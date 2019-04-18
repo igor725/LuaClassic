@@ -360,11 +360,11 @@ function init()
 
 	local ws = config:get('allow-websocket', true)
 	if ws then
+		WSGUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 		wsPort = config:get('websocket-port',port+1)
 		wsServer = bindSock(ip, wsPort)
 		wsHandshake = {}
 		require('helper')
-		require('wshlp')
 	end
 
 	io.write(CON_WLOAD,'\n\t')
@@ -443,13 +443,9 @@ end,debug.traceback)
 
 print(CON_SVSTOP)
 
-ecode = 1
+ecode = 0
 err = tostring(err)
-if server then
-	server:settimeout(.1)
-end
 playersForEach(function(ply)
-	ply:getClient():settimeout(.1)
 	ply:kick(CON_SVSTOP)
 end)
 if config:save()and permissions:save()then
@@ -471,10 +467,7 @@ sql.close()
 if not succ then
 	if not err:find('interrupted')then
 		print(err)
-	else
-		ecode = 0
+		ecode = 1
 	end
-else
-	ecode = 0
 end
 os.exit(ecode)

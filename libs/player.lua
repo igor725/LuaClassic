@@ -17,7 +17,7 @@ local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
 	struct = require('struct')
 	gz = require('gzip')
 	if isWS then
-		require('wshlp')
+		require('helper')
 	end
 
 	local fmt = '>Bhc1024b'
@@ -253,10 +253,6 @@ local player_mt = {
 		end
 		return false
 	end,
-	wsClose = function(self, code, reason)
-		if not self.isWS then return false end
-		return self:sendNetMesg(encodeWsClose(code, reason), 0x8)
-	end,
 	readWsFrame = function(self)
 		if not self.isWS then return false end
 		local cl = self:getClient()
@@ -352,7 +348,6 @@ local player_mt = {
 	kick = function(self,reason)
 		reason = reason or KICK_NOREASON
 		self:sendPacket(false, 0x0e, reason)
-		self:wsClose(1000, reason)
 		self:destroy()
 	end,
 	sendMap = function(self)
