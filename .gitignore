@@ -1,0 +1,7 @@
+worlds/*
+!worlds/.keep
+*.properties
+*.txt
+*.bat
+*.sh
+*.db
