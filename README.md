@@ -4,7 +4,9 @@ A small Minecraft Classic server written in Lua.
 Code of this server is very buggy, shitty and needs refactoring, but it works and i don't want to touch him.
 Server supports web clients over websockets and some CPE extensions.
 
-All of necessary libraries already compiled for Linux (arm, x86_64) and Windows (x86, x86_64).
+All of necessary libraries already compiled for Linux (arm, x86_64) and Windows mingw-w64 (x86, x86_64).
+
+Server tested on Debian Stretch/Buster, Arch Linux, Raspbian and Windows 10. On other systems stable work is not guaranteed.
 
 # Using
 1. Run ```luajit main.lua``` and let the server to generate config files
@@ -14,6 +16,8 @@ All of necessary libraries already compiled for Linux (arm, x86_64) and Windows 
 
 # Deps
 * [LuaJIT](http://luajit.org/git/luajit-2.0.git)
+* [zlib](https://www.zlib.net/)
+* [LuaLanes](https://github.com/LuaLanes/lanes)
 * [luasocket-lanes](https://github.com/LuaDist-testing/luasocket-lanes)
 * [lsqlite3](https://github.com/LuaDist/lsqlite3)
 * [lua-cjson](https://www.kyne.com.au/~mark/software/lua-cjson.php)
