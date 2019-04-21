@@ -316,13 +316,19 @@ function handleConsoleCommand(cmd)
 		if #args > 0 then
 			newChatMessage(argstr)
 		else
-			print(CON_USE%CC_SAY)
+			print(CON_USE%CU_SAY)
 		end
 	elseif cmd == 'addperm'then
 		if #args == 2 then
 			permissions:addFor(args[1], args[2])
 		else
-			print(CON_USE%CC_ADDPERM)
+			print(CON_USE%CU_ADDPERM)
+		end
+	elseif cmd == 'delperm'then
+		if #args == 2 then
+			permissions:addFor(args[1], args[2])
+		else
+			print(CON_USE%CU_DELPERM)
 		end
 	elseif cmd == 'kick'then
 		if #args > 0 then
@@ -337,7 +343,7 @@ function handleConsoleCommand(cmd)
 				print(MESG_PLAYERNF)
 			end
 		else
-			print(CON_USE%CC_KICK)
+			print(CON_USE%CU_KICK)
 		end
 	elseif cmd == 'regen'then
 		if #args >= 1 then
@@ -351,7 +357,7 @@ function handleConsoleCommand(cmd)
 				print(MESG_DONEIN%(tm*1000))
 			end
 		else
-			print(CON_USE%CC_REGEN)
+			print(CON_USE%CU_REGEN)
 		end
 	elseif cmd == 'tp'then
 		if #args == 2 then
@@ -374,7 +380,13 @@ function handleConsoleCommand(cmd)
 				p1:teleportTo(p2:getPos())
 			end
 		else
-			print(CON_USE%CC_TP)
+			print(CON_USE%CU_TP)
+		end
+	elseif cmd == 'help' or cmd == '?'then
+		for k, v in pairs(_G)do
+			if k:sub(1,3) == 'CU_'then
+				print(v)
+			end
 		end
 	else
 		print(MESG_UNKNOWNCMD)
@@ -397,7 +409,6 @@ end
 function init()
 	players, IDS = {}, {}
 	worlds, generators = {}, {}
-	cmdh = initCmdHandler(handleConsoleCommand)
 
 	hooks:Create('onPlayerRotate')
 	hooks:Create('onPlayerMove')
@@ -496,6 +507,8 @@ function init()
 		add = CON_WSBINDSUCC%wsPort
 	end
 	printf(CON_BINDSUCC, ip, port, add)
+	cmdh = initCmdHandler(handleConsoleCommand)
+	print('For help, type "help" or "?"')
 	CTIME = socket.gettime()
 end
 
@@ -516,7 +529,7 @@ succ, err = xpcall(function()
 			wsDoHandshake()
 		end
 		if cmdh then
-			cmdh.step()
+			cmdh()
 		end
 		socket.sleep(.01)
 	end

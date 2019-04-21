@@ -1,7 +1,6 @@
 function initCmdHandler(cbfunc)
 	if type(cbfunc)~='function'then return false end
 	local cmdlinda = lanes.linda()
-	local t = {}
 	local thread = lanes.gen('*', function()
 		local buffer = ''
 		while true do
@@ -16,7 +15,7 @@ function initCmdHandler(cbfunc)
 			end
 		end
 	end)()
-	t.step = function()
+	return function()
 		if thread.status == 'running'then
 			local cmd = select(2, cmdlinda:receive(0,'cmd'))
 			if cmd then
@@ -27,5 +26,4 @@ function initCmdHandler(cbfunc)
 		end
 		return true
 	end
-	return t
 end
