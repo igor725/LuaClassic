@@ -414,7 +414,7 @@ local player_mt = {
 		if not force and self:isInWorld(wname)then
 			return false, 1
 		end
-		local world = worlds[wname]
+		local world = getWorld(wname)
 		if world then
 			local wsp = world.data.spawnpoint
 			local wse = world.data.spawnpointeye

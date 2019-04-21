@@ -141,7 +141,7 @@ addChatCommand('tp',function(player, name, to)
 	if name then
 		ply = getPlayerByName(name)
 		if not ply then
-			return MESG_PLAYERNF
+			return MESG_PLAYERNFA%name
 		end
 		if to then
 			to = getPlayerByName(to)
@@ -152,7 +152,7 @@ addChatCommand('tp',function(player, name, to)
 					ply:teleportTo(to:getPos())
 				end
 			else
-				return MESG_PLAYERNF
+				return MESG_PLAYERNFA%to
 			end
 		else
 			if not player:isInWorld(ply)then
@@ -196,13 +196,10 @@ addChatCommand('regen',function(player, gen, seed)
 	end
 
 	player:sendMessage(CMD_GENSTART)
-	local succ, ret, tm = pcall(regenerateWorld,world, gen, seed)
-	if not succ then
-		return CMD_GENERR%tostring(ret)
-	end
-	if ret then
-		return MESG_DONEIN%(tm*1000)
+	local ret, tm = regenerateWorld(world, gen, seed)
+	if not ret then
+		return CMD_GENERR%tostring(tm)
 	else
-		return tm
+		return MESG_DONEIN%(tm*1000)
 	end
 end)

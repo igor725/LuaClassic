@@ -14,6 +14,7 @@ socket = require('socket.core')
 
 require('cpe')
 require('lng')
+require('conh')
 require('hooks')
 require('timer')
 require('config')
@@ -304,6 +305,82 @@ function createPlayer(cl,isWS)
 	end
 end
 
+function handleConsoleCommand(cmd)
+	args = cmd:split('%s')
+	cmd = table.remove(args, 1)
+	argstr = table.concat(args,' ')
+
+	if cmd == 'stop'then
+		_STOP = true
+	elseif cmd == 'say'then
+		if #args > 0 then
+			newChatMessage(argstr)
+		else
+			print(CON_USE%CC_SAY)
+		end
+	elseif cmd == 'addperm'then
+		if #args == 2 then
+			permissions:addFor(args[1], args[2])
+		else
+			print(CON_USE%CC_ADDPERM)
+		end
+	elseif cmd == 'kick'then
+		if #args > 0 then
+			local p = getPlayerByName(args[1])
+			local reason = KICK_NOREASON
+			if p then
+				if #args > 1 then
+					reason = table.concat(args, ' ', 2)
+				end
+				p:kick(reason)
+			else
+				print(MESG_PLAYERNF)
+			end
+		else
+			print(CON_USE%CC_KICK)
+		end
+	elseif cmd == 'regen'then
+		if #args >= 1 then
+			local world = getWorld(args[1])
+			local gen = args[2]or'default'
+			local seed = tonumber(args[3]or os.time())
+			local ret, tm = regenerateWorld(world, gen, seed)
+			if not ret then
+				print(CMD_GENERR%tostring(tm))
+			else
+				print(MESG_DONEIN%(tm*1000))
+			end
+		else
+			print(CON_USE%CC_REGEN)
+		end
+	elseif cmd == 'tp'then
+		if #args == 2 then
+			local pn1 = args[1]
+			local pn2 = args[2]
+			local p1 = getPlayerByName(pn1)
+			local p2 = getPlayerByName(pn2)
+			if not p1 then
+				print(MESG_PLAYERNFA%pn1)
+				return
+			end
+			if not p2 then
+				print(MESG_PLAYERNFA%pn2)
+				return
+			end
+			local wp2 = getWorld(p2)
+			if getWorld(p1)~=wp2 then
+				p1:changeWorld(wp2, false, p2:getPos())
+			else
+				p1:teleportTo(p2:getPos())
+			end
+		else
+			print(CON_USE%CC_TP)
+		end
+	else
+		print(MESG_UNKNOWNCMD)
+	end
+end
+
 function acceptClients()
 	local cl = server:accept()
 	if not cl then return end
@@ -320,6 +397,7 @@ end
 function init()
 	players, IDS = {}, {}
 	worlds, generators = {}, {}
+	cmdh = initCmdHandler(handleConsoleCommand)
 
 	hooks:Create('onPlayerRotate')
 	hooks:Create('onPlayerMove')
@@ -436,6 +514,9 @@ succ, err = xpcall(function()
 		if wsServer then
 			wsAcceptClients()
 			wsDoHandshake()
+		end
+		if cmdh then
+			cmdh.step()
 		end
 		socket.sleep(.01)
 	end
