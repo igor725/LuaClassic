@@ -567,7 +567,7 @@ end
 
 local function generateCaves(mapaddr, dimx, dimy, dimz, heightMap, heightGrass, heightLava, seed)
 	math.randomseed(seed)
-	
+
 	ffi = require("ffi")
 
 	local map = ffi.cast('char*', mapaddr)
@@ -580,16 +580,16 @@ local function generateCaves(mapaddr, dimx, dimy, dimz, heightMap, heightGrass, 
 		end
 		--map[(y * dimz + z) * dimx + x + 4] = id
 	end
-	
+
 	--local CAVES_LENGTH = 65
 	local CAVES_LENGTH = math.random(50, 150)
 	local CAVE_RADIUS = 3
 	local CAVE_RADIUS2 = CAVE_RADIUS * CAVE_RADIUS
-	
+
 	local CAVE_CHANGE_DIRECTION = math.floor(CAVES_LENGTH / 3)
 
 	local ddx, ddy, ddz, length, directionX, directionY, directionZ
-	
+
 	--[[local directionX = (math.random() - 0.5) * 0.3
 	local directionY = (math.random() - 0.5) * 0.1
 	local directionZ = (math.random() - 0.5) * 0.3]]--
@@ -605,11 +605,11 @@ local function generateCaves(mapaddr, dimx, dimy, dimz, heightMap, heightGrass, 
 			directionY = (math.random() - 0.5) * 0.2
 			directionZ = (math.random() - 0.5) * 0.6
 		end
-		
+
 		ddx = math.random() - 0.5 + directionX
 		ddy = (math.random() - 0.5) * 0.4 + directionY
 		ddz = math.random() - 0.5 + directionZ
-		
+
 		length = 1--math.sqrt(ddx^2 + ddy^2 + ddz^2)
 
 		x = math.floor(x + ddx * CAVE_RADIUS / length + 0.5)
@@ -646,7 +646,7 @@ return function(world, seed)
 	local dx, dy, dz = world:GetDimensions()
 
 	math.randomseed(seed)
-	
+
 	-- Generate map
 	biomsGenerate(dx, dz)
 
@@ -654,7 +654,7 @@ return function(world, seed)
 	heightMapGenerate(dx, dz)
 
 	fillStone(world, dx, dz)
-	
+
 	local mapaddr = world:GetAddr()
 
 	io.write('terrain, ')
@@ -670,7 +670,7 @@ return function(world, seed)
 	end
 
 	count = #threads
-	
+
 	while count > 0 do
 		local thread = threads[count]
 		if thread then
@@ -691,19 +691,19 @@ return function(world, seed)
 	if GEN_ENABLE_ORES then
 		io.write('ores, ')
 		local sendMap_gen = lanes.gen('*', generateOre)
-		
+
 		count = count + 1
 		threads[count] = sendMap_gen(mapaddr, dx, dy, dz, heightMap, heightGrass)
 	end
-	
+
 	-- trees
 	if GEN_ENABLE_TREES then
 		local sendMap_gen = lanes.gen('*', generateTrees)
-		
+
 		count = count + 1
 		threads[count] = sendMap_gen(mapaddr, dx, dy, dz, heightMap)
 	end
-	
+
 	-- houses
 	if GEN_ENABLE_HOUSES then
 		io.write('houses, ')
@@ -712,7 +712,7 @@ return function(world, seed)
 		count = count + 1
 		threads[count] = sendMap_gen(mapaddr, dx, dy, dz, heightMap, heightWater)
 	end
-	
+
 	while count > 0 do
 		local thread = threads[count]
 		if thread then
@@ -725,7 +725,7 @@ return function(world, seed)
 			socket.sleep(.1)
 		end
 	end
-	
+
 	if GEN_ENABLE_CAVES then
 		io.write('caves, ')
 		local limit = config:get('generator-threads-count', 2)
@@ -735,7 +735,7 @@ return function(world, seed)
 		for i = 1, CAVES_COUNT do
 			if count > limit then
 				local thread = threads[1]
-				
+
 				while true do
 					if thread then
 						if thread.status == "error" then
@@ -751,7 +751,7 @@ return function(world, seed)
 					end
 				end
 			end
-			
+
 			count = count + 1
 			threads[count] = sendMap_gen(mapaddr, dx, dy, dz, heightMap, heightGrass, heightLava, seed + i)
 		end
@@ -767,8 +767,8 @@ return function(world, seed)
 			threads[count] = sendMap_gen(mapaddr, dx, dy, dz, heightMap, heightGrass, heightLava, seed + i)
 		end
 	end
-	
-	
+
+
 	while count > 0 do
 		local thread = threads[count]
 		if thread then

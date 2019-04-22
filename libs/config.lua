@@ -34,7 +34,7 @@ function config:parse()
 		return true
 	else
 		if ec==2 then
-			return true, 0
+			return true
 		else
 			return false, err
 		end
@@ -42,13 +42,13 @@ function config:parse()
 end
 
 function config:save()
-	local h, err = io.open('server.properties','wb')
-	if h then
+	local f, err = io.open('server.properties','wb')
+	if f then
 		for key, value in pairs(self.values)do
 			value = tostring(value)
-			h:write(string.format('%s=%s\n', key, value))
+			f:write(string.format('%s=%s\n', key, value))
 		end
-		h:close()
+		f:close()
 		return true
 	else
 		return false, err

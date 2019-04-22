@@ -38,6 +38,8 @@ local Z_DEFAULT_STRATEGY =  0
 local Z_DEFLATED         =  8
 local GZ_WINDOWBITS      = 31
 local CHUNK_SIZE         = 1024
+local GZ_ERR             = 'gzip %s error: %s'
+local GZ_DATAERR         = 'ggzip data error'
 
 local zLoaded, _zlib = pcall(ffi.load,'z')
 if not zLoaded then
@@ -68,7 +70,7 @@ local function deflate(_in,len,level,callback)
 
 		if ret == Z_STREAM_ERROR then
 			local errstr = ffi.string(_zlib.zError(ret))
-			print(GZ_ERR%{'compress',errstr})
+			print(string.format(GZ_ERR, 'compress', errstr))
 			_zlib.deflateEnd(stream)
 			return false
 		end
@@ -86,7 +88,7 @@ local function inflate(file,callback)
 
 	if ret ~= Z_OK then
 		local errstr = ffi.string(_zlib.zError(ret))
-		print(GZ_ERR%{'init',errstr})
+		print(string.format(GZ_ERR, 'init', errstr))
 		_zlib.inflateEnd(stream)
 		return false
 	end
@@ -112,7 +114,7 @@ local function inflate(file,callback)
 			if ret == Z_BUF_ERROR then ret = Z_OK end
 			if ret ~= Z_OK and ret ~= Z_STREAM_END then
 				local errstr = ffi.string(_zlib.zError(ret))
-				print(GZ_ERR%{'decompress',errstr})
+				print(string.format(GZ_ERR, 'decompress', errstr))
 				_zlib.inflateEnd(stream)
 				return false
 			end

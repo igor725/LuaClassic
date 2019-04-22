@@ -312,6 +312,20 @@ function handleConsoleCommand(cmd)
 
 	if cmd == 'stop'then
 		_STOP = true
+	elseif cmd == 'loadworld'then
+		if #args == 1 then
+			local succ, err = loadWorld(args[1])
+			if not succ then
+				print(err)
+			end
+		end
+	elseif cmd == 'unloadWorld'then
+		if #args == 1 then
+			local succ, err = unloadWorld(args[1])
+			if not succ then
+				print(err)
+			end
+		end
 	elseif cmd == 'say'then
 		if #args > 0 then
 			newChatMessage(argstr)
@@ -388,6 +402,23 @@ function handleConsoleCommand(cmd)
 				print(v)
 			end
 		end
+	elseif cmd:sub(1,1) == '#'then
+		local code = cmd:sub(2)
+		if code:sub(1,1)=='='then
+			code = 'return '..code:sub(2)
+		end
+		local chunk, err = loadstring(code)
+		if chunk then
+			local succ, ret = pcall(chunk)
+			ret = tostring(ret)
+			if succ then
+				return ret
+			else
+				return MESG_ERROR%ret
+			end
+		else
+			return MESG_ERROR%err
+		end
 	else
 		print(MESG_UNKNOWNCMD)
 	end
@@ -419,11 +450,9 @@ function init()
 	hooks:Create('postPlayerSpawn')
 	hooks:Create('onUpdate')
 
-	local succ, parsed =
-	permissions
-	:parse()
+	permissions:parse()
 
-	succ, parsed = config
+	config
 	:registerTypeFor('generator-threads-count','number')
 	:registerTypeFor('gzip-compression-level','number')
 	:registerTypeFor('allow-websocket','boolean')
