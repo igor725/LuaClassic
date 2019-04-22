@@ -7,9 +7,11 @@ return function(world, seed)
 	local dx, dy, dz = world:GetDimensions()
 	io.write("terrain, ")
 	local data = world.ldata
-	local sz = (dz*dx)*(dy/4-2)
-	ffi.fill(data+4, sz, 3)
-	ffi.fill(data+sz, dz*dx, 2)
+	local flr = dz*dx
+	local sz = flr*(dy/4-2)
+	ffi.fill(data+4, flr, 7)
+	ffi.fill(data+flr+4, sz, 3)
+	ffi.fill(data+sz+4, dz*dx, 2)
 
 	if config:get('cpe-enabled',true)then
 		local ma = {

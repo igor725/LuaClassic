@@ -83,7 +83,7 @@ function onPlayerChatMessage(player, message)
 		message = tostring(prt)
 	end
 	message = message:gsub('%%(%x)','&%1')
-	printf(os.date('[%H:%M:%S] %%s: %%s'), player:getName(), message)
+	printf(os.date('[%H:%M:%S] %%s: %%s'), player:getName(), mc2ansi(message))
 	local starts = message:sub(1,1)
 	if starts=='#'then
 		if player:checkPermission('server.luaexec')then
@@ -261,19 +261,23 @@ function wsDoHandshake()
 			tonumber(wsver) == 13 then
 				wskey = wskey+WSGUID
 				wskey = b64enc(sha1(wskey))
-				cl:send('HTTP/1.1 101 Switching Protocols\r\n')
-				cl:send('Upgrade: websocket\r\nConnection: Upgrade\r\n')
-				cl:send('Sec-WebSocket-Accept: '+wskey+'\r\n')
-				cl:send('Sec-WebSocket-Protocol: binary\r\n\r\n')
+				local response =
+				'HTTP/1.1 101 Switching Protocols\r\n'+
+				'Upgrade: websocket\r\nConnection: Upgrade\r\n'+
+				'Sec-WebSocket-Accept: '+wskey+'\r\n'+
+				'Sec-WebSocket-Protocol: binary\r\n\r\n'
+				cl:send(response)
 				wsHandshake[cl] = nil
 				createPlayer(cl, true)
 			else
 				data.state = 'badrequest'
 			end
 		elseif data.state == 'badrequest'then
-			cl:send('HTTP/1.1 400 Bad request\r\n')
-			cl:send('Content-Length: 65\r\n\r\n')
-			cl:send(MESG_NOTWSCONN)
+			local response =
+			'HTTP/1.1 400 Bad request\r\n'+
+			'Content-Length: %d\r\n\r\n'%#MESG_NOTWSCONN+
+			MESG_NOTWSCONN
+			cl:send(response)
 			cl:close()
 			wsHandshake[cl] = nil
 		end
@@ -537,7 +541,7 @@ function init()
 	end
 	printf(CON_BINDSUCC, ip, port, add)
 	cmdh = initCmdHandler(handleConsoleCommand)
-	print('For help, type "help" or "?"')
+	print(CON_HELP)
 	CTIME = socket.gettime()
 end
 

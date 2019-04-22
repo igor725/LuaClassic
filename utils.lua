@@ -31,6 +31,49 @@ bxor = bit.bxor
 abs = math.abs
 bor = bit.bor
 
+function checkEnv(ev, val)
+	local evar = os.getenv(ev)
+	if evar then
+		return os.getenv(ev):lower():find(val:lower())
+	else
+		return false
+	end
+end
+
+ENABLE_ANSI = checkEnv('ConEmuANSI','on')or checkEnv('TERM','xterm')
+
+if ENABLE_ANSI then
+	local rt = {
+		['&0'] = '30',
+		['&1'] = '34',
+		['&2'] = '32',
+		['&3'] = '36',
+		['&4'] = '1;31',
+		['&5'] = '35',
+		['&6'] = '1;33',
+		['&7'] = '1;30',
+		['&8'] = '1;30',
+		['&9'] = '1;34',
+		['&a'] = '1;32',
+		['&b'] = '1;36',
+		['&c'] = '1;31',
+		['&d'] = '1;35',
+		['&e'] = '33',
+		['&f'] = '1;37'
+	}
+
+	function mc2ansi(str)
+		return str:gsub('(&%x)', function(s)
+			s = s:lower()
+			return string.format('\27[%sm', rt[s])
+		end)..'\27[0m'
+	end
+else
+	function mc2ansi(str)
+		return str
+	end
+end
+
 function trimStr(str)
 	return str:match('^%s*(.-)%s*$')
 end
@@ -201,6 +244,7 @@ end
 function regenerateWorld(world,gentype,seed)
 	world = getWorld(world)
 	if not world then return false, WORLD_NE end
+	if world:IsInReadOnly()then return false, WORLD_RO end
 	local p = 'generators/'+gentype+'.lua'
 	local chunk, err = loadfile(p)
 	if not chunk then

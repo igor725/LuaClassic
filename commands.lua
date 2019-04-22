@@ -182,9 +182,6 @@ end)
 
 addChatCommand('regen',function(player, gen, seed)
 	local world = getWorld(player.worldName)
-	if world:IsInReadOnly()then
-		return WORLD_RO
-	end
 	gen = tonumber(gen)or gen
 
 	if type(gen)~='number'then

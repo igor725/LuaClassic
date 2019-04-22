@@ -140,37 +140,9 @@ local world_mt = {
 		self.ldata = nil
 		collectgarbage()
 	end,
-	isWorld = true,
-	players = 0
-}
-world_mt.__index = world_mt
-
-return function(nm)
-	local world =
-	setmetatable({}, world_mt)
-
-	local pt
-
-	if nm then
-		pt = 'worlds/'+nm
-		local data = assert(io.open(pt+'/data.json','r'))
-		local pdata = json.decode(data:read('*a'))
-		data:close()
-		world:CreateWorld(pdata)
-		world:LoadLevelData(pt+'/level.dat')
-	end
-
-	function world:SetName(name)
-		nm = name
-		pt = 'worlds/'+name
-	end
-
-	function world:GetName()
-		return nm
-	end
-
-	function world:Save()
+	Save = function(self)
 		if not self.ldata then return true end
+		local pt = 'worlds/'+self.wname
 		if lfs.attributes(pt,'mode')~='directory'then
 			os.remove(pt)
 			lfs.mkdir(pt)
@@ -193,13 +165,37 @@ return function(nm)
 		dfile:write(json)
 		dfile:close()
 		return true
-	end
-
-	function world:TriggerLoad()
+	end,
+	TriggerLoad = function(self)
 		if not self.ldata then
+			local pt = 'worlds/'+self.wname
 			self.ldata = ffi.new('char[?]',self.size)
 			self:LoadLevelData(pt+'/level.dat')
 		end
+	end,
+	SetName = function(self, name)
+		self.wname = name
+	end,
+	GetName = function(self)
+		return self.wname
+	end,
+	isWorld = true,
+	players = 0
+}
+world_mt.__index = world_mt
+
+return function(nm)
+	local world =
+	setmetatable({}, world_mt)
+
+	if nm then
+		local pt = 'worlds/'+nm
+		world.wname = nm
+		local data = assert(io.open(pt+'/data.json','r'))
+		local pdata = json.decode(data:read('*a'))
+		data:close()
+		world:CreateWorld(pdata)
+		world:LoadLevelData(pt+'/level.dat')
 	end
 
 	return world
