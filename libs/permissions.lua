@@ -6,6 +6,7 @@ permissions = {
 
 function permissions:parse()
 	local h, err, ec = io.open('permissions.txt', 'r')
+	if not h then return end
 	local key
 	for line in h:lines()do
 		if not key then
