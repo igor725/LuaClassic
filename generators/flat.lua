@@ -13,14 +13,12 @@ return function(world, seed)
 	ffi.fill(data+flr+4, sz, 3)
 	ffi.fill(data+sz+4, dz*dx, 2)
 
-	if config:get('cpe-enabled',true)then
-		local ma = {
-			['0'] = 3,
-			['1'] = 8,
-			['2'] = (dy/4)-1
-		}
-		world.data.map_aspects = ma
-	end
+	local ma = {
+		['0'] = 3,
+		['1'] = 8,
+		['2'] = (dy/4)-1
+	}
+	world.data.map_aspects = ma
 
 	world:SetSpawn(dx/2, (dy/4)+1.59375, dz/2)
 	return true

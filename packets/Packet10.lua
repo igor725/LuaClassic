@@ -1,6 +1,6 @@
 return function(player, appName, extCount)
 	if extCount<1 then
-		player:kick()
+		player:kick(KICK_CPEEXTCOUNT)
 		return
 	end
 	player.appName = trimStr(appName)

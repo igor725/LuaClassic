@@ -211,7 +211,7 @@ local player_mt = {
 				return
 			end
 			if not sql.createPlayer(key)then
-				self:kick(KICK_SQLERR)
+				self:kick(KICK_INTERR%IE_SQL)
 				return
 			end
 			self.inited = true
@@ -243,7 +243,7 @@ local player_mt = {
 			self.eye.y = ay
 			self.eye.p = ap
 
-			if hsFlag==0x42 and cpe.inited then
+			if hsFlag==0x42 then
 				cpe:StartFor(self)
 				self.handshakeStage2 = false
 			end
@@ -562,7 +562,7 @@ local player_mt = {
 						self:spawn()
 					else
 						print('MAPSEND ERROR', mesg)
-						self:kick()
+						self:kick(KICK_INTERR%IE_GZ)
 					end
 					self.thread = nil
 					self.kickTimeout = CTIME + getKickTimeout()
@@ -596,7 +596,6 @@ local player_mt = {
 		return self.appName or'vanilla'
 	end,
 	isSupported = function(self,extName,extVer)
-		if not cpe.inited then return false end
 		extVer = extVer or 1
 		extName = extName:lower()
 		local ext = self.extensions[extName]

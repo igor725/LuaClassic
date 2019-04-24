@@ -218,8 +218,8 @@ function wsAcceptClients()
 	if not cl then return end
 	cl:settimeout(0)
 	wsHandshake[cl] = {
-		headers = {},
-		state = 'initial'
+		state = 'initial',
+		headers = {}
 	}
 end
 
@@ -447,9 +447,9 @@ function acceptClients()
 end
 
 function serviceMessages()
-	for player in pairs(players)do
+	playersForEach(function(player)
 		player:serviceMessages()
-	end
+	end)
 end
 
 function init()
@@ -473,7 +473,6 @@ function init()
 	:registerTypeFor('allow-websocket','boolean')
 	:registerTypeFor('websocket-port','number')
 	:registerTypeFor('player-timeout','number')
-	:registerTypeFor('cpe-enabled','boolean')
 	:registerTypeFor('server-port','number')
 	:registerTypeFor('server-name','string')
 	:registerTypeFor('server-motd','string')

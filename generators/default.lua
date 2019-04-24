@@ -640,8 +640,6 @@ end
 
 -- Main
 return function(world, seed)
-	collectgarbage()
-	collectgarbage()
 	seed = seed or (os.clock()*os.time())
 	local dx, dy, dz = world:GetDimensions()
 
@@ -795,17 +793,13 @@ return function(world, seed)
 
 	world:SetSpawn(x,y+2,z,0,0)
 
-	if config:get('cpe-enabled',true)then
-		local ma = {
-			['0'] = 0,
-			['1'] = 8,
-			['2'] = heightWater + 1,
-			['9'] = 0
-		}
-		world.data.map_aspects = ma
-	end
-	collectgarbage()
-	collectgarbage()
+	local ma = {
+		['0'] = 0,
+		['1'] = 8,
+		['2'] = heightWater + 1,
+		['9'] = 0
+	}
+	world.data.map_aspects = ma
 
 	return true
 end
