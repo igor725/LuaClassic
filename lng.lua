@@ -27,6 +27,7 @@ CU_REGEN           = 'regen <world> [generator] [seed] - Regenerate specified wo
 CU_LEXEC           = '#<lua code> - Run lua code'
 CU_LOADWORLD       = 'loadworld <worldname> - Load specified world'
 CU_UNLOADWORLD     = 'unloadWorld <worldname> - Unload specified world'
+CU_PUT             = 'put <playername> <worldname> - Teleport player to specified world'
 
 KICK_CONNREJ       = 'Server rejected your connection attempt'
 KICK_CPESEQERR     = 'Packet 0x10 not received before 0x11'

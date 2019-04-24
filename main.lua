@@ -348,6 +348,17 @@ function handleConsoleCommand(cmd)
 		else
 			print(CON_USE%CU_DELPERM)
 		end
+	elseif cmd == 'put'then
+		if #args == 2 then
+			local player = getPlayerByName(args[1])
+			if player then
+				player:changeWorld(args[2])
+			else
+				print(MESG_PLAYERNF)
+			end
+		else
+			print(CON_USE%CU_PUT)
+		end
 	elseif cmd == 'kick'then
 		if #args > 0 then
 			local p = getPlayerByName(args[1])
