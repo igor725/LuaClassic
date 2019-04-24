@@ -43,7 +43,8 @@ local GZ_DATAERR         = 'gzip data error'
 
 local zLoaded, _zlib = pcall(ffi.load,'z')
 if not zLoaded then
-	local path = './bin/%s/z.%s'%{jit.arch,_EXT}
+	local ext = (jit.os=='Windows'and'dll')or'so'
+	local path = ('./bin/%s/z.%s'):format(jit.arch, ext)
 	_zlib = ffi.load(path)
 end
 local Z_VER = _zlib.zlibVersion()
