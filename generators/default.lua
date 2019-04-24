@@ -1,3 +1,8 @@
+--
+-- Created by scaled
+-- and Igor
+--
+
 GEN_ENABLE_CAVES = true
 GEN_ENABLE_TREES = true
 GEN_ENABLE_ORES = true
