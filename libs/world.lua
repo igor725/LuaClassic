@@ -204,10 +204,8 @@ local world_mt = {
 				end
 			elseif k == 'weather'then
 				packTo(wh, '>bb', 6, v)
-				print('weatherType', v)
 			elseif k == 'readonly'then
 				packTo(wh, '>bb', 7, (v and 1)or 0)
-				print('isInReadOnly', v)
 			elseif k == 'portals'then
 				for id, val in pairs(v)do
 					local p1x, p1y, p1z = unpack(val.pt1)
@@ -215,7 +213,6 @@ local world_mt = {
 					packTo(wh, '>bHHHHHHH', 8, p1x, p1y, p1z,
 					p2x, p2y, p2z, #val.tpTo)
 					wh:write(val.tpTo)
-					print('portal to', val.tpTo)
 				end
 			else
 				print('Warning: Unknown MAPOPT %q skipped!'%k)
