@@ -14,9 +14,9 @@ return function(world, seed)
 	ffi.fill(data+sz+4, dz*dx, 2)
 
 	local ma = {
-		['0'] = 3,
-		['1'] = 8,
-		['2'] = (dy/4)-1
+		[0] = 3,
+		[1] = 8,
+		[2] = (dy/4)-1
 	}
 	world.data.map_aspects = ma
 	world.data.isNether = false

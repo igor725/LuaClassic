@@ -154,7 +154,7 @@ local world_mt = {
 					self.data.colors = self.data.colors or{}
 					self.data.colors[ct] = {r,g,b}
 				elseif id == '\5'then
-					local ct, val = unpackFrom(wh, 'bI')
+					local ct, val = unpackFrom(wh, '>bI')
 					self.data.map_aspects = self.data.map_aspects or{}
 					self.data.map_aspects[ct] = val
 				elseif id == '\255'then
