@@ -160,7 +160,7 @@ local world_mt = {
 				elseif id == '\6'then
 					self.data.weather = wh:read(1):byte()
 				elseif id == '\7'then
-					self.data.isInReadOnly = wh:read(1)=='\1'
+					self.data.readonly = wh:read(1)=='\1'
 				elseif id == '\8'then
 					self.data.portals = self.data.portals or{}
 					local p1x, p1y, p1z,
@@ -203,18 +203,18 @@ local world_mt = {
 					packTo(wh, '>bbI', 5, id, val)
 				end
 			elseif k == 'weather'then
-				packTo(nw, '>bb', 6, v)
+				packTo(wh, '>bb', 6, v)
 				print('weatherType', v)
 			elseif k == 'readonly'then
-				packTo(nw, '>bb', 7, (v and 1)or 0)
+				packTo(wh, '>bb', 7, (v and 1)or 0)
 				print('isInReadOnly', v)
 			elseif k == 'portals'then
 				for id, val in pairs(v)do
 					local p1x, p1y, p1z = unpack(val.pt1)
 					local p2x, p2y, p2z = unpack(val.pt2)
-					packTo(nw, '>bHHHHHHH', 8, p1x, p1y, p1z,
+					packTo(wh, '>bHHHHHHH', 8, p1x, p1y, p1z,
 					p2x, p2y, p2z, #val.tpTo)
-					nw:write(val.tpTo)
+					wh:write(val.tpTo)
 					print('portal to', val.tpTo)
 				end
 			else
