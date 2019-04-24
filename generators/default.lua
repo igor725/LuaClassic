@@ -711,19 +711,6 @@ return function(world, seed)
 		threads[count] = sendMap_gen(mapaddr, dx, dy, dz, heightMap, heightWater)
 	end
 
-	while count > 0 do
-		local thread = threads[count]
-		if thread then
-			if thread.status == "error" then
-				print(thread[1])
-			elseif thread.status == "done" then
-				count = count - 1
-			end
-		else
-			socket.sleep(.1)
-		end
-	end
-
 	if GEN_ENABLE_CAVES then
 		io.write('caves, ')
 		local limit = config:get('generator-threads-count', 2)
@@ -755,18 +742,6 @@ return function(world, seed)
 		end
 	end
 
-	--[[if GEN_ENABLE_CAVES then
-		io.write('caves, ')
-		local sendMap_gen = lanes.gen('*', generateCaves)
-
-		local CAVES_COUNT = dx * dy * dz / 700000
-		for i = 1, CAVES_COUNT do
-			count = count + 1
-			threads[count] = sendMap_gen(mapaddr, dx, dy, dz, heightMap, heightGrass, heightLava, seed + i)
-		end
-	end
-
-
 	while count > 0 do
 		local thread = threads[count]
 		if thread then
@@ -778,7 +753,7 @@ return function(world, seed)
 		else
 			socket.sleep(.1)
 		end
-	end]]--
+	end
 
 	local x, z = math.random(1, dx), math.random(1, dz)
 	local y = getHeight(x,z)
@@ -794,10 +769,10 @@ return function(world, seed)
 	world:setSpawn(x,y+2,z,0,0)
 
 	local ma = {
-		['0'] = 0,
-		['1'] = 8,
-		['2'] = heightWater + 1,
-		['9'] = 0
+		[0] = 0,
+		[1] = 8,
+		[2] = heightWater + 1,
+		[9] = 0
 	}
 	world.data.map_aspects = ma
 	world.data.isNether = false
