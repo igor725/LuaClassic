@@ -758,6 +758,21 @@ for k, v in pairs(info)do
 			packTo(nw, '>bbI', 5, tonumber(id), val)
 			print('mapProp', id, val)
 		end
+	elseif k == 'weather'then
+		packTo(nw, '>bb', 6, v)
+		print('weatherType', v)
+	elseif k == 'readonly'then
+		packTo(nw, '>bb', 7, (v and 1)or 0)
+		print('isInReadOnly', v)
+	elseif k == 'portals'then
+		for id, val in pairs(v)do
+			local p1x, p1y, p1z = unpack(val.pt1)
+			local p2x, p2y, p2z = unpack(val.pt2)
+			packTo(nw, '>bHHHHHHH', 8, p1x, p1y, p1z,
+			p2x, p2y, p2z, #val.tpTo)
+			nw:write(val.tpTo)
+			print('portal to', val.tpTo)
+		end
 	else
 		print('Warning: Unknown MAPOPT %q skipped!'%k)
 	end

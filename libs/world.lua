@@ -157,6 +157,19 @@ local world_mt = {
 					local ct, val = unpackFrom(wh, '>bI')
 					self.data.map_aspects = self.data.map_aspects or{}
 					self.data.map_aspects[ct] = val
+				elseif id == '\6'then
+					self.data.weather = wh:read(1):byte()
+				elseif id == '\7'then
+					self.data.isInReadOnly = wh:read(1)=='\1'
+				elseif id == '\8'then
+					self.data.portals = self.data.portals or{}
+					local p1x, p1y, p1z,
+					p2x, p2y, p2z, strsz = unpackFrom(wh, '>HHHHHHH')
+					table.insert(self.data.portals,{
+						pt1 = {p1x, p1y, p1z},
+						pt2 = {p2x, p2y, p2z},
+						tpTo = wh:read(strsz)
+					})
 				elseif id == '\255'then
 					break
 				else
@@ -189,6 +202,21 @@ local world_mt = {
 				for id, val in pairs(v)do
 					packTo(wh, '>bbI', 5, id, val)
 				end
+			elseif k == 'weather'then
+				packTo(nw, '>bb', 6, v)
+				print('weatherType', v)
+			elseif k == 'readonly'then
+				packTo(nw, '>bb', 7, (v and 1)or 0)
+				print('isInReadOnly', v)
+			elseif k == 'portals'then
+				for id, val in pairs(v)do
+					local p1x, p1y, p1z = unpack(val.pt1)
+					local p2x, p2y, p2z = unpack(val.pt2)
+					packTo(nw, '>bHHHHHHH', 8, p1x, p1y, p1z,
+					p2x, p2y, p2z, #val.tpTo)
+					nw:write(val.tpTo)
+					print('portal to', val.tpTo)
+				end
 			else
 				print('Warning: Unknown MAPOPT %q skipped!'%k)
 			end
@@ -197,7 +225,7 @@ local world_mt = {
 		gz.compress(self.ldata, self.size, 4, function(out,stream)
 			local chunksz = 1024-stream.avail_out
 			C.fwrite(out, 1, chunksz, wh)
-			if C.ferror(wfile)~=0 then
+			if C.ferror(wh)~=0 then
 				print(WORLD_WRITEFAIL)
 				os.exit(1)
 			end
