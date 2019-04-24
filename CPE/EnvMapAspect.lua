@@ -51,7 +51,7 @@ function ema:prePlayerSpawn(player)
 	local world = getWorld(wn)
 
 	for typ, val in pairs(getMa(wn))do
-		updateMapPropertyFor(player, tonumber(typ), val)
+		updateMapPropertyFor(player, typ, val)
 	end
 	if world.data.texPack then
 		setTexturePackFor(player, world.data.texPack)
@@ -79,7 +79,7 @@ end
 
 function ema:set(world, typ, val)
 	world = getWorld(world)
-	getMa(world)[tostring(typ)] = val
+	getMa(world)[typ] = val
 	playersForEach(function(player)
 		if player:isInWorld(world)then
 			updateMapPropertyFor(player, typ, val)

@@ -20,6 +20,5 @@ Server tested on Debian Stretch/Buster, Arch Linux, Raspbian and Windows 10. On 
 * [LuaLanes](https://github.com/LuaLanes/lanes)
 * [luasocket-lanes](https://github.com/LuaDist-testing/luasocket-lanes)
 * [lsqlite3](https://github.com/LuaDist/lsqlite3)
-* [lua-cjson](https://www.kyne.com.au/~mark/software/lua-cjson.php)
 * [luafilesystem](https://github.com/keplerproject/luafilesystem)
 * Libraries from src dir

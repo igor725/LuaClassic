@@ -59,18 +59,17 @@ end
 function ec:prePlayerSpawn(player)
 	local colors = getClrs(player.worldName)
 	for i=0,4 do
-		local typ = tostring(i)
-		local color = colors[typ]
+		local color = colors[i]
 		if color then
-			updateEnvColorsFor(player, tonumber(typ), unpack(color))
+			updateEnvColorsFor(player, i, unpack(color))
 		else
-			updateEnvColorsFor(player, tonumber(typ))
+			updateEnvColorsFor(player, i)
 		end
 	end
 end
 
 function ec:set(world, typ, r, g, b)
-	getClrs(world)[tostring(typ)] = {r,g,b}
+	getClrs(world)[typ] = {r,g,b}
 	playersForEach(function(player)
 		if player:isInWorld(world)then
 			updateEnvColorsFor(player, typ, r, g, b)

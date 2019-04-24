@@ -4,7 +4,6 @@ require('utils')
 
 gz = require('gzip')
 lfs = require('lfs')
-json = require('cjson')
 lanes = require('lanes')
 sql = require('sqlite3')
 struct = require('struct')
@@ -517,8 +516,9 @@ function init()
 		io.write(wn,': ')
 		local st = socket.gettime()
 		local world
-		if lfs.attributes('worlds/'+wn,'mode')=='directory'then
-			world = newWorld(wn)
+		local lvlh = io.open('worlds/'+wn+'.map','rb')
+		if lvlh then
+			world = newWorld(lvlh, wn)
 		else
 			local gtype = tlist[num]or'default'
 			local dims = slist[num]or'256x256x256'

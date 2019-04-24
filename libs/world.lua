@@ -18,6 +18,17 @@ local function gBufSize(x,y,z)
 	return x*y*z+4
 end
 
+local function packTo(file, fmt, ...)
+	local data = struct.pack(fmt, ...)
+	return file:write(data)
+end
+
+local function unpackFrom(file, fmt)
+	local sz = struct.size(fmt)
+	local data = file:read(sz)
+	return struct.unpack(fmt, data)
+end
+
 local world_mt = {
 	createWorld = function(self,data)
 		local dim = data.dimensions
@@ -34,31 +45,14 @@ local world_mt = {
 		self.data = data
 		return true
 	end,
-	loadLevelData = function(self,fn)
-		local wfile = io.open(fn,'rb')
-		local mapUncompressed = false
-		if not wfile then
-			wfile = assert(io.open(fn+'.raw','rb'))
-			if wfile then
-				mapUncompressed = true
-			end
-		end
-		if mapUncompressed then
-			C.fread(self.ldata, 1, self.size, wfile)
-		else
-			local a = self:getAddr()
-			local ptr = ffi.cast('char*', a)
-			gz.decompress(wfile, function(out,stream)
-				local chunksz = 1024-stream.avail_out
-				ffi.copy(ptr, out, chunksz)
-				ptr = ptr + chunksz
-			end)
-		end
-		wfile:close()
-		local fsz = ffi.cast('int*', self.ldata)
-		if bswap(fsz[0])~=self.size-4 then
-			error(WORLD_INVALID)
-		end
+	readGZIPData = function(self, wh)
+		local a = self:getAddr()
+		local ptr = ffi.cast('char*', a)
+		gz.decompress(wh, function(out,stream)
+			local chunksz = 1024-stream.avail_out
+			ffi.copy(ptr, out, chunksz)
+			ptr = ptr + chunksz
+		end)
 	end,
 	getDimensions = function(self)
 		return unpack(self.data.dimensions)
@@ -134,30 +128,81 @@ local world_mt = {
 		collectgarbage()
 		return true
 	end,
+	readLevelInfo = function(self, wh)
+		wh:seek('set', 0)
+		if wh:read(4) == 'LCW\0'then
+			self.data = {}
+			while true do
+				local id = wh:read(1)
+
+				if id == '\0'then
+					local dx, dy, dz = unpackFrom(wh, '>HHH')
+					local sz = gBufSize(dx, dy, dz)
+					self.data.dimensions = {dx, dy, dz}
+					self.ldata = ffi.new('char[?]', sz)
+					self.size = sz
+				elseif id == '\1'then
+					local sx, sy, sz = unpackFrom(wh, '>fff')
+					self.data.spawnpoint = {sx, sy, sz}
+				elseif id == '\2'then
+					local ay, ap = unpackFrom(wh, '>ff')
+					self.data.spawnpointeye = {ay, ap}
+				elseif id == '\3'then
+					self.data.isNether = wh:read(1)=='\1'
+				elseif id == '\4'then
+					local ct, r, g, b = unpackFrom(wh, 'BBBB')
+					self.data.colors = self.data.colors or{}
+					self.data.colors[ct] = {r,g,b}
+				elseif id == '\5'then
+					local ct, val = unpackFrom(wh, 'bI')
+					self.data.map_aspects = self.data.map_aspects or{}
+					self.data.map_aspects[ct] = val
+				elseif id == '\255'then
+					break
+				else
+					error('Unsupported map version or file corrupted.')
+				end
+			end
+			return true
+		end
+		return false
+	end,
 	save = function(self)
 		if not self.ldata then return true end
-		local pt = 'worlds/'+self.wname
-		if lfs.attributes(pt,'mode')~='directory'then
-			os.remove(pt)
-			lfs.mkdir(pt)
+		local pt = 'worlds/'+self.wname+'.map'
+		local wh = assert(io.open(pt, 'wb'))
+		wh:write('LCW\0')
+		for k, v in pairs(self.data)do
+			if k == 'dimensions'then
+				packTo(wh, '>bHHH', 0, unpack(v))
+			elseif k == 'spawnpoint'then
+				packTo(wh, '>bfff', 1, unpack(v))
+			elseif k == 'spawnpointeye'then
+				packTo(wh, '>bff', 2, unpack(v))
+			elseif k == 'isNether'then
+				packTo(wh, '>bb', 3, (v and 1)or 0)
+			elseif k == 'colors'then
+				for id, rgb in pairs(v)do
+					packTo(wh, 'bbbbb', 4, id, unpack(rgb))
+				end
+			elseif k == 'map_aspects'then
+				for id, val in pairs(v)do
+					packTo(wh, '>bbI', 5, id, val)
+				end
+			else
+				print('Warning: Unknown MAPOPT %q skipped!'%k)
+			end
 		end
-
-		local wfile = assert(io.open(pt+'/level.dat','wb'))
+		wh:write('\255')
 		gz.compress(self.ldata, self.size, 4, function(out,stream)
 			local chunksz = 1024-stream.avail_out
-			C.fwrite(out, 1, chunksz, wfile)
+			C.fwrite(out, 1, chunksz, wh)
 			if C.ferror(wfile)~=0 then
 				print(WORLD_WRITEFAIL)
 				os.exit(1)
 			end
 		end)
-		wfile:close()
-		os.remove(pt+'/level.dat.raw')
-
-		local json = json.encode(self.data)
-		local dfile = assert(io.open(pt+'/data.json','wb'))
-		dfile:write(json)
-		dfile:close()
+		wh:close()
 		return true
 	end,
 	triggerLoad = function(self)
@@ -181,18 +226,15 @@ local world_mt = {
 }
 world_mt.__index = world_mt
 
-return function(nm)
+return function(wh, wn)
 	local world =
 	setmetatable({}, world_mt)
 
-	if nm then
-		local pt = 'worlds/'+nm
-		world.wname = nm
-		local data = assert(io.open(pt+'/data.json','r'))
-		local pdata = json.decode(data:read('*a'))
-		data:close()
-		world:createWorld(pdata)
-		world:loadLevelData(pt+'/level.dat')
+	if wh then
+		world:setName(wn)
+		world:readLevelInfo(wh)
+		world:readGZIPData(wh)
+		wh:close()
 	end
 
 	return world

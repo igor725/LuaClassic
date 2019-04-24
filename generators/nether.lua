@@ -243,17 +243,17 @@ return function(world, seed)
 	world:setSpawn(x,y+2,z,0,0)
 
 	local ma = {
-		['0'] = 0,
-		['1'] = 11,
-		['2'] = heightWater + 1,
-		['3'] = -10000,
-		['9'] = 0
+		[0] = 0,
+		[1] = 11,
+		[2] = heightWater + 1,
+		[3] = -10000,
+		[9] = 0
 	}
 	world.data.map_aspects = ma
 
 	world.data.colors = {
-		['0'] = {255,0,0},
-		['2'] = {250,10,10}
+		[0] = {255,0,0},
+		[2] = {250,10,10}
 	}
 	-- world.data.texPack = 'http://91.135.213.120/nether.png'
 	world.data.isNether = true
