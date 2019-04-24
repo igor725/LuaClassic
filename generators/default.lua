@@ -1,6 +1,7 @@
 --
 -- Created by scaled
 -- and Igor
+-- for LuaClassic server
 --
 
 GEN_ENABLE_CAVES = true
