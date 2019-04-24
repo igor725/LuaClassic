@@ -1,6 +1,6 @@
 return function(player, x, y, z, mode, id)
 	local world = worlds[player.worldName]
-	local cblock = world:GetBlock(x,y,z)
+	local cblock = world:getBlock(x,y,z)
 
 	if mode == 0x00 then
 		id = 0
@@ -11,7 +11,7 @@ return function(player, x, y, z, mode, id)
 	end
 	if cblock ~= id then
 		if not onPlayerPlaceBlock(player, x, y, z, id)then
-			world:SetBlock(x,y,z,id)
+			world:setBlock(x,y,z,id)
 			broadcast(generatePacket(0x06, x, y, z, id))
 		else
 			player:sendPacket(false, 0x06, x, y, z, cblock)

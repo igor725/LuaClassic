@@ -16,14 +16,13 @@ function initCmdHandler(cbfunc)
 		end
 	end)()
 	return function()
-		if thread.status == 'running'then
+		if thread and thread.status == 'running'then
 			local cmd = select(2, cmdlinda:receive(0,'cmd'))
 			if cmd then
 				cbfunc(cmd)
 			end
-		elseif thread.status == 'error'then
-			print(thread[-1])
+			return true
 		end
-		return true
+		return false
 	end
 end

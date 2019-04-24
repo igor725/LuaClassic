@@ -7,12 +7,6 @@ local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
 	local ext = (jit.os=='Windows'and'dll')or'so'
 	package.cpath = './bin/'..jit.arch..'/?.'..ext
 
-	lshift = bit.lshift
-	rshift = bit.rshift
-	band = bit.band
-	bxor = bit.bxor
-	bor = bit.bor
-
 	socket = require('socket.core')
 	struct = require('struct')
 	gz = require('gzip')
@@ -46,8 +40,6 @@ local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
 			gz.defEnd(stream)
 			gErr = err
 		end
-		cdat, dat = nil
-		collectgarbage()
 	end)
 	cl:setfd(-1)
 	return gErr or 0
@@ -63,7 +55,6 @@ local player_mt = {
 	init = function(self)
 		self.handshaked = false
 		self.handshakeStage2 = false
-		self.inited = false
 	end,
 	setID = function(self,id)
 		self.id = id
@@ -214,7 +205,6 @@ local player_mt = {
 				self:kick(KICK_INTERR%IE_SQL)
 				return
 			end
-			self.inited = true
 			self.handshaked = true
 			self.handshakeStage2 = true
 			onPlayerHandshakeDone(self)
@@ -357,11 +347,11 @@ local player_mt = {
 		local world = worlds[self.worldName]
 		if not world.ldata then
 			self:sendMessage(MESG_LEVELLOAD,1)
-			world:TriggerLoad()
+			world:triggerLoad()
 			self:sendMessage('',1)
 		end
-		local addr = world:GetAddr()
-		local size = world:GetSize()
+		local addr = world:getAddr()
+		local size = world:getSize()
 		local sendMap_gen = lanes.gen('*', sendMap)
 		local cmplvl = config:get('gzip-compression-level', 5)
 		self.thread = sendMap_gen(self:getClientFd(), addr, size, cmplvl, self.isWS)
@@ -470,13 +460,11 @@ local player_mt = {
 			local id = self.wsBuf:byte()
 			local psz = psizes[id]
 			if not psz or #self.wsBuf<psz then return end
-			if cpe.inited then
-				local cpesz = cpe.psizes[id]
-				if cpesz then
-					if self:isSupported(cpe.pexts[id])then
-						psz = cpesz
-						self.cpeRewrite = true
-					end
+			local cpesz = cpe.psizes[id]
+			if cpesz then
+				if self:isSupported(cpe.pexts[id])then
+					psz = cpesz
+					self.cpeRewrite = true
 				end
 			end
 			local fmt
@@ -585,7 +573,7 @@ local player_mt = {
 			end
 		end
 
-		if not self.inited then return end
+		if not self.handshaked then return end
 		if self.isWS then
 			self:readWsData()
 		else
@@ -613,7 +601,6 @@ local player_mt = {
 		end
 		self:getClient():close()
 		self.handshaked = false
-		self.inited = false
 		return true
 	end,
 	getClient = function(self)

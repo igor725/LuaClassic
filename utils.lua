@@ -21,15 +21,9 @@ _EXT = (jit.os=='Windows'and'dll')or'so'
 package.cpath = './bin/%s/?.%s;'%{jit.arch,_EXT}
 package.path = './libs/?.lua;./libs/?/init.lua;./?.lua'
 
-lshift = bit.lshift
-rshift = bit.rshift
 floor = math.floor
-bswap = bit.bswap
 ceil = math.ceil
-band = bit.band
-bxor = bit.bxor
-abs = math.abs
-bor = bit.bor
+bswap = bit.bswap
 
 function checkEnv(ev, val)
 	local evar = os.getenv(ev)
@@ -171,7 +165,7 @@ function loadWorld(wname)
 end
 
 function unloadWorld(wname)
-	local world = worlds[wname]
+	local world = getWorld(wname)
 	if world==worlds['default']then
 		return false
 	end
@@ -182,7 +176,7 @@ function unloadWorld(wname)
 				player:changeWorld('default')
 			end
 		end)
-		world:Save()
+		world:save()
 		world.buf = nil
 		worlds[wname] = nil
 		collectgarbage()
@@ -235,8 +229,8 @@ end
 function createWorld(wname,dims,gen,seed)
 	local data = {dimensions=dims}
 	local tmpWorld = newWorld()
-	tmpWorld:CreateWorld(data)
-	tmpWorld:SetName(wname)
+	tmpWorld:createWorld(data)
+	tmpWorld:setName(wname)
 	worlds[wname] = tmpWorld
 	return regenerateWorld(wname,gen,seed)
 end
@@ -244,7 +238,7 @@ end
 function regenerateWorld(world,gentype,seed)
 	world = getWorld(world)
 	if not world then return false, WORLD_NE end
-	if world:IsInReadOnly()then return false, WORLD_RO end
+	if world:isInReadOnly()then return false, WORLD_RO end
 	local p = 'generators/'+gentype+'.lua'
 	local chunk, err = loadfile(p)
 	if not chunk then
@@ -263,7 +257,7 @@ function regenerateWorld(world,gentype,seed)
 						player:despawn()
 					end
 				end)
-				local data = ffi.cast('char*',world:GetAddr()+4)
+				local data = ffi.cast('char*',world:getAddr()+4)
 				ffi.fill(data, world.size)
 				seed = seed or CTIME
 				local t = socket.gettime()
@@ -279,7 +273,7 @@ function regenerateWorld(world,gentype,seed)
 			end
 		end
 	end
-	return false, UNEXPECTED_ERROR
+	return false, IE_UE
 end
 
 function bindSock(ip, port)
@@ -290,7 +284,6 @@ function bindSock(ip, port)
 	assert(sock:setoption('tcp-nodelay', true))
 	assert(sock:setoption('reuseaddr', true))
 	assert(sock:settimeout(0))
-
 	assert(sock:bind(ip, port))
 	assert(sock:listen())
 	return sock

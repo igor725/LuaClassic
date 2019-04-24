@@ -39,7 +39,7 @@ local Z_DEFLATED         =  8
 local GZ_WINDOWBITS      = 31
 local CHUNK_SIZE         = 1024
 local GZ_ERR             = 'gzip %s error: %s'
-local GZ_DATAERR         = 'ggzip data error'
+local GZ_DATAERR         = 'gzip data error'
 
 local zLoaded, _zlib = pcall(ffi.load,'z')
 if not zLoaded then

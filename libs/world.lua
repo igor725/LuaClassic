@@ -19,7 +19,7 @@ local function gBufSize(x,y,z)
 end
 
 local world_mt = {
-	CreateWorld = function(self,data)
+	createWorld = function(self,data)
 		local dim = data.dimensions
 		local sz = gBufSize(unpack(dim))
 		if sz>1533634564 then
@@ -32,8 +32,9 @@ local world_mt = {
 		local szint = ffi.new('int[1]',bswap(sz-4))
 		ffi.copy(self.ldata, szint, 4)
 		self.data = data
+		return true
 	end,
-	LoadLevelData = function(self,fn)
+	loadLevelData = function(self,fn)
 		local wfile = io.open(fn,'rb')
 		local mapUncompressed = false
 		if not wfile then
@@ -45,7 +46,7 @@ local world_mt = {
 		if mapUncompressed then
 			C.fread(self.ldata, 1, self.size, wfile)
 		else
-			local a = self:GetAddr()
+			local a = self:getAddr()
 			local ptr = ffi.cast('char*', a)
 			gz.decompress(wfile, function(out,stream)
 				local chunksz = 1024-stream.avail_out
@@ -59,37 +60,35 @@ local world_mt = {
 			error(WORLD_INVALID)
 		end
 	end,
-	GetDimensions = function(self)
+	getDimensions = function(self)
 		return unpack(self.data.dimensions)
 	end,
-	GetOffset = function(self,x,y,z)
+	getOffset = function(self,x,y,z)
 		if not self.ldata then return false end
-		local dx, dy, dz = self:GetDimensions()
+		local dx, dy, dz = self:getDimensions()
 		local offset = math.floor(z*dx+y*(dx*dz)+x+4)
 		local fs = ffi.sizeof(self.ldata)
 		offset = math.max(math.min(offset, fs), 4)
 		return offset
 	end,
-	IsInReadOnly = function(self)
-		if not self.data then return false end
+	isInReadOnly = function(self)
 		return self.data.readonly
 	end,
-	SetReadOnly = function(self,b)
-		if not self.data then return false end
+	setReadOnly = function(self,b)
 		self.data.readonly = b
+		return true
 	end,
-	ToggleReadOnly = function(self)
-		if not self.data then return false end
+	toggleReadOnly = function(self)
 		self.data.readonly = not self.data.readonly
 		return self.data.readonly
 	end,
-	SetBlock = function(self,x,y,z,id)
+	setBlock = function(self,x,y,z,id)
 		if not self.ldata then return false end
-		if self:IsInReadOnly()then return false end
-		local offset = self:GetOffset(x,y,z)
+		if self:isInReadOnly()then return false end
+		local offset = self:getOffset(x,y,z)
 		self.ldata[offset] = id
 	end,
-	SetSpawn = function(self,x,y,z,ay,ap)
+	setSpawn = function(self,x,y,z,ay,ap)
 		local data = self.data
 		if x and y and z then
 			local sp = data.spawnpoint
@@ -100,14 +99,14 @@ local world_mt = {
 			eye[1] = ay eye[2] = ap
 		end
 	end,
-	FillBlocks = function(self,x1,y1,z1,x2,y2,z2,id)
-		if self:IsInReadOnly()then return false end
+	fillBlocks = function(self,x1,y1,z1,x2,y2,z2,id)
+		if self:isInReadOnly()then return false end
 		x1,y1,z1,x2,y2,z2 = makeNormalCube(x1,y1,z1,x2,y2,z2)
 		local buf = ''
 		for x=x2,x1-1 do
 			for y=y2,y1-1 do
 				for z=z2,z1-1 do
-					self:SetBlock(x,y,z,id)
+					self:setBlock(x,y,z,id)
 					buf = buf .. generatePacket(0x06,x,y,z,id)
 				end
 			end
@@ -118,29 +117,24 @@ local world_mt = {
 			end
 		end)
 	end,
-	GetBlock = function(self,x,y,z)
+	getBlock = function(self,x,y,z)
 		if not self.ldata then return false end
-		return self.ldata[self:GetOffset(x,y,z)]
+		return self.ldata[self:getOffset(x,y,z)]
 	end,
-	GetAddr = function(self)
+	getAddr = function(self)
 		return getAddr(self.ldata)
 	end,
-	GetSize = function(self)
+	getSize = function(self)
 		return self.size
 	end,
-	Unload = function(self)
-		local locked = false
-		playersForEach(function(player)
-			if player:isInWorld(self)then
-				locked = true
-			end
-		end)
-		if locked then return end
-		self:Save()
+	unload = function(self)
+		if self.players>0 then return false end
+		self:save()
 		self.ldata = nil
 		collectgarbage()
+		return true
 	end,
-	Save = function(self)
+	save = function(self)
 		if not self.ldata then return true end
 		local pt = 'worlds/'+self.wname
 		if lfs.attributes(pt,'mode')~='directory'then
@@ -166,17 +160,20 @@ local world_mt = {
 		dfile:close()
 		return true
 	end,
-	TriggerLoad = function(self)
+	triggerLoad = function(self)
 		if not self.ldata then
 			local pt = 'worlds/'+self.wname
 			self.ldata = ffi.new('char[?]',self.size)
-			self:LoadLevelData(pt+'/level.dat')
+			return self:loadLevelData(pt+'/level.dat')
 		end
+		return false
 	end,
-	SetName = function(self, name)
+	setName = function(self, name)
+		if type(name)~='string' then return false end
 		self.wname = name
+		return true
 	end,
-	GetName = function(self)
+	getName = function(self)
 		return self.wname
 	end,
 	isWorld = true,
@@ -194,8 +191,8 @@ return function(nm)
 		local data = assert(io.open(pt+'/data.json','r'))
 		local pdata = json.decode(data:read('*a'))
 		data:close()
-		world:CreateWorld(pdata)
-		world:LoadLevelData(pt+'/level.dat')
+		world:createWorld(pdata)
+		world:loadLevelData(pt+'/level.dat')
 	end
 
 	return world

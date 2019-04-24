@@ -641,7 +641,7 @@ end
 -- Main
 return function(world, seed)
 	seed = seed or (os.clock()*os.time())
-	local dx, dy, dz = world:GetDimensions()
+	local dx, dy, dz = world:getDimensions()
 
 	math.randomseed(seed)
 
@@ -653,7 +653,7 @@ return function(world, seed)
 
 	fillStone(world, dx, dz)
 
-	local mapaddr = world:GetAddr()
+	local mapaddr = world:getAddr()
 
 	io.write('terrain, ')
 	local threads = {}
@@ -791,7 +791,7 @@ return function(world, seed)
 		end
 	end
 
-	world:SetSpawn(x,y+2,z,0,0)
+	world:setSpawn(x,y+2,z,0,0)
 
 	local ma = {
 		['0'] = 0,
@@ -800,6 +800,7 @@ return function(world, seed)
 		['9'] = 0
 	}
 	world.data.map_aspects = ma
+	world.data.isNether = false
 
 	return true
 end

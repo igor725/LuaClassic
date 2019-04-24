@@ -4,7 +4,7 @@ local function getOffset(ptr, offset)
 end
 
 return function(world, seed)
-	local dx, dy, dz = world:GetDimensions()
+	local dx, dy, dz = world:getDimensions()
 	io.write("terrain, ")
 	local data = world.ldata
 	local flr = dz*dx
@@ -19,7 +19,8 @@ return function(world, seed)
 		['2'] = (dy/4)-1
 	}
 	world.data.map_aspects = ma
+	world.data.isNether = false
 
-	world:SetSpawn(dx/2, (dy/4)+1.59375, dz/2)
+	world:setSpawn(dx/2, (dy/4)+1.59375, dz/2)
 	return true
 end

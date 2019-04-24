@@ -4,7 +4,6 @@ local sql = {
 	db = DB
 }
 
-
 function sql.createPlayer(key)
 	local created = false
 	DB:exec([[

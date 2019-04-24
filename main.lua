@@ -164,7 +164,7 @@ function onUpdate(dt)
 		for _, world in pairs(worlds)do
 			if world.emptyfrom then
 				if CTIME-world.emptyfrom>uwa then
-					world:Unload()
+					world:unload()
 					world.emptyfrom = nil
 				end
 			end
@@ -427,12 +427,12 @@ function handleConsoleCommand(cmd)
 			local succ, ret = pcall(chunk)
 			ret = tostring(ret)
 			if succ then
-				return ret
+				print(ret)
 			else
-				return MESG_ERROR%ret
+				print(MESG_ERROR%ret)
 			end
 		else
-			return MESG_ERROR%err
+			print(MESG_ERROR%err)
 		end
 	else
 		print(MESG_UNKNOWNCMD)
@@ -531,8 +531,8 @@ function init()
 				error(CON_PROPINVALID)
 			end
 			world = newWorld()
-			world:SetName(wn)
-			world:CreateWorld({dimensions={x,y,z}})
+			world:setName(wn)
+			world:createWorld({dimensions={x,y,z}})
 			generator(world,sdlist[num]or CTIME)
 		end
 		worlds[wn] = world
@@ -578,30 +578,29 @@ succ, err = xpcall(function()
 	end
 end,debug.traceback)
 
-print(CON_SVSTOP)
-
 ecode = 0
-err = tostring(err)
+print(CON_SVSTOP)
 playersForEach(function(ply)
 	ply:kick(CON_SVSTOP)
 end)
 if config:save()and permissions:save()then
 	print(CON_SAVESUCC)
 end
-for _, world in pairs(worlds)do
-	if _~='default'then
-		io.write(CON_WSAVE%_)
+for wname, world in pairs(worlds)do
+	if wname ~= 'default'then
+		io.write(CON_WSAVE%wname)
 		local s = socket.gettime()
-		if world:Save()then
+		if world:save()then
 			printf(MESG_DONEIN, (socket.gettime()-s)*1000)
 		else
-			print(UNEXPECTED_ERROR)
+			print(IE_UE)
 		end
 	end
 end
 sql.close()
 
 if not succ then
+	err = tostring(err)
 	if not err:find('interrupted')then
 		print(err)
 		ecode = 1

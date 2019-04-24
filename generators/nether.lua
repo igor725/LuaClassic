@@ -119,8 +119,8 @@ local function generateTerrain(world, dimx, dimy, dimz)
 			height1 = getHeight(x, z)
 
 			-- Badrock
-			world:SetBlock(x, 0, z, 7)
-			world:SetBlock(x, dimy-1, z, 7)
+			world:setBlock(x, 0, z, 7)
+			world:setBlock(x, dimy-1, z, 7)
 
 			-- Biom depend
 			--local biome = getBiome(x, z)
@@ -140,14 +140,14 @@ local function generateTerrain(world, dimx, dimy, dimz)
 			if biome == 1 then
 				-- Stone
 				for y = 1, height1 do
-					world:SetBlock(x, y, z, 45)
-					--world:SetBlock(x, dimy - y - 1, z, 45)
+					world:setBlock(x, y, z, 45)
+					--world:setBlock(x, dimy - y - 1, z, 45)
 				end
 			elseif biome == 2 then
 				-- Stone
 				for y = 1, height1 do
-					world:SetBlock(x, y, z, 3)
-					--world:SetBlock(x, dimy - y - 1, z, 45)
+					world:setBlock(x, y, z, 3)
+					--world:setBlock(x, dimy - y - 1, z, 45)
 				end
 			end
 
@@ -155,7 +155,7 @@ local function generateTerrain(world, dimx, dimy, dimz)
 			-- normal or trees
 			if height1 <= heightWater then
 				for y = height1 + 1, heightWater do
-					world:SetBlock(x, y, z, 11)
+					world:setBlock(x, y, z, 11)
 				end
 			end
 		end
@@ -170,10 +170,10 @@ local function generateTerrainUp(world, dimx, dimy, dimz)
 		for z = 0, dimz - 1 do
 			height1 = getHeight(x, z)
 
-			world:SetBlock(x, dimy-1, z, 7)
+			world:setBlock(x, dimy-1, z, 7)
 
 			for y = 1, height1 + math.random(0, 2) do
-				world:SetBlock(x, dimy - y - 1, z, 45)
+				world:setBlock(x, dimy - y - 1, z, 45)
 			end
 		end
 	end
@@ -205,9 +205,9 @@ local function generateMiddleTerrain(world, dimx, dimy, dimz)
 
 			-- Stone
 			for y = math.floor(dimy / 2) - height1 + height2 - math.random(0, 2), math.floor(dimy / 2) + height1 + height2 do
-				world:SetBlock(x, y, z, 45)
-				--world:SetBlock(x, dimy - y, z, 45)
-				--world:SetBlock(x, getHeight(x, z) - y, z, 45)
+				world:setBlock(x, y, z, 45)
+				--world:setBlock(x, dimy - y, z, 45)
+				--world:setBlock(x, getHeight(x, z) - y, z, 45)
 			end
 		end
 	end
@@ -216,7 +216,7 @@ end
 -- Main
 return function(world, seed)
 	seed = seed or (os.clock()*os.time())
-	local dx, dy, dz = world:GetDimensions()
+	local dx, dy, dz = world:getDimensions()
 	math.randomseed(seed)
 
 	dy = 128
@@ -240,7 +240,7 @@ return function(world, seed)
 
 	local x, z = math.random(50, dx), math.random(50, dz)
 	local y = getHeight(x,z)
-	world:SetSpawn(x,y+2,z,0,0)
+	world:setSpawn(x,y+2,z,0,0)
 
 	local ma = {
 		['0'] = 0,

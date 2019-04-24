@@ -6,7 +6,7 @@ end
 
 addChatCommand('rc',function(player)
 	local world = getWorld(player)
-	return CMD_WMODE%((world:ToggleReadOnly()and'&aro&f')or'&crw&f')
+	return CMD_WMODE%((world:toggleReadOnly()and'&aro&f')or'&crw&f')
 end)
 
 addChatCommand('info',function(player)
@@ -103,7 +103,7 @@ end)
 
 addChatCommand('set', function(player, id)
 	local world = getWorld(player)
-	if world:IsInReadOnly()then
+	if world:isInReadOnly()then
 		return WORLD_RO
 	end
 	id = tonumber(id)
@@ -111,7 +111,7 @@ addChatCommand('set', function(player, id)
 		id = math.max(0, math.min(255, id))
 		local p1, p2 = player.cuboidP1, player.cuboidP2
 		if p1 and p2 then
-			world:FillBlocks(
+			world:fillBlocks(
 				p1[1],p1[2],p1[3],
 				p2[1],p2[2],p2[3],
 				tonumber(id)
@@ -127,10 +127,10 @@ end)
 
 addChatCommand('delportal',function(player, pname)
 	if not pname then return 'Invalid portal name'end
-	local wd = getWorld(player).data
-	if wd.portals then
-		if wd.portals[pname]then
-			wd.portals[pname] = nil
+	local world = getWorld(player).data
+	if world.portals then
+		if world.portals[pname]then
+			world.portals[pname] = nil
 			return CMD_RMPORTAL
 		end
 	end

@@ -31,6 +31,7 @@ CU_PUT             = 'put <playername> <worldname> - Teleport player to specifie
 
 IE_SQL             = 'SQL troubles'
 IE_GZ              = 'Map compression failed'
+IE_UE              = 'Unexpected error'
 
 KICK_CONNREJ       = 'Server rejected your connection attempt'
 KICK_CPESEQERR     = 'Packet 0x10 not received before 0x11'
@@ -84,5 +85,3 @@ WORLD_NE           = '&cThis world not exists'
 WORLD_TOOBIGDIM    = 'World dimensions is too big'
 WORLD_INVALID      = 'World have invalid format'
 WORLD_WRITEFAIL    = 'Level data write operation failed!'
-
-UNEXPECTED_ERROR   = 'Unexpected error'
