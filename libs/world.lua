@@ -232,9 +232,12 @@ local world_mt = {
 	end,
 	triggerLoad = function(self)
 		if not self.ldata then
-			local pt = 'worlds/'+self.wname
-			self.ldata = ffi.new('char[?]',self.size)
-			return self:loadLevelData(pt+'/level.dat')
+			local pt = 'worlds/'+self.wname+'.map'
+			local wh = assert(io.open(pt, 'rb'))
+			self:readLevelInfo(wh)
+			self:readGZIPData(wh)
+			wh:close()
+			return true
 		end
 		return false
 	end,
