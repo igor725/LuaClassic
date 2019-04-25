@@ -1,6 +1,7 @@
 worlds/*
 !worlds/.keep
 *.properties
+*.log
 *.txt
 *.bat
 *.sh

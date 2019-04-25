@@ -255,7 +255,7 @@ return function(wh, wn)
 	local world =
 	setmetatable({}, world_mt)
 
-	if wh then
+	if wh and wn then
 		world:setName(wn)
 		world:readLevelInfo(wh)
 		world:readGZIPData(wh)

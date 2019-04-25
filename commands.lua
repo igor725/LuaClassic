@@ -11,11 +11,11 @@ end)
 
 addChatCommand('info',function(player)
 	player:sendMessage(CMD_SVINFO1%{jit.os,jit.arch})
-	player:sendMessage(CMD_SVINFO2%{collectgarbage('count')/1024})
+	player:sendMessage(CMD_SVINFO2%{gcinfo()/1024})
 end)
 
 addChatCommand('clear',function(player)
-	for i=1,45 do
+	for i=1,25 do
 		player:sendMessage('')
 	end
 end)

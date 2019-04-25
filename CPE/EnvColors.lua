@@ -19,9 +19,9 @@ time_presets = {
 	night = {
 		[EC_DIFFUSE] = {85,85,85},
 		[EC_AMBIENT] = {40,40,40},
-		[EC_FOG] = {40,40,40},
-		[EC_CLOUD] = {40,40,40},
-		[EC_SKY] = {40,40,40}
+		[EC_FOG] = {23,28,42},
+		[EC_CLOUD] = {36,39,49},
+		[EC_SKY] = {23,28,42}
 	},
 	day = {
 		[EC_DIFFUSE] = {255,255,255},

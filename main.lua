@@ -1,5 +1,4 @@
 io.output():setvbuf('no')
-
 require('utils')
 
 gz = require('gzip')
