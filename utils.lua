@@ -261,7 +261,11 @@ function regenerateWorld(world,gentype,seed)
 				ffi.fill(data, world.size)
 				seed = seed or CTIME
 				local t = socket.gettime()
-				ret(world,seed)
+				local succ, err = pcall(ret, world, seed)
+				if not succ then
+					print(err)
+					return false, err
+				end
 				local e = socket.gettime()
 				io.write('done\n')
 				playersForEach(function(player)
