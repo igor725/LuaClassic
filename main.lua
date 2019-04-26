@@ -231,19 +231,23 @@ function wsDoHandshake()
 
 		if data.state == 'initial'then
 			local req = cl:receive()
-			if req and req:find('GET%s(.+)%sHTTP/1.1')then
-				data.state = 'headers'
-			else
-				data.state = 'badrequest'
+			if req then
+				if req:find('GET%s(.+)%sHTTP/1.1')then
+					data.state = 'headers'
+				else
+					data.state = 'badrequest'
+				end
 			end
 		elseif data.state == 'headers'then
 			local ln = cl:receive()
 			if ln==''then
 				data.state = 'genresp'
-			else
+			elseif ln then
 				local k, v = ln:match('(.+): (.+)')
 				if k then
 					data.headers[k] = v
+				else
+					data.state = 'badrequest'
 				end
 			end
 		elseif data.state == 'genresp'then
