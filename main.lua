@@ -262,8 +262,7 @@ function wsDoHandshake()
 				local response =
 				'HTTP/1.1 101 Switching Protocols\r\n'+
 				'Upgrade: websocket\r\nConnection: Upgrade\r\n'+
-				'Sec-WebSocket-Accept: '+wskey+'\r\n'+
-				'Sec-WebSocket-Protocol: binary\r\n\r\n'
+				'Sec-WebSocket-Accept: '+wskey+'\r\n\r\n'
 				cl:send(response)
 				wsHandshake[cl] = nil
 				createPlayer(cl, true)
