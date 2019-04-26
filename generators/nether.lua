@@ -5,20 +5,20 @@ GEN_ENABLE_HOUSES = true
 
 local STEP = 20
 local heightGrass
-local heightWater
+local heightLava
 
 -- Bioms
 local biomes
 
 local function biomsGenerate(dx, dz)
 	biomes = {}
-	
+
 	-- 1	normal
 	-- 2	high
 	-- 3	trees
 	-- 4	sand
 	-- 5	water
-	
+
 	-- Circles
 	local biomesSizeX = math.floor(dx / STEP + 1)
 	local biomesSizeZ = math.floor(dz / STEP + 1)
@@ -28,13 +28,13 @@ local function biomsGenerate(dx, dz)
 			biomes[x][z] = 1
 		end
 	end
-	
+
 	local radius = 2
 	local BIOME_COUNT = dx * dz / STEP / radius / 512 + 1
 	--local BIOME_COUNT = 10
 	--local radius = math.floor(dx * dz / BIOME_COUNT / STEP / 32)
 	local radius2 = radius * radius
-	
+
 	for i = 1, BIOME_COUNT do
 		local x = math.random(biomesSizeX)
 		local z = math.random(biomesSizeZ)
@@ -63,7 +63,7 @@ local heightMap
 
 function heightSet(dy)
 	heightGrass = 7 --dy / 10
-	heightWater = heightGrass
+	heightLava = heightGrass
 	heightLava = 7
 end
 
@@ -92,12 +92,12 @@ end
 local layers
 function layersGenerate(dx, dy, dz)
 	layers = {}
-	
+
 	LAYERS_COUNT = dy / 32
-	
+
 	for layer = 1, LAYERS_COUNT do
 		layers[layer] = {}
-		
+
 		-- Circles
 		local biomesSizeX = math.floor(dx / STEP + 1)
 		local biomesSizeZ = math.floor(dz / STEP + 1)
@@ -107,11 +107,11 @@ function layersGenerate(dx, dy, dz)
 				layers[layer][x][z] = 1
 			end
 		end
-	
+
 		local radius = 3
 		local BIOME_COUNT = dx * dz / STEP / radius / 128 + 1
 		local radius2 = radius * radius
-	
+
 		for i = 1, BIOME_COUNT do
 			local x = math.random(biomesSizeX)
 			local z = math.random(biomesSizeZ)
@@ -132,12 +132,12 @@ function layersGenerate(dx, dy, dz)
 end
 
 -- Generate
-local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightWater, startX, endX, layers)
+local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightLava, startX, endX, layers)
 	ffi = require("ffi")
 
 	local map = ffi.cast('char*', mapaddr)
 	local size = dx * dy * dz + 4
-	
+
 	--local STEP = 20
 
 	local SetBlock = function(x, y, z, id)
@@ -148,7 +148,7 @@ local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightWater, startX
 		--map[y * dz * dx + z * dx + x + 4] = id
 		map[(y * dz + z) * dx + x + 4] = id
 	end
-	
+
 	local getLayerMultiplier = function(layer, x, z)
 		local hx, hz = math.floor(x/STEP), math.floor(z/STEP)
 		local percentX = x / STEP - hx
@@ -183,7 +183,7 @@ local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightWater, startX
 				+ (heightMap[hx][hz+1] * percentNegX + heightMap[hx+1][hz+1] * percentPosX) * percentZ
 				+ 0.5
 			)
-			
+
 			-- Biom depend
 			local biomePosZ = math.floor(z/STEP)
 			if biomePosZ ~= biomePosZOld then
@@ -248,15 +248,15 @@ local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightWater, startX
 				map[offset + y * step] = block
 			end
 
-			for y = height1 + 1, heightWater do
+			for y = height1 + 1, heightLava do
 				SetBlock(x, y, z, 11)
 			end
-			
+
 			-- temp for up
 			for y = dy - height1 - math.random(1, 2), dy - 2 do
 				map[offset + y * step] = 45
 			end
-			
+
 			-- temp for layers
 			for layer = 1, #layers do
 				local multiplier = getLayerMultiplier(layer, x, z)
@@ -280,9 +280,9 @@ return function(world, seed)
 	seed = seed or (os.clock()*os.time())
 	local dx, dy, dz = world:getDimensions()
 	dy = math.min(dy, 128)
-	
+
 	math.randomseed(seed)
-	
+
 	ffi.fill(world.ldata + 4, dx * dz, 7)
 	ffi.fill(world.ldata + 4 + dx * dz * (dy - 1), dx * dz, 7)
 
@@ -291,7 +291,7 @@ return function(world, seed)
 
 	heightSet(dy)
 	heightMapGenerate(dx, dz)
-	
+
 	layersGenerate(dx, dy, dz)
 
 	local mapaddr = world:getAddr()
@@ -305,7 +305,7 @@ return function(world, seed)
 		endX = math.floor(dx * (i + 1) / count) - 1
 
 		local sendMap_gen = lanes.gen('*', threadTerrain)
-		threads[i] = sendMap_gen(mapaddr, dx, dy, dz, heightMap, heightWater, startX, endX, layers)
+		threads[i] = sendMap_gen(mapaddr, dx, dy, dz, heightMap, heightLava, startX, endX, layers)
 	end
 
 	count = #threads
@@ -341,12 +341,20 @@ return function(world, seed)
 
 	local ma = {
 		[0] = 0,
-		[1] = 8,
-		[2] = heightWater + 1,
+		[1] = 11,
+		[2] = heightLava + 1,
+		[3] = -10000,
 		[9] = 0
 	}
+
+	world.data.colors = {
+		[0] = {255,0,0},
+		[2] = {250,10,10}
+	}
+
+	-- world.data.texPack = 'http://91.135.213.120/nether.png'
+	world.data.isNether = true
 	world.data.map_aspects = ma
-	world.data.isNether = false
 
 	return true
 end
