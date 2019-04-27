@@ -10,8 +10,8 @@ EC_DIFFUSE = 4
 
 time_presets = {
 	dawn = {
-		[EC_DIFFUSE] = {65,50,50},
-		[EC_AMBIENT] = {40,50,40},
+		[EC_DIFFUSE] = {65,55,55},
+		[EC_AMBIENT] = {50,50,50},
 		[EC_FOG] = {60,47,40},
 		[EC_CLOUD] = {60,47,40},
 		[EC_SKY] = {91,43,18},

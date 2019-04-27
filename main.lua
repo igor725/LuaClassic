@@ -92,26 +92,24 @@ function onPlayerChatMessage(player, message)
 			local chunk, err = loadstring(code)
 			if chunk then
 				world = worlds[player.worldName]
-				local retstr = ''
 				self = player
 				local ret = {pcall(chunk)}
 				self = nil
 				world = nil
-				for i=2, #ret do
-					retstr = retstr + tostring(ret[i])+', '
+				for i=2,#ret do
+					ret[i] = tostring(ret[i])
 				end
-				retstr = retstr:sub(1,-3)
 				if ret[1] then
-					if #retstr>0 then
-						return MESG_EXECRET%retstr
+					if #ret>1 then
+						return MESG_EXECRET%table.concat(ret, ', ', 2)
 					else
 						return MESG_EXEC
 					end
 				else
-					return MESG_ERROR%retstr
+					return MESG_ERROR%ret[2]
 				end
 			else
-				return MESG_ERROR%retstr
+				return MESG_ERROR%err
 			end
 		else
 			return err
@@ -425,12 +423,14 @@ function handleConsoleCommand(cmd)
 		end
 		local chunk, err = loadstring(code)
 		if chunk then
-			local succ, ret = pcall(chunk)
-			ret = tostring(ret)
-			if succ then
-				print(ret)
+			local ret = {pcall(chunk)}
+			for i=2,#ret do
+				ret[i] = tostring(ret[i])
+			end
+			if ret[1] then
+				print(table.concat(ret, ', ', 2))
 			else
-				print(MESG_ERROR%ret)
+				print(MESG_ERROR%ret[2])
 			end
 		else
 			print(MESG_ERROR%err)
