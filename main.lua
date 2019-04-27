@@ -29,21 +29,21 @@ function onConnectionAttempt(ip, port)
 end
 
 function postPlayerSpawn(player)
-	cpe:ExtCallHook('postPlayerSpawn', player)
-	hooks:Call('postPlayerSpawn', player)
+	cpe:extCallHook('postPlayerSpawn', player)
+	hooks:call('postPlayerSpawn', player)
 	local world = worlds[player.worldName]
 	world.players = world.players + 1
 	world.emptyfrom = nil
 end
 
 function prePlayerSpawn(player)
-	cpe:ExtCallHook('prePlayerSpawn', player)
-	hooks:Call('prePlayerSpawn', player)
+	cpe:extCallHook('prePlayerSpawn', player)
+	hooks:call('prePlayerSpawn', player)
 end
 
 function onPlayerDespawn(player)
-	cpe:ExtCallHook('postPlayerDespawn', player)
-	hooks:Call('onPlayerDespawn', player)
+	cpe:extCallHook('postPlayerDespawn', player)
+	hooks:call('onPlayerDespawn', player)
 	local world = worlds[player.worldName]
 	world.players = world.players - 1
 	if world.players==0 then
@@ -54,8 +54,8 @@ end
 function onPlayerDestroy(player)
 	local msg = printf(MESG_DISCONN, player:getName())
 	newChatMessage('&e'+msg)
-	cpe:ExtCallHook('onPlayerDestroy', player)
-	hooks:Call('onPlayerDestroy', player)
+	cpe:extCallHook('onPlayerDestroy', player)
+	hooks:call('onPlayerDestroy', player)
 	if player.handshaked then
 		local x, y, z = player:getPos()
 		local ay, ap = player:getEyePos()
@@ -76,7 +76,7 @@ function onPlayerHandshakeDone(player)
 end
 
 function onPlayerChatMessage(player, message)
-	local prt = hooks:Call('onPlayerChat', player, message)
+	local prt = hooks:call('onPlayerChat', player, message)
 	if prt~=nil then
 		message = tostring(prt)
 	end
@@ -154,8 +154,8 @@ function onPlayerChatMessage(player, message)
 end
 
 function onUpdate(dt)
-	cpe:ExtCallHook('onUpdate', dt)
-	hooks:Call('onUpdate', dt)
+	cpe:extCallHook('onUpdate', dt)
+	hooks:call('onUpdate', dt)
 	timer.Update(dt)
 
 	if uwa>0 then
@@ -171,7 +171,7 @@ function onUpdate(dt)
 end
 
 function onPlayerMove(player, dx, dy, dz)
-	hooks:Call('onPlayerMove', player, dx, dy, dz)
+	hooks:call('onPlayerMove', player, dx, dy, dz)
 	local world = getWorld(player)
 	local portals = world.data.portals
 	if portals then
@@ -193,7 +193,7 @@ function onPlayerMove(player, dx, dy, dz)
 end
 
 function onPlayerRotate(player, dy, dp)
-	hooks:Call('onPlayerRotate', player, dy, dp)
+	hooks:call('onPlayerRotate', player, dy, dp)
 end
 
 function onPlayerPlaceBlock(player, x, y, z, id)
@@ -202,7 +202,7 @@ function onPlayerPlaceBlock(player, x, y, z, id)
 		player:sendMessage(WORLD_RO, 100)
 		return true
 	end
-	local prt = hooks:Call('onPlayerPlaceBlock', player, dy, dp)
+	local prt = hooks:call('onPlayerPlaceBlock', player, dy, dp)
 	if prt~=nil then
 		return prt
 	end
@@ -457,14 +457,14 @@ function init()
 	players, IDS = {}, {}
 	worlds, generators = {}, {}
 
-	hooks:Create('onPlayerRotate')
-	hooks:Create('onPlayerMove')
-	hooks:Create('onPlayerChat')
-	hooks:Create('onPlayerPlaceBlock')
-	hooks:Create('onPlayerDespawn')
-	hooks:Create('prePlayerSpawn')
-	hooks:Create('postPlayerSpawn')
-	hooks:Create('onUpdate')
+	hooks:create('onPlayerRotate')
+	hooks:create('onPlayerMove')
+	hooks:create('onPlayerChat')
+	hooks:create('onPlayerPlaceBlock')
+	hooks:create('onPlayerDespawn')
+	hooks:create('prePlayerSpawn')
+	hooks:create('postPlayerSpawn')
+	hooks:create('onUpdate')
 
 	permissions:parse()
 
@@ -546,7 +546,7 @@ function init()
 	end
 	io.write('\r')
 
-	cpe:Init()
+	cpe:init()
 	local add = ''
 	if wsServer then
 		add = CON_WSBINDSUCC%wsPort

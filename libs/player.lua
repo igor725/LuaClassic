@@ -234,7 +234,7 @@ local player_mt = {
 			self.eye.p = ap
 
 			if hsFlag==0x42 then
-				cpe:StartFor(self)
+				cpe:startFor(self)
 				self.handshakeStage2 = false
 			end
 			return true
@@ -329,7 +329,7 @@ local player_mt = {
 	sendPacket = function(self, isCPE, ...)
 		local rawPacket
 		if isCPE then
-			rawPacket = cpe:GeneratePacket(...)
+			rawPacket = cpe:generatePacket(...)
 		else
 			rawPacket = generatePacket(...)
 		end
@@ -376,7 +376,7 @@ local player_mt = {
 			if ply:isInWorld(self)then
 				local cl = self:getClient()
 				if ply:isSupported('ExtEntityPositions')then
-					datcpe = datcpe or cpe:GeneratePacket(0x07, sId, cname, cx, cy, cz, cay, cap)
+					datcpe = datcpe or cpe:generatePacket(0x07, sId, cname, cx, cy, cz, cay, cap)
 					self:sendNetMesg(datcpe)
 				else
 					dat = dat or generatePacket(0x07, sId, cname, cx, cy, cz, cay, cap)
@@ -385,7 +385,7 @@ local player_mt = {
 				if sId~=-1 then
 					cl = ply:getClient()
 					if ply:isSupported('ExtEntityPositions')then
-						dat2cpe = dat2cpe or cpe:GeneratePacket(0x07, pId, name, x, y, z, ay, ap)
+						dat2cpe = dat2cpe or cpe:generatePacket(0x07, pId, name, x, y, z, ay, ap)
 						ply:sendNetMesg(dat2cpe)
 					else
 						dat2 = dat2 or generatePacket(0x07, pId, name, x, y, z, ay, ap)

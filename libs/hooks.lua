@@ -2,19 +2,19 @@ hooks = {
 	list = {}
 }
 
-function hooks:Create(hookname)
+function hooks:create(hookname)
 	self.list[hookname] = {}
 end
 
-function hooks:Add(hookname, bname, func)
+function hooks:add(hookname, bname, func)
 	self.list[hookname][bname] = func
 end
 
-function hooks:Remove(hookname, bname)
+function hooks:remove(hookname, bname)
 	self.list[hookname][bname] = nil
 end
 
-function hooks:Call(hookname, ...)
+function hooks:call(hookname, ...)
 	local hks = self.list[hookname]
 	if hks then
 		for _, fnc in pairs(hks)do

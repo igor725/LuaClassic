@@ -16,7 +16,7 @@ local ext_mt = {
 }
 ext_mt.__index = ext_mt
 
-function cpe:Init()
+function cpe:init()
 	if self.inited then return end
 	self.extCount = 0
 	self.inited = true
@@ -48,17 +48,17 @@ function cpe:Init()
 	io.write('\r\n')
 end
 
-function cpe:RegisterSvPacket(id, fmt)
+function cpe:registerSvPacket(id, fmt)
 	self.packets.sv[id] = fmt
 end
 
-function cpe:RegisterClPacket(id, fmt, ext)
+function cpe:registerClPacket(id, fmt, ext)
 	self.packets.cl[id] = fmt
 	self.psizes[id] = struct.size(fmt)
 	self.pexts[id] = ext
 end
 
-function cpe:GeneratePacket(id, ...)
+function cpe:generatePacket(id, ...)
 	local fmt = self.packets.sv[id]
 	if fmt then
 		return struct.pack(fmt, id, ...)
@@ -67,7 +67,7 @@ function cpe:GeneratePacket(id, ...)
 	end
 end
 
-function cpe:ExtCallHook(hookName, ...)
+function cpe:extCallHook(hookName, ...)
 	if cpe.inited then
 		for ename, ext in pairs(cpe.exts)do
 			if ext[hookName] then
@@ -77,7 +77,7 @@ function cpe:ExtCallHook(hookName, ...)
 	end
 end
 
-function cpe:StartFor(player)
+function cpe:startFor(player)
 	if cpe.inited then
 		player:sendPacket(false, 0x10, self.softwareName, self.extCount)
 		for name, ext in pairs(self.exts)do
