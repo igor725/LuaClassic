@@ -20,20 +20,25 @@ function wt:load()
 			self:setWeather(player.worldName, wtt)
 		end
 	end)
+	getWorldMT().setWeather = function(...)
+		return wt:setWeather(...)
+	end
 end
 
 function wt:prePlayerSpawn(player)
 	weatherFor(player, worlds[player.worldName].data.weather or WT_SUNNY)
 end
 
-function wt:setWeather(wname, w)
+function wt:setWeather(world, w)
+	world = getWorld(world)
 	w = math.max(math.min(w,2),0)
 	playersForEach(function(player)
 		if player:isInWorld(wname)then
 			weatherFor(player, w)
 		end
 	end)
-	worlds[wname].data.weather = w
+	world.data.weather = w
+	return true
 end
 
 return wt

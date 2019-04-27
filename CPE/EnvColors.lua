@@ -50,6 +50,9 @@ end
 
 function ec:load()
 	registerSvPacket(0x19,'>Bbhhh')
+	getWorldMT().setEnvColor = function(...)
+		return ec:set(...)
+	end
 end
 
 function ec:setFor(player, typ, r, g, b)
@@ -75,6 +78,7 @@ function ec:set(world, typ, r, g, b)
 			updateEnvColorsFor(player, typ, r, g, b)
 		end
 	end)
+	return true
 end
 
 return ec

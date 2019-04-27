@@ -19,6 +19,9 @@ function cm:load()
 			self:setModel(player, mstr)
 		end
 	end
+	getPlayerMT().setModel = function(...)
+		return cm:setModel(...)
+	end
 end
 
 function cm:postPlayerSpawn(player)
@@ -49,9 +52,10 @@ function cm:setModel(player, model)
 	playersForEach(function(ply)
 		if player:isSupported('ChangeModel')then
 			local id = (ply==player and -1)or ply:getID()
-			ply:sendPacket(0x1d,id,model)
+			ply:sendPacket(false, 0x1d,id,model)
 		end
 	end)
+	return true
 end
 
 return cm

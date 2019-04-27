@@ -7,7 +7,7 @@ EP_ROTY = 1
 EP_ROTZ = 2
 
 local function entPropFor(ply, id, ptype, val)
-	ply:sendPacket(0x2A, id, ptype, val)
+	ply:sendPacket(false, 0x2A, id, ptype, val)
 end
 
 function ep:load()

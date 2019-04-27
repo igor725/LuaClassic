@@ -254,6 +254,10 @@ local world_mt = {
 }
 world_mt.__index = world_mt
 
+function getWorldMT()
+	return world_mt
+end
+
 return function(wh, wn)
 	local world =
 	setmetatable({}, world_mt)

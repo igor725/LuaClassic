@@ -38,12 +38,12 @@ end
 function ema:load()
 	registerSvPacket(0x28,'Bc64')
 	registerSvPacket(0x29,'>BBi')
-	addChatCommand('maxfogdist',function(player, dist)
-		dist = tonumber(dist)
-		if dist then
-			ema:setMapEnvProp(player.worldName, MEP_MAXFOGDIST, dist)
-		end
-	end)
+	getWorldMT().setEnvProp = function(...)
+		return ema:set(...)
+	end
+	getWorldMT().setTexPack = function(...)
+		return ema:setTexturePack(...)
+	end
 end
 
 function ema:prePlayerSpawn(player)
@@ -61,6 +61,7 @@ function ema:prePlayerSpawn(player)
 end
 
 function ema:setTexturePack(world, tpack)
+	world = getWorld(world)
 	if tpack:sub(1,7)=='http://'or tpack:sub(1,8)=='https://'or tpack==''then
 		if #tpack>64 then
 			return false, 'url_too_long'
@@ -78,7 +79,6 @@ function ema:setTexturePack(world, tpack)
 end
 
 function ema:set(world, typ, val)
-	world = getWorld(world)
 	getMa(world)[typ] = val
 	playersForEach(function(player)
 		if player:isInWorld(world)then

@@ -2,6 +2,9 @@ local hb = {}
 
 function hb:load()
 	registerSvPacket(0x14, 'BBB')
+	getPlayerMT().getHeldBlock = function(self)
+		return self.heldBlock or -1
+	end
 end
 
 function hb:holdThis(player, block, prevent)

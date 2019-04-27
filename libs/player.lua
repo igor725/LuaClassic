@@ -613,6 +613,10 @@ local player_mt = {
 }
 player_mt.__index = player_mt
 
+function getPlayerMT()
+	return player_mt
+end
+
 return function(cl)
 	return setmetatable({
 		kickTimeout = CTIME+getKickTimeout(),
