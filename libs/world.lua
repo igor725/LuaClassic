@@ -122,7 +122,7 @@ local world_mt = {
 		return self.size
 	end,
 	unload = function(self)
-		if self.players>0 then return false end
+		if self.players>0 or self.unloadLocked then return false end
 		self:save()
 		self.ldata = nil
 		collectgarbage()

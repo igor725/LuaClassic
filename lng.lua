@@ -62,7 +62,7 @@ MESG_UNKNOWNCMD    = 'Unknown command'
 MESG_NOTWSCONN     = 'Bad request: This port accepts only websocket connections.'
 
 CMD_WMODE          = 'Now world in %s mode'
-CMD_SVINFO1        = 'Server runned on &a%s &e%s'
+CMD_SVINFO1        = 'Server runned on &a%s &e%s &fwith &4%s'
 CMD_SVINFO2        = 'Ram used: %.3fMB'
 CMD_TIMEDISALLOW   = 'Time changing not allowed in the nether.'
 CMD_SVER           = 'Current server version: &a%s [%d commits]'

@@ -554,7 +554,10 @@ local player_mt = {
 					end
 					self.thread = nil
 					self.kickTimeout = CTIME + getKickTimeout()
+					worlds[self.worldName].unloadLocked = false
 				end
+			elseif self.thread.status == 'running' then --TODO: Improve this
+				worlds[self.worldName].unloadLocked = true
 			end
 			return
 		end
