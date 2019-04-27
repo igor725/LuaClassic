@@ -1,6 +1,23 @@
 io.output():setvbuf('no')
-require('utils')
+require('lng')
 
+if not (jit or jit.version)then
+	print(CON_LJVER)
+	os.exit(1)
+elseif jit.version_num == 20000 then
+	local ver = jit.version
+	local beta = ver:match('.+%-beta(%d+)')
+	beta = tonumber(beta)
+	if beta and beta<11 then
+		print(CON_LJVER)
+		os.exit(1)
+	end
+elseif jit.version_num < 20000 then
+	print(CON_LJVER)
+	os.exit(1)
+end
+
+require('utils')
 gz = require('gzip')
 lfs = require('lfs')
 lanes = require('lanes')
@@ -11,7 +28,6 @@ newPlayer = require('player')
 socket = require('socket.core')
 
 require('cpe')
-require('lng')
 require('conh')
 require('hooks')
 require('timer')

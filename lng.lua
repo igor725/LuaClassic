@@ -7,6 +7,7 @@ CONF_INVALIDSYNTAX = 'Invalid syntax in %s file on line %d'
 TMR_ERR            = 'timer %q error: %s'
 
 CON_PROPINVALID    = 'Invalid server.properties configuration'
+CON_LJVER          = 'Server requires LuaJIT >= 2.0.0-beta11'
 CON_SAVESUCC       = 'Configuration saved successfully'
 CON_HELP           = 'For help, type "help" or "?"'
 CON_BINDSUCC       = 'Server started on %s:%d%s'
