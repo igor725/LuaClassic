@@ -14,8 +14,9 @@ local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
 		require('helper')
 	end
 
+	local newTCP = socket.tcp4 or socket.tcp
 	local fmt = '>Bhc1024b'
-	local cl = socket.tcp4(fd)
+	local cl = newTCP(fd)
 	local map = ffi.cast('char*', mapaddr)
 	local gErr = nil
 	if isWS then

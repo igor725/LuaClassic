@@ -1,7 +1,7 @@
 ffi = require('ffi')
 C = ffi.C
 
-local meta = debug.getmetatable("")
+local meta = debug.getmetatable('')
 meta.__mod = function(self,vars)
 	if type(vars)=='table'then
 		return self:format(unpack(vars))
@@ -17,8 +17,8 @@ meta.__add = function(self,add)
 	end
 end
 
-_EXT = (jit.os=='Windows'and'dll')or'so'
-package.cpath = './bin/%s/?.%s;'%{jit.arch,_EXT}
+local ext = (jit.os=='Windows'and'dll')or'so'
+package.cpath = './bin/%s/?.%s;'%{jit.arch,ext}
 package.path = './libs/?.lua;./libs/?/init.lua;./?.lua'
 
 floor = math.floor
@@ -28,7 +28,7 @@ bswap = bit.bswap
 function checkEnv(ev, val)
 	local evar = os.getenv(ev)
 	if evar then
-		return os.getenv(ev):lower():find(val:lower())
+		return evar:lower():find(val:lower())
 	else
 		return false
 	end
@@ -101,7 +101,7 @@ function setID(player)
 			return -1
 		end
 	end
-	local mp = config:get('max-players',20)
+	local mp = config:get('max-players', 20)
 	if s>mp then s = -1 end
 	return s
 end
@@ -118,7 +118,7 @@ function table.hasValue(tbl, ...)
 	return false
 end
 
-function string.split(self,sep)
+function string.split(self, sep)
    local sep, fields = sep or ":", {}
    local pattern = string.format("([^%s]+)", sep)
    self:gsub(pattern, function(c) fields[#fields+1] = c end)
@@ -131,10 +131,10 @@ function newChatMessage(msg, id)
 	end)
 end
 
-function dirForEach(dir,ext,func)
+function dirForEach(dir, ext, func)
 	for file in lfs.dir(dir)do
 		local fp = dir+'/'+file
-		if lfs.attributes(fp,'mode')=='file'and
+		if lfs.attributes(fp, 'mode')=='file'and
 		file:sub(-#ext)==ext then
 			func(file,fp)
 		end
@@ -192,7 +192,7 @@ function loadGenerator(name)
 	return generator
 end
 
-function makeNormalCube(x1,y1,z1,x2,y2,z2)
+function makeNormalCube(x1, y1, z1, x2, y2, z2)
 	local px1, py1, pz1 = x1, y1, z1
 	local px2, py2, pz2 = x2, y2, z2
 	if x1-x2<0 then
@@ -226,16 +226,16 @@ function getPlayerByName(name)
 	end)
 end
 
-function createWorld(wname,dims,gen,seed)
+function createWorld(wname, dims, gen, seed)
 	local data = {dimensions=dims}
 	local tmpWorld = newWorld()
 	tmpWorld:createWorld(data)
 	tmpWorld:setName(wname)
 	worlds[wname] = tmpWorld
-	return regenerateWorld(wname,gen,seed)
+	return regenerateWorld(wname, gen, seed)
 end
 
-function regenerateWorld(world,gentype,seed)
+function regenerateWorld(world, gentype, seed)
 	world = getWorld(world)
 	if not world then return false, WORLD_NE end
 	if world:isInReadOnly()then return false, WORLD_RO end

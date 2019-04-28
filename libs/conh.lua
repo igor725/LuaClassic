@@ -1,18 +1,18 @@
+--[[
+TODO: Rewrite it sometime.
+Threads isn't good idea in
+this place.
+]]
+
 function initCmdHandler(cbfunc)
 	if type(cbfunc)~='function'then return false end
 	local cmdlinda = lanes.linda()
 	local thread = lanes.gen('*', function()
 		local buffer = ''
 		while true do
-			local sym = io.read(1)
-			if sym == '\10'then
-				if #buffer>0 then
-					cmdlinda:send('cmd', buffer)
-					buffer = ''
-				end
-			else
-				buffer = buffer .. sym
-			end
+			local line = io.read('*l')
+			if not line then break end
+			cmdlinda:send('cmd', line)
 		end
 	end)()
 	return function()

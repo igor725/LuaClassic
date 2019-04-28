@@ -15,7 +15,7 @@ Server tested on Debian Stretch/Buster, Arch Linux, Raspbian and Windows 10. On 
 4. Start server again with ```luajit main.lua```
 
 # Deps
-* [LuaJIT](http://luajit.org/git/luajit-2.0.git)
+* [LuaJIT](http://luajit.org/download.html)
 * [zlib](https://www.zlib.net/)
 * [LuaLanes](https://github.com/LuaLanes/lanes)
 * [luasocket-lanes](https://github.com/LuaDist-testing/luasocket-lanes)

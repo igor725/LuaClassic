@@ -315,7 +315,7 @@ function createPlayer(cl,isWS)
 			player:kick(KICK_SFULL)
 		end
 	else
-		local rawPacket = generatePacket(0x0e,KICK_CONNREJ)
+		local rawPacket = generatePacket(0x0e, KICK_CONNREJ)
 		if isWS then
 			cl:send(encodeWsFrame(rawPacket, 0x02))
 		else
@@ -485,21 +485,21 @@ function init()
 	permissions:parse()
 
 	config
-	:registerTypeFor('generator-threads-count','number')
-	:registerTypeFor('gzip-compression-level','number')
-	:registerTypeFor('allow-websocket','boolean')
-	:registerTypeFor('websocket-port','number')
-	:registerTypeFor('player-timeout','number')
-	:registerTypeFor('server-port','number')
-	:registerTypeFor('server-name','string')
-	:registerTypeFor('server-motd','string')
-	:registerTypeFor('max-players','number')
-	:registerTypeFor('level-names','string')
-	:registerTypeFor('level-types','string')
-	:registerTypeFor('level-sizes','string')
-	:registerTypeFor('level-seeds','string')
-	:registerTypeFor('cpe-force','boolean')
-	:registerTypeFor('server-ip','string')
+	:registerTypeFor('generator-threads-count', 'number')
+	:registerTypeFor('gzip-compression-level', 'number')
+	:registerTypeFor('allow-websocket', 'boolean')
+	:registerTypeFor('websocket-port', 'number')
+	:registerTypeFor('player-timeout', 'number')
+	:registerTypeFor('server-port', 'number')
+	:registerTypeFor('server-name', 'string')
+	:registerTypeFor('server-motd', 'string')
+	:registerTypeFor('max-players', 'number')
+	:registerTypeFor('level-names', 'string')
+	:registerTypeFor('level-types', 'string')
+	:registerTypeFor('level-sizes', 'string')
+	:registerTypeFor('level-seeds', 'string')
+	:registerTypeFor('cpe-force', 'boolean')
+	:registerTypeFor('server-ip', 'string')
 	:parse()
 
 	uwa = config:get('unload-world-after', 600)
@@ -510,23 +510,23 @@ function init()
 	local ws = config:get('allow-websocket', true)
 	if ws then
 		WSGUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
-		wsPort = config:get('websocket-port',port+1)
+		wsPort = config:get('websocket-port', port+1)
 		wsServer = bindSock(ip, wsPort)
 		wsHandshake = {}
 		require('helper')
 	end
 
 	io.write(CON_WLOAD,'\n\t')
-	local sdlist = config:get('level-seeds','')
+	local sdlist = config:get('level-seeds', '')
 	sdlist = sdlist:split(',')
 
-	local wlist = config:get('level-names','world')
+	local wlist = config:get('level-names', 'world')
 	wlist = wlist:split(',')
 
-	local tlist = config:get('level-types','default')
+	local tlist = config:get('level-types', 'default')
 	tlist = tlist:split(',')
 
-	local slist = config:get('level-sizes','256x256x256')
+	local slist = config:get('level-sizes', '256x256x256')
 	slist = slist:split(',')
 
 	for num, wn in pairs(wlist)do
@@ -534,7 +534,7 @@ function init()
 		io.write(wn,': ')
 		local st = socket.gettime()
 		local world
-		local lvlh = io.open('worlds/'+wn+'.map','rb')
+		local lvlh = io.open('worlds/'+wn+'.map', 'rb')
 		if lvlh then
 			world = newWorld(lvlh, wn)
 		else
@@ -616,6 +616,8 @@ for wname, world in pairs(worlds)do
 	end
 end
 sql.close()
+if server then server:close()end
+if wsServer then wsServer:close()end
 
 if not succ then
 	err = tostring(err)
