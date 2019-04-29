@@ -24,6 +24,7 @@ local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
 	else
 		mapStart = '\2'
 	end
+
 	cl:send(mapStart)
 	gz.compress(map, maplen, cmplvl, function(out,stream)
 		local chunksz = 1024-stream.avail_out
@@ -32,8 +33,8 @@ local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
 		if isWS then
 			dat = encodeWsFrame(dat, 0x02)
 		end
-		local _, err = cl:send(dat)
 
+		local _, err = cl:send(dat)
 		if err=='closed'then
 			gz.defEnd(stream)
 			gErr = err
@@ -42,6 +43,7 @@ local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
 			gErr = err
 		end
 	end)
+	
 	cl:setfd(-1)
 	return gErr or 0
 end
