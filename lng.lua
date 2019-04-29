@@ -18,6 +18,7 @@ CON_SVSTOP         = 'Server stopped'
 CON_USE            = 'Usage: %s'
 
 CU_STOP            = 'stop - Stop the server'
+CU_RESTART         = 'restart - Restart the server'
 CU_HELP            = 'help - Shows this list of commands'
 CU_SAY             = 'say <message> - Send message to chat'
 CU_KICK            = 'kick <player> [reason] - Kick player'

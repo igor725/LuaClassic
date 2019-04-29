@@ -13,12 +13,18 @@ function initCmdHandler(cbfunc)
 			if not line then break end
 			if #line>0 then
 				cmdlinda:send('cmd', line)
+				if line:sub(1,7)=='restart'then
+					break
+				end
 			end
 		end
 	end)()
-	
+
 	return function()
-		if thread and thread.status == 'running'then
+		if thread and
+		thread.status == 'running'
+		or thread.status == 'done'
+		then
 			local cmd = select(2, cmdlinda:receive(0,'cmd'))
 			if cmd then
 				cbfunc(cmd)

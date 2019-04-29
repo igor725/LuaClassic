@@ -1,31 +1,35 @@
 io.output():setvbuf('no')
 require('lng')
 
-if not (jit or jit.version)then
-	print(CON_LJVER)
-	os.exit(1)
-elseif jit.version_num == 20000 then
-	local ver = jit.version
-	local beta = ver:match('.+%-beta(%d+)')
-	beta = tonumber(beta)
-	if beta and beta<11 then
+do
+	local function vermismatch()
 		print(CON_LJVER)
 		os.exit(1)
 	end
-elseif jit.version_num < 20000 then
-	print(CON_LJVER)
-	os.exit(1)
+
+	if not (jit or jit.version)then
+		vermismatch()
+	elseif jit.version_num == 20000 then
+		local ver = jit.version
+		local beta = ver:match('.+%-beta(%d+)')
+		beta = tonumber(beta)
+		if beta and beta<11 then
+			vermismatch()
+		end
+	elseif jit.version_num < 20000 then
+		vermismatch()
+	end
 end
 
 require('utils')
 gz = require('gzip')
 lfs = require('lfs')
-lanes = require('lanes')
 sql = require('sqlite3')
 struct = require('struct')
 newWorld = require('world')
 newPlayer = require('player')
 socket = require('socket.core')
+lanes = require('lanes').configure()
 
 require('cpe')
 require('conh')
@@ -37,9 +41,6 @@ require('commands')
 require('permissions')
 
 CTIME = socket.gettime()
-if lanes.configure then
-	lanes.configure()
-end
 
 function onConnectionAttempt(ip, port)
 end
@@ -331,6 +332,8 @@ function handleConsoleCommand(cmd)
 
 	if cmd == 'stop'then
 		_STOP = true
+	elseif cmd == 'restart'then
+		_STOP = 'restart'
 	elseif cmd == 'loadworld'then
 		if #args == 1 then
 			local succ, err = loadWorld(args[1])
@@ -625,5 +628,8 @@ if not succ then
 		print(err)
 		ecode = 1
 	end
+end
+if _STOP=='restart'then
+	os.execute(arg[-1]..' '..arg[0])
 end
 os.exit(ecode)

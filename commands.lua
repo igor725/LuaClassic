@@ -24,6 +24,10 @@ addChatCommand('stop',function()
 	_STOP=true
 end)
 
+addChatCommand('restart',function()
+	_STOP='restart'
+end)
+
 addChatCommand('time',function(player,name)
 	local world = getWorld(player)
 	if world.data.isNether then
