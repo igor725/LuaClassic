@@ -79,12 +79,12 @@ function config:save()
 	end
 end
 
-function config:get(key,default)
+function config:get(key, default)
 	local v = self.values[key]
 	if v ~= nil then
 		return v
 	end
-	self.values[key] = default
+	self:set(key, default)
 	return default
 end
 
