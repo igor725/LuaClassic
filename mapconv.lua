@@ -582,6 +582,7 @@ for k, v in pairs(info)do
 		if #v>64 then error('TexturePack URL too long')end
 		nw:write(string.char(9, #v))
 		nw:write(v)
+		print('TexturePack:', v)
 	else
 		print('Warning: Unknown MAPOPT %q skipped!'%k)
 	end

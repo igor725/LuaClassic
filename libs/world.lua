@@ -45,15 +45,79 @@ local world_mt = {
 		self.data = data
 		return true
 	end,
-	readGZIPData = function(self, wh)
-		local a = self:getAddr()
-		local ptr = ffi.cast('char*', a)
-		gz.decompress(wh, function(out,stream)
+	save = function(self)
+		if not self.ldata then return true end
+		local pt = 'worlds/'+self.wname+'.map'
+		local wh = assert(io.open(pt, 'wb'))
+		wh:write('LCW\0')
+		for k, v in pairs(self.data)do
+			if k == 'dimensions'then
+				packTo(wh, '>bHHH', 0, unpack(v))
+			elseif k == 'spawnpoint'then
+				packTo(wh, '>bfff', 1, unpack(v))
+			elseif k == 'spawnpointeye'then
+				packTo(wh, '>bff', 2, unpack(v))
+			elseif k == 'isNether'then
+				packTo(wh, '>bb', 3, (v and 1)or 0)
+			elseif k == 'colors'then
+				for id, rgb in pairs(v)do
+					packTo(wh, 'bbbbb', 4, id, unpack(rgb))
+				end
+			elseif k == 'map_aspects'then
+				for id, val in pairs(v)do
+					packTo(wh, '>bbI', 5, id, val)
+				end
+			elseif k == 'weather'then
+				packTo(wh, '>bb', 6, v)
+			elseif k == 'readonly'then
+				packTo(wh, '>bb', 7, (v and 1)or 0)
+			elseif k == 'portals'then
+				for id, val in pairs(v)do
+					local p1x, p1y, p1z = unpack(val.pt1)
+					local p2x, p2y, p2z = unpack(val.pt2)
+					packTo(wh, '>bHHHHHHH', 8, p1x, p1y, p1z,
+					p2x, p2y, p2z, #val.tpTo)
+					wh:write(val.tpTo)
+				end
+			elseif k == 'texPack'then
+				if #v>64 then error('TexturePack URL too long')end
+				wh:write(string.char(9, #v))
+				wh:write(v)
+			else
+				print('Warning: Unknown MAPOPT %q skipped!'%k)
+			end
+		end
+		wh:write('\255')
+		gz.compress(self.ldata, self.size, 4, function(out,stream)
 			local chunksz = 1024-stream.avail_out
-			ffi.copy(ptr, out, chunksz)
-			ptr = ptr + chunksz
+			C.fwrite(out, 1, chunksz, wh)
+			if C.ferror(wh)~=0 then
+				print(WORLD_WRITEFAIL)
+				os.exit(1)
+			end
 		end)
+		wh:close()
+		return true
 	end,
+	unload = function(self)
+		if self.players>0 or self.unloadLocked then return false end
+		self:save()
+		self.ldata = nil
+		collectgarbage()
+		return true
+	end,
+	triggerLoad = function(self)
+		if not self.ldata then
+			local pt = 'worlds/'+self.wname+'.map'
+			local wh = assert(io.open(pt, 'rb'))
+			self:readLevelInfo(wh)
+			self:readGZIPData(wh)
+			wh:close()
+			return true
+		end
+		return false
+	end,
+
 	getDimensions = function(self)
 		return unpack(self.data.dimensions)
 	end,
@@ -65,17 +129,20 @@ local world_mt = {
 		offset = math.max(math.min(offset, fs), 4)
 		return offset
 	end,
-	isInReadOnly = function(self)
-		return self.data.readonly
+	getBlock = function(self,x,y,z)
+		if not self.ldata then return false end
+		return self.ldata[self:getOffset(x,y,z)]
 	end,
-	setReadOnly = function(self,b)
-		self.data.readonly = b
-		return true
+	getAddr = function(self)
+		return getAddr(self.ldata)
 	end,
-	toggleReadOnly = function(self)
-		self.data.readonly = not self.data.readonly
-		return self.data.readonly
+	getSize = function(self)
+		return self.size
 	end,
+	getName = function(self)
+		return self.wname
+	end,
+
 	setBlock = function(self,x,y,z,id)
 		if not self.ldata then return false end
 		if self:isInReadOnly()then return false end
@@ -93,6 +160,24 @@ local world_mt = {
 			eye[1] = ay eye[2] = ap
 		end
 	end,
+	setName = function(self, name)
+		if type(name)~='string' then return false end
+		self.wname = name
+		return true
+	end,
+	setReadOnly = function(self,b)
+		self.data.readonly = b
+		return true
+	end,
+	toggleReadOnly = function(self)
+		self.data.readonly = not self.data.readonly
+		return self.data.readonly
+	end,
+
+	isInReadOnly = function(self)
+		return self.data.readonly
+	end,
+
 	fillBlocks = function(self,x1,y1,z1,x2,y2,z2,id)
 		if self:isInReadOnly()then return false end
 		x1,y1,z1,x2,y2,z2 = makeNormalCube(x1,y1,z1,x2,y2,z2)
@@ -111,22 +196,15 @@ local world_mt = {
 			end
 		end)
 	end,
-	getBlock = function(self,x,y,z)
-		if not self.ldata then return false end
-		return self.ldata[self:getOffset(x,y,z)]
-	end,
-	getAddr = function(self)
-		return getAddr(self.ldata)
-	end,
-	getSize = function(self)
-		return self.size
-	end,
-	unload = function(self)
-		if self.players>0 or self.unloadLocked then return false end
-		self:save()
-		self.ldata = nil
-		collectgarbage()
-		return true
+	
+	readGZIPData = function(self, wh)
+		local a = self:getAddr()
+		local ptr = ffi.cast('char*', a)
+		gz.decompress(wh, function(out,stream)
+			local chunksz = 1024-stream.avail_out
+			ffi.copy(ptr, out, chunksz)
+			ptr = ptr + chunksz
+		end)
 	end,
 	readLevelInfo = function(self, wh)
 		wh:seek('set', 0)
@@ -183,79 +261,7 @@ local world_mt = {
 		end
 		return false
 	end,
-	save = function(self)
-		if not self.ldata then return true end
-		local pt = 'worlds/'+self.wname+'.map'
-		local wh = assert(io.open(pt, 'wb'))
-		wh:write('LCW\0')
-		for k, v in pairs(self.data)do
-			if k == 'dimensions'then
-				packTo(wh, '>bHHH', 0, unpack(v))
-			elseif k == 'spawnpoint'then
-				packTo(wh, '>bfff', 1, unpack(v))
-			elseif k == 'spawnpointeye'then
-				packTo(wh, '>bff', 2, unpack(v))
-			elseif k == 'isNether'then
-				packTo(wh, '>bb', 3, (v and 1)or 0)
-			elseif k == 'colors'then
-				for id, rgb in pairs(v)do
-					packTo(wh, 'bbbbb', 4, id, unpack(rgb))
-				end
-			elseif k == 'map_aspects'then
-				for id, val in pairs(v)do
-					packTo(wh, '>bbI', 5, id, val)
-				end
-			elseif k == 'weather'then
-				packTo(wh, '>bb', 6, v)
-			elseif k == 'readonly'then
-				packTo(wh, '>bb', 7, (v and 1)or 0)
-			elseif k == 'portals'then
-				for id, val in pairs(v)do
-					local p1x, p1y, p1z = unpack(val.pt1)
-					local p2x, p2y, p2z = unpack(val.pt2)
-					packTo(wh, '>bHHHHHHH', 8, p1x, p1y, p1z,
-					p2x, p2y, p2z, #val.tpTo)
-					wh:write(val.tpTo)
-				end
-			elseif k == 'texPack'then
-				if #v>64 then error('TexturePack URL too long')end
-				wh:write(string.char(9, #v))
-				wh:write(v)
-			else
-				print('Warning: Unknown MAPOPT %q skipped!'%k)
-			end
-		end
-		wh:write('\255')
-		gz.compress(self.ldata, self.size, 4, function(out,stream)
-			local chunksz = 1024-stream.avail_out
-			C.fwrite(out, 1, chunksz, wh)
-			if C.ferror(wh)~=0 then
-				print(WORLD_WRITEFAIL)
-				os.exit(1)
-			end
-		end)
-		wh:close()
-		return true
-	end,
-	triggerLoad = function(self)
-		if not self.ldata then
-			local pt = 'worlds/'+self.wname+'.map'
-			local wh = assert(io.open(pt, 'rb'))
-			self:readLevelInfo(wh)
-			self:readGZIPData(wh)
-			wh:close()
-			return true
-		end
-		return false
-	end,
-	setName = function(self, name)
-		if type(name)~='string' then return false end
-		self.wname = name
-		return true
-	end,
-	getName = function(self)
-		return self.wname
-	end,
+
 	isWorld = true,
 	players = 0
 }

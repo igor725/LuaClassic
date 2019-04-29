@@ -21,11 +21,11 @@ addChatCommand('clear',function(player)
 end)
 
 addChatCommand('stop',function()
-	_STOP=true
+	_STOP = true
 end)
 
 addChatCommand('restart',function()
-	_STOP='restart'
+	_STOP = 'restart'
 end)
 
 addChatCommand('time',function(player,name)

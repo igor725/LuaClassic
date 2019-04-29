@@ -247,12 +247,11 @@ function wsDoHandshake()
 
 		if data.state == 'initial'then
 			local req = cl:receive()
-			if req then
-				if req:find('GET%s(.+)%sHTTP/1.1')then
-					data.state = 'headers'
-				else
-					data.state = 'badrequest'
-				end
+			if req and req:find('GET%s(.+)%sHTTP/1.1')then
+				data.state = 'headers'
+			else
+				data.state = 'badrequest'
+				data.emsg = 'Not a HTTP request'
 			end
 		elseif data.state == 'headers'then
 			local ln = cl:receive()
@@ -264,6 +263,7 @@ function wsDoHandshake()
 					data.headers[k] = v
 				else
 					data.state = 'badrequest'
+					data.emsg = 'Invalid header'
 				end
 			end
 		elseif data.state == 'genresp'then
@@ -290,10 +290,11 @@ function wsDoHandshake()
 				data.state = 'badrequest'
 			end
 		elseif data.state == 'badrequest'then
+			local msg = data.emsg or MESG_NOTWSCONN
 			local response =
 			'HTTP/1.1 400 Bad request\r\n'+
-			'Content-Length: %d\r\n\r\n'%#MESG_NOTWSCONN+
-			MESG_NOTWSCONN
+			'Content-Length: %d\r\n\r\n'%#msg+
+			msg
 			cl:send(response)
 			cl:close()
 			wsHandshake[cl] = nil
@@ -331,7 +332,7 @@ function handleConsoleCommand(cmd)
 	cmd = table.remove(args, 1)
 	argstr = table.concat(args,' ')
 	cmd = cmd:lower()
-	
+
 	if cmd == 'stop'then
 		_STOP = true
 	elseif cmd == 'restart'then
