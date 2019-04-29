@@ -233,7 +233,7 @@ local player_mt = {
 		end
 		return false, 0
 	end,
-	
+
 	readHandShakeData = function(self, data)
 		local fmt = packets[0x00]
 		local pid, protover, uname, verikey, hsFlag = struct.unpack(fmt, data)
@@ -553,6 +553,9 @@ local player_mt = {
 		local id = self:getID()
 		players[self] = nil
 		IDS[id] = nil
+		if not self.leavereason then
+			self.leavereason = 'Disconnected'
+		end
 		if self.handshaked then
 			onPlayerDestroy(self)
 		end
@@ -562,6 +565,8 @@ local player_mt = {
 	kick = function(self,reason)
 		reason = reason or KICK_NOREASON
 		self:sendPacket(false, 0x0e, reason)
+		self.leavereason = reason
+		self.kicked = true
 		self:destroy()
 	end,
 

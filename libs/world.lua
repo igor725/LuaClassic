@@ -34,7 +34,8 @@ local world_mt = {
 		local dim = data.dimensions
 		local sz = gBufSize(unpack(dim))
 		if sz>1533634564 then
-			error(WORLD_TOOBIGDIM)
+			print(WORLD_TOOBIGDIM)
+			return false, WORLD_TOOBIGDIM
 		end
 		data.spawnpoint = data.spawnpoint or{0,0,0}
 		data.spawnpointeye = data.spawnpointeye or{0,0}
@@ -110,10 +111,13 @@ local world_mt = {
 		if not self.ldata then
 			local pt = 'worlds/'+self.wname+'.map'
 			local wh = assert(io.open(pt, 'rb'))
-			self:readLevelInfo(wh)
-			self:readGZIPData(wh)
-			wh:close()
-			return true
+			if self:readLevelInfo(wh)then
+				self:readGZIPData(wh)
+				wh:close()
+				return true
+			else
+				return false
+			end
 		end
 		return false
 	end,
@@ -196,11 +200,11 @@ local world_mt = {
 			end
 		end)
 	end,
-	
+
 	readGZIPData = function(self, wh)
 		local a = self:getAddr()
 		local ptr = ffi.cast('char*', a)
-		gz.decompress(wh, function(out,stream)
+		return gz.decompress(wh, function(out,stream)
 			local chunksz = 1024-stream.avail_out
 			ffi.copy(ptr, out, chunksz)
 			ptr = ptr + chunksz
@@ -254,7 +258,8 @@ local world_mt = {
 				elseif id == '\255'then
 					break
 				else
-					error('Unsupported map version or file corrupted.')
+					io.write(WORLD_CORRUPT)
+					return false
 				end
 			end
 			return true
@@ -276,10 +281,16 @@ return function(wh, wn)
 	setmetatable({}, world_mt)
 
 	if wh and wn then
-		world:setName(wn)
-		world:readLevelInfo(wh)
-		world:readGZIPData(wh)
-		wh:close()
+		if world:readLevelInfo(wh)then
+			world:setName(wn)
+			if not world:readGZIPData(wh)then
+				wh:close()
+				return false
+			end
+			wh:close()
+		else
+			return false
+		end
 	end
 
 	return world

@@ -36,6 +36,8 @@ end
 
 ENABLE_ANSI = checkEnv('ConEmuANSI','on')or checkEnv('TERM','xterm')
 
+local colorReplace
+
 if ENABLE_ANSI then
 	local rt = {
 		['&0'] = '30',
@@ -53,19 +55,47 @@ if ENABLE_ANSI then
 		['&c'] = '1;31',
 		['&d'] = '1;35',
 		['&e'] = '33',
-		['&f'] = '1;37'
+		['&f'] = '0'
 	}
-
-	function mc2ansi(str)
-		return str:gsub('(&%x)', function(s)
-			s = s:lower()
-			return string.format('\27[%sm', rt[s])
-		end)..'\27[0m'
+	colorReplace = function(s)
+		s = s:lower()
+		return string.format('\27[%sm', rt[s])
 	end
 else
-	function mc2ansi(str)
+	colorReplace = function()
+		return ''
+	end
+end
+
+function mc2ansi(str)
+	local pattern = '(&%x)'
+	if str:find(pattern)then
+		str = str:gsub(pattern, colorReplace)
+		if ENABLE_ANSI then
+			str = str..'\27[0m'
+		end
+		return str
+	else
 		return str
 	end
+end
+
+local cprint = print
+local cwrite = io.write
+
+function print(...)
+	local p = {...}
+	for i=1,#p do
+		p[i] = mc2ansi(tostring(p[i]))
+	end
+	cprint(unpack(p))
+end
+function io.write(...)
+	local p = {...}
+	for i=1,#p do
+		p[i] = mc2ansi(tostring(p[i]))
+	end
+	cwrite(unpack(p))
 end
 
 function trimStr(str)
@@ -229,10 +259,13 @@ end
 function createWorld(wname, dims, gen, seed)
 	local data = {dimensions=dims}
 	local tmpWorld = newWorld()
-	tmpWorld:createWorld(data)
-	tmpWorld:setName(wname)
-	worlds[wname] = tmpWorld
-	return regenerateWorld(wname, gen, seed)
+	if tmpWorld:createWorld(data)then
+		tmpWorld:setName(wname)
+		worlds[wname] = tmpWorld
+		return regenerateWorld(wname, gen, seed)
+	else
+		return false
+	end
 end
 
 function regenerateWorld(world, gentype, seed)

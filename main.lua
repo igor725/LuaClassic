@@ -69,8 +69,8 @@ function onPlayerDespawn(player)
 end
 
 function onPlayerDestroy(player)
-	local msg = printf(MESG_DISCONN, player:getName())
-	newChatMessage('&e'+msg)
+	local msg = printf(MESG_DISCONN, player:getName(), player.leavereason)
+	newChatMessage(msg)
 	cpe:extCallHook('onPlayerDestroy', player)
 	hooks:call('onPlayerDestroy', player)
 	if player.handshaked then
@@ -89,7 +89,7 @@ end
 
 function onPlayerHandshakeDone(player)
 	local msg = printf(MESG_CONN, player:getName())
-	newChatMessage('&e'..msg)
+	newChatMessage(msg)
 end
 
 function onPlayerChatMessage(player, message)
@@ -330,6 +330,7 @@ end
 function handleConsoleCommand(cmd)
 	args = cmd:split('%s')
 	cmd = table.remove(args, 1)
+	if not cmd then return end
 	argstr = table.concat(args,' ')
 	cmd = cmd:lower()
 
@@ -349,6 +350,14 @@ function handleConsoleCommand(cmd)
 			local succ, err = unloadWorld(args[1])
 			if not succ then
 				print(err)
+			end
+		end
+	elseif cmd == 'list'then
+		print(CMD_WORLDLST)
+		for wn, world in pairs(worlds)do
+			if wn~='default'then
+				local dfld = (worlds['default']==world and' (default)')or''
+				print('   - '+wn+dfld)
 			end
 		end
 	elseif cmd == 'say'then
@@ -522,7 +531,7 @@ function init()
 		require('helper')
 	end
 
-	io.write(CON_WLOAD,'\n\t')
+	io.write(CON_WLOAD)
 	local sdlist = config:get('level-seeds', '')
 	sdlist = sdlist:split(',')
 
@@ -537,7 +546,7 @@ function init()
 
 	for num, wn in pairs(wlist)do
 		wn = wn:lower()
-		io.write(wn,': ')
+		io.write('\n\t',wn,': ')
 		local st = socket.gettime()
 		local world
 		local lvlh = io.open('worlds/'+wn+'.map', 'rb')
@@ -556,18 +565,24 @@ function init()
 			end
 			world = newWorld()
 			world:setName(wn)
-			world:createWorld({dimensions={x,y,z}})
-			generator(world,sdlist[num]or CTIME)
+			if world:createWorld({dimensions={x,y,z}})then
+				generator(world,sdlist[num]or CTIME)
+			end
 		end
-		worlds[wn] = world
-		world.emptyfrom = CTIME
-		if num==1 then
-			worlds['default'] = world
+		if world then
+			worlds[wn] = world
+			world.emptyfrom = CTIME
+			if num==1 then
+				worlds['default'] = world
+			end
+			io.write(MESG_DONEIN%{(socket.gettime()-st)*1000})
 		end
-		io.write(MESG_DONEIN%{(socket.gettime()-st)*1000},'\n\t')
 	end
-	io.write('\r')
-
+	io.write('\r\n')
+	if not worlds['default']then
+		print(CON_WLOADERR)
+		os.exit(1)
+	end
 	cpe:init()
 	local add = ''
 	if wsServer then
@@ -605,10 +620,16 @@ end,debug.traceback)
 ecode = 0
 print(CON_SVSTOP)
 playersForEach(function(ply)
-	ply:kick(CON_SVSTOP)
+	if _STOP == 'restart'then
+		ply:kick(KICK_SVRST)
+	else
+		ply:kick(KICK_SVSTOP)
+	end
 end)
 if config:save()and permissions:save()then
 	print(CON_SAVESUCC)
+else
+	print(CON_SAVEERR)
 end
 for wname, world in pairs(worlds)do
 	if wname ~= 'default'then

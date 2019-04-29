@@ -24,9 +24,10 @@ addChatCommand('stop',function()
 	_STOP = true
 end)
 
-addChatCommand('restart',function()
-	_STOP = 'restart'
-end)
+-- Temporarily (or not) disabled
+-- addChatCommand('restart',function()
+-- 	_STOP = 'restart'
+-- end)
 
 addChatCommand('time',function(player,name)
 	local world = getWorld(player)
@@ -67,9 +68,9 @@ addChatCommand('sel',function(player)
 	else
 		unsel(player)
 		player.onPlaceBlock = nil
-		return CMD_SELMODEOFF
+		return CMD_SELMODE%'&cdisabled'
 	end
-	return CMD_SELMODEON
+	return CMD_SELMODE%'&aenabled'
 end)
 
 addChatCommand('mkportal',function(player, pname, wname)
