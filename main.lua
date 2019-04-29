@@ -135,6 +135,7 @@ function onPlayerChatMessage(player, message)
 		local args = message:split(' ')
 		if #args>0 then
 			local cmd = table.remove(args, 1):sub(2)
+			cmd = cmd:lower()
 			local cmf = commands[cmd]
 			if cmf then
 				if player:checkPermission('commands.'+cmd)then
@@ -329,7 +330,8 @@ function handleConsoleCommand(cmd)
 	args = cmd:split('%s')
 	cmd = table.remove(args, 1)
 	argstr = table.concat(args,' ')
-
+	cmd = cmd:lower()
+	
 	if cmd == 'stop'then
 		_STOP = true
 	elseif cmd == 'restart'then
