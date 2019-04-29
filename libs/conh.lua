@@ -8,13 +8,15 @@ function initCmdHandler(cbfunc)
 	if type(cbfunc)~='function'then return false end
 	local cmdlinda = lanes.linda()
 	local thread = lanes.gen('*', function()
-		local buffer = ''
 		while true do
 			local line = io.read('*l')
 			if not line then break end
-			cmdlinda:send('cmd', line)
+			if #line>0 then
+				cmdlinda:send('cmd', line)
+			end
 		end
 	end)()
+	
 	return function()
 		if thread and thread.status == 'running'then
 			local cmd = select(2, cmdlinda:receive(0,'cmd'))
