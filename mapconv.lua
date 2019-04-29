@@ -1,8 +1,3 @@
--- Module options:
-local always_try_using_lpeg = true
-local register_global_module_table = false
-local global_module_name = 'json'
-
 --[==[
 
 David Kolf's JSON module for Lua 5.1/5.2
@@ -53,10 +48,6 @@ local strmatch = string.match
 local concat = table.concat
 
 local json = { version = "dkjson 2.5" }
-
-if register_global_module_table then
-  _G[global_module_name] = json
-end
 
 local _ENV = nil -- blocking globals in Lua 5.2
 
@@ -178,10 +169,6 @@ end
 
 updatedecpoint()
 
-local function num2str (num)
-  return replace(fsub(tostring(num), numfilter, ""), decpoint, ".")
-end
-
 local function str2num (str)
   local num = tonumber(replace(str, ".", decpoint))
   if not num then
@@ -189,188 +176,6 @@ local function str2num (str)
     num = tonumber(replace(str, ".", decpoint))
   end
   return num
-end
-
-local function addnewline2 (level, buffer, buflen)
-  buffer[buflen+1] = "\n"
-  buffer[buflen+2] = strrep ("  ", level)
-  buflen = buflen + 2
-  return buflen
-end
-
-function json.addnewline (state)
-  if state.indent then
-    state.bufferlen = addnewline2 (state.level or 0,
-                           state.buffer, state.bufferlen or #(state.buffer))
-  end
-end
-
-local encode2 -- forward declaration
-
-local function addpair (key, value, prev, indent, level, buffer, buflen, tables, globalorder, state)
-  local kt = type (key)
-  if kt ~= 'string' and kt ~= 'number' then
-    return nil, "type '" .. kt .. "' is not supported as a key by JSON."
-  end
-  if prev then
-    buflen = buflen + 1
-    buffer[buflen] = ","
-  end
-  if indent then
-    buflen = addnewline2 (level, buffer, buflen)
-  end
-  buffer[buflen+1] = quotestring (key)
-  buffer[buflen+2] = ":"
-  return encode2 (value, indent, level, buffer, buflen + 2, tables, globalorder, state)
-end
-
-local function appendcustom(res, buffer, state)
-  local buflen = state.bufferlen
-  if type (res) == 'string' then
-    buflen = buflen + 1
-    buffer[buflen] = res
-  end
-  return buflen
-end
-
-local function exception(reason, value, state, buffer, buflen, defaultmessage)
-  defaultmessage = defaultmessage or reason
-  local handler = state.exception
-  if not handler then
-    return nil, defaultmessage
-  else
-    state.bufferlen = buflen
-    local ret, msg = handler (reason, value, state, defaultmessage)
-    if not ret then return nil, msg or defaultmessage end
-    return appendcustom(ret, buffer, state)
-  end
-end
-
-function json.encodeexception(reason, value, state, defaultmessage)
-  return quotestring("<" .. defaultmessage .. ">")
-end
-
-encode2 = function (value, indent, level, buffer, buflen, tables, globalorder, state)
-  local valtype = type (value)
-  local valmeta = getmetatable (value)
-  valmeta = type (valmeta) == 'table' and valmeta -- only tables
-  local valtojson = valmeta and valmeta.__tojson
-  if valtojson then
-    if tables[value] then
-      return exception('reference cycle', value, state, buffer, buflen)
-    end
-    tables[value] = true
-    state.bufferlen = buflen
-    local ret, msg = valtojson (value, state)
-    if not ret then return exception('custom encoder failed', value, state, buffer, buflen, msg) end
-    tables[value] = nil
-    buflen = appendcustom(ret, buffer, state)
-  elseif value == nil then
-    buflen = buflen + 1
-    buffer[buflen] = "null"
-  elseif valtype == 'number' then
-    local s
-    if value ~= value or value >= huge or -value >= huge then
-      -- This is the behaviour of the original JSON implementation.
-      s = "null"
-    else
-      s = num2str (value)
-    end
-    buflen = buflen + 1
-    buffer[buflen] = s
-  elseif valtype == 'boolean' then
-    buflen = buflen + 1
-    buffer[buflen] = value and "true" or "false"
-  elseif valtype == 'string' then
-    buflen = buflen + 1
-    buffer[buflen] = quotestring (value)
-  elseif valtype == 'table' then
-    if tables[value] then
-      return exception('reference cycle', value, state, buffer, buflen)
-    end
-    tables[value] = true
-    level = level + 1
-    local isa, n = isarray (value)
-    if n == 0 and valmeta and valmeta.__jsontype == 'object' then
-      isa = false
-    end
-    local msg
-    if isa then -- JSON array
-      buflen = buflen + 1
-      buffer[buflen] = "["
-      for i = 1, n do
-        buflen, msg = encode2 (value[i], indent, level, buffer, buflen, tables, globalorder, state)
-        if not buflen then return nil, msg end
-        if i < n then
-          buflen = buflen + 1
-          buffer[buflen] = ","
-        end
-      end
-      buflen = buflen + 1
-      buffer[buflen] = "]"
-    else -- JSON object
-      local prev = false
-      buflen = buflen + 1
-      buffer[buflen] = "{"
-      local order = valmeta and valmeta.__jsonorder or globalorder
-      if order then
-        local used = {}
-        n = #order
-        for i = 1, n do
-          local k = order[i]
-          local v = value[k]
-          if v then
-            used[k] = true
-            buflen, msg = addpair (k, v, prev, indent, level, buffer, buflen, tables, globalorder, state)
-            prev = true -- add a seperator before the next element
-          end
-        end
-        for k,v in pairs (value) do
-          if not used[k] then
-            buflen, msg = addpair (k, v, prev, indent, level, buffer, buflen, tables, globalorder, state)
-            if not buflen then return nil, msg end
-            prev = true -- add a seperator before the next element
-          end
-        end
-      else -- unordered
-        for k,v in pairs (value) do
-          buflen, msg = addpair (k, v, prev, indent, level, buffer, buflen, tables, globalorder, state)
-          if not buflen then return nil, msg end
-          prev = true -- add a seperator before the next element
-        end
-      end
-      if indent then
-        buflen = addnewline2 (level - 1, buffer, buflen)
-      end
-      buflen = buflen + 1
-      buffer[buflen] = "}"
-    end
-    tables[value] = nil
-  else
-    return exception ('unsupported type', value, state, buffer, buflen,
-      "type '" .. valtype .. "' is not supported by JSON.")
-  end
-  return buflen
-end
-
-function json.encode (value, state)
-  state = state or {}
-  local oldbuffer = state.buffer
-  local buffer = oldbuffer or {}
-  state.buffer = buffer
-  updatedecpoint()
-  local ret, msg = encode2 (value, state.indent, state.level or 0,
-                   buffer, state.bufferlen or 0, state.tables or {}, state.keyorder, state)
-  if not ret then
-    error (msg, 2)
-  elseif oldbuffer == buffer then
-    state.bufferlen = ret
-    return true
-  else
-    state.bufferlen = nil
-    state.buffer = nil
-    return concat (buffer)
-  end
 end
 
 local function loc (str, where)
@@ -773,6 +578,10 @@ for k, v in pairs(info)do
 			nw:write(val.tpTo)
 			print('portal to', val.tpTo)
 		end
+	elseif k == 'texPack'then
+		if #v>64 then error('TexturePack URL too long')end
+		nw:write(string.char(9, #v))
+		nw:write(v)
 	else
 		print('Warning: Unknown MAPOPT %q skipped!'%k)
 	end

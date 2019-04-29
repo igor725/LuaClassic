@@ -20,17 +20,13 @@ config = {
 	types = {}
 }
 
-local default = [[
-player-timeout=10
-level-names=world]]
-
 function config:registerTypeFor(key, typ)
 	self.types[key] = typ
 	return self
 end
 
 function config:parse()
-	local f, err, ec = io.open('server.properties','rb')
+	local f, err, ec = io.open('server.properties', 'rb')
 	if not f then
 		if ec == 2 then
 			self.changed = true
@@ -65,7 +61,7 @@ end
 
 function config:save()
 	if not self.changed then return true end
-	local f, err = io.open('server.properties','wb')
+	local f, err = io.open('server.properties', 'wb')
 	if f then
 		for key, value in pairs(self.values)do
 			value = tostring(value)

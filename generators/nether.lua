@@ -352,7 +352,6 @@ return function(world, seed)
 		[2] = {250,10,10}
 	}
 
-	-- world.data.texPack = 'http://91.135.213.120/nether.png'
 	world.data.isNether = true
 	world.data.map_aspects = ma
 

@@ -170,6 +170,9 @@ local world_mt = {
 						pt2 = {p2x, p2y, p2z},
 						tpTo = wh:read(strsz)
 					})
+				elseif id == '\9'then
+					local len = wh:read(1):byte()
+					self.data.texPack = wh:read(len)
 				elseif id == '\255'then
 					break
 				else
@@ -214,6 +217,10 @@ local world_mt = {
 					p2x, p2y, p2z, #val.tpTo)
 					wh:write(val.tpTo)
 				end
+			elseif k == 'texPack'then
+				if #v>64 then error('TexturePack URL too long')end
+				wh:write(string.char(9, #v))
+				wh:write(v)
 			else
 				print('Warning: Unknown MAPOPT %q skipped!'%k)
 			end
