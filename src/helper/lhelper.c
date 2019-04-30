@@ -82,7 +82,7 @@ int meth_b64enc(lua_State *L)
 	return 1;
 }
 
-int luaopen_helper(lua_State *L)
+__declspec(dllexport) int luaopen_helper(lua_State *L)
 {
 	lua_pushcfunction(L, meth_digest);
 	lua_setglobal(L, "sha1");
