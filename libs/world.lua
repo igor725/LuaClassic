@@ -84,6 +84,12 @@ local world_mt = {
 				if #v>64 then error('TexturePack URL too long')end
 				wh:write(string.char(9, #v))
 				wh:write(v)
+			elseif k == 'wscripts'then
+				for name, script in pairs(v)do
+					packTo(wh, '>bBH', 10, #name, #script.body)
+					wh:write(name)
+					wh:write(script.body)
+				end
 			else
 				print('Warning: Unknown MAPOPT %q skipped!'%k)
 			end
@@ -255,6 +261,16 @@ local world_mt = {
 				elseif id == '\9'then
 					local len = wh:read(1):byte()
 					self.data.texPack = wh:read(len)
+				elseif id == '\10'then
+					local nl, sl = unpackFrom(wh, '>BH')
+					self.data.wscripts = self.data.wscripts or{}
+					local name = wh:read(nl)
+					local sl = wh:read(sl)
+					local sctbl = {
+						body = sl
+					}
+					self.data.wscripts[name] = sctbl
+					self:executeScript(name)
 				elseif id == '\255'then
 					break
 				else
@@ -265,6 +281,60 @@ local world_mt = {
 			return true
 		end
 		return false
+	end,
+
+	addScript = function(self, name, body)
+		if type(name)~='string' or #name>255 then return false end
+		if type(body)~='string' or #body>65535 then return false end
+		self.data.wscripts = self.data.wscripts or{}
+		self.data.wscripts[name] = {
+			body = body
+		}
+		return true
+	end,
+	addScriptFile = function(self, name, filename)
+		if type(name)~='string' or #name>255 then return false end
+		if type(filename)~='string' then return false end
+		local f = io.open(filename, 'rb')
+		if not f then return false end
+		local body = f:read(65535)
+		f:close()
+		self.data.wscripts = self.data.wscripts or{}
+		self.data.wscripts[name] = {
+			body = body
+		}
+		return true
+	end,
+	removeScript = function(self, name)
+		if not self.data.wscripts then return false end
+		self.data.wscripts[name] = nil
+		return true
+	end,
+	executeScript = function(self, name)
+		if not self.data.wscripts then return false end
+		local sctbl = self.data.wscripts[name]
+		if not sctbl then return false end
+
+		if config:get('world-scripts', false)then
+			local scret, succ
+			local chunk, err = loadstring(sctbl.body, name)
+			if not chunk then
+				sctbl.succ = false
+				sctbl.ret = err
+			else
+				succ, scret = pcall(chunk, self)
+			end
+			sctbl.ret = scret
+			sctbl.succ = succ
+			return true
+		end
+		return false
+	end,
+	scriptStatus = function(self, name)
+		if not self.data.wscripts then return false end
+		local sc = self.data.wscripts[name]
+		if not sc then return false end
+		return sc.succ, sc.ret
 	end,
 
 	isWorld = true,

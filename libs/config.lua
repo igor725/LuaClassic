@@ -4,12 +4,13 @@ config = {
 		['server-name'] = 'A Minecraft server',
 		['allow-websocket'] = true,
 		['websocket-port'] = 25566,
+		['server-ip'] = '0.0.0.0',
 		['server-port'] = 25565,
 		['max-players'] = 20,
-		['server-ip'] = '*',
 
 		['level-seeds'] = '',
 		['level-names'] = 'world',
+		['world-scripts'] = false,
 		['level-types'] = 'default',
 		['unload-world-after'] = 600,
 		['level-sizes'] = '256x256x256',
@@ -47,7 +48,7 @@ function config:parse()
 			local typ = self.types[key]
 			local gtyp = type(value)
 			if typ and gtyp~=typ then
-				print(CONF_VTYPERR%{key,gtyp,typ})
+				print(CONF_VTYPERR%{key,typ,gtyp})
 				return
 			end
 			self.values[key] = value
