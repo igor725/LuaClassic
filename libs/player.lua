@@ -7,7 +7,21 @@ local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
 	local ext = (jit.os=='Windows'and'dll')or'so'
 	package.cpath = './bin/'..jit.arch..'/?.'..ext
 
-	socket = require('socket.core')
+	do
+		local path = package.searchpath('socket.core', package.cpath)
+		if path then
+			local lib = package.loadlib(path, 'luaopen_socket_core')
+			if not lib then
+				lib = package.loadlib(path, 'luaopen_lanes_core')
+			end
+			if lib then
+				socket = lib()
+			end
+		end
+		if not socket then
+			error('Can\'t load socket library')
+		end
+	end
 	struct = require('struct')
 	gz = require('gzip')
 	if isWS then

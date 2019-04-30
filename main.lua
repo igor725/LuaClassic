@@ -28,8 +28,22 @@ sql = require('sqlite3')
 struct = require('struct')
 newWorld = require('world')
 newPlayer = require('player')
-socket = require('socket.core')
 lanes = require('lanes').configure()
+do
+	local path = package.searchpath('socket.core', package.cpath)
+	if path then
+		local lib = package.loadlib(path, 'luaopen_socket_core')
+		if not lib then
+			lib = package.loadlib(path, 'luaopen_lanes_core')
+		end
+		if lib then
+			socket = lib()
+		end
+	end
+	if not socket then
+		error('Can\'t load socket library')
+	end
+end
 
 require('cpe')
 require('conh')
