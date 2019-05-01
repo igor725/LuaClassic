@@ -60,15 +60,24 @@ local function gzerrstr(code)
 	return ffi.string(_zlib.zError(code))
 end
 
+local function defstreamend(stream)
+	return _zlib.deflateEnd(stream)
+end
+
+local function infstreamend(stream)
+	return _zlib.inflateEnd(stream)
+end
+
 local function deflate(_in,len,level,callback)
 	level = level or 4
 	local stream = ffi.new('z_stream')
 	local streamsz = ffi.sizeof(stream)
 	local ret =  _zlib.deflateInit2_(stream,level,Z_DEFLATED,GZ_WINDOWBITS,Z_MEMLEVEL,Z_DEFAULT_STRATEGY,Z_VER,streamsz)
+
 	if ret ~= Z_OK then
+		defstreamend(stream)
 		local err = gzerrstr(ret)
 		gzerr('init', err)
-		_zlib.deflateEnd(stream)
 		return false, err
 	end
 	stream.avail_in = len
@@ -82,14 +91,14 @@ local function deflate(_in,len,level,callback)
 		if ret == Z_STREAM_ERROR then
 			local err = gzerrstr(ret)
 			gzerr('compress', err)
-			_zlib.deflateEnd(stream)
+			defstreamend(stream)
 			return false, err
 		end
 
 		callback(outbuff, stream)
 	until stream.avail_out ~= 0
 
-	_zlib.deflateEnd(stream)
+	defstreamend(stream)
 	return true
 end
 
@@ -100,7 +109,7 @@ local function inflate(file,callback)
 	if ret ~= Z_OK then
 		local err = gzerrstr(ret)
 		gzerr('init', err)
-		_zlib.inflateEnd(stream)
+		infstreamend(stream)
 		return false, err
 	end
 
@@ -110,7 +119,7 @@ local function inflate(file,callback)
 
 		local ferr = C.ferror(file)
 		if ferr ~= 0 then
-			_zlib.inflateEnd(stream)
+			infstreamend(stream)
 			gzerr('data', ferr)
 			return false
 		end
@@ -119,24 +128,24 @@ local function inflate(file,callback)
 			stream.next_out = outbuff
 			stream.avail_out = CHUNK_SIZE
 			ret = _zlib.inflate(stream, Z_NO_FLUSH)
-			if ret == Z_BUF_ERROR then ret = Z_OK end
-			if ret ~= Z_OK and ret ~= Z_STREAM_END then
+			if ret ~= Z_OK and ret ~= Z_STREAM_END and
+			ret ~= Z_BUF_ERROR then
 				local err = gzerrstr(ret)
 				gzerr('decompress', err)
-				_zlib.inflateEnd(stream)
-				return false
+				infstreamend(stream)
+				return false, err
 			end
 
 			callback(outbuff, stream)
 		until stream.avail_out ~= 0
 	until ret == Z_STREAM_END
 
-	_zlib.inflateEnd(stream)
+	infstreamend(stream)
 	return true
 end
 
 return {
 	compress = deflate,
 	decompress = inflate,
-	defEnd = _zlib.deflateEnd
+	defEnd = defstreamend
 }
