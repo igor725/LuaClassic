@@ -36,10 +36,10 @@ local Z_STREAM_ERROR     = -2
 local Z_BUF_ERROR        = -5
 local Z_DEFAULT_STRATEGY =  0
 local Z_DEFLATED         =  8
+local Z_MEMLEVEL         =  8
 local GZ_WINDOWBITS      = 31
 local CHUNK_SIZE         = 1024
 local GZ_ERR             = 'gzip %s error: %s'
-local GZ_DATAERR         = 'gzip data error'
 
 local zLoaded, _zlib = pcall(ffi.load,'z')
 if not zLoaded then
@@ -47,19 +47,29 @@ if not zLoaded then
 	local path = ('./bin/%s/z.%s'):format(jit.arch, ext)
 	_zlib = ffi.load(path)
 end
+
 local Z_VER = _zlib.zlibVersion()
 local outbuff = ffi.new('char[?]',CHUNK_SIZE)
 local inbuff = ffi.new('char[?]',CHUNK_SIZE)
 
+local function gzerr(i,e)
+	print((GZ_ERR):format(i, e))
+end
+
+local function gzerrstr(code)
+	return ffi.string(_zlib.zError(code))
+end
+
 local function deflate(_in,len,level,callback)
 	level = level or 4
 	local stream = ffi.new('z_stream')
-	local ret =  _zlib.deflateInit2_(stream,level,Z_DEFLATED,GZ_WINDOWBITS,8,Z_DEFAULT_STRATEGY,Z_VER,ffi.sizeof(stream))
+	local streamsz = ffi.sizeof(stream)
+	local ret =  _zlib.deflateInit2_(stream,level,Z_DEFLATED,GZ_WINDOWBITS,Z_MEMLEVEL,Z_DEFAULT_STRATEGY,Z_VER,streamsz)
 	if ret ~= Z_OK then
-		local errstr = ffi.string(_zlib.zError(ret))
-		print(GZ_ERR%{'init',errstr})
+		local err = gzerrstr(ret)
+		gzerr('init', err)
 		_zlib.deflateEnd(stream)
-		return false
+		return false, err
 	end
 	stream.avail_in = len
 	stream.next_in = _in
@@ -70,10 +80,10 @@ local function deflate(_in,len,level,callback)
 		ret = _zlib.deflate(stream, Z_FINISH)
 
 		if ret == Z_STREAM_ERROR then
-			local errstr = ffi.string(_zlib.zError(ret))
-			print(string.format(GZ_ERR, 'compress', errstr))
+			local err = gzerrstr(ret)
+			gzerr('compress', err)
 			_zlib.deflateEnd(stream)
-			return false
+			return false, err
 		end
 
 		callback(outbuff, stream)
@@ -88,24 +98,21 @@ local function inflate(file,callback)
 	local ret = _zlib.inflateInit2_(stream,GZ_WINDOWBITS,Z_VER,ffi.sizeof('z_stream'))
 
 	if ret ~= Z_OK then
-		local errstr = ffi.string(_zlib.zError(ret))
-		print(string.format(GZ_ERR, 'init', errstr))
+		local err = gzerrstr(ret)
+		gzerr('init', err)
 		_zlib.inflateEnd(stream)
-		return false
+		return false, err
 	end
 
 	repeat
 		stream.next_in = inbuff
 		stream.avail_in = C.fread(inbuff, 1, CHUNK_SIZE, file)
 
-		if C.ferror(file)~=0 then
+		local ferr = C.ferror(file)
+		if ferr ~= 0 then
 			_zlib.inflateEnd(stream)
+			gzerr('data', ferr)
 			return false
-		end
-
-		if stream.avail_in == 0 then
-			_zlib.inflateEnd(stream)
-			return false, GZ_DATERR
 		end
 
 		repeat
@@ -114,8 +121,8 @@ local function inflate(file,callback)
 			ret = _zlib.inflate(stream, Z_NO_FLUSH)
 			if ret == Z_BUF_ERROR then ret = Z_OK end
 			if ret ~= Z_OK and ret ~= Z_STREAM_END then
-				local errstr = ffi.string(_zlib.zError(ret))
-				print(string.format(GZ_ERR, 'decompress', errstr))
+				local err = gzerrstr(ret)
+				gzerr('decompress', err)
 				_zlib.inflateEnd(stream)
 				return false
 			end
@@ -123,6 +130,7 @@ local function inflate(file,callback)
 			callback(outbuff, stream)
 		until stream.avail_out ~= 0
 	until ret == Z_STREAM_END
+
 	_zlib.inflateEnd(stream)
 	return true
 end

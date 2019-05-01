@@ -19,7 +19,7 @@ end
 
 local ext = (jit.os=='Windows'and'dll')or'so'
 package.cpath = './bin/%s/?.%s;'%{jit.arch,ext}
-package.path = './lua/?.lua;./lua/?/init.lua;./?.lua'
+package.path = './lua/?.lua;./?.lua'
 
 floor = math.floor
 ceil = math.ceil
@@ -76,10 +76,8 @@ function mc2ansi(str)
 		if ENABLE_ANSI then
 			str = str..'\27[0m'
 		end
-		return str
-	else
-		return str
 	end
+	return str
 end
 
 function print(...)
@@ -196,7 +194,7 @@ end
 
 function unloadWorld(wname)
 	local world = getWorld(wname)
-	if world==worlds['default']then
+	if world == worlds['default']then
 		return false
 	end
 

@@ -540,11 +540,13 @@ playersForEach(function(ply)
 		ply:kick(KICK_SVSTOP)
 	end
 end)
+
 if config:save()and permissions:save()then
 	print(CON_SAVESUCC)
 else
 	print(CON_SAVEERR)
 end
+
 for wname, world in pairs(worlds)do
 	if wname ~= 'default'then
 		io.write(CON_WSAVE%wname)
@@ -556,6 +558,7 @@ for wname, world in pairs(worlds)do
 		end
 	end
 end
+
 sql.close()
 if server then server:close()end
 if wsServer then wsServer:close()end
@@ -567,6 +570,7 @@ if not succ then
 		ecode = 1
 	end
 end
+
 if _STOP=='restart'then
 	os.execute(arg[-1]..' '..arg[0])
 end

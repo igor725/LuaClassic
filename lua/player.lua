@@ -40,7 +40,7 @@ local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
 	end
 
 	cl:send(mapStart)
-	gz.compress(map, maplen, cmplvl, function(out,stream)
+	local succ, gErr = gz.compress(map, maplen, cmplvl, function(out, stream)
 		local chunksz = 1024-stream.avail_out
 		local cdat = ffi.string(out, 1024)
 		local dat = struct.pack(fmt, 3, chunksz, cdat, 100)

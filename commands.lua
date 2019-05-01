@@ -21,32 +21,32 @@ end
 	Ingame commands
 ]]
 
-addChatCommand('rc',function(player)
+addChatCommand('rc', function(player)
 	local world = getWorld(player)
 	return CMD_WMODE%((world:toggleReadOnly()and'&aro&f')or'&crw&f')
 end)
 
-addChatCommand('info',function(player)
+addChatCommand('info', function(player)
 	player:sendMessage(CMD_SVINFO1%{jit.os,jit.arch,jit.version})
 	player:sendMessage(CMD_SVINFO2%{gcinfo()/1024})
 end)
 
-addChatCommand('clear',function(player)
+addChatCommand('clear', function(player)
 	for i=1,25 do
 		player:sendMessage('')
 	end
 end)
 
-addChatCommand('stop',function()
+addChatCommand('stop', function()
 	_STOP = true
 end)
 
 -- Temporarily (or not) disabled
--- addChatCommand('restart',function()
+-- addChatCommand('restart', function()
 -- 	_STOP = 'restart'
 -- end)
 
-addChatCommand('time',function(player,name)
+addChatCommand('time', function(player,name)
 	local world = getWorld(player)
 	if world.data.isNether then
 		return CMD_TIMEDISALLOW
@@ -68,9 +68,9 @@ local function unsel(player)
 	end
 end
 
-addChatCommand('unsel',unsel)
+addChatCommand('unsel', unsel)
 
-addChatCommand('sel',function(player)
+addChatCommand('sel', function(player)
 	if not player.onPlaceBlock then
 		player.onPlaceBlock = function(x, y, z, id)
 			if player.cuboidP1 then
@@ -90,7 +90,7 @@ addChatCommand('sel',function(player)
 	return CMD_SELMODE%'&aenabled'
 end)
 
-addChatCommand('mkportal',function(player, pname, wname)
+addChatCommand('mkportal', function(player, pname, wname)
 	local p1, p2 = player.cuboidP1, player.cuboidP2
 	if p1 and p2 then
 		local cworld = getWorld(player.worldName)
@@ -111,7 +111,7 @@ addChatCommand('mkportal',function(player, pname, wname)
 	end
 end)
 
-addChatCommand('setspawn',function(player)
+addChatCommand('setspawn', function(player)
 	local world = getWorld(player)
 	local x, y, z = player:getPos()
 	local ay, ap = player:getEyePos()
@@ -147,7 +147,7 @@ addChatCommand('set', function(player, id)
 	end
 end)
 
-addChatCommand('delportal',function(player, pname)
+addChatCommand('delportal', function(player, pname)
 	if not pname then return 'Invalid portal name'end
 	local world = getWorld(player).data
 	if world.portals then
@@ -159,7 +159,7 @@ addChatCommand('delportal',function(player, pname)
 	return CMD_NEPORTAL
 end)
 
-addChatCommand('tp',function(player, name, to)
+addChatCommand('tp', function(player, name, to)
 	if name then
 		ply = getPlayerByName(name)
 		if not ply then
@@ -188,11 +188,11 @@ addChatCommand('tp',function(player, name, to)
 	end
 end)
 
-addChatCommand('spawn',function(player)
+addChatCommand('spawn', function(player)
 	player:moveToSpawn()
 end)
 
-addChatCommand('list',function(player)
+addChatCommand('list', function(player)
 	player:sendMessage(CMD_WORLDLST)
 	for wn, world in pairs(worlds)do
 		if wn~='default'then
@@ -202,7 +202,7 @@ addChatCommand('list',function(player)
 	end
 end)
 
-addChatCommand('regen',function(player, gen, seed)
+addChatCommand('regen', function(player, gen, seed)
 	local world = getWorld(player.worldName)
 	gen = tonumber(gen)or gen
 
@@ -232,12 +232,12 @@ addConsoleCommand('stop', function()
 	return true
 end)
 
-addConsoleCommand('restart',function()
+addConsoleCommand('restart', function()
 	_STOP = 'restart'
 	return true
 end)
 
-addConsoleCommand('loadworld',function()
+addConsoleCommand('loadworld', function()
 	if #args == 1 then
 		local succ, err = loadWorld(args[1])
 		if not succ then
@@ -247,7 +247,7 @@ addConsoleCommand('loadworld',function()
 	end
 end)
 
-addConsoleCommand('unloadworld',function()
+addConsoleCommand('unloadworld', function()
 	if #args == 1 then
 		local succ, err = unloadWorld(args[1])
 		if not succ then
@@ -257,7 +257,7 @@ addConsoleCommand('unloadworld',function()
 	end
 end)
 
-addConsoleCommand('list',function()
+addConsoleCommand('list', function()
 	print(CMD_WORLDLST)
 	for wn, world in pairs(worlds)do
 		if wn~='default'then
@@ -268,28 +268,28 @@ addConsoleCommand('list',function()
 	return true
 end)
 
-addConsoleCommand('say',function(args, argstr)
+addConsoleCommand('say', function(args, argstr)
 	if #args > 0 then
 		newChatMessage(argstr)
 		return true
 	end
 end)
 
-addConsoleCommand('addperm',function(args)
+addConsoleCommand('addperm', function(args)
 	if #args == 2 then
 		permissions:addFor(args[1], args[2])
 		return true
 	end
 end)
 
-addConsoleCommand('delperm',function(args)
+addConsoleCommand('delperm', function(args)
 	if #args == 2 then
 		permissions:addFor(args[1], args[2])
 		return true
 	end
 end)
 
-addConsoleCommand('put',function(args)
+addConsoleCommand('put', function(args)
 	if #args == 2 then
 		local player = getPlayerByName(args[1])
 		if player then
@@ -301,7 +301,7 @@ addConsoleCommand('put',function(args)
 	end
 end)
 
-addConsoleCommand('kick',function(args)
+addConsoleCommand('kick', function(args)
 	if #args > 0 then
 		local p = getPlayerByName(args[1])
 		local reason = KICK_NOREASON
@@ -317,7 +317,7 @@ addConsoleCommand('kick',function(args)
 	end
 end)
 
-addConsoleCommand('regen',function(args)
+addConsoleCommand('regen', function(args)
 	if #args >= 1 then
 		local world = getWorld(args[1])
 		local gen = args[2]or'default'
@@ -331,7 +331,7 @@ addConsoleCommand('regen',function(args)
 	end
 end)
 
-addConsoleCommand('tp',function(args)
+addConsoleCommand('tp', function(args)
 	if #args == 2 then
 		local pn1 = args[1]
 		local pn2 = args[2]
@@ -352,7 +352,7 @@ addConsoleCommand('tp',function(args)
 	end
 end)
 
-addConsoleCommand('help',function()
+addConsoleCommand('help', function()
 	for k, v in pairs(_G)do
 		if k:sub(1,3) == 'CU_'then
 			print(v)
