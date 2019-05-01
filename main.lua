@@ -348,120 +348,7 @@ function handleConsoleCommand(cmd)
 	argstr = table.concat(args,' ')
 	cmd = cmd:lower()
 
-	if cmd == 'stop'then
-		_STOP = true
-	elseif cmd == 'restart'then
-		_STOP = 'restart'
-	elseif cmd == 'loadworld'then
-		if #args == 1 then
-			local succ, err = loadWorld(args[1])
-			if not succ then
-				print(err)
-			end
-		end
-	elseif cmd == 'unloadWorld'then
-		if #args == 1 then
-			local succ, err = unloadWorld(args[1])
-			if not succ then
-				print(err)
-			end
-		end
-	elseif cmd == 'list'then
-		print(CMD_WORLDLST)
-		for wn, world in pairs(worlds)do
-			if wn~='default'then
-				local dfld = (worlds['default']==world and' (default)')or''
-				print('   - '+wn+dfld)
-			end
-		end
-	elseif cmd == 'say'then
-		if #args > 0 then
-			newChatMessage(argstr)
-		else
-			print(CON_USE%CU_SAY)
-		end
-	elseif cmd == 'addperm'then
-		if #args == 2 then
-			permissions:addFor(args[1], args[2])
-		else
-			print(CON_USE%CU_ADDPERM)
-		end
-	elseif cmd == 'delperm'then
-		if #args == 2 then
-			permissions:addFor(args[1], args[2])
-		else
-			print(CON_USE%CU_DELPERM)
-		end
-	elseif cmd == 'put'then
-		if #args == 2 then
-			local player = getPlayerByName(args[1])
-			if player then
-				player:changeWorld(args[2])
-			else
-				print(MESG_PLAYERNF)
-			end
-		else
-			print(CON_USE%CU_PUT)
-		end
-	elseif cmd == 'kick'then
-		if #args > 0 then
-			local p = getPlayerByName(args[1])
-			local reason = KICK_NOREASON
-			if p then
-				if #args > 1 then
-					reason = table.concat(args, ' ', 2)
-				end
-				p:kick(reason)
-			else
-				print(MESG_PLAYERNF)
-			end
-		else
-			print(CON_USE%CU_KICK)
-		end
-	elseif cmd == 'regen'then
-		if #args >= 1 then
-			local world = getWorld(args[1])
-			local gen = args[2]or'default'
-			local seed = tonumber(args[3]or os.time())
-			local ret, tm = regenerateWorld(world, gen, seed)
-			if not ret then
-				print(CMD_GENERR%tostring(tm))
-			else
-				print(MESG_DONEIN%(tm*1000))
-			end
-		else
-			print(CON_USE%CU_REGEN)
-		end
-	elseif cmd == 'tp'then
-		if #args == 2 then
-			local pn1 = args[1]
-			local pn2 = args[2]
-			local p1 = getPlayerByName(pn1)
-			local p2 = getPlayerByName(pn2)
-			if not p1 then
-				print(MESG_PLAYERNFA%pn1)
-				return
-			end
-			if not p2 then
-				print(MESG_PLAYERNFA%pn2)
-				return
-			end
-			local wp2 = getWorld(p2)
-			if getWorld(p1)~=wp2 then
-				p1:changeWorld(wp2, false, p2:getPos())
-			else
-				p1:teleportTo(p2:getPos())
-			end
-		else
-			print(CON_USE%CU_TP)
-		end
-	elseif cmd == 'help' or cmd == '?'then
-		for k, v in pairs(_G)do
-			if k:sub(1,3) == 'CU_'then
-				print(v)
-			end
-		end
-	elseif cmd:sub(1,1) == '#'then
+	if cmd:sub(1,1) == '#'then
 		local code = cmd:sub(2)
 		if code:sub(1,1)=='='then
 			code = 'return '..code:sub(2)
@@ -481,7 +368,19 @@ function handleConsoleCommand(cmd)
 			print(MESG_ERROR%err)
 		end
 	else
-		print(MESG_UNKNOWNCMD)
+		local cmdf = concommands[cmd]
+		if cmdf then
+			local rtval, str = cmdf(args, argstr)
+			if not rtval then
+				local str = _G['CU_'+cmd:upper()]
+				if str then print(CON_USE%str)end
+			elseif rtval == true then
+				if str == nil then return end
+				print(str)
+			end
+		else
+			print(MESG_UNKNOWNCMD)
+		end
 	end
 end
 

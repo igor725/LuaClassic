@@ -19,7 +19,7 @@ end
 
 local ext = (jit.os=='Windows'and'dll')or'so'
 package.cpath = './bin/%s/?.%s;'%{jit.arch,ext}
-package.path = './libs/?.lua;./libs/?/init.lua;./?.lua'
+package.path = './lua/?.lua;./lua/?/init.lua;./?.lua'
 
 floor = math.floor
 ceil = math.ceil
@@ -37,6 +37,8 @@ end
 ENABLE_ANSI = checkEnv('ConEmuANSI','on')or checkEnv('TERM','xterm')
 
 local colorReplace
+local cprint = print
+local cwrite = io.write
 
 if ENABLE_ANSI then
 	local rt = {
@@ -80,9 +82,6 @@ function mc2ansi(str)
 	end
 end
 
-local cprint = print
-local cwrite = io.write
-
 function print(...)
 	local p = {...}
 	for i=1,#p do
@@ -90,6 +89,7 @@ function print(...)
 	end
 	cprint(unpack(p))
 end
+
 function io.write(...)
 	local p = {...}
 	for i=1,#p do
@@ -149,10 +149,10 @@ function table.hasValue(tbl, ...)
 end
 
 function string.split(self, sep)
-   local sep, fields = sep or ":", {}
-   local pattern = string.format("([^%s]+)", sep)
-   self:gsub(pattern, function(c) fields[#fields+1] = c end)
-   return fields
+	local sep, fields = sep or ":", {}
+	local pattern = string.format("([^%s]+)", sep)
+	self:gsub(pattern, function(c) fields[#fields+1] = c end)
+	return fields
 end
 
 function newChatMessage(msg, id)
@@ -314,9 +314,6 @@ function regenerateWorld(world, gentype, seed)
 end
 
 function bindSock(ip, port)
-	if ip == '*'then
-		ip = '0.0.0.0'
-	end
 	local sock = (socket.tcp4 and socket.tcp4())or socket.tcp()
 	assert(sock:setoption('tcp-nodelay', true))
 	assert(sock:setoption('reuseaddr', true))

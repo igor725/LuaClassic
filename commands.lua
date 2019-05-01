@@ -1,8 +1,25 @@
 commands = {}
+concommands = {}
 
 function addChatCommand(name, func)
 	commands[name] = func
 end
+
+function addConsoleCommand(name, func)
+	concommands[name] = func
+end
+
+function addAlias(isChatCommand, name, alias)
+	if isChatCommand then
+		commands[alias] = commands[name]
+	else
+		concommands[alias] = concommands[name]
+	end
+end
+
+--[[
+	Ingame commands
+]]
 
 addChatCommand('rc',function(player)
 	local world = getWorld(player)
@@ -205,3 +222,143 @@ addChatCommand('regen',function(player, gen, seed)
 		return MESG_DONEIN%(tm*1000)
 	end
 end)
+
+--[[
+	Console commands
+]]
+
+addConsoleCommand('stop', function()
+	_STOP = true
+	return true
+end)
+
+addConsoleCommand('restart',function()
+	_STOP = 'restart'
+	return true
+end)
+
+addConsoleCommand('loadworld',function()
+	if #args == 1 then
+		local succ, err = loadWorld(args[1])
+		if not succ then
+			return true, err
+		end
+		return true
+	end
+end)
+
+addConsoleCommand('unloadworld',function()
+	if #args == 1 then
+		local succ, err = unloadWorld(args[1])
+		if not succ then
+			return true, err
+		end
+		return true
+	end
+end)
+
+addConsoleCommand('list',function()
+	print(CMD_WORLDLST)
+	for wn, world in pairs(worlds)do
+		if wn~='default'then
+			local dfld = (worlds['default']==world and' (default)')or''
+			print('   - '+wn+dfld)
+		end
+	end
+	return true
+end)
+
+addConsoleCommand('say',function(args, argstr)
+	if #args > 0 then
+		newChatMessage(argstr)
+		return true
+	end
+end)
+
+addConsoleCommand('addperm',function(args)
+	if #args == 2 then
+		permissions:addFor(args[1], args[2])
+		return true
+	end
+end)
+
+addConsoleCommand('delperm',function(args)
+	if #args == 2 then
+		permissions:addFor(args[1], args[2])
+		return true
+	end
+end)
+
+addConsoleCommand('put',function(args)
+	if #args == 2 then
+		local player = getPlayerByName(args[1])
+		if player then
+			player:changeWorld(args[2])
+			return true
+		else
+			return MESG_PLAYERNF
+		end
+	end
+end)
+
+addConsoleCommand('kick',function(args)
+	if #args > 0 then
+		local p = getPlayerByName(args[1])
+		local reason = KICK_NOREASON
+		if p then
+			if #args > 1 then
+				reason = table.concat(args, ' ', 2)
+			end
+			p:kick(reason)
+			return true
+		else
+			return MESG_PLAYERNF
+		end
+	end
+end)
+
+addConsoleCommand('regen',function(args)
+	if #args >= 1 then
+		local world = getWorld(args[1])
+		local gen = args[2]or'default'
+		local seed = tonumber(args[3]or os.time())
+		local ret, tm = regenerateWorld(world, gen, seed)
+		if not ret then
+			return true, CMD_GENERR%tostring(tm)
+		else
+			return true, MESG_DONEIN%(tm*1000)
+		end
+	end
+end)
+
+addConsoleCommand('tp',function(args)
+	if #args == 2 then
+		local pn1 = args[1]
+		local pn2 = args[2]
+		local p1 = getPlayerByName(pn1)
+		local p2 = getPlayerByName(pn2)
+		if not p1 then
+			return true, MESG_PLAYERNFA%pn1
+		end
+		if not p2 then
+			return true, MESG_PLAYERNFA%pn2
+		end
+		local wp2 = getWorld(p2)
+		if getWorld(p1)~=wp2 then
+			p1:changeWorld(wp2, false, p2:getPos())
+		else
+			p1:teleportTo(p2:getPos())
+		end
+	end
+end)
+
+addConsoleCommand('help',function()
+	for k, v in pairs(_G)do
+		if k:sub(1,3) == 'CU_'then
+			print(v)
+		end
+	end
+	return true
+end)
+
+addAlias(false, 'help', '?')

@@ -81,8 +81,10 @@ function config:get(key, default)
 	if v ~= nil then
 		return v
 	end
-	self:set(key, default)
-	return default
+	if default ~= nil then
+		self:set(key, default)
+		return default
+	end
 end
 
 function config:set(key, value)
