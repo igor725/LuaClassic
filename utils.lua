@@ -1,5 +1,36 @@
 ffi = require('ffi')
 C = ffi.C
+ffi.cdef[[
+	typedef unsigned char uchar;
+
+	typedef struct {
+		uchar r;
+		uchar g;
+		uchar b;
+	} color;
+	typedef struct {
+		float x;
+		float y;
+		float z;
+	} vector;
+	typedef struct {
+		float yaw;
+		float pitch;
+	} angle;
+]]
+
+function newColor(r,g,b)
+	r, g, b = r or 255, g or 255, b or 255
+	return ffi.new('color', r, g, b)
+end
+
+function newAngle(y,p)
+	return ffi.new('angle', y, p)
+end
+
+function newVector(x,y,z)
+	return ffi.new('vector', x, y, z)
+end
 
 local meta = debug.getmetatable('')
 meta.__mod = function(self,vars)

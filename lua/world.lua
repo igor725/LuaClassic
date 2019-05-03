@@ -61,8 +61,8 @@ local world_mt = {
 			elseif k == 'isNether'then
 				packTo(wh, '>bb', 3, (v and 1)or 0)
 			elseif k == 'colors'then
-				for id, rgb in pairs(v)do
-					packTo(wh, 'bbbbb', 4, id, unpack(rgb))
+				for id, c in pairs(v)do
+					packTo(wh, 'bbbbb', 4, id, c.r, c.g, c.b)
 				end
 			elseif k == 'map_aspects'then
 				for id, val in pairs(v)do
@@ -240,7 +240,7 @@ local world_mt = {
 				elseif id == '\4'then
 					local ct, r, g, b = unpackFrom(wh, 'BBBB')
 					self.data.colors = self.data.colors or{}
-					self.data.colors[ct] = {r,g,b}
+					self.data.colors[ct] = newColor(r,g,b)
 				elseif id == '\5'then
 					local ct, val = unpackFrom(wh, '>bI')
 					self.data.map_aspects = self.data.map_aspects or{}

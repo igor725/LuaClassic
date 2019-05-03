@@ -54,8 +54,6 @@ require('packets')
 require('commands')
 require('permissions')
 
-CTIME = socket.gettime()
-
 function onConnectionAttempt(ip, port)
 end
 
@@ -111,9 +109,11 @@ function onPlayerChatMessage(player, message)
 	if prt~=nil then
 		message = tostring(prt)
 	end
-	message = message:gsub('%%(%x)','&%1')
-	printf(os.date('[%H:%M:%S] %%s: %%s'), player:getName(), mc2ansi(message))
 	local starts = message:sub(1,1)
+	if starts~='#'then
+		message = message:gsub('%%(%x)','&%1')
+	end
+	printf(os.date('[%H:%M:%S] %%s: %%s'), player:getName(), mc2ansi(message))
 	if starts=='#'then
 		if player:checkPermission('server.luaexec')then
 			local code = message:sub(2)
@@ -506,11 +506,12 @@ function init()
 	cmdh = initCmdHandler(handleConsoleCommand)
 	print(CON_HELP)
 	CTIME = socket.gettime()
+	return true
 end
 
 succ, err = xpcall(function()
 	while not _STOP do
-		if not INITED then INITED=true init()end
+		if not INITED then INITED=init()end
 		ETIME = CTIME
 		CTIME = socket.gettime()
 		if ETIME then

@@ -53,8 +53,8 @@ addChatCommand('time', function(player,name)
 	end
 	if name and time_presets[name]then
 		for i=0,4 do
-			local r, g, b = unpack(time_presets[name][i])
-			EnvColors:set(world, i, r, g, b)
+			local c = time_presets[name][i]
+			EnvColors:set(world, i, c.r, c.g, c.b)
 		end
 		return CMD_TIMECHANGE%name
 	end

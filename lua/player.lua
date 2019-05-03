@@ -86,10 +86,11 @@ local player_mt = {
 		end
 	end,
 	getEyePos = function(self,forNet)
+		local eye = self.eye
 		if forNet then
-			return floor((self.eye.y/360)*255), floor((self.eye.p/360)*255)
+			return floor((eye.yaw/360)*255), floor((eye.pitch/360)*255)
 		else
-			return self.eye.y, self.eye.p
+			return eye.yaw, eye.pitch
 		end
 	end,
 	getOnlineTime = function(self)
@@ -129,10 +130,10 @@ local player_mt = {
 	setEyePos = function(self,y,p)
 		if not self.isSpawned then return false end
 		local eye = self.eye
-		local ly, lp = eye.y, eye.p
+		local ly, lp = eye.yaw, eye.pitch
 		if ly~=y or lp~=p then
-			eye.y = y
-			eye.p = p
+			eye.yaw = y
+			eye.pitch = p
 			onPlayerRotate(self, y, p)
 			return true
 		end
@@ -289,8 +290,8 @@ local player_mt = {
 			self.pos.x = sx
 			self.pos.y = sy
 			self.pos.z = sz
-			self.eye.y = ay
-			self.eye.p = ap
+			self.eye.yaw = ay
+			self.eye.pitch = ap
 
 			if hsFlag==0x42 then
 				cpe:startFor(self)
@@ -590,12 +591,14 @@ local player_mt = {
 			self:destroy()
 			return
 		end
+
 		if CTIME>self.kickTimeout then
 			if self.isSpawned then
 				self:kick(KICK_TIMEOUT)
 				return
 			end
 		end
+
 		if self.thread then
 			if self.thread.status == 'error'then
 				print(self.thread[-1])
@@ -622,6 +625,7 @@ local player_mt = {
 			end
 			return
 		end
+
 		if not self.handshaked then
 			if self.isWS then
 				self.handshaked = self:checkForWsHandshake()
@@ -637,11 +641,12 @@ local player_mt = {
 			end
 		end
 
-		if not self.handshaked then return end
-		if self.isWS then
-			self:readWsData()
-		else
-			self:readRawData()
+		if self.handshaked then
+			if self.isWS then
+				self:readWsData()
+			else
+				self:readRawData()
+			end
 		end
 	end,
 	isPlayer = true
@@ -656,12 +661,11 @@ return function(cl)
 	return setmetatable({
 		kickTimeout = CTIME+getKickTimeout(),
 		connectTime = CTIME,
-		pos = {x=0,y=0,z=0},
+		pos = newVector(0,0,0),
 		isSpawned = false,
-		eye = {y=0,p=0},
 		waitingExts = -1,
+		eye = newAngle(0,0),
 		extensions = {},
-		inited = false,
 		client = cl
 	}, player_mt)
 end
