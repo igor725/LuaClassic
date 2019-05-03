@@ -207,16 +207,12 @@ function onPlayerMove(player, dx, dy, dz)
 	if portals then
 		local x, y, z = player:getPos()
 		for _, portal in pairs(portals)do
-			if portal then
-				y = floor(y)
-				if portal.pt1[1]>=x and portal.pt2[1]<=x then
-					if portal.pt1[2]>=y and portal.pt2[2]<=y then
-						if portal.pt1[3]>=z and portal.pt2[3]<=z then
-							player:changeWorld(portal.tpTo, true)
-							return
-						end
-					end
-				end
+			y = floor(y)
+			if(portal.pt1[1]>=x and portal.pt2[1]<=x)and
+			(portal.pt1[2]>=y and portal.pt2[2]<=y)and
+			(portal.pt1[3]>=z and portal.pt2[3]<=z)then
+				player:changeWorld(portal.tpTo, true)
+				break
 			end
 		end
 	end

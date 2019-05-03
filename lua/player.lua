@@ -239,8 +239,8 @@ local player_mt = {
 			self:despawn()
 			self.worldName = wname
 			self.handshakeStage2 = true
-			self.eye.y = ay or wse[1]
-			self.eye.p = ap or wse[2]
+			self.eye.yaw = ay or wse[1]
+			self.eye.pitch = ap or wse[2]
 			self.pos.x = x or wsp[1]
 			self.pos.y = y or wsp[2]
 			self.pos.z = z or wsp[3]
