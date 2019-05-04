@@ -9,10 +9,9 @@ All of necessary libraries already compiled for Linux (arm, x86_64) and Windows 
 Server tested on Debian Stretch/Buster, Arch Linux, Raspbian and Windows 10. On other systems stable work is not guaranteed.
 
 # Using
-1. Run ```luajit main.lua``` and let the server to generate config files
-2. Press Ctrl+C
+1. Run ```./start.sh``` (on Windows ```start.bat```) and let the server to generate config files
 3. Modify configuration files as you needed
-4. Start server again with ```luajit main.lua```
+4. Execute "restart" command
 
 # Deps
 * [LuaJIT](http://luajit.org/download.html)
