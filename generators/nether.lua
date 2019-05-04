@@ -1,8 +1,3 @@
-GEN_ENABLE_CAVES = true
-GEN_ENABLE_TREES = true
-GEN_ENABLE_ORES = true
-GEN_ENABLE_HOUSES = true
-
 local STEP = 20
 local heightGrass
 local heightLava
@@ -308,23 +303,7 @@ return function(world, seed)
 		threads[i] = sendMap_gen(mapaddr, dx, dy, dz, heightMap, heightLava, startX, endX, layers)
 	end
 
-	count = #threads
-
-	while count > 0 do
-		local thread = threads[count]
-		if thread then
-			if thread.status == "error" then
-				print(thread[1])
-			elseif thread.status == "done" then
-				count = count - 1
-			end
-		else
-			socket.sleep(.1)
-		end
-	end
-
-	threads = {}
-	count = 0
+	watchThreads(threads)
 
 	local x, z = math.random(1, dx), math.random(1, dz)
 	local y = getHeight(x,z)
@@ -347,10 +326,8 @@ return function(world, seed)
 		[9] = 0
 	}
 
-	world.data.colors = {
-		[0] = {255,0,0},
-		[2] = {250,10,10}
-	}
+	world:setEnvColor(255,0,0)
+	world:setEnvColor(250,10,10)
 
 	world.data.isNether = true
 	world.data.map_aspects = ma

@@ -386,3 +386,18 @@ function bindSock(ip, port)
 	assert(sock:listen())
 	return sock
 end
+
+function watchThreads(threads)
+	while #threads > 0 do
+		local thread = threads[#threads]
+		if thread then
+			if thread.status == "error" then
+				print(thread[1])
+			elseif thread.status == "done" then
+				table.remove(threads, #threads)
+			end
+		else
+			socket.sleep(.05)
+		end
+	end
+end

@@ -399,6 +399,8 @@ function init()
 		require('helper')
 	end
 
+	cpe:init()
+
 	io.write(CON_WLOAD)
 	local sdlist = config:get('level-seeds', '')
 	sdlist = sdlist:split(',')
@@ -451,7 +453,7 @@ function init()
 		print(CON_WLOADERR)
 		os.exit(1)
 	end
-	cpe:init()
+
 	local add = ''
 	if wsServer then
 		add = CON_WSBINDSUCC%wsPort

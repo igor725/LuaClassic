@@ -664,78 +664,69 @@ return function(world, seed)
 	io.write('terrain, ')
 	local threads = {}
 
-	local count = config:get('generator-threads-count', 2)
-	for i = 0, count-1 do
-		startX = math.floor(dx * i / count)
-		endX = math.floor(dx * (i + 1) / count) - 1
+	local thlimit = config:get('generator-threads-count', 2)
+	for i = 0, thlimit-1 do
+		startX = math.floor(dx * i / thlimit)
+		endX = math.floor(dx * (i + 1) / thlimit) - 1
 
-		local sendMap_gen = lanes.gen('*', threadTerrain)
-		threads[i] = sendMap_gen(mapaddr, dx, dy, dz, heightMap, heightWater, startX, endX, heightStone)
+		local terrain_gen = lanes.gen('*', threadTerrain)
+		threads[i] = terrain_gen(mapaddr, dx, dy, dz, heightMap, heightWater, startX, endX, heightStone)
 	end
-
-	count = #threads
-
-	while count > 0 do
-		local thread = threads[count]
-		if thread then
-			if thread.status == "error" then
-				print(thread[1])
-			elseif thread.status == "done" then
-				count = count - 1
-			end
-		else
-			socket.sleep(.1)
-		end
-	end
-
-	threads = {}
-	count = 0
+	watchThreads(threads)
 
 	-- ores
 	if GEN_ENABLE_ORES then
 		io.write('ores, ')
-		local sendMap_gen = lanes.gen('*', generateOre)
+		local ores_gen = lanes.gen('*', generateOre)
 
-		count = count + 1
-		threads[count] = sendMap_gen(mapaddr, dx, dy, dz, heightMap, heightGrass)
+		table.insert(threads, ores_gen(mapaddr, dx, dy, dz, heightMap, heightGrass))
+	end
+
+	if #threads == thlimit then
+		watchThreads(threads)
 	end
 
 	-- trees
 	if GEN_ENABLE_TREES then
-		local sendMap_gen = lanes.gen('*', generateTrees)
+		io.write('trees, ')
+		local trees_gen = lanes.gen('*', generateTrees)
 
-		count = count + 1
-		threads[count] = sendMap_gen(mapaddr, dx, dy, dz, heightMap)
+		table.insert(threads, trees_gen(mapaddr, dx, dy, dz, heightMap))
+	end
+
+	if #threads == thlimit then
+		watchThreads(threads)
 	end
 
 	-- houses
 	if GEN_ENABLE_HOUSES then
 		io.write('houses, ')
-		local sendMap_gen = lanes.gen('*', generateHouse)
+		local houses_gen = lanes.gen('*', generateHouse)
 
-		count = count + 1
-		threads[count] = sendMap_gen(mapaddr, dx, dy, dz, heightMap, heightWater)
+		table.insert(threads, houses_gen(mapaddr, dx, dy, dz, heightMap, heightWater))
 	end
+
+	watchThreads(threads)
 
 	if GEN_ENABLE_CAVES then
 		io.write('caves, ')
-		local limit = config:get('generator-threads-count', 2)
-		local sendMap_gen = lanes.gen('*', generateCaves)
+		local caves_gen = lanes.gen('*', generateCaves)
+		local count = 0
 
 		local CAVES_COUNT = dx * dy * dz / 700000
 		for i = 1, CAVES_COUNT do
-			if count > limit then
-				local thread = threads[1]
-
+			if count > thlimit then
 				while true do
+					local thread = threads[1]
 					if thread then
 						if thread.status == "error" then
 							print(thread[1])
-							table.remove(threads, 1)
 						elseif thread.status == "done" then
 							count = count - 1
 							table.remove(threads, 1)
-							break
+							if count == 0 then
+								break
+							end
 						end
 					else
 						socket.sleep(.1)
@@ -744,22 +735,11 @@ return function(world, seed)
 			end
 
 			count = count + 1
-			threads[count] = sendMap_gen(mapaddr, dx, dy, dz, heightMap, heightGrass, heightLava, seed + i)
+			threads[count] = caves_gen(mapaddr, dx, dy, dz, heightMap, heightGrass, heightLava, seed + i)
 		end
 	end
 
-	while count > 0 do
-		local thread = threads[count]
-		if thread then
-			if thread.status == "error" then
-				print(thread[1])
-			elseif thread.status == "done" then
-				count = count - 1
-			end
-		else
-			socket.sleep(.1)
-		end
-	end
+	watchThreads(threads)
 
 	local x, z = math.random(1, dx), math.random(1, dz)
 	local y = getHeight(x,z)
