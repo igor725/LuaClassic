@@ -152,6 +152,9 @@ local world_mt = {
 	getName = function(self)
 		return self.wname
 	end,
+	getData = function(self,key)
+		return self.data[key]
+	end,
 
 	setBlock = function(self,x,y,z,id)
 		if not self.ldata then return false end
@@ -160,27 +163,34 @@ local world_mt = {
 		self.ldata[offset] = id
 	end,
 	setSpawn = function(self,x,y,z,ay,ap)
-		local data = self.data
-		if x and y and z then
-			local sp = data.spawnpoint
-			sp[1] = x sp[2] = y sp[3] = z
-		end
-		if ay and ap then
-			local eye = data.spawnpointeye
-			eye[1] = ay eye[2] = ap
-		end
+		if not x or not y or not z then return false end
+		ay, ap = ay or 0, ap or 0
+		local sp = self:getData('spawnpoint')
+		local eye = self:getData('spawnpointeye')
+
+		sp[1] = x sp[2] = y sp[3] = z
+		eye[1] = ay eye[2] = ap
+		return true
 	end,
-	setName = function(self, name)
+	setName = function(self,name)
 		if type(name)~='string' then return false end
 		self.wname = name
 		return true
 	end,
+	setData = function(self,key,val)
+		if not self.data then return false end
+		self.data[key] = val
+		return val
+	end,
+	setDataInv = function(self,key)
+		return self:setData(key, not self:getData(key))
+	end,
 	setReadOnly = function(self,b)
-		self.data.readonly = b
+		self:setData('readonly', b)
 		return true
 	end,
 	toggleReadOnly = function(self)
-		self.data.readonly = not self.data.readonly
+		self:setDataInv('readonly')
 		return self.data.readonly
 	end,
 
@@ -348,7 +358,7 @@ end
 
 return function(wh, wn)
 	local world =
-	setmetatable({}, world_mt)
+	setmetatable({data={}}, world_mt)
 
 	if wh and wn then
 		if world:readLevelInfo(wh)then

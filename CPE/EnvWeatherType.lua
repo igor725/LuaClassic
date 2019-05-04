@@ -37,7 +37,7 @@ function wt:setWeather(world, w)
 			weatherFor(player, w)
 		end
 	end)
-	world.data.weather = w
+	world:setData('weather', w)
 	return true
 end
 

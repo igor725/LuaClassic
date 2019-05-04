@@ -222,7 +222,8 @@ end
 
 function loadWorld(wname)
 	if worlds[wname]then return false end
-	local status, world = pcall(newWorld,wname)
+	local lvlh = io.open('worlds/'+wname+'.map', 'rb')
+	local status, world = pcall(newWorld,lvlh,wname)
 	if status then
 		worlds[wname] = world
 		return true

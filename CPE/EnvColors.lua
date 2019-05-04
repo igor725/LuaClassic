@@ -40,7 +40,7 @@ end
 
 local function getClrs(world)
 	world = getWorld(world)
-	local clr = world.data.colors
+	local clr = world:getData('colors')
 	if not clr then
 		clr = {}
 		world.data.colors = clr
@@ -76,8 +76,13 @@ function ec:prePlayerSpawn(player)
 end
 
 function ec:set(world, typ, r, g, b)
-	local clr = getClrs(world)[typ]
-	clr.r, clr.g, clr.b = r, g, b
+	local colors = getClrs(world)
+	local clr = colors[typ]
+	if clr then
+		clr.r, clr.g, clr.b = r, g, b
+	else
+		colors[typ] = newColor(r,g,b)
+	end
 	playersForEach(function(player)
 		if player:isInWorld(world)then
 			updateEnvColorsFor(player, typ, r, g, b)

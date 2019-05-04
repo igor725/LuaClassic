@@ -27,7 +27,7 @@ end
 
 local function getMa(world)
 	world = getWorld(world)
-	local ma = world.data.map_aspects
+	local ma = world:getData('map_aspects')
 	if not ma then
 		ma = {}
 		world.data.map_aspects = ma
