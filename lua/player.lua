@@ -3,6 +3,8 @@ local function getKickTimeout()
 end
 
 local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
+	set_debug_threadname('MapSender')
+
 	ffi = require('ffi')
 	local ext = (jit.os=='Windows'and'dll')or'so'
 	package.cpath = './bin/'..jit.arch..'/?.'..ext

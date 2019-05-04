@@ -128,6 +128,7 @@ end
 
 -- Generate
 local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightLava, startX, endX, layers)
+	set_debug_threadname('TerrainGenerator')
 	ffi = require("ffi")
 
 	local map = ffi.cast('char*', mapaddr)

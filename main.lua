@@ -307,17 +307,12 @@ function createPlayer(cl,isWS)
 end
 
 function handleConsoleCommand(cmd)
-	args = cmd:split('%s')
-	cmd = table.remove(args, 1)
-	if not cmd then return end
-	argstr = table.concat(args,' ')
-	cmd = cmd:lower()
-
 	if cmd:sub(1,1) == '#'then
 		local code = cmd:sub(2)
 		if code:sub(1,1)=='='then
 			code = 'return '..code:sub(2)
 		end
+
 		local chunk, err = loadstring(code)
 		if chunk then
 			local ret = {pcall(chunk)}
@@ -333,6 +328,12 @@ function handleConsoleCommand(cmd)
 			print(MESG_ERROR%err)
 		end
 	else
+		local args = cmd:split('%s')
+		cmd = table.remove(args, 1)
+		if not cmd then return end
+		local argstr = table.concat(args,' ')
+		cmd = cmd:lower()
+
 		local cmdf = concommands[cmd]
 		if cmdf then
 			local rtval, str = cmdf(args, argstr)

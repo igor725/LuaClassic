@@ -137,6 +137,7 @@ end
 
 -- Generate
 local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightWater, startX, endX, heightStone)
+	set_debug_threadname('TerrainGenerator')
 	ffi = require("ffi")
 
 	local map = ffi.cast('char*', mapaddr)
@@ -322,6 +323,7 @@ end
 
 
 local function generateTrees(mapaddr, dx, dy, dz, heightMap)
+	set_debug_threadname('TreesGenerator')
 	ffi = require("ffi")
 
 	local map = ffi.cast('char*', mapaddr)
@@ -423,6 +425,7 @@ local function generateTrees(mapaddr, dx, dy, dz, heightMap)
 end
 
 local function generateHouse(mapaddr, dimx, dimy, dimz, heightMap, heightWater)
+	set_debug_threadname('HousesGenerator')
 	ffi = require("ffi")
 
 	local map = ffi.cast('char*', mapaddr)
@@ -538,6 +541,7 @@ end
 
 
 local function generateOre(mapaddr, dimx, dimy, dimz, heightMap, heightGrass)
+	set_debug_threadname('OreGenerator')
 	ffi = require("ffi")
 
 	local map = ffi.cast('char*', mapaddr)
@@ -572,6 +576,7 @@ local function generateOre(mapaddr, dimx, dimy, dimz, heightMap, heightGrass)
 end
 
 local function generateCaves(mapaddr, dimx, dimy, dimz, heightMap, heightGrass, heightLava, seed)
+	set_debug_threadname('CavesGenerator')
 	math.randomseed(seed)
 
 	ffi = require("ffi")
