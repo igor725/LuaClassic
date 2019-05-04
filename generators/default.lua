@@ -753,15 +753,11 @@ return function(world, seed)
 	end
 
 	world:setSpawn(x,y+2,z,0,0)
-
-	local ma = {
-		[0] = 0,
-		[1] = 8,
-		[2] = heightWater + 1,
-		[9] = 0
-	}
-	world.data.map_aspects = ma
-	world.data.isNether = false
+	world:setEnvProp(0, 0)
+	world:setEnvProp(1, 8)
+	world:setEnvProp(2, heightWater + 1)
+	world:setEnvProp(9, 0)
+	world:setData('isNether', false)
 
 	return true
 end

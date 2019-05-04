@@ -299,8 +299,8 @@ return function(world, seed)
 		startX = math.floor(dx * i / count)
 		endX = math.floor(dx * (i + 1) / count) - 1
 
-		local sendMap_gen = lanes.gen('*', threadTerrain)
-		threads[i] = sendMap_gen(mapaddr, dx, dy, dz, heightMap, heightLava, startX, endX, layers)
+		local terrain_gen = lanes.gen('*', threadTerrain)
+		threads[i] = terrain_gen(mapaddr, dx, dy, dz, heightMap, heightLava, startX, endX, layers)
 	end
 
 	watchThreads(threads)
@@ -316,21 +316,15 @@ return function(world, seed)
 		end
 	end
 
-	world:setSpawn(x,y+2,z,0,0)
-
-	local ma = {
-		[0] = 0,
-		[1] = 11,
-		[2] = heightLava + 1,
-		[3] = -10000,
-		[9] = 0
-	}
-
-	world:setEnvColor(255,0,0)
-	world:setEnvColor(250,10,10)
-
-	world.data.isNether = true
-	world.data.map_aspects = ma
+	world:setSpawn(x, y+2, z)
+	world:setEnvProp(0, 0)
+	world:setEnvProp(1, 11)
+	world:setEnvProp(2, heightLava + 1)
+	world:setEnvProp(3, -10000)
+	world:setEnvProp(9, 0)
+	world:setEnvColor(EC_SKY, 255, 0, 0)
+	world:setEnvColor(EC_FOG, 250, 10, 10)
+	world:setData('isNether', true)
 
 	return true
 end
