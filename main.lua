@@ -113,7 +113,7 @@ function onPlayerChatMessage(player, message)
 	if starts~='#'then
 		message = message:gsub('%%(%x)','&%1')
 	end
-	printf(os.date('[%H:%M:%S] %%s: %%s'), player:getName(), mc2ansi(message))
+	printf('%s: %s', player:getName(), mc2ansi(message))
 	if starts=='#'then
 		if player:checkPermission('server.luaexec')then
 			local code = message:sub(2)
@@ -504,6 +504,7 @@ function init()
 	return true
 end
 
+print(CON_START)
 succ, err = xpcall(function()
 	while not _STOP do
 		if not INITED then INITED=init()end
@@ -528,7 +529,6 @@ succ, err = xpcall(function()
 end,debug.traceback)
 
 ecode = 0
-print(CON_SVSTOP)
 playersForEach(function(ply)
 	if _STOP == 'restart'then
 		ply:kick(KICK_SVRST)
@@ -543,17 +543,19 @@ else
 	print(CON_SAVEERR)
 end
 
+io.write(CON_WSAVE)
 for wname, world in pairs(worlds)do
 	if wname ~= 'default'then
-		io.write(CON_WSAVE%wname)
+		io.write('\n\t',wname,': ')
 		local s = socket.gettime()
 		if world:save()then
-			printf(MESG_DONEIN, (socket.gettime()-s)*1000)
+			io.write(MESG_DONEIN%((socket.gettime()-s)*1000))
 		else
-			print(IE_UE)
+			io.write(IE_UE)
 		end
 	end
 end
+io.write('\n')
 
 sql.close()
 if server then server:close()end
@@ -569,6 +571,8 @@ end
 
 if _STOP == 'restart'then
 	ecode = 2
+else
+	print(CON_SVSTOP)
 end
 
 os.exit(ecode)

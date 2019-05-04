@@ -116,7 +116,14 @@ function print(...)
 	for i=1,#p do
 		p[i] = mc2ansi(tostring(p[i]))
 	end
+	p[1] = os.date('[%H:%M:%S] ')..p[1]
 	cprint(unpack(p))
+end
+
+function printf(...)
+	local str = string.format(...)
+	print(str)
+	return str
 end
 
 function io.write(...)
@@ -350,10 +357,4 @@ function bindSock(ip, port)
 	assert(sock:bind(ip, port))
 	assert(sock:listen())
 	return sock
-end
-
-function printf(...)
-	local str = string.format(...)
-	print(str)
-	return str
 end
