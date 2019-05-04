@@ -129,7 +129,6 @@ end
 -- Generate
 local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightLava, startX, endX, layers)
 	set_debug_threadname('TerrainGenerator')
-	ffi = require("ffi")
 
 	local map = ffi.cast('char*', mapaddr)
 	local size = dx * dy * dz + 4
@@ -300,7 +299,7 @@ return function(world, seed)
 		startX = math.floor(dx * i / count)
 		endX = math.floor(dx * (i + 1) / count) - 1
 
-		local terrain_gen = lanes.gen('*', threadTerrain)
+		local terrain_gen = lanes.gen('math,ffi', threadTerrain)
 		threads[i] = terrain_gen(mapaddr, dx, dy, dz, heightMap, heightLava, startX, endX, layers)
 	end
 
@@ -326,6 +325,7 @@ return function(world, seed)
 	world:setEnvColor(EC_SKY, 255, 0, 0)
 	world:setEnvColor(EC_FOG, 250, 10, 10)
 	world:setData('isNether', true)
+	collectgarbage()
 
 	return true
 end

@@ -138,7 +138,6 @@ end
 -- Generate
 local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightWater, startX, endX, heightStone)
 	set_debug_threadname('TerrainGenerator')
-	ffi = require("ffi")
 
 	local map = ffi.cast('char*', mapaddr)
 	local size = dx * dy * dz + 4
@@ -324,7 +323,6 @@ end
 
 local function generateTrees(mapaddr, dx, dy, dz, heightMap)
 	set_debug_threadname('TreesGenerator')
-	ffi = require("ffi")
 
 	local map = ffi.cast('char*', mapaddr)
 	local size = dx * dy * dz + 4
@@ -426,7 +424,6 @@ end
 
 local function generateHouse(mapaddr, dimx, dimy, dimz, heightMap, heightWater)
 	set_debug_threadname('HousesGenerator')
-	ffi = require("ffi")
 
 	local map = ffi.cast('char*', mapaddr)
 	local size = dimx * dimy * dimz + 4
@@ -542,7 +539,6 @@ end
 
 local function generateOre(mapaddr, dimx, dimy, dimz, heightMap, heightGrass)
 	set_debug_threadname('OreGenerator')
-	ffi = require("ffi")
 
 	local map = ffi.cast('char*', mapaddr)
 	local size = dimx * dimy * dimz + 4
@@ -578,8 +574,6 @@ end
 local function generateCaves(mapaddr, dimx, dimy, dimz, heightMap, heightGrass, heightLava, seed)
 	set_debug_threadname('CavesGenerator')
 	math.randomseed(seed)
-
-	ffi = require("ffi")
 
 	local map = ffi.cast('char*', mapaddr)
 	local size = dimx * dimy * dimz + 4
@@ -649,6 +643,8 @@ local function fillStone(world, dimx, dimz)
 	ffi.fill(world.ldata + 4 + dimx * dimz, dimx * dimz * (heightStone - 1), 1)
 end
 
+local lanelibs = 'math,ffi'
+
 -- Main
 return function(world, seed)
 	seed = seed or (os.clock()*os.time())
@@ -674,7 +670,7 @@ return function(world, seed)
 		startX = math.floor(dx * i / thlimit)
 		endX = math.floor(dx * (i + 1) / thlimit) - 1
 
-		local terrain_gen = lanes.gen('*', threadTerrain)
+		local terrain_gen = lanes.gen(lanelibs, threadTerrain)
 		threads[i] = terrain_gen(mapaddr, dx, dy, dz, heightMap, heightWater, startX, endX, heightStone)
 	end
 	watchThreads(threads)
@@ -682,7 +678,7 @@ return function(world, seed)
 	-- ores
 	if GEN_ENABLE_ORES then
 		io.write('ores, ')
-		local ores_gen = lanes.gen('*', generateOre)
+		local ores_gen = lanes.gen(lanelibs, generateOre)
 
 		table.insert(threads, ores_gen(mapaddr, dx, dy, dz, heightMap, heightGrass))
 	end
@@ -694,7 +690,7 @@ return function(world, seed)
 	-- trees
 	if GEN_ENABLE_TREES then
 		io.write('trees, ')
-		local trees_gen = lanes.gen('*', generateTrees)
+		local trees_gen = lanes.gen(lanelibs, generateTrees)
 
 		table.insert(threads, trees_gen(mapaddr, dx, dy, dz, heightMap))
 	end
@@ -706,7 +702,7 @@ return function(world, seed)
 	-- houses
 	if GEN_ENABLE_HOUSES then
 		io.write('houses, ')
-		local houses_gen = lanes.gen('*', generateHouse)
+		local houses_gen = lanes.gen(lanelibs, generateHouse)
 
 		table.insert(threads, houses_gen(mapaddr, dx, dy, dz, heightMap, heightWater))
 	end
@@ -715,7 +711,7 @@ return function(world, seed)
 
 	if GEN_ENABLE_CAVES then
 		io.write('caves, ')
-		local caves_gen = lanes.gen('*', generateCaves)
+		local caves_gen = lanes.gen(lanelibs, generateCaves)
 		local count = 0
 
 		local CAVES_COUNT = dx * dy * dz / 700000
@@ -763,6 +759,7 @@ return function(world, seed)
 	world:setEnvProp(2, heightWater + 1)
 	world:setEnvProp(9, 0)
 	world:setData('isNether', false)
+	collectgarbage()
 
 	return true
 end
