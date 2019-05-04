@@ -166,7 +166,7 @@ function trimStr(str)
 end
 
 function getAddr(void)
-	return tonumber(ffi.cast('uint32_t', void))
+	return tonumber(ffi.cast('intptr_t', void))
 end
 
 function playersForEach(func)

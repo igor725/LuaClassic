@@ -36,10 +36,12 @@ THE SOFTWARE.
 ]]--
 
 local core = require "lanes.core"
+-- Lua 5.1: module() creates a global variable
+-- Lua 5.2: module() is gone
+-- almost everything module() does is done by require() anyway
 -- -> simply create a table, populate it, return it, and be done
-local lanes = {}
 local lanesMeta = {}
-setmetatable(lanes,lanesMeta)
+local lanes = setmetatable( {}, lanesMeta)
 
 -- this function is available in the public interface until it is called, after which it disappears
 lanes.configure = function( settings_)
@@ -52,7 +54,7 @@ lanes.configure = function( settings_)
 		error( "To use 'lanes', you will also need to have 'string' available.", 2)
 	end
 	-- Configure called so remove metatable from lanes
-	setmetatable(lanes,nil)
+	setmetatable( lanes, nil)
 	--
 	-- Cache globals for code that might run under sandboxing
 	--
@@ -74,8 +76,7 @@ lanes.configure = function( settings_)
 		track_lanes = false,
 		demote_full_userdata = nil,
 		verbose_errors = false,
-		-- LuaJIT provides a thread-unsafe allocator by default, so we need to protect it when used in parallel lanes
-		protect_allocator = (jit and jit.version) and true or false
+		allocator = nil
 	}
 	local boolean_param_checker = function( val_)
 		-- non-'boolean-false' should be 'boolean-true' or nil
@@ -88,7 +89,10 @@ lanes.configure = function( settings_)
 			return type( val_) == "number" and val_ > 0
 		end,
 		with_timers = boolean_param_checker,
-		protect_allocator = boolean_param_checker,
+		allocator = function( val_)
+			-- can be nil, "protected", or a function
+			return val_ and (type( val_) == "function" or val_ == "protected") or true
+		end,
 		on_state_create = function( val_)
 			-- on_state_create may be nil or a function
 			return val_ and type( val_) == "function" or true
@@ -111,6 +115,12 @@ lanes.configure = function( settings_)
 		if type( settings_) ~= "table" then
 			error "Bad parameter #1 to lanes.configure(), should be a table"
 		end
+		-- any setting unknown to Lanes raises an error
+		for setting, _ in pairs( settings_) do
+			if not param_checkers[setting] then
+			error( "Unknown parameter '" .. setting .. "' in configure options")
+			end
+		end
 		-- any setting not present in the provided parameters takes the default value
 		for key, checker in pairs( param_checkers) do
 			local my_param = settings_[key]
@@ -128,7 +138,7 @@ lanes.configure = function( settings_)
 		return settings
 	end
 	local settings = core.configure and core.configure( params_checker( settings_)) or core.settings
-	local core_lane_new = assert( core.lane_new or core.thread_new)
+	local core_lane_new = assert( core.lane_new)
 	local max_prio = assert( core.max_prio)
 
 	lanes.ABOUT =
@@ -136,7 +146,7 @@ lanes.configure = function( settings_)
 		author= "Asko Kauppi <akauppi@gmail.com>, Benoit Germain <bnt.germain@gmail.com>",
 		description= "Running multiple Lua states in parallel",
 		license= "MIT/X11",
-		copyright= "Copyright (c) 2007-10, Asko Kauppi; (c) 2011-13, Benoit Germain",
+		copyright= "Copyright (c) 2007-10, Asko Kauppi; (c) 2011-18, Benoit Germain",
 		version = assert( core.version)
 	}
 
@@ -188,7 +198,7 @@ lanes.configure = function( settings_)
 	--
 	-- 'opt': .priority:  int (-3..+3) smaller is lower priority (0 = default)
 	--
-	--	      .cancelstep: bool | uint
+	--        .cancelstep: bool | uint
 	--            false: cancellation check only at pending Linda operations
 	--                   (send/receive) so no runtime performance penalty (default)
 	--            true:  adequate cancellation check (same as 100)
@@ -215,8 +225,14 @@ lanes.configure = function( settings_)
 		["string"] = true,
 		["math"] = true,
 		["debug"] = true,
+		["bit32"] = true, -- Lua 5.2 only, ignored silently under 5.1
+		["utf8"] = true, -- Lua 5.3 only, ignored silently under 5.1 and 5.2
+		["bit"] = true, -- LuaJIT only, ignored silently under PUC-Lua
+		["jit"] = true, -- LuaJIT only, ignored silently under PUC-Lua
+		["ffi"] = true, -- LuaJIT only, ignored silently under PUC-Lua
+		--
 		["base"] = true,
-		["coroutine"] = true,
+		["coroutine"] = true, -- part of "base" in Lua 5.1
 		["lanes.core"] = true
 	}
 
@@ -707,6 +723,7 @@ lanes.configure = function( settings_)
 
 	-- activate full interface
 	lanes.require = core.require
+	lanes.register = core.register
 	lanes.gen = gen
 	lanes.linda = core.linda
 	lanes.cancel_error = core.cancel_error
@@ -714,6 +731,7 @@ lanes.configure = function( settings_)
 	lanes.set_singlethreaded = core.set_singlethreaded
 	lanes.threads = core.threads or function() error "lane tracking is not available" end -- core.threads isn't registered if settings.track_lanes is false
 	lanes.set_thread_priority = core.set_thread_priority
+	lanes.set_thread_affinity = core.set_thread_affinity
 	lanes.timer = timer
 	lanes.timer_lane = timer_lane
 	lanes.timers = timers
@@ -725,20 +743,18 @@ lanes.configure = function( settings_)
 	return lanes
 end -- lanes.configure
 
-lanesMeta.__index = function(t,k)
+lanesMeta.__index = function( t, k)
 	-- This is called when some functionality is accessed without calling configure()
-	lanes.configure()	-- Initialize with default settings
+	lanes.configure() -- initialize with default settings
 	-- Access the required key
 	return lanes[k]
 end
 
--- no need to force calling configure() excepted the first time
+-- no need to force calling configure() manually excepted the first time (other times will reuse the internally stored settings of the first call)
 if core.settings then
 	return lanes.configure()
 else
 	return lanes
 end
 
-
---the end (Unreachable Code)
---return lanes
+--the end
