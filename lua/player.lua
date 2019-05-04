@@ -25,7 +25,7 @@ local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
 		end
 	end
 	struct = require('struct')
-	gz = require('gzip')
+	require('gzip')
 	if isWS then
 		require('helper')
 	end

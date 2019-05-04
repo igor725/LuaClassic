@@ -39,15 +39,17 @@ local ext = (jit.os=='Windows'and'dll')or'so'
 package.cpath = './bin/%s/?.%s;'%{jit.arch,ext}
 package.path = './lua/?.lua;./?.lua'
 
-lanes = require('lanes').configure()
+lanes = require('lanes').configure({
+	with_timers = false
+})
 struct = require('struct')
-sql = require('sqlite3')
 lfs = require('lfs')
-gz = require('gzip')
 
 require('conh')
+require('gzip')
 require('hooks')
 require('timer')
+require('sqlite3')
 require('packets')
 
 do

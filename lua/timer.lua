@@ -3,7 +3,7 @@ timer = {
 }
 
 function timer.Simple(delay,func)
-	return timer.Create("simpletimer"..(os.clock()*math.random())*100,1,delay,func)
+	return timer.Create("simpletimer"..(os.clock()*math.random()),1,delay,func)
 end
 
 function timer.Create(id,reps,delay,func)

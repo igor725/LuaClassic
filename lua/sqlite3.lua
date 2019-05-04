@@ -1,6 +1,6 @@
 local sqlite3 = require('lsqlite3')
 local DB = sqlite3.open('server.db')
-local sql = {
+sql = {
 	db = DB
 }
 
@@ -93,5 +93,3 @@ else
 	assert(sql.addColumn('onlineTime','INTEGER default 0'))
 	assert(sql.addColumn('lastIP','VARCHAR(15) NOT NULL default "0.0.0.0"'))
 end
-
-return sql

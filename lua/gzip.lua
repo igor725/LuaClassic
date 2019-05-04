@@ -144,7 +144,7 @@ local function inflate(file,callback)
 	return true
 end
 
-return {
+gz = {
 	compress = deflate,
 	decompress = inflate,
 	defEnd = defstreamend
