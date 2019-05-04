@@ -1,5 +1,7 @@
 cpe = {
+	softwareName = 'LuaClassic',
 	inited = false,
+	extCount = 0,
 	packets = {
 		sv = {},
 		cl = {}
@@ -18,9 +20,7 @@ ext_mt.__index = ext_mt
 
 function cpe:init()
 	if self.inited then return end
-	self.extCount = 0
 	self.inited = true
-	self.softwareName = 'LuaClassic'
 	registerSvPacket(0x10, '>Bc64h')
 	registerSvPacket(0x11, '>Bc64i')
 	registerClPacket(0x10, '>c64h')

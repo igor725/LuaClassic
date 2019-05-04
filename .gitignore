@@ -3,6 +3,4 @@ worlds/*
 *.properties
 *.log
 *.txt
-*.bat
-*.sh
 *.db

@@ -41,10 +41,9 @@ addChatCommand('stop', function()
 	_STOP = true
 end)
 
--- Temporarily (or not) disabled
--- addChatCommand('restart', function()
--- 	_STOP = 'restart'
--- end)
+addChatCommand('restart', function()
+	_STOP = 'restart'
+end)
 
 addChatCommand('time', function(player,name)
 	local world = getWorld(player)

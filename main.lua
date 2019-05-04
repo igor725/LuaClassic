@@ -423,7 +423,6 @@ function init()
 	:registerTypeFor('level-types', 'string')
 	:registerTypeFor('level-sizes', 'string')
 	:registerTypeFor('level-seeds', 'string')
-	:registerTypeFor('cpe-force', 'boolean')
 	:registerTypeFor('server-ip', 'string')
 	:parse()
 
@@ -568,7 +567,8 @@ if not succ then
 	end
 end
 
-if _STOP=='restart'then
-	os.execute(arg[-1]..' '..arg[0])
+if _STOP == 'restart'then
+	ecode = 2
 end
+
 os.exit(ecode)
