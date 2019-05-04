@@ -21,9 +21,7 @@ svpackets = {
 	[0x0f] = '>BB'
 }
 
-psizes = {
-	[0x00] = struct.size(packets[0x00])
-}
+psizes = {}
 pHandlers = {}
 
 function registerClPacket(id, fmt, handler)

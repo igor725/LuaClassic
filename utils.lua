@@ -19,19 +19,6 @@ ffi.cdef[[
 	} angle;
 ]]
 
-function newColor(r,g,b)
-	r, g, b = r or 255, g or 255, b or 255
-	return ffi.new('color', r, g, b)
-end
-
-function newAngle(y,p)
-	return ffi.new('angle', y, p)
-end
-
-function newVector(x,y,z)
-	return ffi.new('vector', x, y, z)
-end
-
 local meta = debug.getmetatable('')
 meta.__mod = function(self,vars)
 	if type(vars)=='table'then
@@ -51,6 +38,46 @@ end
 local ext = (jit.os=='Windows'and'dll')or'so'
 package.cpath = './bin/%s/?.%s;'%{jit.arch,ext}
 package.path = './lua/?.lua;./?.lua'
+
+lanes = require('lanes').configure()
+struct = require('struct')
+sql = require('sqlite3')
+lfs = require('lfs')
+gz = require('gzip')
+
+require('conh')
+require('hooks')
+require('timer')
+require('packets')
+
+do
+	local path = package.searchpath('socket.core', package.cpath)
+	if path then
+		local lib = package.loadlib(path, 'luaopen_socket_core')
+		if not lib then
+			lib = package.loadlib(path, 'luaopen_lanes_core')
+		end
+		if lib then
+			socket = lib()
+		end
+	end
+	if not socket then
+		error('Can\'t load socket library')
+	end
+end
+
+function newColor(r,g,b)
+	r, g, b = r or 255, g or 255, b or 255
+	return ffi.new('color', r, g, b)
+end
+
+function newAngle(y,p)
+	return ffi.new('angle', y, p)
+end
+
+function newVector(x,y,z)
+	return ffi.new('vector', x, y, z)
+end
 
 floor = math.floor
 ceil = math.ceil
@@ -77,9 +104,9 @@ if ENABLE_ANSI then
 		['&1'] = '34',
 		['&2'] = '32',
 		['&3'] = '36',
-		['&4'] = '1;31',
+		['&4'] = '31',
 		['&5'] = '35',
-		['&6'] = '1;33',
+		['&6'] = '33',
 		['&7'] = '1;30',
 		['&8'] = '1;30',
 		['&9'] = '1;34',
@@ -87,7 +114,7 @@ if ENABLE_ANSI then
 		['&b'] = '1;36',
 		['&c'] = '1;31',
 		['&d'] = '1;35',
-		['&e'] = '33',
+		['&e'] = '1;33',
 		['&f'] = '0'
 	}
 	colorReplace = function(s)

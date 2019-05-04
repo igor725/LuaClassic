@@ -157,8 +157,7 @@ local player_mt = {
 		if not self.isWS then return false end
 		local data = self:readWsFrame()
 		if data then
-			local psz = psizes[0x00]
-			if #data~=psz then
+			if #data~=131 then
 				self:kick(KICK_PACKETSIZE)
 				return false
 			end
@@ -169,8 +168,7 @@ local player_mt = {
 	checkForRawHandshake = function(self)
 		if self.isWS then return false end
 		local cl = self:getClient()
-		local psz = psizes[0x00]
-		local msg = cl:receive(psz)
+		local msg = cl:receive(131)
 		if msg then
 			return self:readHandShakeData(msg)
 		end

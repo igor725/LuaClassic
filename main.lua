@@ -22,37 +22,6 @@ do
 end
 
 require('utils')
-gz = require('gzip')
-lfs = require('lfs')
-sql = require('sqlite3')
-struct = require('struct')
-newWorld = require('world')
-newPlayer = require('player')
-lanes = require('lanes').configure()
-do
-	local path = package.searchpath('socket.core', package.cpath)
-	if path then
-		local lib = package.loadlib(path, 'luaopen_socket_core')
-		if not lib then
-			lib = package.loadlib(path, 'luaopen_lanes_core')
-		end
-		if lib then
-			socket = lib()
-		end
-	end
-	if not socket then
-		error('Can\'t load socket library')
-	end
-end
-
-require('cpe')
-require('conh')
-require('hooks')
-require('timer')
-require('config')
-require('packets')
-require('commands')
-require('permissions')
 
 function onConnectionAttempt(ip, port)
 end
@@ -397,6 +366,13 @@ function init()
 	players, IDS = {}, {}
 	worlds, generators = {}, {}
 
+	newWorld = require('world')
+	newPlayer = require('player')
+	require('cpe')
+	require('config')
+	require('commands')
+	require('permissions')
+
 	hooks:create('onPlayerRotate')
 	hooks:create('onPlayerMove')
 	hooks:create('onPlayerChat')
@@ -407,24 +383,7 @@ function init()
 	hooks:create('onUpdate')
 
 	permissions:parse()
-
-	config
-	:registerTypeFor('generator-threads-count', 'number')
-	:registerTypeFor('gzip-compression-level', 'number')
-	:registerTypeFor('allow-websocket', 'boolean')
-	:registerTypeFor('world-scripts', 'boolean')
-	:registerTypeFor('websocket-port', 'number')
-	:registerTypeFor('player-timeout', 'number')
-	:registerTypeFor('server-port', 'number')
-	:registerTypeFor('server-name', 'string')
-	:registerTypeFor('server-motd', 'string')
-	:registerTypeFor('max-players', 'number')
-	:registerTypeFor('level-names', 'string')
-	:registerTypeFor('level-types', 'string')
-	:registerTypeFor('level-sizes', 'string')
-	:registerTypeFor('level-seeds', 'string')
-	:registerTypeFor('server-ip', 'string')
-	:parse()
+	config:parse()
 
 	uwa = config:get('unload-world-after', 600)
 	local ip = config:get('server-ip', '0.0.0.0')
@@ -537,10 +496,12 @@ playersForEach(function(ply)
 	end
 end)
 
-if config:save()and permissions:save()then
-	print(CON_SAVESUCC)
-else
-	print(CON_SAVEERR)
+if config and permissions then
+	if config:save()and permissions:save()then
+		print(CON_SAVESUCC)
+	else
+		print(CON_SAVEERR)
+	end
 end
 
 io.write(CON_WSAVE)

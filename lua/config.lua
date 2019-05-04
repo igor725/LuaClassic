@@ -1,30 +1,64 @@
+local smotd = 'server-motd'
+local sname = 'server-name'
+local allowws = 'allow-websocket'
+local wsport = 'websocket-port'
+local sip = 'server-ip'
+local sport = 'server-port'
+local mplys = 'max-players'
+
+local lseeds = 'level-seeds'
+local lnames = 'level-names'
+local wscripts = 'world-scripts'
+local ltypes = 'level-types'
+local unload = 'unload-world-after'
+local lvlsz = 'level-sizes'
+local gthc = 'generator-threads-count'
+
+local gzcmplvl = 'gzip-compression-level'
+local plytimeout = 'player-timeout'
+
 config = {
 	values = {
-		['server-motd'] = 'This server uses LuaClassic',
-		['server-name'] = 'A Minecraft server',
-		['allow-websocket'] = true,
-		['websocket-port'] = 25566,
-		['server-ip'] = '0.0.0.0',
-		['server-port'] = 25565,
-		['max-players'] = 20,
+		[smotd] = 'This server uses LuaClassic',
+		[sname] = 'A Minecraft server',
+		[allowws] = true,
+		[wsport] = 25566,
+		[sip] = '0.0.0.0',
+		[sport] = 25565,
+		[mplys] = 20,
 
-		['level-seeds'] = '',
-		['level-names'] = 'world',
-		['world-scripts'] = false,
-		['level-types'] = 'default',
-		['unload-world-after'] = 600,
-		['level-sizes'] = '256x256x256',
+		[lseeds] = '',
+		[lnames] = 'world',
+		[wscripts] = false,
+		[ltypes] = 'default',
+		[unload] = 600,
+		[lvlsz] = '256x256x256',
+		[gthc] = 2,
 
-		['gzip-compression-level'] = 5,
-		['player-timeout'] = 10,
+		[gzcmplvl] = 5,
+		[plytimeout] = 10,
 	},
-	types = {}
-}
+	types = {
+		[smotd] = 'string',
+		[sname] = 'string',
+		[allowws] = 'boolean',
+		[wsport] = 'number',
+		[sip] = 'string',
+		[sport] = 'number',
+		[mplys] = 'number',
 
-function config:registerTypeFor(key, typ)
-	self.types[key] = typ
-	return self
-end
+		[lseeds] = 'string',
+		[lnames] = 'string',
+		[wscripts] = 'boolean',
+		[ltypes] = 'string',
+		[unload] = 'number',
+		[lvlsz] = 'string',
+		[gthc] = 'number',
+
+		[gzcmplvl] = 'number',
+		[plytimeout] = 'number'
+	}
+}
 
 function config:parse()
 	local f, err, ec = io.open('server.properties', 'rb')
