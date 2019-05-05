@@ -51,7 +51,7 @@ end
 
 function timer.Update(dt)
   for id,data in pairs(timer.active)do
-    if data.repeats<0 or data.repeats>0 then
+    if data.repeats ~= 0 then
 			if not data.paused then
 	      if data.curr>0 then
 	        data.curr = data.curr - dt
@@ -63,6 +63,7 @@ function timer.Update(dt)
 					if not status then
 						ret = tostring(ret)
 						print(TMR_ERR%{id, ret})
+						timer.Pause(id)
 					end
 	      end
 			end

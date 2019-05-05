@@ -33,6 +33,7 @@ local world_mt = {
 	__tostring = function(self)
 		return self:getName()
 	end,
+
 	createWorld = function(self,data)
 		local dim = data.dimensions
 		local sz = gBufSize(unpack(dim))
@@ -84,14 +85,21 @@ local world_mt = {
 					wh:write(val.tpTo)
 				end
 			elseif k == 'texPack'then
-				if #v>64 then error('TexturePack URL too long')end
-				wh:write(string.char(9, #v))
-				wh:write(v)
+				local slen = #v
+				if slen > 64 then error('TexturePack URL too long')end
+				if slen > 0 then
+					wh:write(string.char(9, slen))
+					wh:write(v)
+				end
 			elseif k == 'wscripts'then
 				for name, script in pairs(v)do
-					packTo(wh, '>bBH', 10, #name, #script.body)
-					wh:write(name)
-					wh:write(script.body)
+					local slen = math.min(#script.body, 65535)
+					local nlen = math.min(#name, 255)
+					if slen > 0 and nlen > 0 then
+						packTo(wh, '>bBH', 10, nlen, slen)
+						wh:write(name)
+						wh:write(script.body)
+					end
 				end
 			else
 				print('Warning: Unknown MAPOPT %q skipped!'%k)
@@ -118,8 +126,7 @@ local world_mt = {
 	end,
 	triggerLoad = function(self)
 		if not self.ldata then
-			local pt = 'worlds/'+self.wname+'.map'
-			local wh = assert(io.open(pt, 'rb'))
+			local wh = assert(io.open(self:getPath(), 'rb'))
 			if self:readLevelInfo(wh)then
 				self:readGZIPData(wh)
 				wh:close()
@@ -151,6 +158,10 @@ local world_mt = {
 	end,
 	getSize = function(self)
 		return self.size
+	end,
+	getPath = function(self)
+		local name = self:getName()
+		return 'worlds/'+name+'.map'
 	end,
 	getName = function(self)
 		return self.wname
@@ -221,8 +232,7 @@ local world_mt = {
 	end,
 
 	readGZIPData = function(self, wh)
-		local a = self:getAddr()
-		local ptr = ffi.cast('char*', a)
+		local ptr = self.ldata
 		return gz.decompress(wh, function(out,stream)
 			local chunksz = 1024-stream.avail_out
 			ffi.copy(ptr, out, chunksz)
@@ -230,7 +240,6 @@ local world_mt = {
 		end)
 	end,
 	readLevelInfo = function(self, wh)
-		wh:seek('set', 0)
 		if wh:read(4) == 'LCW\0'then
 			self.data = {}
 			while true do

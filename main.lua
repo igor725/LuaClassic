@@ -21,6 +21,12 @@ do
 	end
 end
 
+if os.getenv('DEBUG')then
+	local path = os.getenv('MDPATH')
+	path = path or '../mobdebug.lua'
+	loadfile(path)().start()
+end
+
 require('utils')
 
 function onConnectionAttempt(ip, port)
