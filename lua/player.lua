@@ -66,7 +66,7 @@ end
 
 local player_mt = {
 	__tostring = function(self)
-		return 'Player<'+self:getName()+'>'
+		return self:getName()
 	end,
 
 	init = function(self)

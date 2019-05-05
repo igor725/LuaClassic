@@ -30,6 +30,9 @@ local function unpackFrom(file, fmt)
 end
 
 local world_mt = {
+	__tostring = function(self)
+		return self:getName()
+	end,
 	createWorld = function(self,data)
 		local dim = data.dimensions
 		local sz = gBufSize(unpack(dim))

@@ -62,25 +62,43 @@ addChatCommand('weather',function(player,wname,wtt)
 	if wtt then
 		wtt = math.min(math.max(wtt,0),2)
 		if world:setWeather(wtt)then
-			return CMD_WTCHANGE%{world:getName(), WT[wtt]}
+			return CMD_WTCHANGE%{world, WT[wtt]}
 		end
 	else
 		return CMD_WTINVALID
 	end
 end)
 
-addChatCommand('time', function(player,name)
-	local world = getWorld(player)
-	if world.data.isNether then
+addChatCommand('time', function(player,wname,name)
+	if not wname then return end
+	local world, colors
+	if time_presets[wname]then
+		world = getWorld(player)
+		colors = time_presets[wname]
+	else
+		if not name then
+			return CMD_TIMEPRESETNF
+		end
+		world = getWorld(wname)
+		colors = time_presets[name]
+		if not world then
+			return WORLD_NE
+		end
+		if not colors then
+			return CMD_TIMEPRESETNF
+		end
+	end
+
+	if world:getData('isNether')then
 		return CMD_TIMEDISALLOW
 	end
-	if name and time_presets[name]then
-		for i=0,4 do
-			local c = time_presets[name][i]
-			EnvColors:set(world, i, c.r, c.g, c.b)
-		end
-		return CMD_TIMECHANGE%name
+
+	for i=0,4 do
+		local c = colors[i]
+		world:setEnvColor(i, c.r, c.g, c.b)
 	end
+
+	return CMD_TIMECHANGE%{world, wname}
 end)
 
 local function unsel(player)
