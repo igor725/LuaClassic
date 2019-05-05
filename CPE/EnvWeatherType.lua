@@ -33,7 +33,7 @@ function wt:setWeather(world, w)
 	world = getWorld(world)
 	w = math.max(math.min(w,2),0)
 	playersForEach(function(player)
-		if player:isInWorld(wname)then
+		if player:isInWorld(world)then
 			weatherFor(player, w)
 		end
 	end)
