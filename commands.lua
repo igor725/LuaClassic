@@ -45,6 +45,30 @@ addChatCommand('restart', function()
 	_STOP = 'restart'
 end)
 
+addChatCommand('weather',function(player,wname,wtt)
+	local world
+	local wnum = tonumber(wname)or WTN[wname]
+	if wnum==nil then
+		world = getWorld(wname)
+		if not world then
+			return WORLD_NE
+		end
+		wtt = tonumber(wtt)or WTN[wtt]
+	else
+		world = getWorld(player)
+		wtt = wnum
+	end
+
+	if wtt then
+		wtt = math.min(math.max(wtt,0),2)
+		if world:setWeather(wtt)then
+			return CMD_WTCHANGE%{world:getName(), WT[wtt]}
+		end
+	else
+		return CMD_WTINVALID
+	end
+end)
+
 addChatCommand('time', function(player,name)
 	local world = getWorld(player)
 	if world.data.isNether then
@@ -353,7 +377,7 @@ end)
 
 addConsoleCommand('help', function()
 	for k, v in pairs(_G)do
-		if k:sub(1,3) == 'CU_'then
+		if k:startsWith('CU_')then
 			print(v)
 		end
 	end

@@ -36,8 +36,8 @@ local function getMa(world)
 end
 
 function ema:load()
-	registerSvPacket(0x28,'Bc64')
-	registerSvPacket(0x29,'>BBi')
+	registerSvPacket(0x28, 'Bc64')
+	registerSvPacket(0x29, '>BBi')
 	getWorldMT().setEnvProp = function(...)
 		return ema:set(...)
 	end
@@ -62,7 +62,7 @@ end
 
 function ema:setTexturePack(world, tpack)
 	world = getWorld(world)
-	if tpack:sub(1,7)=='http://'or tpack:sub(1,8)=='https://'or tpack==''then
+	if tpack:startsWith('http://')or tpack:startsWith('https://')or tpack==''then
 		if #tpack>64 then
 			return false, 'url_too_long'
 		end

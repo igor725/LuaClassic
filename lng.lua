@@ -86,6 +86,8 @@ CMD_WORLDLST       = 'Loaded worlds:'
 CMD_TPDONE         = '&aTeleported'
 CMD_GENSTART       = 'Generation started...'
 CMD_GENERR         = 'Error in generator: %s'
+CMD_WTCHANGE       = 'Weather in &a%s&f changed to &e%s'
+CMD_WTINVALID      = '&cInvalid weather type'
 
 WORLD_RO           = '&cThis world in readonly mode'
 WORLD_NE           = '&cThis world not exists'

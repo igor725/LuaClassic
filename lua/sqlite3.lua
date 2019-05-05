@@ -31,7 +31,7 @@ function sql.addColumn(col, type)
 		return true
 	else
 		local err = DB:errmsg()
-		if err:sub(1,9)=='duplicate'then
+		if tostring(err):startsWith('duplicate')then
 			return true
 		else
 			return false, err
@@ -74,22 +74,25 @@ function sql.close()
 	return DB:close()
 end
 
-local r = DB:exec[[
-CREATE TABLE IF NOT EXISTS players (
-		id                     INTEGER PRIMARY KEY AUTOINCREMENT,
-		onlineTime             INTEGER default 0,
-  	pkey                   VARCHAR(64) NOT NULL,
-		lastWorld              VARCHAR(64) NOT NULL default "default",
-		spawnX                 float(24) default 0,
-		spawnY                 float(24) default 0,
-		spawnZ                 float(24) default 0,
-		spawnYaw               float(24) default 0,
-		spawnPitch             float(24) default 0,
-		lastIP                 VARCHAR(15) NOT NULL default "0.0.0.0"
-);]]
-if r~=sqlite3.OK then
-	error(DB:errmsg())
-else
-	assert(sql.addColumn('onlineTime','INTEGER default 0'))
-	assert(sql.addColumn('lastIP','VARCHAR(15) NOT NULL default "0.0.0.0"'))
+function sql.init()
+	local r = DB:exec[[
+	CREATE TABLE IF NOT EXISTS players (
+			id                     INTEGER PRIMARY KEY AUTOINCREMENT,
+			onlineTime             INTEGER default 0,
+	  	pkey                   VARCHAR(64) NOT NULL,
+			lastWorld              VARCHAR(64) NOT NULL default "default",
+			spawnX                 float(24) default 0,
+			spawnY                 float(24) default 0,
+			spawnZ                 float(24) default 0,
+			spawnYaw               float(24) default 0,
+			spawnPitch             float(24) default 0,
+			lastIP                 VARCHAR(15) NOT NULL default "0.0.0.0"
+	);]]
+	if r~=sqlite3.OK then
+		error(DB:errmsg())
+	else
+		assert(sql.addColumn('onlineTime','INTEGER default 0'))
+		assert(sql.addColumn('lastIP','VARCHAR(15) NOT NULL default "0.0.0.0"'))
+	end
+	return true
 end

@@ -5,6 +5,11 @@ local wt = {
 WT_SUNNY = 0
 WT_RAIN  = 1
 WT_SNOW  = 2
+WT = {[0]='sunny','rain','snow'}
+WTN = {}
+for k, v in pairs(WT)do
+	WTN[v] = k
+end
 
 local function weatherFor(player, w)
 	if player:isSupported('EnvWeatherType')then
@@ -14,23 +19,23 @@ end
 
 function wt:load()
 	registerSvPacket(0x1f, '>BB')
-	addChatCommand('weather',function(player,wtt)
-		wtt = tonumber(wtt)
-		if wtt then
-			self:setWeather(player.worldName, wtt)
-		end
-	end)
 	getWorldMT().setWeather = function(...)
 		return wt:setWeather(...)
+	end
+	getWorldMT().getWeather = function(world)
+		return world:getData('weather')or 0
 	end
 end
 
 function wt:prePlayerSpawn(player)
-	weatherFor(player, worlds[player.worldName].data.weather or WT_SUNNY)
+	weatherFor(player, getWorld(player):getData('weather') or WT_SUNNY)
 end
 
 function wt:setWeather(world, w)
 	world = getWorld(world)
+	if not world then return false end
+	w = WTN[w]or w
+
 	w = math.max(math.min(w,2),0)
 	playersForEach(function(player)
 		if player:isInWorld(world)then

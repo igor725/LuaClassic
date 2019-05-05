@@ -385,6 +385,8 @@ function init()
 
 	permissions:parse()
 	config:parse()
+	cpe:init()
+	sql.init()
 
 	uwa = config:get('unload-world-after', 600)
 	local ip = config:get('server-ip', '0.0.0.0')
@@ -399,8 +401,6 @@ function init()
 		wsHandshake = {}
 		require('helper')
 	end
-
-	cpe:init()
 
 	io.write(CON_WLOAD)
 	local sdlist = config:get('level-seeds', '')
@@ -491,37 +491,38 @@ succ, err = xpcall(function()
 end,debug.traceback)
 
 ecode = 0
-playersForEach(function(ply)
-	if _STOP == 'restart'then
-		ply:kick(KICK_SVRST)
-	else
-		ply:kick(KICK_SVSTOP)
-	end
-end)
 
-if config and permissions then
+if INITED then
+	playersForEach(function(ply)
+		if _STOP == 'restart'then
+			ply:kick(KICK_SVRST)
+		else
+			ply:kick(KICK_SVSTOP)
+		end
+	end)
+
 	if config:save()and permissions:save()then
 		print(CON_SAVESUCC)
 	else
 		print(CON_SAVEERR)
 	end
-end
 
-io.write(CON_WSAVE)
-for wname, world in pairs(worlds)do
-	if wname ~= 'default'then
-		io.write('\n\t',wname,': ')
-		local s = socket.gettime()
-		if world:save()then
-			io.write(MESG_DONEIN%((socket.gettime()-s)*1000))
-		else
-			io.write(IE_UE)
+	io.write(CON_WSAVE)
+	for wname, world in pairs(worlds)do
+		if wname ~= 'default'then
+			io.write('\n\t',wname,': ')
+			local s = socket.gettime()
+			if world:save()then
+				io.write(MESG_DONEIN%((socket.gettime()-s)*1000))
+			else
+				io.write(IE_UE)
+			end
 		end
 	end
+	io.write('\n')
 end
-io.write('\n')
 
-sql.close()
+if sql then sql.close()end
 if server then server:close()end
 if wsServer then wsServer:close()end
 

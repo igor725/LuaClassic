@@ -220,6 +220,10 @@ function string.split(self, sep)
 	return fields
 end
 
+function string.startsWith(self, str)
+	return self:sub(1, #str) == str
+end
+
 function newChatMessage(msg, id)
 	playersForEach(function(ply)
 		ply:sendMessage(msg, id)
