@@ -21,7 +21,7 @@ function ep:load()
 		end)
 	end
 	getPlayerMT().getProp = function(player, ptype)
-		if not player.entProps then return nil end
+		if not player.entProps then return end
 		return player.entProps[ptype]
 	end
 end

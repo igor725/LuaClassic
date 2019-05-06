@@ -1,4 +1,4 @@
-MT_CHAT = 0
+MT_CHAT     = 0
 MT_STATUS1  = 1
 MT_STATUS2  = 2
 MT_STATUS3  = 3

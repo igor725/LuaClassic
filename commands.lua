@@ -23,7 +23,7 @@ end
 
 addChatCommand('rc', function(player)
 	local world = getWorld(player)
-	return CMD_WMODE%((world:toggleReadOnly()and'&aro&f')or'&crw&f')
+	return CMD_WMODE%((world:toggleReadOnly()and ST_ON)or ST_OFF)
 end)
 
 addChatCommand('info', function(player)
@@ -47,8 +47,14 @@ end)
 
 addChatCommand('weather',function(player,wname,wtt)
 	local world
+	if wname == nil then
+		world = getWorld(player)
+		local cw = world:getData('weather')
+		cw = WT[cw]or WT[0]
+		return CMD_WTCURR%cw
+	end
 	local wnum = tonumber(wname)or WTN[wname]
-	if wnum==nil then
+	if wnum == nil then
 		world = getWorld(wname)
 		if not world then
 			return WORLD_NE
@@ -126,9 +132,9 @@ addChatCommand('sel', function(player)
 	else
 		unsel(player)
 		player.onPlaceBlock = nil
-		return CMD_SELMODE%'&cdisabled'
+		return CMD_SELMODE%ST_OFF
 	end
-	return CMD_SELMODE%'&aenabled'
+	return CMD_SELMODE%ST_ON
 end)
 
 addChatCommand('mkportal', function(player, pname, wname)
