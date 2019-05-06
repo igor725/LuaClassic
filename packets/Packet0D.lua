@@ -1,5 +1,5 @@
-return function(player, unused, message)
-	if unused==1 then
+return function(player, isPartial, message)
+	if isPartial==1 then
 		player.messageBuffer = player.messageBuffer..message
 		return
 	end

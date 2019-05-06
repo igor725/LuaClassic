@@ -1,4 +1,4 @@
-io.output():setvbuf('no')
+io.stdout:setvbuf('no')
 require('lng')
 
 do

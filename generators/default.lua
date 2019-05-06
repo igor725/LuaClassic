@@ -671,7 +671,7 @@ return function(world, seed)
 		endX = math.floor(dx * (i + 1) / thlimit) - 1
 
 		local terrain_gen = lanes.gen(lanelibs, threadTerrain)
-		threads[i] = terrain_gen(mapaddr, dx, dy, dz, heightMap, heightWater, startX, endX, heightStone)
+		table.insert(threads,terrain_gen(mapaddr, dx, dy, dz, heightMap, heightWater, startX, endX, heightStone))
 	end
 	watchThreads(threads)
 
