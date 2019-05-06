@@ -1,6 +1,4 @@
-local ep = {
-	global = true
-}
+local ep = {}
 
 EP_ROTX = 0
 EP_ROTY = 1
@@ -12,6 +10,20 @@ end
 
 function ep:load()
 	registerSvPacket(0x2A, '>Bbbi')
+	getPlayerMT().setProp = function(player, ptype, val)
+		player.entProps = player.entProps or{}
+		player.entProps[ptype] = val
+		playersForEach(function(ply)
+			if ply:isSupported('EntityProperty')then
+				local id = (ply==player and -1)or player:getID()
+				entPropFor(ply, id, ptype, val)
+			end
+		end)
+	end
+	getPlayerMT().getProp = function(player, ptype)
+		if not player.entProps then return nil end
+		return player.entProps[ptype]
+	end
 end
 
 function ep:postPlayerSpawn(player)
@@ -25,17 +37,6 @@ function ep:postPlayerSpawn(player)
 			end
 		end)
 	end
-end
-
-function ep:setEntProp(player, ptype, val)
-	player.entProps = player.entProps or{}
-	player.entProps[ptype] = val
-	playersForEach(function(ply)
-		if ply:isSupported('EntityProperty')then
-			local id = (ply==player and -1)or player:getID()
-			entPropFor(ply, id, ptype, val)
-		end
-	end)
 end
 
 return ep

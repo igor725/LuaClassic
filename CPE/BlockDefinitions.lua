@@ -3,7 +3,7 @@ local bd = {
 	global = true
 }
 
-local function defineBlockFor(ply, opts)
+local function defineBlockFor(player, opts)
 	opts.name = opts.name or'Unnamed block'
 	opts.solidity = opts.solidity or 2
 	opts.movespeed = opts.movespeed or 128
@@ -20,7 +20,7 @@ local function defineBlockFor(ply, opts)
 	opts.fogG = opts.fogG or 0
 	opts.fogB = opts.fogB or 0
 
-	ply:sendPacket(
+	player:sendPacket(
 		false,
 		0x23,
 		opts.id,
@@ -55,11 +55,19 @@ function bd:Remove(id)
 	end)
 end
 
+function bd:prePlayerSpawn(player)
+	if player:isSupported('BlockDefinitions')then
+		for id, opts in pairs(self.definedBlocks)do
+			defineBlockFor(player, opts)
+		end
+	end
+end
+
 function bd:Create(opts)
-	bd.definedBlocks[opts.id] = opts
-	playersForEach(function(ply)
+	self.definedBlocks[opts.id] = opts
+	playersForEach(function(player)
 		if ply:isSupported('BlockDefinitions')then
-			defineBlockFor(ply, opts)
+			defineBlockFor(player, opts)
 		end
 	end)
 end

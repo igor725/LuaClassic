@@ -1,5 +1,4 @@
 local cm = {
-	global = true,
 	allowed_models = {
 		['chicken'] = 1,
 		['creeper'] = 1,
@@ -13,14 +12,26 @@ local cm = {
 
 function cm:load()
 	registerSvPacket(0x1d, '>Bbc64')
-	commands['model'] = function(player,mstr)
-		if mstr then
-			mstr = tonumber(mstr)or mstr
-			self:setModel(player, mstr)
+	getPlayerMT().setModel = function(player, model)
+		if type(model)=='number'then
+			if model<0 or model>49 then
+				return false
+			end
+			model = tostring(model)
+		else
+			model = model:lower()
+			if not self.allowed_models[model]then
+				model = 'humanoid'
+			end
 		end
-	end
-	getPlayerMT().setModel = function(...)
-		return cm:setModel(...)
+		player.model = model
+		playersForEach(function(ply)
+			if player:isSupported('ChangeModel')then
+				local id = (ply==player and -1)or ply:getID()
+				ply:sendPacket(false, 0x1d,id,model)
+			end
+		end)
+		return true
 	end
 end
 
@@ -34,28 +45,6 @@ function cm:postPlayerSpawn(player)
 			end
 		end)
 	end
-end
-
-function cm:setModel(player, model)
-	if type(model)=='number'then
-		if model<0 or model>49 then
-			return false
-		end
-		model = tostring(model)
-	else
-		model = model:lower()
-		if not self.allowed_models[model]then
-			model = 'humanoid'
-		end
-	end
-	player.model = model
-	playersForEach(function(ply)
-		if player:isSupported('ChangeModel')then
-			local id = (ply==player and -1)or ply:getID()
-			ply:sendPacket(false, 0x1d,id,model)
-		end
-	end)
-	return true
 end
 
 return cm

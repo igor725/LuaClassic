@@ -1,6 +1,4 @@
-local ec = {
-	global = true
-}
+local ec = {}
 
 EC_SKY     = 0
 EC_CLOUD   = 1
@@ -43,24 +41,32 @@ local function getClrs(world)
 	local clr = world:getData('colors')
 	if not clr then
 		clr = {}
-		world.data.colors = clr
+		world:setData('colors', clr)
 	end
 	return clr
 end
 
 function ec:load()
 	registerSvPacket(0x19,'>Bbhhh')
-	getWorldMT().setEnvColor = function(...)
-		return ec:set(...)
+	getWorldMT().setEnvColor = function(world, typ, r, g, b)
+		local colors = getClrs(world)
+		local clr = colors[typ]
+		if clr then
+			clr.r, clr.g, clr.b = r, g, b
+		else
+			colors[typ] = newColor(r,g,b)
+		end
+		playersForEach(function(player)
+			if player:isInWorld(world)then
+				updateEnvColorsFor(player, typ, r, g, b)
+			end
+		end)
+		return true
 	end
 	getWorldMT().getEnvColor = function(self, typ)
 		local c = self.data.colors[typ]
 		return c.r, c.g, c.b
 	end
-end
-
-function ec:setFor(player, typ, r, g, b)
-	updateEnvColorsFor(player, typ, r, g, b)
 end
 
 function ec:prePlayerSpawn(player)
@@ -73,22 +79,6 @@ function ec:prePlayerSpawn(player)
 			updateEnvColorsFor(player, i)
 		end
 	end
-end
-
-function ec:set(world, typ, r, g, b)
-	local colors = getClrs(world)
-	local clr = colors[typ]
-	if clr then
-		clr.r, clr.g, clr.b = r, g, b
-	else
-		colors[typ] = newColor(r,g,b)
-	end
-	playersForEach(function(player)
-		if player:isInWorld(world)then
-			updateEnvColorsFor(player, typ, r, g, b)
-		end
-	end)
-	return true
 end
 
 return ec

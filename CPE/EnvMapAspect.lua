@@ -1,6 +1,4 @@
-local ema = {
-	global = true
-}
+local ema = {}
 
 MEP_SIDESBLOCK     = 0
 MEP_EDGEBLOCK      = 1
@@ -30,7 +28,7 @@ local function getMa(world)
 	local ma = world:getData('map_aspects')
 	if not ma then
 		ma = {}
-		world.data.map_aspects = ma
+		world:setData('map_aspects', ma)
 	end
 	return ma
 end
@@ -38,11 +36,30 @@ end
 function ema:load()
 	registerSvPacket(0x28, 'Bc64')
 	registerSvPacket(0x29, '>BBi')
-	getWorldMT().setEnvProp = function(...)
-		return ema:set(...)
+	getWorldMT().setEnvProp = function(world, typ, val)
+		getMa(world)[typ] = val
+		playersForEach(function(player)
+			if player:isInWorld(world)then
+				updateMapPropertyFor(player, typ, val)
+			end
+		end)
 	end
-	getWorldMT().setTexPack = function(...)
-		return ema:setTexturePack(...)
+	getWorldMT().setTexPack = function(world, tpack)
+		world = getWorld(world)
+		if tpack:startsWith('http://')or tpack:startsWith('https://')or tpack==''then
+			if #tpack>64 then
+				return false, 'url_too_long'
+			end
+			world.data.texPack = tpack
+			playersForEach(function(player)
+				if player:isInWorld(world)then
+					setTexturePackFor(player, tpack)
+				end
+			end)
+			return true
+		else
+			return false, 'invalid_protocol'
+		end
 	end
 end
 
@@ -58,33 +75,6 @@ function ema:prePlayerSpawn(player)
 	else
 		setTexturePackFor(player, '')
 	end
-end
-
-function ema:setTexturePack(world, tpack)
-	world = getWorld(world)
-	if tpack:startsWith('http://')or tpack:startsWith('https://')or tpack==''then
-		if #tpack>64 then
-			return false, 'url_too_long'
-		end
-		world.data.texPack = tpack
-		playersForEach(function(player)
-			if player:isInWorld(world)then
-				setTexturePackFor(player, tpack)
-			end
-		end)
-		return true
-	else
-		return false, 'invalid_protocol'
-	end
-end
-
-function ema:set(world, typ, val)
-	getMa(world)[typ] = val
-	playersForEach(function(player)
-		if player:isInWorld(world)then
-			updateMapPropertyFor(player, typ, val)
-		end
-	end)
 end
 
 return ema
