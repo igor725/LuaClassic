@@ -254,8 +254,9 @@ function getWorld(w)
 end
 
 function loadWorld(wname)
-	if worlds[wname]then return false end
+	if worlds[wname]then return true end
 	local lvlh = io.open('worlds/'+wname+'.map', 'rb')
+	if not lvlh then return false end
 	local status, world = pcall(newWorld,lvlh,wname)
 	if status then
 		worlds[wname] = world
@@ -327,6 +328,7 @@ function getPlayerByName(name)
 end
 
 function createWorld(wname, dims, gen, seed)
+	if world[wname]then return false end
 	local data = {dimensions=dims}
 	local tmpWorld = newWorld()
 	if tmpWorld:createWorld(data)then
