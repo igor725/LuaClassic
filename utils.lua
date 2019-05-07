@@ -248,13 +248,14 @@ function dirForEach(dir, ext, func)
 end
 
 function getWorld(w)
-	if type(w)=='table'then
+	local t = type(w)
+	if t == 'table'then
 		if w.isWorld then
 			return w
 		elseif w.isPlayer then
 			return worlds[w.worldName]
 		end
-	elseif type(w)=='string'then
+	elseif t == 'string'then
 		w = w:lower()
 		return worlds[w]
 	end
@@ -291,13 +292,6 @@ function unloadWorld(wname)
 		return true
 	end
 	return false
-end
-
-function loadGenerator(name)
-	local chunk = assert(loadfile('generators/'+name+'.lua'))
-	local generator = chunk()
-	generators[name] = generator
-	return generator
 end
 
 function makeNormalCube(x1, y1, z1, x2, y2, z2)
@@ -347,46 +341,48 @@ function createWorld(wname, dims, gen, seed)
 	end
 end
 
+function openGenerator(name)
+	local chunk, err = loadfile('generators/'+name+'.lua')
+	if chunk then
+		local status, ret = pcall(chunk)
+		return status and ret, ret
+	end
+	return false, err
+end
+
 function regenerateWorld(world, gentype, seed)
 	world = getWorld(world)
 	if not world then return false, WORLD_NE end
 	if world:isInReadOnly()then return false, WORLD_RO end
-	local p = 'generators/'+gentype+'.lua'
-	local chunk, err = loadfile(p)
-	if not chunk then
+	local gen, err = openGenerator(gentype)
+	if not gen then
 		return false, err
 	else
-		local status, ret = pcall(chunk)
-		if not status then
-			return false, tostring(ret)
-		else
-			if type(ret)=='function'then
-				world.data.colors = nil
-				world.data.map_aspects = nil
-				world.data.texPack = nil
-				playersForEach(function(player)
-					if player:isInWorld(world)then
-						player:despawn()
-					end
-				end)
-				local data = ffi.cast('char*',world:getAddr()+4)
-				ffi.fill(data, world.size)
-				seed = seed or CTIME
-				local t = socket.gettime()
-				local succ, err = pcall(ret, world, seed)
-				if not succ then
-					print(err)
-					return false, err
+		if type(gen)=='function'then
+			world.data.colors = nil
+			world.data.map_aspects = nil
+			world.data.texPack = nil
+			playersForEach(function(player)
+				if player:isInWorld(world)then
+					player:despawn()
 				end
-				local e = socket.gettime()
-				io.write('done\n')
-				playersForEach(function(player)
-					if player:isInWorld(world)then
-						player.handshakeStage2 = true
-					end
-				end)
-				return true, e-t
+			end)
+			ffi.fill(world.ldata+4, world.size)
+			seed = seed or CTIME
+			local t = socket.gettime()
+			local succ, err = pcall(gen, world, seed)
+			if not succ then
+				print(err)
+				return false, err
 			end
+			local e = socket.gettime()
+			io.write('done\n')
+			playersForEach(function(player)
+				if player:isInWorld(world)then
+					player.handshakeStage2 = true
+				end
+			end)
+			return true, e-t
 		end
 	end
 	return false, IE_UE

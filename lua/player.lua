@@ -177,7 +177,7 @@ local player_mt = {
 		return false
 	end,
 	checkPermission = function(self,nm)
-		local sect, perm = nm:match('(.*)%.(.*)')
+		local sect = nm:match('(.*)%.')
 		local perms = permissions:getFor(self.verikey)
 		if table.hasValue(perms, '*.*', sect+'.*', nm)then
 			return true

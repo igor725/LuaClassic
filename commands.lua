@@ -140,7 +140,7 @@ end)
 addChatCommand('mkportal', function(player, pname, wname)
 	local p1, p2 = player.cuboidP1, player.cuboidP2
 	if p1 and p2 then
-		local cworld = getWorld(player.worldName)
+		local cworld = getWorld(player)
 		if getWorld(wname)then
 			cworld.data.portals = cworld.data.portals or{}
 			local x1, y1, z1, x2, y2, z2 = makeNormalCube(p1[1],p1[2],p1[3],unpack(p2))

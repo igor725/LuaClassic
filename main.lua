@@ -432,7 +432,8 @@ function init()
 		else
 			local gtype = tlist[num]or'default'
 			local dims = slist[num]or'256x256x256'
-			local generator = generators[gtype]or loadGenerator(gtype)
+			local generator = generators[gtype]or assert(openGenerator(gtype))
+			generators[gtype] = generator
 			local x, y, z = dims:match('(%d+)x(%d+)x(%d+)')
 			x = tonumber(x)
 			y = tonumber(y)
@@ -455,6 +456,7 @@ function init()
 			io.write(MESG_DONEIN%{(socket.gettime()-st)*1000})
 		end
 	end
+	generators = nil
 	io.write('\r\n')
 	if not worlds['default']then
 		print(CON_WLOADERR)
