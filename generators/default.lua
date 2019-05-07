@@ -720,9 +720,9 @@ return function(world, seed)
 				while true do
 					local thread = threads[1]
 					if thread then
-						if thread.status == "error" then
+						if thread.status == 'error'then
 							print(thread[1])
-						elseif thread.status == "done" then
+						elseif thread.status == 'done'then
 							count = count - 1
 							table.remove(threads, 1)
 							if count == 0 then

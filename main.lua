@@ -278,8 +278,8 @@ function wsDoHandshake()
 			local msg = data.emsg or MESG_NOTWSCONN
 			local response =
 			'HTTP/1.1 400 Bad request\r\n'+
-			'Content-Length: %d\r\n\r\n'%#msg+
-			msg
+			'Content-Length: %d\r\n\r\nBad request: '
+			%(#msg+13)+msg
 			cl:send(response)
 			cl:close()
 			wsHandshake[cl] = nil

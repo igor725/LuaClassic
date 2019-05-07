@@ -70,7 +70,7 @@ MESG_LEVELLOAD     = 'Please wait, server is loading this level...'
 MESG_CONN          = '&ePlayer %s connected to server'
 MESG_DISCONN       = '&ePlayer %s disconnected from server (%s)'
 MESG_UNKNOWNCMD    = '&cUnknown command'
-MESG_NOTWSCONN     = 'Bad request: This port accepts only websocket connections.'
+MESG_NOTWSCONN     = 'This port accepts only websocket connections.'
 
 CMD_WMODE          = 'Readonly mode %s'
 CMD_SVINFO1        = 'Server runned on &a%s &e%s &fwith &b%s'
