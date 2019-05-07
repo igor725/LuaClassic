@@ -12,22 +12,18 @@ if not status then
 	end
 	return
 end
-local function col(r,g,b)
-	return ffi.new('unsigned char[3]', r, g, b)
-end
-
 local HCOLORS = {
-	[-1] = col(0,0,0),
-	[1]  = col(116,116,116),
-	[2]  = col(118,177,79),
-	[3]  = col(121,85,58),
-	[4]  = col(82,82,82),
-	[5]  = col(188,152,98),
-	[8]  = col(35,62,140),
-	[10] = col(224,142,46),
-	[12] = col(220,213,159),
-	[18] = col(90,250,58),
-	[45] = col(177,52,17)
+	[-1] = newColor(0,0,0),
+	[1]  = newColor(116,116,116),
+	[2]  = newColor(118,177,79),
+	[3]  = newColor(121,85,58),
+	[4]  = newColor(82,82,82),
+	[5]  = newColor(188,152,98),
+	[8]  = newColor(35,62,140),
+	[10] = newColor(224,142,46),
+	[12] = newColor(220,213,159),
+	[18] = newColor(90,250,58),
+	[45] = newColor(177,52,17)
 }
 HCOLORS[9] = HCOLORS[8]
 HCOLORS[11] = HCOLORS[10]
