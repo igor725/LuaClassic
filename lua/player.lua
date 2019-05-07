@@ -432,11 +432,13 @@ local player_mt = {
 
 	sendNetMesg = function(self, msg, opcode)
 		local cl = self:getClient()
+		local s, err
 		if self.isWS then
-			cl:send(encodeWsFrame(msg, opcode or 0x02))
+			s, err = cl:send(encodeWsFrame(msg, opcode or 0x02))
 		else
-			cl:send(msg)
+			s, err = cl:send(msg)
 		end
+		return s ~= nil, err
 	end,
 	sendPacket = function(self, isCPE, ...)
 		local rawPacket
@@ -445,7 +447,7 @@ local player_mt = {
 		else
 			rawPacket = generatePacket(...)
 		end
-		self:sendNetMesg(rawPacket)
+		return self:sendNetMesg(rawPacket)
 	end,
 	sendMap = function(self)
 		if not self.handshaked then return end

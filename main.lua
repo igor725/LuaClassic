@@ -85,7 +85,7 @@ function onPlayerChatMessage(player, message)
 		message = tostring(prt)
 	end
 	local starts = message:sub(1,1)
-	if starts~='#'then
+	if not message:startsWith('#','>','/')then
 		message = message:gsub('%%(%x)','&%1')
 	end
 	printf('%s: %s', player:getName(), mc2ansi(message))

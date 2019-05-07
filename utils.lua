@@ -220,8 +220,15 @@ function string.split(self, sep)
 	return fields
 end
 
-function string.startsWith(self, str)
-	return self:sub(1, #str) == str
+function string.startsWith(self, ...)
+	local strs = {...}
+	for i=1,#strs do
+		local str = strs[i]
+		if self:sub(1, #str) == str then
+			return true, i
+		end
+	end
+	return false
 end
 
 function newChatMessage(msg, id)
