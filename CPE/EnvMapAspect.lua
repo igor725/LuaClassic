@@ -34,8 +34,8 @@ local function getMa(world)
 end
 
 function ema:load()
-	registerSvPacket(0x28, 'Bc64')
-	registerSvPacket(0x29, '>BBi')
+	registerSvPacket(0x28, 'bc64')
+	registerSvPacket(0x29, '>bbi')
 	getWorldMT().setEnvProp = function(world, typ, val)
 		getMa(world)[typ] = val
 		playersForEach(function(player)

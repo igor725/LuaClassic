@@ -10,7 +10,7 @@ if not status then
 	function pngSave()
 		return false, 'libpng not loaded: '+tostring(LIB)
 	end
-	return
+	return false
 end
 local HCOLORS = {
 	[-1] = newColor(0,0,0),

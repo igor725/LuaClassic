@@ -1,7 +1,7 @@
 local iord = {}
 
 function iord:load()
-	registerSvPacket(0x2C, 'BBB')
+	registerSvPacket(0x2C, 'bbb')
 	getPlayerMT().setInventoryOrder = function(player, order, id)
 		if player:isSupported('InventoryOrder')then
 			player:sendPacket(false, order, id)

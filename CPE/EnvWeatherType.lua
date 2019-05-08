@@ -16,7 +16,7 @@ local function weatherFor(player, w)
 end
 
 function wt:load()
-	registerSvPacket(0x1f, '>BB')
+	registerSvPacket(0x1f, 'bb')
 	getWorldMT().setWeather = function(world, w)
 		world = getWorld(world)
 		if not world then return false end

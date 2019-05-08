@@ -3,8 +3,8 @@ local sc = {
 }
 
 function sc:load()
-	registerSvPacket(0x1A, '>BBc64hhhhhhhhhh')
-	registerSvPacket(0x1B, '>BB')
+	registerSvPacket(0x1A, '>bbc64hhhhhhhhhh')
+	registerSvPacket(0x1B, 'bb')
 end
 
 function sc:create(player, id, label, x1, y1, z1, x2, y2, z2, r, g, b, a)

@@ -47,7 +47,7 @@ local function getClrs(world)
 end
 
 function ec:load()
-	registerSvPacket(0x19,'>Bbhhh')
+	registerSvPacket(0x19,'>bbhhh')
 	getWorldMT().setEnvColor = function(world, typ, r, g, b)
 		local colors = getClrs(world)
 		local clr = colors[typ]

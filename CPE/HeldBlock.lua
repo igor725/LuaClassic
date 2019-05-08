@@ -1,7 +1,7 @@
 local hb = {}
 
 function hb:load()
-	registerSvPacket(0x14, 'BBB')
+	registerSvPacket(0x14, 'bbb')
 	getPlayerMT().getHeldBlock = function(player)
 		return player.heldBlock or -1
 	end

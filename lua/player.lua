@@ -113,6 +113,8 @@ local player_mt = {
 
 	setID = function(self,id)
 		self.id = id
+		IDS[id] = player
+		players[player] = id
 	end,
 	setVeriKey = function(self,key)
 		self.verikey = key

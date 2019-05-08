@@ -11,7 +11,7 @@ local cm = {
 }
 
 function cm:load()
-	registerSvPacket(0x1d, '>Bbc64')
+	registerSvPacket(0x1d, 'bbc64')
 	getPlayerMT().setModel = function(player, model)
 		if type(model)=='number'then
 			if model<0 or model>49 then
@@ -24,11 +24,12 @@ function cm:load()
 				model = 'humanoid'
 			end
 		end
+		
 		player.model = model
 		playersForEach(function(ply)
-			if player:isSupported('ChangeModel')then
-				local id = (ply==player and -1)or ply:getID()
-				ply:sendPacket(false, 0x1d,id,model)
+			if ply:isSupported('ChangeModel')then
+				local id = (ply==player and -1)or player:getID()
+				ply:sendPacket(false, 0x1d, id, model)
 			end
 		end)
 		return true

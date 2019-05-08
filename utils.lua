@@ -188,7 +188,7 @@ function broadcast(str, exid)
 	end)
 end
 
-function setID(player)
+function findFreeID(player)
 	local s = 1
 	while IDS[s]do
 		s = s + 1
@@ -335,6 +335,10 @@ function getPlayerByName(name)
 			return ply
 		end
 	end)
+end
+
+function getPlayerByID(id)
+	return IDS[id]
 end
 
 function createWorld(wname, dims, gen, seed)

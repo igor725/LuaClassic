@@ -4,6 +4,16 @@ local bd = {
 	global = true
 }
 
+BS_WALK         = 0
+BS_SWIM         = 1
+BS_SOLID        = 2
+
+BD_OPAQUE       = 0
+BD_TRANSPARENT  = 1
+BD_CTRANSPARENT = 2
+BD_TRANSLUCENT  = 3
+BD_GAS          = 4
+
 local function defineBlockFor(player, opts)
 	if player:isSupported('BlockDefinitions')then
 		opts.name = opts.name or'Unnamed block'
@@ -46,11 +56,12 @@ local function defineBlockFor(player, opts)
 end
 
 function bd:load()
-	registerSvPacket(0x23, '>BBc64bbbbbbbbbbbbbb')
-	registerSvPacket(0x24, 'BB')
+	registerSvPacket(0x23, 'bbc64bbbbbbbbbbbbbb')
+	registerSvPacket(0x24, 'bb')
 end
 
 function bd:remove(id)
+	self.definedBlocks[id] = nil
 	playersForEach(function(player)
 		if player:isSupported('BlockDefinitions')then
 			removeDefinedBlock(player, id)

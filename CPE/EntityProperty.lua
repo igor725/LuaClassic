@@ -9,7 +9,7 @@ local function entPropFor(ply, id, ptype, val)
 end
 
 function ep:load()
-	registerSvPacket(0x2A, '>Bbbi')
+	registerSvPacket(0x2A, '>bbbi')
 	getPlayerMT().setProp = function(player, ptype, val)
 		player.entProps = player.entProps or{}
 		player.entProps[ptype] = val

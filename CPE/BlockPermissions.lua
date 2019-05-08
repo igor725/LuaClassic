@@ -16,7 +16,7 @@ local function setBlockPermFor(player, id, allowPlace, allowDelete)
 end
 
 function bp:load()
-	registerSvPacket(0x1C, 'BBBB')
+	registerSvPacket(0x1C, 'bbbb')
 	getPlayerMT().setBlockPermissions = function(...)
 		setBlockPermFor(...)
 	end

@@ -17,7 +17,7 @@ local function hackControlFor(player, ...)
 end
 
 function hc:load()
-	registerSvPacket(0x20, 'BBBBBBh')
+	registerSvPacket(0x20, 'bbbbbbh')
 	getPlayerMT().hackControl = function(...)
 		return hackControlFor(...)
 	end

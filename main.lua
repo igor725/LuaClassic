@@ -293,12 +293,10 @@ function createPlayer(cl,isWS)
 		local player = newPlayer(cl)
 		player.isWS = isWS
 		player.ip = ip
-		local nid = setID(player)
+		local nid = findFreeID(player)
 		if nid>0 then
 			player:init()
 			player:setID(nid)
-			IDS[nid] = player
-			players[player] = nid
 		else
 			player:kick(KICK_SFULL)
 		end

@@ -61,7 +61,7 @@ local function defineExBlockFor(player, opts)
 end
 
 function bde:load()
-	registerSvPacket(0x25, '>bbc64bbbbbbbbbbbbbbbbbbbbbb')
+	registerSvPacket(0x25, 'bbc64bbbbbbbbbbbbbbbbbbbbbb')
 	local bd = BlockDefinitions
 	bd.definedExBlocks = {}
 
