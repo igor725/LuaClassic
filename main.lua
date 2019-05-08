@@ -45,6 +45,10 @@ function prePlayerSpawn(player)
 	hooks:call('prePlayerSpawn', player)
 end
 
+function onPlayerClick(...)
+	hooks:call('onPlayerClick', ...)
+end
+
 function onPlayerDespawn(player)
 	cpe:extCallHook('postPlayerDespawn', player)
 	hooks:call('onPlayerDespawn', player)

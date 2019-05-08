@@ -14,6 +14,17 @@ BD_CTRANSPARENT = 2
 BD_TRANSLUCENT  = 3
 BD_GAS          = 4
 
+SND_NO          = 0
+SND_WOOD        = 1
+SND_GRAVEL      = 2
+SND_GRASS       = 3
+SND_STONE       = 4
+SND_METAL       = 5
+SND_GLASS       = 6
+SND_WOOL        = 7
+SND_SAND        = 8
+SND_SNOW        = 9
+
 local function defineBlockFor(player, opts)
 	if player:isSupported('BlockDefinitions')then
 		opts.name = opts.name or'Unnamed block'
