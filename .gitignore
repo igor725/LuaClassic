@@ -1,5 +1,6 @@
 worlds/*
 !worlds/.keep
+/test*.lua
 *.properties
 *.log
 *.txt

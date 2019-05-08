@@ -202,12 +202,17 @@ function setID(player)
 end
 
 function table.hasValue(tbl, ...)
-	local ch = {...}
 	for k, v in pairs(tbl)do
-		for k1, v1 in pairs(ch)do
-			if v==v1 then
+		local idx = 1
+		while true do
+			local tv = select(idx, ...)
+			if tv == nil then
+				break
+			end
+			if tv == v then
 				return true
 			end
+			idx = idx + 1
 		end
 	end
 	return false
@@ -221,12 +226,16 @@ function string.split(self, sep)
 end
 
 function string.startsWith(self, ...)
-	local strs = {...}
-	for i=1,#strs do
-		local str = strs[i]
-		if self:sub(1, #str) == str then
-			return true, i
+	local idx = 1
+	while true do
+		local str = select(idx, ...)
+		if str == nil then
+			break
 		end
+		if self:sub(1, #str) == str then
+			return true, idx
+		end
+		idx = idx + 1
 	end
 	return false
 end

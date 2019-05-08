@@ -8,7 +8,7 @@
 local status, LIB = pcall(ffi.load, 'png')
 if not status then
 	function pngSave()
-		return false, 'libpng not loaded: '+tostring(status)
+		return false, 'libpng not loaded: '+tostring(LIB)
 	end
 	return
 end
@@ -47,12 +47,12 @@ local function eHandler(png, err)
 	error('libpng error')
 end
 
-function pngSave(world, filename, flipx, flipy)
+function pngSave(world, filename, flipx, flipy, pngver)
 	if not world.isWorld then return false, 'Invalid argument #1 (World expected)' end
 	local f, err = io.open(filename or'hmap.png', 'wb')
 	if not f then return false, err end
 	local succ, err = pcall(function()
-		local png = LIB.png_create_write_struct(PNG_VER, nil, eHandler, eHandler)
+		local png = LIB.png_create_write_struct(pngver or PNG_VER, nil, eHandler, eHandler)
 		if png == 0 then return false, 'PNG struct not created'end
 		local info = LIB.png_create_info_struct(png)
 		if png == 1 then return false, 'INFO struct not created'end
