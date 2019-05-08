@@ -284,7 +284,7 @@ addConsoleCommand('restart', function()
 	return true
 end)
 
-addConsoleCommand('loadworld', function()
+addConsoleCommand('loadworld', function(args)
 	if #args == 1 then
 		local succ, err = loadWorld(args[1])
 		if not succ then
@@ -294,7 +294,7 @@ addConsoleCommand('loadworld', function()
 	end
 end)
 
-addConsoleCommand('unloadworld', function()
+addConsoleCommand('unloadworld', function(args)
 	if #args == 1 then
 		local succ, err = unloadWorld(args[1])
 		if not succ then

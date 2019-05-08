@@ -44,8 +44,8 @@ local world_mt = {
 		data.spawnpoint = data.spawnpoint or{0,0,0}
 		data.spawnpointeye = data.spawnpointeye or{0,0}
 		self.size = sz
-		self.ldata = ffi.new('char[?]',sz)
-		local szint = ffi.new('int[1]',bswap(sz-4))
+		self.ldata = ffi.new('uchar[?]', sz)
+		local szint = ffi.new('int[1]', bswap(sz-4))
 		ffi.copy(self.ldata, szint, 4)
 		self.data = data
 		return true

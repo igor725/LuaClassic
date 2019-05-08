@@ -33,10 +33,6 @@ function cpe:init()
 		local ext = setmetatable(chunk(), ext_mt)
 		local extn = filename:sub(1,-5)
 		if not ext.disabled then
-			if ext.load then
-				ext:load()
-				ext.load = nil
-			end
 			self.exts[extn] = ext
 			if ext.global then
 				_G[extn] = ext
@@ -45,6 +41,12 @@ function cpe:init()
 			io.write('\n\t', extn, ', ', ext:getVersion())
 		end
 	end)
+	for extn, ext in pairs(self.exts)do
+		if ext.load then
+			ext:load()
+			ext.load = nil
+		end
+	end
 	io.write('\r\n')
 end
 
