@@ -666,12 +666,13 @@ return function(world, seed)
 	local threads = {}
 
 	local thlimit = config:get('generator-threads-count', 2)
+
+	local terrain_gen = lanes.gen(lanelibs, threadTerrain)
 	for i = 0, thlimit-1 do
 		startX = math.floor(dx * i / thlimit)
 		endX = math.floor(dx * (i + 1) / thlimit) - 1
 
-		local terrain_gen = lanes.gen(lanelibs, threadTerrain)
-		table.insert(threads,terrain_gen(mapaddr, dx, dy, dz, heightMap, heightWater, startX, endX, heightStone))
+		table.insert(threads, terrain_gen(mapaddr, dx, dy, dz, heightMap, heightWater, startX, endX, heightStone))
 	end
 	watchThreads(threads)
 
@@ -679,7 +680,6 @@ return function(world, seed)
 	if GEN_ENABLE_ORES then
 		io.write('ores, ')
 		local ores_gen = lanes.gen(lanelibs, generateOre)
-
 		table.insert(threads, ores_gen(mapaddr, dx, dy, dz, heightMap, heightGrass))
 	end
 
@@ -691,7 +691,6 @@ return function(world, seed)
 	if GEN_ENABLE_TREES then
 		io.write('trees, ')
 		local trees_gen = lanes.gen(lanelibs, generateTrees)
-
 		table.insert(threads, trees_gen(mapaddr, dx, dy, dz, heightMap))
 	end
 
@@ -703,7 +702,6 @@ return function(world, seed)
 	if GEN_ENABLE_HOUSES then
 		io.write('houses, ')
 		local houses_gen = lanes.gen(lanelibs, generateHouse)
-
 		table.insert(threads, houses_gen(mapaddr, dx, dy, dz, heightMap, heightWater))
 	end
 
@@ -712,31 +710,25 @@ return function(world, seed)
 	if GEN_ENABLE_CAVES then
 		io.write('caves, ')
 		local caves_gen = lanes.gen(lanelibs, generateCaves)
-		local count = 0
 
 		local CAVES_COUNT = dx * dy * dz / 700000
 		for i = 1, CAVES_COUNT do
-			if count > thlimit then
+			if i%thlimit == 0 then
 				while true do
 					local thread = threads[1]
 					if thread then
 						if thread.status == 'error'then
 							print(thread[1])
 						elseif thread.status == 'done'then
-							count = count - 1
 							table.remove(threads, 1)
-							if count == 0 then
-								break
-							end
 						end
 					else
-						socket.sleep(.1)
+						break
 					end
 				end
 			end
 
-			count = count + 1
-			threads[count] = caves_gen(mapaddr, dx, dy, dz, heightMap, heightGrass, heightLava, seed + i)
+			table.insert(threads, caves_gen(mapaddr, dx, dy, dz, heightMap, heightGrass, heightLava, seed + i))
 		end
 	end
 

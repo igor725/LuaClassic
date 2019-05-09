@@ -34,6 +34,7 @@ ffi.cdef[[
 	void png_init_io(void*,void*);
 	void png_set_IHDR(void*,void*,uint32_t,uint32_t,int,int,int,int,int);
 	void *png_create_write_struct(const char*,void*,func,func);
+	void png_destroy_write_struct(void*,void*);
 	void *png_create_info_struct(void*);
 	void png_write_info(void*,void*);
 	void png_write_row(void*,const char*);
@@ -47,7 +48,7 @@ local function eHandler(png, err)
 	error('libpng error')
 end
 
-function pngSave(world, filename, flipx, flipy, pngver)
+function pngSave(world, filename, flipx, flipz, pngver)
 	if not world.isWorld then return false, 'Invalid argument #1 (World expected)' end
 	local f, err = io.open(filename or'hmap.png', 'wb')
 	if not f then return false, err end
@@ -94,5 +95,6 @@ function pngSave(world, filename, flipx, flipy, pngver)
 	end)
 
 	f:close()
+	LIB.png_destroy_write_struct(png, info)
 	return succ, PNG_ERR or err
 end

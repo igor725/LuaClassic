@@ -31,7 +31,7 @@ function sql.addColumn(col, type)
 		return true
 	else
 		local err = DB:errmsg()
-		if tostring(err):startsWith('duplicate')then
+		if err:startsWith('duplicate')then
 			return true
 		else
 			return false, err

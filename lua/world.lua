@@ -1,19 +1,3 @@
-ffi.cdef[[
-typedef struct {
-	char *fpos;
-	void *base;
-	unsigned short handle;
-	short flags;
-	short unget;
-	unsigned long alloc;
-	unsigned short buffincrement;
-} FILE;
-
-size_t fread(const void * ptr, size_t size, size_t count, FILE *stream);
-size_t fwrite(const void * ptr, size_t size, size_t count, FILE *stream);
-int    ferror(FILE *stream);
-]]
-
 local function gBufSize(x,y,z)
 	return x*y*z+4
 end
