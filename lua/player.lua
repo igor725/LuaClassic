@@ -657,6 +657,15 @@ local player_mt = {
 }
 player_mt.__index = player_mt
 
+function playersForEach(func)
+	for player, id in pairs(players)do
+		local ret = func(player, id)
+		if ret~=nil then
+			return ret
+		end
+	end
+end
+
 function getPlayerMT()
 	return player_mt
 end
@@ -671,13 +680,14 @@ function getPlayerByName(name)
 	end)
 end
 
-function playersForEach(func)
-	for player, id in pairs(players)do
-		local ret = func(player, id)
-		if ret~=nil then
-			return ret
+function findPlayer(namepart)
+	if not namepart then return end
+	namepart = namepart:lower()
+	return playersForEach(function(ply)
+		if ply:getName():lower():find(namepart) then
+			return ply
 		end
-	end
+	end)
 end
 
 function getPlayerByID(id)

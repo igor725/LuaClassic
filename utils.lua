@@ -59,19 +59,6 @@ lanes = require('lanes').configure{
 struct = require('struct')
 lfs = require('lfs')
 
-require('conh')
-require('gzip')
-require('hooks')
-require('timer')
-require('sqlite3')
-require('packets')
-require('world')
-require('player')
-require('cpe')
-require('config')
-require('commands')
-require('permissions')
-
 do
 	local path = package.searchpath('socket.core', package.cpath)
 	if path then
@@ -116,7 +103,8 @@ end
 
 local colorReplace
 
-ENABLE_ANSI = checkEnv('ConEmuANSI','on')or checkEnv('TERM','xterm')
+ENABLE_ANSI = checkEnv('ConEmuANSI', 'on')or checkEnv('TERM', 'xterm')or
+checkEnv('TERM', 'screen')
 require('log')
 
 

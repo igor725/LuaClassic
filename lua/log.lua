@@ -31,12 +31,15 @@ local function printlogline(ltype, ...)
 	if log.level < ltype then return end
 	local color = (log.colors and log.colors[ltype])or nil
 	local fmt
+	local time, mtime = math.modf(lanes.now_secs())
+	mtime = mtime * 1000
+
 	if color then
-		fmt = os.date('%H:%M:%S [\27[%%sm%%s\27[0m] ')
-		fmt = string.format(fmt, color, types[ltype])
+		fmt = os.date('%H:%M:%S.%%03d [\27[%%sm%%s\27[0m] ', time)
+		fmt = string.format(fmt, mtime, color, types[ltype])
 	else
-		fmt = os.date('%H:%M:%S [%%s] ')
-		fmt = string.format(fmt, types[ltype])
+		fmt = os.date('%H:%M:%S.%%03d [%%s] ', time)
+		fmt = string.format(fmt, mtime, types[ltype])
 	end
 	io.write(fmt)
 	local idx = 1
@@ -58,7 +61,7 @@ local function printlogline(ltype, ...)
 	io.write('\27[0m\n')
 end
 
-function log.setlevel(lvl)
+function log.setLevel(lvl)
 	lvl = tonumber(lvl)
 	if not lvl then return false end
 	lvl = math.max(math.min(lvl, 3), 0)

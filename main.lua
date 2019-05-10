@@ -28,6 +28,10 @@ if os.getenv('DEBUG')then
 end
 
 require('utils')
+require('commands')
+dirForEach('lua', 'lua', function(file)
+	require(file:sub(1,-5))
+end)
 
 function onConnectionAttempt(ip, port)
 end
@@ -247,7 +251,7 @@ function wsDoHandshake()
 			if ln==''then
 				data.state = 'genresp'
 			elseif ln then
-				local k, v = ln:match('(.+): (.+)')
+				local k, v = ln:match('(.+):%s(.+)')
 				if k then
 					data.headers[k] = v
 				else
@@ -372,6 +376,7 @@ function serviceMessages()
 end
 
 function init()
+	log.info(CON_START)
 	players, IDS = {}, {}
 	worlds, generators = {}, {}
 
@@ -467,23 +472,26 @@ function init()
 	return true
 end
 
-log.info(CON_START)
 succ, err = xpcall(function()
 	while not _STOP do
-		if not INITED then INITED=init()end
 		ETIME = CTIME
 		CTIME = socket.gettime()
+
+		if not INITED then INITED=init()end
 		if ETIME then
 			dt = CTIME-ETIME
 			dt = math.min(.1, dt)
 			onUpdate(dt)
 		end
+
 		acceptClients()
 		serviceMessages()
+
 		if wsServer then
 			wsAcceptClients()
 			wsDoHandshake()
 		end
+
 		if cmdh then
 			cmdh()
 		end

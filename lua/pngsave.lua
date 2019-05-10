@@ -52,7 +52,7 @@ local function eHandler(png, err)
 end
 
 function setlibpngVer(str)
-	PNG_VER = str or'1.5.0'
+	PNG_VER = str or PNG_VER
 end
 
 function pngSave(world, filename, flipx, flipz)
@@ -87,7 +87,7 @@ function pngSave(world, filename, flipx, flipz)
 			zStart, zEnd, zStep = ih-1, 0, -1
 		end
 
-		local irow = ffi.new('unsigned char[?]', 3*iw)
+		local irow = ffi.new('uchar[?]', 3*iw)
 		for z = zStart, zEnd, zStep do
 			for x = 0, iw-1 do
 				local col = getBlockColor(x, z)
