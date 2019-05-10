@@ -82,12 +82,12 @@ function config:parse()
 			local typ = self.types[key]
 			local gtyp = type(value)
 			if typ and gtyp~=typ then
-				print(CONF_VTYPERR%{key,typ,gtyp})
+				log.error(CONF_VTYPERR%{key,typ,gtyp})
 				return
 			end
 			self.values[key] = value
 		else
-			print(CONF_INVALIDSYNTAX%{'properties',ln})
+			log.error(CONF_INVALIDSYNTAX%{'properties',ln})
 		end
 	end
 	f:close()

@@ -22,7 +22,7 @@ local world_mt = {
 		local dim = data.dimensions
 		local sz = gBufSize(unpack(dim))
 		if sz>1533634564 then
-			print(WORLD_TOOBIGDIM)
+			log.error(WORLD_TOOBIGDIM)
 			return false, WORLD_TOOBIGDIM
 		end
 		data.spawnpoint = data.spawnpoint or{0,0,0}
@@ -86,20 +86,20 @@ local world_mt = {
 					end
 				end
 			else
-				print('Warning: Unknown MAPOPT %q skipped!'%k)
+				log.warn('Warning: Unknown MAPOPT %q skipped!'%k)
 			end
 		end
 		wh:write('\255')
-		gz.compress(self.ldata, self.size, 4, function(out,stream)
+		local gStatus, gErr = gz.compress(self.ldata, self.size, 4, function(out, stream)
 			local chunksz = 1024-stream.avail_out
 			C.fwrite(out, 1, chunksz, wh)
 			if C.ferror(wh)~=0 then
-				print(WORLD_WRITEFAIL)
-				os.exit(1)
+				log.error(WORLD_WRITEFAIL)
+				gz.defEnd(stream)
 			end
 		end)
 		wh:close()
-		return true
+		return gStatus, gErr
 	end,
 	unload = function(self)
 		if self.players>0 or self.unloadLocked then return false end
@@ -352,7 +352,113 @@ function getWorldMT()
 	return world_mt
 end
 
-return function(wh, wn)
+function getWorld(w)
+	local t = type(w)
+	if t == 'table'then
+		if w.isWorld then
+			return w
+		elseif w.isPlayer then
+			return worlds[w.worldName]
+		end
+	elseif t == 'string'then
+		w = w:lower()
+		return worlds[w]
+	end
+end
+
+function loadWorld(wname)
+	if worlds[wname]then return true end
+	local lvlh = io.open('worlds/'+wname+'.map', 'rb')
+	if not lvlh then return false end
+	local status, world = pcall(newWorld,lvlh,wname)
+	if status then
+		worlds[wname] = world
+		return true
+	end
+	return false, world
+end
+
+function unloadWorld(wname)
+	local world = getWorld(wname)
+	if world == worlds['default']then
+		return false
+	end
+
+	if world then
+		playersForEach(function(player)
+			if player:isInWorld(wname)then
+				player:changeWorld('default')
+			end
+		end)
+		world:save()
+		world.buf = nil
+		worlds[wname] = nil
+		collectgarbage()
+		return true
+	end
+	return false
+end
+
+function createWorld(wname, dims, gen, seed)
+	if world[wname]then return false end
+	local data = {dimensions=dims}
+	local tmpWorld = newWorld()
+	if tmpWorld:createWorld(data)then
+		tmpWorld:setName(wname)
+		worlds[wname] = tmpWorld
+		return regenerateWorld(wname, gen, seed)
+	else
+		return false
+	end
+end
+
+function openGenerator(name)
+	local chunk, err = loadfile('generators/'+name+'.lua')
+	if chunk then
+		local status, ret = pcall(chunk)
+		return status and ret, ret
+	end
+	return false, err
+end
+
+function regenerateWorld(world, gentype, seed)
+	world = getWorld(world)
+	if not world then return false, WORLD_NE end
+	if world:isInReadOnly()then return false, WORLD_RO end
+	local gen, err = openGenerator(gentype)
+	if not gen then
+		return false, err
+	else
+		if type(gen)=='function'then
+			world.data.colors = nil
+			world.data.map_aspects = nil
+			world.data.texPack = nil
+			playersForEach(function(player)
+				if player:isInWorld(world)then
+					player:despawn()
+				end
+			end)
+			ffi.fill(world.ldata+4, world.size)
+			seed = seed or CTIME
+			local t = socket.gettime()
+			local succ, err = pcall(gen, world, seed)
+			if not succ then
+				log.error(err)
+				return false, err
+			end
+			local e = socket.gettime()
+			playersForEach(function(player)
+				if player:isInWorld(world)then
+					player.handshakeStage2 = true
+				end
+			end)
+			return true, e-t
+		end
+	end
+	return false, IE_UE
+end
+
+function newWorld(wh, wn)
 	local world =
 	setmetatable({data={}}, world_mt)
 

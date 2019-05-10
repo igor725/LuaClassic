@@ -5,7 +5,10 @@
 	P.S. libPNG binary can be grabbed here: https://luapower.com/libpng/download
 ]]
 
-local status, LIB = pcall(ffi.load, 'png')
+local status, LIB = pcall(ffi.load, 'png15')
+if not status then
+	status, LIB = pcall(ffi.load, 'png')
+end
 if not status then
 	function pngSave()
 		return false, 'libpng not loaded: '+tostring(LIB)
@@ -40,7 +43,7 @@ ffi.cdef[[
 	void png_write_row(void*,const char*);
 	void png_write_end(void*,void*);
 ]]
-local PNG_VER = '1.5.14'
+local PNG_VER = '1.5.0'
 local PNG_ERR
 
 local function eHandler(png, err)
@@ -48,12 +51,16 @@ local function eHandler(png, err)
 	error('libpng error')
 end
 
-function pngSave(world, filename, flipx, flipz, pngver)
+function setlibpngVer(str)
+	PNG_VER = str or'1.5.0'
+end
+
+function pngSave(world, filename, flipx, flipz)
 	if not world.isWorld then return false, 'Invalid argument #1 (World expected)' end
 	local f, err = io.open(filename or'hmap.png', 'wb')
 	if not f then return false, err end
 	local succ, err = pcall(function()
-		local png = LIB.png_create_write_struct(pngver or PNG_VER, nil, eHandler, eHandler)
+		local png = LIB.png_create_write_struct(PNG_VER, nil, eHandler, eHandler)
 		if png == 0 then return false, 'PNG struct not created'end
 		local info = LIB.png_create_info_struct(png)
 		if png == 1 then return false, 'INFO struct not created'end

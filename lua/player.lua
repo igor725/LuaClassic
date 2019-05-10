@@ -605,7 +605,7 @@ local player_mt = {
 
 		if self.thread then
 			if self.thread.status == 'error'then
-				print(self.thread[-1])
+				log.error(self.thread[-1])
 				self.thread = nil
 				self:kick(KICK_MAPTHREADERR)
 				return
@@ -617,7 +617,7 @@ local player_mt = {
 						self:sendPacket(false, 0x04, unpack(dim))
 						self:spawn()
 					else
-						print('MAPSEND ERROR', mesg)
+						log.error('MAPSEND ERROR', mesg)
 						self:kick(KICK_INTERR%IE_GZ)
 					end
 					self.thread = nil
@@ -661,7 +661,57 @@ function getPlayerMT()
 	return player_mt
 end
 
-return function(cl)
+function getPlayerByName(name)
+	if not name then return end
+	name = name:lower()
+	return playersForEach(function(ply)
+		if ply:getName():lower()==name then
+			return ply
+		end
+	end)
+end
+
+function playersForEach(func)
+	for player, id in pairs(players)do
+		local ret = func(player, id)
+		if ret~=nil then
+			return ret
+		end
+	end
+end
+
+function getPlayerByID(id)
+	return IDS[id]
+end
+
+function findFreeID(player)
+	local s = 1
+	while IDS[s]do
+		s = s + 1
+		if s>127 then
+			return -1
+		end
+	end
+	local mp = config:get('max-players', 20)
+	if s>mp then s = -1 end
+	return s
+end
+
+function newChatMessage(msg, id)
+	playersForEach(function(ply)
+		ply:sendMessage(msg, id)
+	end)
+end
+
+function broadcast(str, exid)
+	playersForEach(function(player, id)
+		if id~=exid then
+			player:sendNetMesg(str)
+		end
+	end)
+end
+
+function newPlayer(cl)
 	return setmetatable({
 		kickTimeout = CTIME+getKickTimeout(),
 		connectTime = CTIME,

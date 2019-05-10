@@ -61,7 +61,7 @@ end
 
 function onPlayerDestroy(player)
 	local msg = printf(MESG_DISCONN, player:getName(), player.leavereason)
-	newChatMessage(msg)
+	newChatMessage('&e'..msg)
 	cpe:extCallHook('onPlayerDestroy', player)
 	hooks:call('onPlayerDestroy', player)
 	if player.handshaked then
@@ -92,7 +92,7 @@ function onPlayerChatMessage(player, message)
 	if not message:startsWith('#','>','/')then
 		message = message:gsub('%%(%x)','&%1')
 	end
-	printf('%s: %s', player:getName(), mc2ansi(message))
+	log.chat('%s: %s'%{player, message})
 	if starts=='#'then
 		if player:checkPermission('server.luaexec')then
 			local code = message:sub(2)
@@ -328,12 +328,12 @@ function handleConsoleCommand(cmd)
 				ret[i] = tostring(ret[i])
 			end
 			if ret[1] then
-				print(table.concat(ret, ', ', 2))
+				log.info(table.concat(ret, ', ', 2))
 			else
-				print(MESG_ERROR%ret[2])
+				log.error(MESG_ERROR%ret[2])
 			end
 		else
-			print(MESG_ERROR%err)
+			log.error(MESG_ERROR%err)
 		end
 	else
 		local args = cmd:split('%s')
@@ -347,13 +347,13 @@ function handleConsoleCommand(cmd)
 			local rtval, str = cmdf(args, argstr)
 			if not rtval then
 				local str = _G['CU_'+cmd:upper()]
-				if str then print(CON_USE%str)end
+				if str then log.info(CON_USE%str)end
 			elseif rtval == true then
 				if str == nil then return end
-				print(str)
+				log.info(str)
 			end
 		else
-			print(MESG_UNKNOWNCMD)
+			log.error(MESG_UNKNOWNCMD)
 		end
 	end
 end
@@ -374,13 +374,6 @@ end
 function init()
 	players, IDS = {}, {}
 	worlds, generators = {}, {}
-
-	newWorld = require('world')
-	newPlayer = require('player')
-	require('cpe')
-	require('config')
-	require('commands')
-	require('permissions')
 
 	hooks:create('onPlayerRotate')
 	hooks:create('onPlayerMove')
@@ -410,7 +403,7 @@ function init()
 		require('helper')
 	end
 
-	io.write(CON_WLOAD)
+	log.info(CON_WLOAD)
 	local sdlist = config:get('level-seeds', '')
 	sdlist = sdlist:split(',')
 
@@ -425,7 +418,6 @@ function init()
 
 	for num, wn in pairs(wlist)do
 		wn = wn:lower()
-		io.write('\n\t',wn,': ')
 		local st = socket.gettime()
 		local world
 		local lvlh = io.open('worlds/'+wn+'.map', 'rb')
@@ -455,28 +447,27 @@ function init()
 			if num==1 then
 				worlds['default'] = world
 			end
-			io.write(MESG_DONEIN%{(socket.gettime()-st)*1000})
+			local tm = MESG_DONEIN%{(socket.gettime()-st)*1000}
+			log.debug(wn, 'loading', tm)
 		end
 	end
 	generators = nil
-	io.write('\r\n')
 	if not worlds['default']then
-		print(CON_WLOADERR)
-		os.exit(1)
+		log.fatal(CON_WLOADERR)
 	end
 
 	local add = ''
 	if wsServer then
 		add = CON_WSBINDSUCC%wsPort
 	end
-	printf(CON_BINDSUCC, ip, port, add)
+	log.info(CON_BINDSUCC%{ip, port}, add)
 	cmdh = initCmdHandler(handleConsoleCommand)
-	print(CON_HELP)
+	log.info(CON_HELP)
 	CTIME = socket.gettime()
 	return true
 end
 
-print(CON_START)
+log.info(CON_START)
 succ, err = xpcall(function()
 	while not _STOP do
 		if not INITED then INITED=init()end
@@ -512,24 +503,22 @@ if INITED then
 	end)
 
 	if config:save()and permissions:save()then
-		print(CON_SAVESUCC)
+		log.info(CON_SAVESUCC)
 	else
-		print(CON_SAVEERR)
+		log.error(CON_SAVEERR)
 	end
 
-	io.write(CON_WSAVE)
+	log.info(CON_WSAVE)
 	for wname, world in pairs(worlds)do
 		if wname ~= 'default'then
-			io.write('\n\t',wname,': ')
 			local s = socket.gettime()
 			if world:save()then
-				io.write(MESG_DONEIN%((socket.gettime()-s)*1000))
+				log.debug('World', wname, 'saved')
 			else
-				io.write(IE_UE)
+				log.error(wname,'saving error')
 			end
 		end
 	end
-	io.write('\n')
 end
 
 if sql then sql.close()end
@@ -547,7 +536,7 @@ end
 if _STOP == 'restart'then
 	ecode = 2
 else
-	print(CON_SVSTOP)
+	log.info(CON_SVSTOP)
 end
 
 os.exit(ecode)

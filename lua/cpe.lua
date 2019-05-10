@@ -27,7 +27,7 @@ function cpe:init()
 	registerClPacket(0x11, '>c64i')
 
 	local f = true
-	io.write('List of loaded CPE extensions: ')
+	log.info('Loading Classic Protocol Extensions...')
 	dirForEach('CPE','lua', function(filename,fullpath)
 		local chunk = assert(loadfile(fullpath))
 		local ext = setmetatable(chunk(), ext_mt)
@@ -38,7 +38,7 @@ function cpe:init()
 				_G[extn] = ext
 			end
 			self.extCount = self.extCount + 1
-			io.write('\n\t', extn, ', ', ext:getVersion())
+			log.debug('EXT', extn, ext:getVersion())
 		end
 	end)
 	for extn, ext in pairs(self.exts)do
@@ -47,7 +47,7 @@ function cpe:init()
 			ext.load = nil
 		end
 	end
-	io.write('\r\n')
+	log.info('Successfully loaded',self.extCount,'extensions.')
 end
 
 function cpe:registerSvPacket(id, fmt)

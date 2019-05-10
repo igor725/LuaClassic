@@ -65,6 +65,12 @@ require('hooks')
 require('timer')
 require('sqlite3')
 require('packets')
+require('world')
+require('player')
+require('cpe')
+require('config')
+require('commands')
+require('permissions')
 
 do
 	local path = package.searchpath('socket.core', package.cpath)
@@ -108,11 +114,11 @@ function checkEnv(ev, val)
 	end
 end
 
-ENABLE_ANSI = checkEnv('ConEmuANSI','on')or checkEnv('TERM','xterm')
-
 local colorReplace
-local cprint = print
-local cwrite = io.write
+
+ENABLE_ANSI = checkEnv('ConEmuANSI','on')or checkEnv('TERM','xterm')
+require('log')
+
 
 if ENABLE_ANSI then
 	local rt = {
@@ -147,34 +153,14 @@ function mc2ansi(str)
 	local pattern = '(&%x)'
 	if str:find(pattern)then
 		str = str:gsub(pattern, colorReplace)
-		if ENABLE_ANSI then
-			str = str..'\27[0m'
-		end
 	end
 	return str
-end
-
-function print(...)
-	local p = {...}
-	for i=1,#p do
-		p[i] = mc2ansi(tostring(p[i]))
-	end
-	p[1] = os.date('[%H:%M:%S] ')..p[1]
-	cprint(unpack(p))
 end
 
 function printf(...)
 	local str = string.format(...)
-	print(str)
+	log.info(str)
 	return str
-end
-
-function io.write(...)
-	local p = {...}
-	for i=1,#p do
-		p[i] = mc2ansi(tostring(p[i]))
-	end
-	cwrite(unpack(p))
 end
 
 function trimStr(str)
@@ -183,36 +169,6 @@ end
 
 function getAddr(void)
 	return tonumber(ffi.cast('uintptr_t', void))
-end
-
-function playersForEach(func)
-	for player, id in pairs(players)do
-		local ret = func(player, id)
-		if ret~=nil then
-			return ret
-		end
-	end
-end
-
-function broadcast(str, exid)
-	playersForEach(function(player, id)
-		if id~=exid then
-			player:sendNetMesg(str)
-		end
-	end)
-end
-
-function findFreeID(player)
-	local s = 1
-	while IDS[s]do
-		s = s + 1
-		if s>127 then
-			return -1
-		end
-	end
-	local mp = config:get('max-players', 20)
-	if s>mp then s = -1 end
-	return s
 end
 
 function table.hasValue(tbl, ...)
@@ -254,12 +210,6 @@ function string.startsWith(self, ...)
 	return false
 end
 
-function newChatMessage(msg, id)
-	playersForEach(function(ply)
-		ply:sendMessage(msg, id)
-	end)
-end
-
 function dirForEach(dir, ext, func)
 	for file in lfs.dir(dir)do
 		local fp = dir+'/'+file
@@ -268,53 +218,6 @@ function dirForEach(dir, ext, func)
 			func(file,fp)
 		end
 	end
-end
-
-function getWorld(w)
-	local t = type(w)
-	if t == 'table'then
-		if w.isWorld then
-			return w
-		elseif w.isPlayer then
-			return worlds[w.worldName]
-		end
-	elseif t == 'string'then
-		w = w:lower()
-		return worlds[w]
-	end
-end
-
-function loadWorld(wname)
-	if worlds[wname]then return true end
-	local lvlh = io.open('worlds/'+wname+'.map', 'rb')
-	if not lvlh then return false end
-	local status, world = pcall(newWorld,lvlh,wname)
-	if status then
-		worlds[wname] = world
-		return true
-	end
-	return false, world
-end
-
-function unloadWorld(wname)
-	local world = getWorld(wname)
-	if world == worlds['default']then
-		return false
-	end
-
-	if world then
-		playersForEach(function(player)
-			if player:isInWorld(wname)then
-				player:changeWorld('default')
-			end
-		end)
-		world:save()
-		world.buf = nil
-		worlds[wname] = nil
-		collectgarbage()
-		return true
-	end
-	return false
 end
 
 function makeNormalCube(x1, y1, z1, x2, y2, z2)
@@ -341,80 +244,6 @@ function makeNormalCube(x1, y1, z1, x2, y2, z2)
 	return px1, py1, pz1, px2, py2, pz2
 end
 
-function getPlayerByName(name)
-	if not name then return end
-	name = name:lower()
-	return playersForEach(function(ply)
-		if ply:getName():lower()==name then
-			return ply
-		end
-	end)
-end
-
-function getPlayerByID(id)
-	return IDS[id]
-end
-
-function createWorld(wname, dims, gen, seed)
-	if world[wname]then return false end
-	local data = {dimensions=dims}
-	local tmpWorld = newWorld()
-	if tmpWorld:createWorld(data)then
-		tmpWorld:setName(wname)
-		worlds[wname] = tmpWorld
-		return regenerateWorld(wname, gen, seed)
-	else
-		return false
-	end
-end
-
-function openGenerator(name)
-	local chunk, err = loadfile('generators/'+name+'.lua')
-	if chunk then
-		local status, ret = pcall(chunk)
-		return status and ret, ret
-	end
-	return false, err
-end
-
-function regenerateWorld(world, gentype, seed)
-	world = getWorld(world)
-	if not world then return false, WORLD_NE end
-	if world:isInReadOnly()then return false, WORLD_RO end
-	local gen, err = openGenerator(gentype)
-	if not gen then
-		return false, err
-	else
-		if type(gen)=='function'then
-			world.data.colors = nil
-			world.data.map_aspects = nil
-			world.data.texPack = nil
-			playersForEach(function(player)
-				if player:isInWorld(world)then
-					player:despawn()
-				end
-			end)
-			ffi.fill(world.ldata+4, world.size)
-			seed = seed or CTIME
-			local t = socket.gettime()
-			local succ, err = pcall(gen, world, seed)
-			if not succ then
-				print(err)
-				return false, err
-			end
-			local e = socket.gettime()
-			io.write('done\n')
-			playersForEach(function(player)
-				if player:isInWorld(world)then
-					player.handshakeStage2 = true
-				end
-			end)
-			return true, e-t
-		end
-	end
-	return false, IE_UE
-end
-
 function bindSock(ip, port)
 	local sock = (socket.tcp4 and socket.tcp4())or socket.tcp()
 	assert(sock:setoption('tcp-nodelay', true))
@@ -429,9 +258,9 @@ function watchThreads(threads)
 	while #threads > 0 do
 		local thread = threads[#threads]
 		if thread then
-			if thread.status == "error" then
-				print(thread[1])
-			elseif thread.status == "done" then
+			if thread.status == 'error'then
+				log.fatal(thread[-1])
+			elseif thread.status == 'done'then
 				table.remove(threads, #threads)
 			end
 		else

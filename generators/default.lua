@@ -662,7 +662,6 @@ return function(world, seed)
 
 	local mapaddr = world:getAddr()
 
-	io.write('terrain, ')
 	local threads = {}
 
 	local thlimit = config:get('generator-threads-count', 2)
@@ -673,14 +672,15 @@ return function(world, seed)
 		endX = math.floor(dx * (i + 1) / thlimit) - 1
 
 		table.insert(threads, terrain_gen(mapaddr, dx, dy, dz, heightMap, heightWater, startX, endX, heightStone))
+		log.debug('TerrainGenerator: #%d thread spawned'%#threads)
 	end
 	watchThreads(threads)
 
 	-- ores
 	if GEN_ENABLE_ORES then
-		io.write('ores, ')
 		local ores_gen = lanes.gen(lanelibs, generateOre)
 		table.insert(threads, ores_gen(mapaddr, dx, dy, dz, heightMap, heightGrass))
+		log.debug('OresGenerator: started')
 	end
 
 	if #threads == thlimit then
@@ -689,9 +689,9 @@ return function(world, seed)
 
 	-- trees
 	if GEN_ENABLE_TREES then
-		io.write('trees, ')
 		local trees_gen = lanes.gen(lanelibs, generateTrees)
 		table.insert(threads, trees_gen(mapaddr, dx, dy, dz, heightMap))
+		log.debug('TreesGenerator: started')
 	end
 
 	if #threads == thlimit then
@@ -700,15 +700,15 @@ return function(world, seed)
 
 	-- houses
 	if GEN_ENABLE_HOUSES then
-		io.write('houses, ')
 		local houses_gen = lanes.gen(lanelibs, generateHouse)
 		table.insert(threads, houses_gen(mapaddr, dx, dy, dz, heightMap, heightWater))
+		log.debug('HousesGenerator: started')
 	end
 
 	watchThreads(threads)
 
 	if GEN_ENABLE_CAVES then
-		io.write('caves, ')
+		log.debug('CavesGenerator: started')
 		local caves_gen = lanes.gen(lanelibs, generateCaves)
 
 		local CAVES_COUNT = dx * dy * dz / 700000
@@ -718,7 +718,7 @@ return function(world, seed)
 					local thread = threads[1]
 					if thread then
 						if thread.status == 'error'then
-							print(thread[1])
+							log.fatal(thread[-1])
 						elseif thread.status == 'done'then
 							table.remove(threads, 1)
 						end
@@ -729,6 +729,7 @@ return function(world, seed)
 			end
 
 			table.insert(threads, caves_gen(mapaddr, dx, dy, dz, heightMap, heightGrass, heightLava, seed + i))
+			log.debug('CaveGenerator: #%d thread spawned'%#threads)
 		end
 	end
 

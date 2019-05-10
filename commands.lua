@@ -305,7 +305,7 @@ addConsoleCommand('unloadworld', function(args)
 end)
 
 addConsoleCommand('list', function()
-	print(CMD_WORLDLST)
+	log.info(CMD_WORLDLST)
 	for wn, world in pairs(worlds)do
 		if wn~='default'then
 			local dfld = (worlds['default']==world and' (default)')or''

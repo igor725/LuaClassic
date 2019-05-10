@@ -291,7 +291,6 @@ return function(world, seed)
 
 	local mapaddr = world:getAddr()
 
-	io.write('terrain, ')
 	local threads = {}
 
 	local count = config:get('generator-threads-count', 2)

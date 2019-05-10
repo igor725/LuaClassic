@@ -5,7 +5,6 @@ end
 
 return function(world, seed)
 	local dx, dy, dz = world:getDimensions()
-	io.write('terrain, ')
 	local data = world.ldata
 	local flr = dz*dx
 	local sz = flr*(dy/4-2)
