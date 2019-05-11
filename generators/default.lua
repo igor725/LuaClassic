@@ -647,6 +647,7 @@ local lanelibs = 'math,ffi'
 
 -- Main
 return function(world, seed)
+	log.debug('DefaultGenerator: START')
 	seed = seed or (os.clock()*os.time())
 	local dx, dy, dz = world:getDimensions()
 
@@ -714,18 +715,8 @@ return function(world, seed)
 		local CAVES_COUNT = dx * dy * dz / 700000
 		for i = 1, CAVES_COUNT do
 			if i%thlimit == 0 then
-				while true do
-					local thread = threads[1]
-					if thread then
-						if thread.status == 'error'then
-							log.fatal(thread[-1])
-						elseif thread.status == 'done'then
-							table.remove(threads, 1)
-						end
-					else
-						break
-					end
-				end
+				watchThreads(threads)
+				log.debug('CaveGenerator: %d threads done'%thlimit)
 			end
 
 			table.insert(threads, caves_gen(mapaddr, dx, dy, dz, heightMap, heightGrass, heightLava, seed + i))
@@ -753,6 +744,7 @@ return function(world, seed)
 	world:setEnvProp(9, 0)
 	world:setData('isNether', false)
 	collectgarbage()
+	log.debug('DefaultGenerator: DONE')
 
 	return true
 end

@@ -64,7 +64,7 @@ end
 function log.setLevel(lvl)
 	lvl = tonumber(lvl)
 	if not lvl then return false end
-	lvl = math.max(math.min(lvl, 3), 0)
+	log.level = math.max(math.min(lvl, LOG_DEBUG), LOG_ERROR)
 	return true
 end
 
