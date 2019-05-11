@@ -69,11 +69,11 @@ local world_mt = {
 					wh:write(val.tpTo)
 				end
 			elseif k == 'texPack'then
-				local slen = #v
-				if slen > 64 then error('TexturePack URL too long')end
-				if slen > 0 then
-					wh:write(string.char(9, slen))
+				if #v > 0 and #v < 65 then
+					wh:write(string.char(9, #v))
 					wh:write(v)
+				else
+					log.warn(WORLD_TPSTRLEN)
 				end
 			elseif k == 'wscripts'then
 				for name, script in pairs(v)do
@@ -83,10 +83,12 @@ local world_mt = {
 						packTo(wh, '>bBH', 10, nlen, slen)
 						wh:write(name)
 						wh:write(script.body)
+					else
+						log.warn(WORLD_SCRSVERR)
 					end
 				end
 			else
-				log.warn('Warning: Unknown MAPOPT %q skipped!'%k)
+				log.warn(WORLD_MAPOPT%k)
 			end
 		end
 		wh:write('\255')

@@ -68,6 +68,22 @@ function log.setLevel(lvl)
 	return true
 end
 
+function log.debug(...)
+	printlogline(LOG_DEBUG, ...)
+end
+
+function log.warn(...)
+	printlogline(LOG_WARN, ...)
+end
+
+function log.info(...)
+	printlogline(LOG_INFO, ...)
+end
+
+function log.chat(...)
+	printlogline(LOG_CHAT, ...)
+end
+
 function log.error(...)
 	printlogline(LOG_ERROR, ...)
 end
@@ -75,20 +91,4 @@ end
 function log.fatal(...)
 	log.error(...)
 	os.exit(1)
-end
-
-function log.warn(...)
-	printlogline(LOG_WARN, ...)
-end
-
-function log.chat(...)
-	printlogline(LOG_CHAT, ...)
-end
-
-function log.info(...)
-	printlogline(LOG_INFO, ...)
-end
-
-function log.debug(...)
-	printlogline(LOG_DEBUG, ...)
 end
