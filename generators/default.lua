@@ -334,6 +334,7 @@ local function generateTrees(mapaddr, dx, dy, dz)
 	end
 
 	local TREES_COUNT = (dx * dz / 700)*GEN_TREES_COUNT_MULT
+
 	local i = 1
 	local fail = 0
 
@@ -544,9 +545,8 @@ local function generateOre(mapaddr, dimx, dimy, dimz)
 	end
 end
 
-local function generateCaves(mapaddr, dimx, dimy, dimz, seed)
+local function generateCaves(mapaddr, dimx, dimy, dimz)
 	set_debug_threadname('CavesGenerator')
-	math.randomseed(seed)
 
 	local map = ffi.cast('char*', mapaddr)
 	local size = dimx * dimy * dimz + 4
@@ -621,7 +621,6 @@ return function(world, seed)
 	log.debug('DefaultGenerator: START')
 	seed = seed or (os.clock()*os.time())
 	local dx, dy, dz = world:getDimensions()
-
 	math.randomseed(seed)
 
 	-- Generate map
@@ -662,7 +661,7 @@ return function(world, seed)
 	-- trees
 	if GEN_ENABLE_TREES then
 		local trees_gen = lanes.gen(lanelibs, generateTrees)
-		table.insert(threads, trees_gen(mapaddr, dx, dy, dz))
+		table.insert(threads, trees_gen(mapaddr, dx, dy, dz, seed))
 		log.debug('TreesGenerator: started')
 	end
 

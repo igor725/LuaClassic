@@ -111,10 +111,7 @@ function config:save()
 end
 
 function config:get(key)
-	local v = self.values[key]
-	if v ~= nil then
-		return v
-	end
+	return self.values[key]
 end
 
 function config:set(key, value)
