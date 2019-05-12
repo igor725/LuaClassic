@@ -1,8 +1,10 @@
-local STEP = 20
+local GEN_BIOME_STEP = 20
+
+
 local heightGrass
 local heightLava
-
--- Bioms
+local heightMap
+local layers
 local biomes
 
 local function biomsGenerate(dx, dz)
@@ -15,8 +17,8 @@ local function biomsGenerate(dx, dz)
 	-- 5	water
 
 	-- Circles
-	local biomesSizeX = math.floor(dx / STEP + 1)
-	local biomesSizeZ = math.floor(dz / STEP + 1)
+	local biomesSizeX = math.floor(dx / GEN_BIOME_STEP + 1)
+	local biomesSizeZ = math.floor(dz / GEN_BIOME_STEP + 1)
 	for x = 0, biomesSizeX do
 		biomes[x] = {}
 		for z = 0, biomesSizeZ do
@@ -25,9 +27,9 @@ local function biomsGenerate(dx, dz)
 	end
 
 	local radius = 2
-	local BIOME_COUNT = dx * dz / STEP / radius / 512 + 1
+	local BIOME_COUNT = dx * dz / GEN_BIOME_STEP / radius / 512 + 1
 	--local BIOME_COUNT = 10
-	--local radius = math.floor(dx * dz / BIOME_COUNT / STEP / 32)
+	--local radius = math.floor(dx * dz / BIOME_COUNT / GEN_BIOME_STEP / 32)
 	local radius2 = radius * radius
 
 	for i = 1, BIOME_COUNT do
@@ -49,33 +51,29 @@ local function biomsGenerate(dx, dz)
 end
 
 local function getBiome(x, z)
-	return biomes[math.floor(x/STEP)][math.floor(z/STEP)]
+	return biomes[math.floor(x/GEN_BIOME_STEP)][math.floor(z/GEN_BIOME_STEP)]
 end
 
-
--- Height map
-local heightMap
-
-function heightSet(dy)
+local function heightSet(dy)
 	heightGrass = 7 --dy / 10
 	heightLava = heightGrass
 	heightLava = 7
 end
 
-function heightMapGenerate(dx, dz)
+local function heightMapGenerate(dx, dz)
 	heightMap = {}
-	for x = 0, dx / STEP + 1 do
+	for x = 0, dx / GEN_BIOME_STEP + 1 do
 		heightMap[x] = {}
-		for z = 0, dz / STEP + 1 do
+		for z = 0, dz / GEN_BIOME_STEP + 1 do
 			heightMap[x][z] = heightGrass + math.random(-6, 15)
 		end
 	end
 end
 
 local function getHeight(x, z)
-	local hx, hz = math.floor(x/STEP), math.floor(z/STEP)
-	local percentX = x / STEP - hx
-	local percentZ = z / STEP - hz
+	local hx, hz = math.floor(x/GEN_BIOME_STEP), math.floor(z/GEN_BIOME_STEP)
+	local percentX = x / GEN_BIOME_STEP - hx
+	local percentZ = z / GEN_BIOME_STEP - hz
 
 	return math.floor(
 		  (heightMap[hx][hz  ] * (1 - percentX) + heightMap[hx+1][hz  ] * percentX) * (1 - percentZ)
@@ -84,8 +82,7 @@ local function getHeight(x, z)
 	)
 end
 
-local layers
-function layersGenerate(dx, dy, dz)
+local function layersGenerate(dx, dy, dz)
 	layers = {}
 
 	LAYERS_COUNT = dy / 32
@@ -94,8 +91,8 @@ function layersGenerate(dx, dy, dz)
 		layers[layer] = {}
 
 		-- Circles
-		local biomesSizeX = math.floor(dx / STEP + 1)
-		local biomesSizeZ = math.floor(dz / STEP + 1)
+		local biomesSizeX = math.floor(dx / GEN_BIOME_STEP + 1)
+		local biomesSizeZ = math.floor(dz / GEN_BIOME_STEP + 1)
 		for x = 0, biomesSizeX do
 			layers[layer][x] = {}
 			for z = 0, biomesSizeZ do
@@ -104,7 +101,7 @@ function layersGenerate(dx, dy, dz)
 		end
 
 		local radius = 3
-		local BIOME_COUNT = dx * dz / STEP / radius / 128 + 1
+		local BIOME_COUNT = dx * dz / GEN_BIOME_STEP / radius / 128 + 1
 		local radius2 = radius * radius
 
 		for i = 1, BIOME_COUNT do
@@ -126,6 +123,15 @@ function layersGenerate(dx, dy, dz)
 	end
 end
 
+local function getLayerMultiplier(layer, x, z)
+	local hx, hz = math.floor(x/GEN_BIOME_STEP), math.floor(z/GEN_BIOME_STEP)
+	local percentX = x / GEN_BIOME_STEP - hx
+	local percentZ = z / GEN_BIOME_STEP - hz
+
+	return (layers[layer][hx][hz  ] * (1 - percentX) + layers[layer][hx+1][hz  ] * percentX) * (1 - percentZ)
+		+ (layers[layer][hx][hz+1] * (1 - percentX) + layers[layer][hx+1][hz+1] * percentX) * percentZ
+end
+
 -- Generate
 local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightLava, startX, endX, layers)
 	set_debug_threadname('TerrainGenerator')
@@ -133,7 +139,7 @@ local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightLava, startX,
 	local map = ffi.cast('char*', mapaddr)
 	local size = dx * dy * dz + 4
 
-	--local STEP = 20
+	--local GEN_BIOME_STEP = 20
 
 	local SetBlock = function(x, y, z, id)
 		--[[local offset = math.floor(z * dx + y * (dx * dz) + x + 4)
@@ -144,23 +150,14 @@ local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightLava, startX,
 		map[(y * dz + z) * dx + x + 4] = id
 	end
 
-	local getLayerMultiplier = function(layer, x, z)
-		local hx, hz = math.floor(x/STEP), math.floor(z/STEP)
-		local percentX = x / STEP - hx
-		local percentZ = z / STEP - hz
-
-		return (layers[layer][hx][hz  ] * (1 - percentX) + layers[layer][hx+1][hz  ] * percentX) * (1 - percentZ)
-			+ (layers[layer][hx][hz+1] * (1 - percentX) + layers[layer][hx+1][hz+1] * percentX) * percentZ
-	end
-
 	local height1, biome
 	local offsetX, offsetY
 	for x = startX, endX do
-		local hx = math.floor(x/STEP)
-		local percentPosX = x / STEP - hx
+		local hx = math.floor(x/GEN_BIOME_STEP)
+		local percentPosX = x / GEN_BIOME_STEP - hx
 		local percentNegX = 1 - percentPosX
 
-		local biomePosX = math.floor(x/STEP)
+		local biomePosX = math.floor(x/GEN_BIOME_STEP)
 		local b0 = biomes[biomePosX]
 		local b1 = biomes[biomePosX+1]
 		local biomePosZOld = nil
@@ -170,8 +167,8 @@ local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightLava, startX,
 		local b11 = b1[0]
 
 		for z = 0, dz - 1 do
-			local hz = math.floor(z/STEP)
-			local percentZ = z / STEP - hz
+			local hz = math.floor(z/GEN_BIOME_STEP)
+			local percentZ = z / GEN_BIOME_STEP - hz
 
 			height1 = math.floor(
 				  (heightMap[hx][hz  ] * percentNegX + heightMap[hx+1][hz  ] * percentPosX) * (1 - percentZ)
@@ -180,7 +177,7 @@ local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightLava, startX,
 			)
 
 			-- Biom depend
-			local biomePosZ = math.floor(z/STEP)
+			local biomePosZ = math.floor(z/GEN_BIOME_STEP)
 			if biomePosZ ~= biomePosZOld then
 				biomePosZOld = biomePosZ
 				b00 = b01
@@ -223,8 +220,8 @@ local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightLava, startX,
 
 			-- else
 			else
-				biome = biomes[math.floor(x / STEP + 0.5)][math.floor(z / STEP + 0.5)]
-				--biome = getBiome(x + STEP / 2, z + STEP / 2)
+				biome = biomes[math.floor(x / GEN_BIOME_STEP + 0.5)][math.floor(z / GEN_BIOME_STEP + 0.5)]
+				--biome = getBiome(x + GEN_BIOME_STEP / 2, z + GEN_BIOME_STEP / 2)
 			end
 
 			local block = 4
