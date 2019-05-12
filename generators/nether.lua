@@ -290,7 +290,7 @@ return function(world, seed)
 
 	local threads = {}
 
-	local count = config:get('generator-threads-count', 2)
+	local count = config:get('generator-threads-count')
 	for i = 0, count-1 do
 		startX = math.floor(dx * i / count)
 		endX = math.floor(dx * (i + 1) / count) - 1

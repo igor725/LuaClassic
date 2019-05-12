@@ -323,7 +323,7 @@ local world_mt = {
 		local sctbl = self.data.wscripts[name]
 		if not sctbl then return false end
 
-		if config:get('world-scripts', false)then
+		if config:get('world-scripts')then
 			local scret, succ
 			local chunk, err = loadstring(sctbl.body, name)
 			if not chunk then

@@ -1,5 +1,5 @@
 local function getKickTimeout()
-	return config:get('player-timeout',10)
+	return config:get('player-timeout')
 end
 
 local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
@@ -463,12 +463,12 @@ local player_mt = {
 		local addr = world:getAddr()
 		local size = world:getSize()
 		local sendMap_gen = lanes.gen('*', sendMap)
-		local cmplvl = config:get('gzip-compression-level', 5)
+		local cmplvl = config:get('gzip-compression-level')
 		self.thread = sendMap_gen(self:getClientFd(), addr, size, cmplvl, self.isWS)
 	end,
 	sendMOTD = function(self, sname, smotd)
-		sname = sname or config:get('server-name', DEF_SERVERNAME)
-		smotd = smotd or config:get('server-motd', DEF_SERVERMOTD)
+		sname = sname or config:get('server-name')
+		smotd = smotd or config:get('server-motd')
 		self:sendPacket(
 			false,
 			0x00,
@@ -704,7 +704,7 @@ function findFreeID(player)
 			return -1
 		end
 	end
-	local mp = config:get('max-players', 20)
+	local mp = config:get('max-players')
 	if s>mp then s = -1 end
 	return s
 end

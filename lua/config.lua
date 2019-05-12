@@ -19,8 +19,8 @@ local plytimeout = 'player-timeout'
 
 config = {
 	values = {
-		[smotd] = 'This server uses LuaClassic',
-		[sname] = 'A Minecraft server',
+		[smotd] = DEF_SERVERMOTD,
+		[sname] = DEF_SERVERNAME,
 		[allowws] = true,
 		[wsport] = 25566,
 		[sip] = '0.0.0.0',
@@ -110,14 +110,10 @@ function config:save()
 	end
 end
 
-function config:get(key, default)
+function config:get(key)
 	local v = self.values[key]
 	if v ~= nil then
 		return v
-	end
-	if default ~= nil then
-		self:set(key, default)
-		return default
 	end
 end
 

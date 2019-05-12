@@ -636,7 +636,7 @@ return function(world, seed)
 
 	local threads = {}
 
-	local thlimit = config:get('generator-threads-count', 2)
+	local thlimit = config:get('generator-threads-count')
 
 	local terrain_gen = lanes.gen(lanelibs, threadTerrain)
 	for i = 0, thlimit-1 do

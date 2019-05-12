@@ -385,31 +385,31 @@ function init()
 	cpe:init()
 	sql.init()
 
-	uwa = config:get('unload-world-after', 600)
-	local ip = config:get('server-ip', '0.0.0.0')
-	local port = config:get('server-port', 25565)
+	uwa = config:get('unload-world-after')
+	local ip = config:get('server-ip')
+	local port = config:get('server-port')
 	server = bindSock(ip, port)
 
-	local ws = config:get('allow-websocket', true)
+	local ws = config:get('allow-websocket')
 	if ws then
 		WSGUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
-		wsPort = config:get('websocket-port', port+1)
+		wsPort = config:get('websocket-port')
 		wsServer = bindSock(ip, wsPort)
 		wsHandshake = {}
 		require('helper')
 	end
 
 	log.info(CON_WLOAD)
-	local sdlist = config:get('level-seeds', '')
+	local sdlist = config:get('level-seeds')
 	sdlist = sdlist:split(',')
 
-	local wlist = config:get('level-names', 'world')
+	local wlist = config:get('level-names')
 	wlist = wlist:split(',')
 
-	local tlist = config:get('level-types', 'default')
+	local tlist = config:get('level-types')
 	tlist = tlist:split(',')
 
-	local slist = config:get('level-sizes', '256x256x256')
+	local slist = config:get('level-sizes')
 	slist = slist:split(',')
 
 	for num, wn in pairs(wlist)do
