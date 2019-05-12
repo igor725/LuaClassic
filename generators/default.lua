@@ -707,11 +707,11 @@ return function(world, seed)
 		end
 	end
 
-	world:setSpawn(x,y+2,z,0,0)
-	world:setEnvProp(0, 0)
-	world:setEnvProp(1, 8)
-	world:setEnvProp(2, heightWater + 1)
-	world:setEnvProp(9, 0)
+	world:setSpawn(x, y+2, z)
+	world:setEnvProp(MEP_SIDESBLOCK, 0)
+	world:setEnvProp(MEP_EDGEBLOCK, 8)
+	world:setEnvProp(MEP_EDGELEVEL, heightWater + 1)
+	world:setEnvProp(MEP_MAPSIDESOFFSET, 0)
 	world:setData('isNether', false)
 	collectgarbage()
 	log.debug('DefaultGenerator: DONE')
