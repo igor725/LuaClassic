@@ -69,9 +69,10 @@ local player_mt = {
 		return self:getName()
 	end,
 
-	init = function(self)
+	init = function(self, id)
 		self.handshaked = false
 		self.handshakeStage2 = false
+		self:setID(id)
 	end,
 
 	getID = function(self)
@@ -113,7 +114,7 @@ local player_mt = {
 
 	setID = function(self,id)
 		self.id = id
-		IDS[id] = player
+		IDS[id] = self
 		players[self] = id
 	end,
 	setVeriKey = function(self,key)
@@ -542,15 +543,16 @@ local player_mt = {
 			local dat, datcpe
 			if ply:isInWorld(self)then
 				local cl = self:getClient()
-				if ply:isSupported('ExtEntityPositions')then
+				if self:isSupported('ExtEntityPositions')then
 					datcpe = datcpe or cpe:generatePacket(0x07, sId, cname, cx, cy, cz, cay, cap)
 					self:sendNetMesg(datcpe)
 				else
 					dat = dat or generatePacket(0x07, sId, cname, cx, cy, cz, cay, cap)
 					self:sendNetMesg(dat)
 				end
-				if sId~=-1 then
-					cl = ply:getClient()
+
+				if sId ~= -1 then
+					print(ply:isSupported('ExtEntityPositions'))
 					if ply:isSupported('ExtEntityPositions')then
 						dat2cpe = dat2cpe or cpe:generatePacket(0x07, pId, name, x, y, z, ay, ap)
 						ply:sendNetMesg(dat2cpe)

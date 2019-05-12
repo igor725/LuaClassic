@@ -1,5 +1,14 @@
 hooks = {
-	list = {}
+	list = {
+		['onUpdate'] = {},
+		['onPlayerMove'] = {},
+		['onPlayerChat'] = {},
+		['onPlayerRotate'] = {},
+		['prePlayerSpawn'] = {},
+		['onPlayerDespawn'] = {},
+		['postPlayerSpawn'] = {},
+		['onPlayerPlaceBlock'] = {}
+	}
 }
 
 function hooks:create(hookname)

@@ -11,7 +11,7 @@ return function(player, id, x, y, z, yaw, pitch)
 
 	playersForEach(function(ply)
 		if not ply.isSpawned then return end
-		if ply.worldName == player.worldName then
+		if ply:isInWorld(player)then
 			if ply:isSupported('ExtEntityPositions')then
 				cpepck = cpepck or cpe:generatePacket(0x08, pid, x, y, z, yaw, pitch)
 				ply:sendNetMesg(cpepck)

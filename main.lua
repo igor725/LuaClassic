@@ -302,9 +302,9 @@ function createPlayer(cl,isWS)
 		player.isWS = isWS
 		player.ip = ip
 		local nid = findFreeID(player)
-		if nid>0 then
-			player:init()
-			player:setID(nid)
+
+		if nid > 0 then
+			player:init(nid)
 		else
 			player:kick(KICK_SFULL)
 		end
@@ -379,15 +379,6 @@ function init()
 	log.info(CON_START)
 	players, IDS = {}, {}
 	worlds, generators = {}, {}
-
-	hooks:create('onPlayerRotate')
-	hooks:create('onPlayerMove')
-	hooks:create('onPlayerChat')
-	hooks:create('onPlayerPlaceBlock')
-	hooks:create('onPlayerDespawn')
-	hooks:create('prePlayerSpawn')
-	hooks:create('postPlayerSpawn')
-	hooks:create('onUpdate')
 
 	permissions:parse()
 	config:parse()

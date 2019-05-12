@@ -211,6 +211,7 @@ end
 function makeNormalCube(x1, y1, z1, x2, y2, z2)
 	local px1, py1, pz1 = x1, y1, z1
 	local px2, py2, pz2 = x2, y2, z2
+
 	if x1-x2<0 then
 		px1 = x2+1
 		px2 = x1
@@ -229,6 +230,7 @@ function makeNormalCube(x1, y1, z1, x2, y2, z2)
 	else
 		pz1 = z1+1
 	end
+
 	return px1, py1, pz1, px2, py2, pz2
 end
 
