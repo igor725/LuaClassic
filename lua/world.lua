@@ -88,7 +88,7 @@ local world_mt = {
 					end
 				end
 			else
-				log.warn(WORLD_MAPOPT%k)
+				log.warn((WORLD_MAPOPT):format(k))
 			end
 		end
 		wh:write('\255')
@@ -158,7 +158,7 @@ local world_mt = {
 
 	setBlock = function(self,x,y,z,id)
 		if not self.ldata then return false end
-		if self:isInReadOnly()then return false end
+		if self:isReadOnly()then return false end
 		local offset = self:getOffset(x,y,z)
 		self.ldata[offset] = id
 	end,
@@ -194,12 +194,12 @@ local world_mt = {
 		return self.data.readonly
 	end,
 
-	isInReadOnly = function(self)
+	isReadOnly = function(self)
 		return self.data.readonly
 	end,
 
 	fillBlocks = function(self,x1,y1,z1,x2,y2,z2,id)
-		if self:isInReadOnly()then return false end
+		if self:isReadOnly()then return false end
 		x1,y1,z1,x2,y2,z2 = makeNormalCube(x1,y1,z1,x2,y2,z2)
 		local buf = ''
 		for x=x2,x1-1 do
@@ -426,7 +426,7 @@ end
 function regenerateWorld(world, gentype, seed)
 	world = getWorld(world)
 	if not world then return false, WORLD_NE end
-	if world:isInReadOnly()then return false, WORLD_RO end
+	if world:isReadOnly()then return false, WORLD_RO end
 	local gen, err = openGenerator(gentype)
 	if not gen then
 		return false, err

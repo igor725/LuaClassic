@@ -24,10 +24,13 @@ svpackets = {
 psizes = {}
 pHandlers = {}
 
+local packetPathFormat = 'packets/Packet%02X.lua'
+
 function registerClPacket(id, fmt, handler)
 	packets[id] = fmt
 	psizes[id] = struct.size(fmt)
-	pHandlers[id] = handler or assert(loadfile('packets/Packet%02X.lua'%id))()
+	local path = (packetPathFormat):format(id)
+	pHandlers[id] = handler or assert(loadfile(path))()
 end
 
 function registerSvPacket(id, fmt)

@@ -70,7 +70,7 @@ function permissions:save()
 		for key, plist in pairs(self.list)do
 			h:write(key+'\n')
 			for i=1,#plist do
-				h:write('\t%s\n'%plist[i])
+				h:write(('\t%s\n'):format(plist[i]))
 			end
 		end
 		h:close()

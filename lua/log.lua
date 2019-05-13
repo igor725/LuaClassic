@@ -20,7 +20,7 @@ log = {
 		[LOG_INFO]  = '1;32',
 		[LOG_ERROR] = '1;31'
 	},
-	level = LOG_CHAT
+	level = LOG_WARN
 }
 
 if not ENABLE_ANSI then
@@ -36,10 +36,10 @@ local function printlogline(ltype, ...)
 
 	if color then
 		fmt = os.date('%H:%M:%S.%%03d [\27[%%sm%%s\27[0m] ', time)
-		fmt = string.format(fmt, mtime, color, types[ltype])
+		fmt = (fmt):format(mtime, color, types[ltype])
 	else
 		fmt = os.date('%H:%M:%S.%%03d [%%s] ', time)
-		fmt = string.format(fmt, mtime, types[ltype])
+		fmt = (fmt):format(mtime, types[ltype])
 	end
 	io.write(fmt)
 	local idx = 1

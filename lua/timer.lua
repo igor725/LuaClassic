@@ -62,7 +62,7 @@ function timer.Update(dt)
 					local status, ret = pcall(data.func, data.reps)
 					if not status then
 						ret = tostring(ret)
-						log.error(TMR_ERR%{id, ret})
+						log.error((TMR_ERR):format(id, ret))
 						timer.Pause(id)
 					end
 	      end

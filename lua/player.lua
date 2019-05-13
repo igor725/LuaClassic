@@ -5,7 +5,6 @@ end
 local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
 	set_debug_threadname('MapSender')
 
-	ffi = require('ffi')
 	local ext = (jit.os=='Windows'and'dll')or'so'
 	package.cpath = './bin/'..jit.arch..'/?.'..ext
 
@@ -24,8 +23,11 @@ local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
 			error('Can\'t load socket library')
 		end
 	end
+
 	struct = require('struct')
+	ffi = require('ffi')
 	require('gzip')
+
 	if isWS then
 		require('helper')
 	end
@@ -35,6 +37,7 @@ local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
 	local cl = newTCP(fd)
 	local map = ffi.cast('char*', mapaddr)
 	local gErr = nil
+
 	if isWS then
 		mapStart = encodeWsFrame('\2', 0x02)
 	else
@@ -43,7 +46,7 @@ local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
 
 	cl:send(mapStart)
 	local succ, gErr = gz.compress(map, maplen, cmplvl, function(out, stream)
-		local chunksz = 1024-stream.avail_out
+		local chunksz = 1024 - stream.avail_out
 		local cdat = ffi.string(out, 1024)
 		local dat = struct.pack(fmt, 3, chunksz, cdat, 100)
 		if isWS then
@@ -51,10 +54,10 @@ local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
 		end
 
 		local _, err = cl:send(dat)
-		if err=='closed'then
+		if err == 'closed'then
 			gz.defEnd(stream)
 			gErr = err
-		elseif err~=nil then
+		elseif err ~= nil then
 			gz.defEnd(stream)
 			gErr = err
 		end
@@ -185,7 +188,7 @@ local player_mt = {
 		if table.hasValue(perms, '*.*', sect+'.*', nm)then
 			return true
 		else
-			self:sendMessage(MESG_PERMERROR%nm)
+			self:sendMessage((MESG_PERMERROR):format(nm))
 			return false
 		end
 	end,
@@ -197,21 +200,21 @@ local player_mt = {
 		extVer = extVer or 1
 		extName = extName:lower()
 		local ext = self.extensions[extName]
-		return ext and ext==extVer
+		return (ext and ext == extVer)or false
 	end,
 	isInWorld = function(self, wname)
 		return worlds[self.worldName] == getWorld(wname)
 	end,
 
 	teleportTo = function(self,x,y,z,ay,ap)
-		x = floor(x*32)
-		y = floor(y*32)
-		z = floor(z*32)
+		x = floor(x * 32)
+		y = floor(y * 32)
+		z = floor(z * 32)
 		if not ay and not ap then
 			ay, ap = self:getEyePos(true)
 		else
-			ay = floor(ay/360*255)
-			ap = floor(ap/360*255)
+			ay = floor(ay / 360 * 255)
+			ap = floor(ap / 360 * 255)
 		end
 		local cl = self:getClient()
 		self:sendPacket(self:isSupported('ExtEntityPositions'), 0x08, -1, x, y, z, ay, ap)
@@ -254,7 +257,7 @@ local player_mt = {
 
 	readHandShakeData = function(self, data)
 		local fmt = packets[0x00]
-		local pid, protover, uname, verikey, hsFlag = struct.unpack(fmt, data)
+		local pid, protover, uname, verikey, magicNumber = struct.unpack(fmt, data)
 		if protover == 0x07 then
 			local name = trimStr(uname)
 			local key = trimStr(verikey)
@@ -265,7 +268,7 @@ local player_mt = {
 				return
 			end
 			if not sql.createPlayer(key)then
-				self:kick(KICK_INTERR%IE_SQL)
+				self:kick((KICK_INTERR):format(IE_SQL))
 				return
 			end
 			self.handshaked = true
@@ -296,7 +299,7 @@ local player_mt = {
 			self.eye.yaw = ay
 			self.eye.pitch = ap
 
-			if hsFlag==0x42 then
+			if magicNumber == 0x42 then
 				cpe:startFor(self)
 				self.handshakeStage2 = false
 			end
@@ -456,9 +459,9 @@ local player_mt = {
 		if not self.handshaked then return end
 		local world = worlds[self.worldName]
 		if not world.ldata then
-			self:sendMessage(MESG_LEVELLOAD,1)
+			self:sendMessage(MESG_LEVELLOAD, 1)
 			world:triggerLoad()
-			self:sendMessage('',1)
+			self:sendMessage('', 1)
 		end
 		local addr = world:getAddr()
 		local size = world:getSize()
@@ -485,7 +488,7 @@ local player_mt = {
 			mesg = mesg:gsub('.',function(s)
 				local bt = s:byte()
 				if bt>127 then
-					return '\\x%02X'%bt
+					return ('\\x%02X'):format(bt)
 				end
 			end)
 		end
@@ -552,7 +555,6 @@ local player_mt = {
 				end
 
 				if sId ~= -1 then
-					print(ply:isSupported('ExtEntityPositions'))
 					if ply:isSupported('ExtEntityPositions')then
 						dat2cpe = dat2cpe or cpe:generatePacket(0x07, pId, name, x, y, z, ay, ap)
 						ply:sendNetMesg(dat2cpe)
@@ -574,9 +576,7 @@ local player_mt = {
 		local id = self:getID()
 		players[self] = nil
 		IDS[id] = nil
-		if not self.leavereason then
-			self.leavereason = 'Disconnected'
-		end
+		self.leavereason = self.leavereason or'Disconnected'
 		if self.handshaked then
 			onPlayerDestroy(self)
 		end
@@ -620,7 +620,7 @@ local player_mt = {
 						self:spawn()
 					else
 						log.error('MAPSEND ERROR', mesg)
-						self:kick(KICK_INTERR%IE_GZ)
+						self:kick((KICK_INTERR):format(IE_GZ))
 					end
 					self.thread = nil
 					self.kickTimeout = CTIME + getKickTimeout()

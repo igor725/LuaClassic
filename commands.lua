@@ -23,12 +23,12 @@ end
 
 addChatCommand('rc', function(player)
 	local world = getWorld(player)
-	return CMD_WMODE%((world:toggleReadOnly()and ST_ON)or ST_OFF)
+	return (CMD_WMODE):format(((world:toggleReadOnly()and ST_ON)or ST_OFF))
 end)
 
 addChatCommand('info', function(player)
-	player:sendMessage(CMD_SVINFO1%{jit.os,jit.arch,jit.version})
-	player:sendMessage(CMD_SVINFO2%{gcinfo()/1024})
+	player:sendMessage((CMD_SVINFO1):format(jit.os, jit.arch, jit.version))
+	player:sendMessage((CMD_SVINFO2):format(gcinfo()/1024))
 end)
 
 addChatCommand('clear', function(player)
@@ -51,7 +51,7 @@ addChatCommand('weather',function(player,wname,wtt)
 		world = getWorld(player)
 		local cw = world:getData('weather')
 		cw = WT[cw]or WT[0]
-		return CMD_WTCURR%cw
+		return (CMD_WTCURR):format(cw)
 	end
 	local wnum = tonumber(wname)or WTN[wname]
 	if wnum == nil then
@@ -68,7 +68,7 @@ addChatCommand('weather',function(player,wname,wtt)
 	if wtt then
 		wtt = math.min(math.max(wtt,0),2)
 		if world:setWeather(wtt)then
-			return CMD_WTCHANGE%{world, WT[wtt]}
+			return (CMD_WTCHANGE):format(world, WT[wtt])
 		end
 	else
 		return CMD_WTINVALID
@@ -104,7 +104,7 @@ addChatCommand('time', function(player,wname,name)
 		world:setEnvColor(i, c.r, c.g, c.b)
 	end
 
-	return CMD_TIMECHANGE%{world, wname}
+	return (CMD_TIMECHANGE):format(world, wname)
 end)
 
 local function unsel(player)
@@ -132,9 +132,9 @@ addChatCommand('sel', function(player)
 	else
 		unsel(player)
 		player.onPlaceBlock = nil
-		return CMD_SELMODE%ST_OFF
+		return (CMD_SELMODE):format(ST_OFF)
 	end
-	return CMD_SELMODE%ST_ON
+	return (CMD_SELMODE):format(ST_ON)
 end)
 
 addChatCommand('mkportal', function(player, pname, wname)
@@ -172,7 +172,7 @@ end)
 
 addChatCommand('set', function(player, id)
 	local world = getWorld(player)
-	if world:isInReadOnly()then
+	if world:isReadOnly()then
 		return WORLD_RO
 	end
 	id = tonumber(id)
@@ -210,7 +210,7 @@ addChatCommand('tp', function(player, name, to)
 	if name then
 		ply = getPlayerByName(name)
 		if not ply then
-			return MESG_PLAYERNFA%name
+			return (MESG_PLAYERNFA):format(name)
 		end
 		if to then
 			to = getPlayerByName(to)
@@ -221,7 +221,7 @@ addChatCommand('tp', function(player, name, to)
 					ply:teleportTo(to:getPos())
 				end
 			else
-				return MESG_PLAYERNFA%to
+				return (MESG_PLAYERNFA):format(to)
 			end
 		else
 			if not player:isInWorld(ply)then
@@ -264,9 +264,9 @@ addChatCommand('regen', function(player, gen, seed)
 	player:sendMessage(CMD_GENSTART)
 	local ret, tm = regenerateWorld(world, gen, seed)
 	if not ret then
-		return CMD_GENERR%tostring(tm)
+		return (CMD_GENERR):format(tm)
 	else
-		return MESG_DONEIN%(tm*1000)
+		return (MESG_DONEIN):format(tm * 1000)
 	end
 end)
 
@@ -371,9 +371,9 @@ addConsoleCommand('regen', function(args)
 		local seed = tonumber(args[3]or os.time())
 		local ret, tm = regenerateWorld(world, gen, seed)
 		if not ret then
-			return true, CMD_GENERR%tostring(tm)
+			return true, (CMD_GENERR):foramt(tm)
 		else
-			return true, MESG_DONEIN%(tm*1000)
+			return true, (MESG_DONEIN):format(tm * 1000)
 		end
 	end
 end)
@@ -385,10 +385,10 @@ addConsoleCommand('tp', function(args)
 		local p1 = getPlayerByName(pn1)
 		local p2 = getPlayerByName(pn2)
 		if not p1 then
-			return true, MESG_PLAYERNFA%pn1
+			return true, (MESG_PLAYERNFA):format(pn1)
 		end
 		if not p2 then
-			return true, MESG_PLAYERNFA%pn2
+			return true, (MESG_PLAYERNFA):format(pn2)
 		end
 		local wp2 = getWorld(p2)
 		if getWorld(p1)~=wp2 then

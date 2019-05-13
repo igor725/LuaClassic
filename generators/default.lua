@@ -18,6 +18,7 @@ local GEN_TREES_COUNT_MULT = 1
 local GEN_ORE_VEIN_SIZE = 3
 
 local GEN_BIOME_STEP = 20
+local GEN_BIOME_RADIUS = 5
 
 local heightStone
 local heightGrass
@@ -45,19 +46,16 @@ local function biomesGenerate(dx, dz)
 		end
 	end
 
-	local radius = 5
-	local BIOME_COUNT = dx * dz / GEN_BIOME_STEP / radius / 64 + 1
-	--local BIOME_COUNT = 10
-	--local radius = math.floor(dx * dz / BIOME_COUNT / GEN_BIOME_STEP / 32)
-	local radius2 = radius * radius
+	local BIOME_COUNT = dx * dz / GEN_BIOME_STEP / GEN_BIOME_RADIUS / 64 + 1
+	local radius2 = GEN_BIOME_RADIUS ^ 2
 
 	for i = 1, BIOME_COUNT do
 		local x = math.random(biomesSizeX)
 		local z = math.random(biomesSizeZ)
 		local biome = math.random(1, 5)
 
-		for dx = -radius, radius do
-			for dz = -radius, radius do
+		for dx = -GEN_BIOME_RADIUS, GEN_BIOME_RADIUS do
+			for dz = -GEN_BIOME_RADIUS, GEN_BIOME_RADIUS do
 				if
 				dx*dx + dz*dz < radius2
 				and biomes[x + dx] ~= nil and biomes[x + dx][z + dz] ~= nil
@@ -643,7 +641,7 @@ return function(world, seed)
 		endX = math.floor(dx * (i + 1) / thlimit) - 1
 
 		table.insert(threads, terrain_gen(mapaddr, dx, dy, dz, startX, endX))
-		log.debug('TerrainGenerator: #%d thread spawned'%#threads)
+		log.debug(('TerrainGenerator: #%d thread spawned'):format(threads))
 	end
 	watchThreads(threads)
 
@@ -686,11 +684,11 @@ return function(world, seed)
 		for i = 1, CAVES_COUNT do
 			if i%thlimit == 0 then
 				watchThreads(threads)
-				log.debug('CaveGenerator: %d threads done'%thlimit)
+				log.debug(('CaveGenerator: %d threads done'):format(thlimit))
 			end
 
 			table.insert(threads, caves_gen(mapaddr, dx, dy, dz, seed + i))
-			log.debug('CaveGenerator: #%d thread spawned'%#threads)
+			log.debug(('CaveGenerator: #%d thread spawned'):format(#threads))
 		end
 	end
 

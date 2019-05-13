@@ -96,8 +96,9 @@ function onPlayerChatMessage(player, message)
 	if not message:startsWith('#','>','/')then
 		message = message:gsub('%%(%x)','&%1')
 	end
-	log.chat('%s: %s'%{player, message})
-	if starts=='#'then
+	log.chat(('%s: %s'):format(player, message))
+
+	if starts == '#'then
 		if player:checkPermission('server.luaexec')then
 			local code = message:sub(2)
 			if code:sub(1,1)=='='then
@@ -114,21 +115,21 @@ function onPlayerChatMessage(player, message)
 					ret[i] = tostring(ret[i])
 				end
 				if ret[1] then
-					if #ret>1 then
-						return MESG_EXECRET%table.concat(ret, ', ', 2)
+					if #ret > 1 then
+						return (MESG_EXECRET):format(table.concat(ret, ', ', 2))
 					else
 						return MESG_EXEC
 					end
 				else
-					return MESG_ERROR%ret[2]
+					return (MESG_ERROR):format(ret[2])
 				end
 			else
-				return MESG_ERROR%err
+				return (MESG_ERROR):format(err)
 			end
 		else
 			return err
 		end
-	elseif starts=='/'then
+	elseif starts == '/'then
 		local args = message:split(' ')
 		if #args>0 then
 			local cmd = table.remove(args, 1):sub(2)
@@ -145,7 +146,7 @@ function onPlayerChatMessage(player, message)
 				player:sendMessage(MESG_UNKNOWNCMD)
 			end
 		end
-	elseif starts=='>'then
+	elseif starts == '>'then
 		local wname = message:sub(2)
 		wname = wname:lower()
 		local succ, msg = player:changeWorld(wname)
@@ -154,9 +155,9 @@ function onPlayerChatMessage(player, message)
 				player:sendMessage(WORLD_NE)
 			end
 		end
-	elseif starts=='!'then
+	elseif starts == '!'then -- Message to global chat
 		newChatMessage(player:getName()+': '+message:sub(2))
-	else
+	else -- Message to local chat
 		local cmsg = player:getName()+': '+message
 		playersForEach(function(ply)
 			if ply:isInWorld(player)then
@@ -191,9 +192,9 @@ function onPlayerMove(player, dx, dy, dz)
 		local x, y, z = player:getPos()
 		for _, portal in pairs(portals)do
 			y = floor(y)
-			if(portal.pt1[1]>=x and portal.pt2[1]<=x)and
-			(portal.pt1[2]>=y and portal.pt2[2]<=y)and
-			(portal.pt1[3]>=z and portal.pt2[3]<=z)then
+			if (portal.pt1[1]>=x and portal.pt2[1]<=x)
+			and(portal.pt1[2]>=y and portal.pt2[2]<=y)
+			and(portal.pt1[3]>=z and portal.pt2[3]<=z)then
 				player:changeWorld(portal.tpTo, true)
 				break
 			end
@@ -207,12 +208,12 @@ end
 
 function onPlayerPlaceBlock(player, x, y, z, id)
 	local world = getWorld(player)
-	if world.data.readonly then
+	if world:isReadOnly()then
 		player:sendMessage(WORLD_RO, 100)
 		return true
 	end
 	local prt = hooks:call('onPlayerPlaceBlock', player, dy, dp)
-	if prt~=nil then
+	if prt ~= nil then
 		return prt
 	end
 	if player.onPlaceBlock then
@@ -273,9 +274,9 @@ function wsDoHandshake()
 				wskey = wskey+WSGUID
 				wskey = b64enc(sha1(wskey))
 				local response =
-				'HTTP/1.1 101 Switching Protocols\r\n'+
-				'Upgrade: websocket\r\nConnection: Upgrade\r\n'+
-				'Sec-WebSocket-Accept: '+wskey+'\r\n\r\n'
+				('HTTP/1.1 101 Switching Protocols\r\n' +
+				'Upgrade: websocket\r\nConnection: Upgrade\r\n' +
+				'Sec-WebSocket-Accept: %s\r\n\r\n'):format(wskey)
 				cl:send(response)
 				wsHandshake[cl] = nil
 				createPlayer(cl, true)
@@ -285,9 +286,9 @@ function wsDoHandshake()
 		elseif data.state == 'badrequest'then
 			local msg = data.emsg or MESG_NOTWSCONN
 			local response =
-			'HTTP/1.1 400 Bad request\r\n'+
-			'Content-Length: %d\r\n\r\nBad request: '
-			%(#msg+13)+msg
+			('HTTP/1.1 400 Bad request\r\n' +
+			'Content-Length: %d\r\n\r\nBad request: %s')
+			:format(#msg + 13, msg)
 			cl:send(response)
 			cl:close()
 			wsHandshake[cl] = nil
@@ -334,10 +335,10 @@ function handleConsoleCommand(cmd)
 			if ret[1] then
 				log.info(table.concat(ret, ', ', 2))
 			else
-				log.error(MESG_ERROR%ret[2])
+				log.error((MESG_ERROR):format(ret[2]))
 			end
 		else
-			log.error(MESG_ERROR%err)
+			log.error((MESG_ERROR):format(err))
 		end
 	else
 		local args = cmd:split('%s')
@@ -443,7 +444,7 @@ function init()
 			if num==1 then
 				worlds['default'] = world
 			end
-			local tm = MESG_DONEIN%{(socket.gettime()-st)*1000}
+			local tm = (MESG_DONEIN):format((socket.gettime()-st)*1000)
 			log.debug(wn, 'loading', tm)
 		end
 	end
@@ -454,9 +455,9 @@ function init()
 
 	local add = ''
 	if wsServer then
-		add = CON_WSBINDSUCC%wsPort
+		add = (CON_WSBINDSUCC):format(wsPort)
 	end
-	log.info(CON_BINDSUCC%{ip, port}, add)
+	log.info((CON_BINDSUCC):format(ip, port), add)
 	cmdh = initCmdHandler(handleConsoleCommand)
 	log.info(CON_HELP)
 	CTIME = socket.gettime()

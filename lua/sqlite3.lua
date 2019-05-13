@@ -6,17 +6,19 @@ sql = {
 
 function sql.createPlayer(key)
 	local created = false
-	DB:exec([[
+	local sql = ([[
 		SELECT pkey FROM players WHERE pkey=%q;
-	]]%key, function(_, cols)
+	]]):format(key)
+	DB:exec(sql, function(_, cols)
 		if cols>0 then
 			created = true
 		end
 	end)
 	if not created then
-		if DB:exec([[
+		sql = ([[
 			INSERT INTO players (pkey) VALUES(%q)
-		]]%key)~=sqlite3.OK then
+		]]):format(key)
+		if DB:exec(sql) ~= sqlite3.OK then
 			return false, DB:errmsg()
 		end
 	end
@@ -24,10 +26,11 @@ function sql.createPlayer(key)
 end
 
 function sql.addColumn(col, type)
-	local r = DB:exec([[
+	local sql = ([[
 		ALTER TABLE players ADD %s %s;
-	]]%{col, type})
-	if r==sqlite3.OK then
+	]]):format(col, type)
+	local ecode = DB:exec(sql)
+	if ecode == sqlite3.OK then
 		return true
 	else
 		local err = DB:errmsg()
@@ -40,7 +43,8 @@ function sql.addColumn(col, type)
 end
 
 function sql.getData(pkey, rows)
-	for row in DB:nrows('SELECT %s FROM players WHERE pkey=%q'%{rows,pkey}) do
+	local sql = ('SELECT %s FROM players WHERE pkey=%q'):format(rows, pkey)
+	for row in DB:nrows(sql)do
 		local _, c = rows:gsub(',','')
 		if c>=0 then
 			return row
@@ -52,19 +56,20 @@ end
 
 function sql.insertData(pkey, rows, values)
 	local dat = ''
-	if #rows~=#values then
+	if #rows ~= #values then
 		return false
 	end
-	for i=1,#rows do
-		dat = dat .. string.format('%s = %q',rows[i], values[i])
-		if #rows~=i then
+	for i=1, #rows do
+		dat = dat .. ('%s = %q'):format(rows[i], values[i])
+		if #rows ~= i then
 			dat = dat .. ', '
 		end
 	end
-	local rt = DB:exec([[
+	local sql = ([[
 		UPDATE players SET %s WHERE pkey=%q;
-	]]%{dat, pkey})
-	if rt~=sqlite3.OK then
+	]]):format(dat, pkey)
+	local ecode = DB:exec(sql)
+	if ecode ~= sqlite3.OK then
 		return false, DB:errmsg()
 	end
 	return true
@@ -91,8 +96,8 @@ function sql.init()
 	if r~=sqlite3.OK then
 		error(DB:errmsg())
 	else
-		assert(sql.addColumn('onlineTime','INTEGER default 0'))
-		assert(sql.addColumn('lastIP','VARCHAR(15) NOT NULL default "0.0.0.0"'))
+		assert(sql.addColumn('onlineTime', 'INTEGER default 0'))
+		assert(sql.addColumn('lastIP', 'VARCHAR(15) NOT NULL default "0.0.0.0"'))
 	end
 	return true
 end

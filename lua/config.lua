@@ -82,12 +82,12 @@ function config:parse()
 			local typ = self.types[key]
 			local gtyp = type(value)
 			if typ and gtyp~=typ then
-				log.error(CONF_VTYPERR%{key,typ,gtyp})
+				log.error((CONF_VTYPERR):format(key, typ, gtyp))
 				return
 			end
 			self.values[key] = value
 		else
-			log.error(CONF_INVALIDSYNTAX%{'properties',ln})
+			log.error((CONF_INVALIDSYNTAX):format('properties', ln))
 		end
 	end
 	f:close()
@@ -100,7 +100,7 @@ function config:save()
 	if f then
 		for key, value in pairs(self.values)do
 			value = tostring(value)
-			f:write(string.format('%s=%s\n', key, value))
+			f:write(('%s=%s\n'):format(key, value))
 		end
 		f:close()
 		self.changed = false

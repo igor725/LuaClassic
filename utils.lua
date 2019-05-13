@@ -33,8 +33,27 @@ ffi.cdef[[
 	int    ferror(FILE *stream);
 ]]
 
+local ext = (jit.os=='Windows'and'dll')or'so'
+package.cpath = ('./bin/%s/?.%s;'):format(jit.arch,ext)
+package.path = './lua/?.lua;./?.lua'
+
+function checkEnv(ev, val)
+	local evar = os.getenv(ev)
+	if evar then
+		return evar:lower():find(val:lower())
+	else
+		return false
+	end
+end
+
+ENABLE_ANSI = checkEnv('ConEmuANSI', 'on')or checkEnv('TERM', 'xterm')or
+checkEnv('TERM', 'screen')
+require('log')
+
 local meta = debug.getmetatable('')
 meta.__mod = function(self,vars)
+	local info = debug.getinfo(2)
+	log.warn('Deprecated metamethod used on line', info.currentline, 'in file', info.short_src)
 	if type(vars)=='table'then
 		return self:format(unpack(vars))
 	else
@@ -48,10 +67,6 @@ meta.__add = function(self,add)
 		return self
 	end
 end
-
-local ext = (jit.os=='Windows'and'dll')or'so'
-package.cpath = './bin/%s/?.%s;'%{jit.arch,ext}
-package.path = './lua/?.lua;./?.lua'
 
 lanes = require('lanes').configure{
 	with_timers = false
@@ -92,21 +107,7 @@ floor = math.floor
 ceil = math.ceil
 bswap = bit.bswap
 
-function checkEnv(ev, val)
-	local evar = os.getenv(ev)
-	if evar then
-		return evar:lower():find(val:lower())
-	else
-		return false
-	end
-end
-
 local colorReplace
-
-ENABLE_ANSI = checkEnv('ConEmuANSI', 'on')or checkEnv('TERM', 'xterm')or
-checkEnv('TERM', 'screen')
-require('log')
-
 
 if ENABLE_ANSI then
 	local rt = {
@@ -179,7 +180,7 @@ end
 function string.split(self, sep)
 	local sep, fields = sep or ":", {}
 	local pattern = string.format("([^%s]+)", sep)
-	self:gsub(pattern, function(c) fields[#fields+1] = c end)
+	self:gsub(pattern, function(c) fields[#fields + 1] = c end)
 	return fields
 end
 
@@ -200,7 +201,7 @@ end
 
 function dirForEach(dir, ext, func)
 	for file in lfs.dir(dir)do
-		local fp = dir+'/'+file
+		local fp = dir + '/' + file
 		if lfs.attributes(fp, 'mode')=='file'and
 		file:sub(-#ext)==ext then
 			func(file,fp)
@@ -249,7 +250,8 @@ function watchThreads(threads)
 		local thread = threads[#threads]
 		if thread then
 			if thread.status == 'error'then
-				log.fatal(thread[-1])
+				log.error(thread[-1])
+				table.remove(threads, #threads)
 			elseif thread.status == 'done'then
 				table.remove(threads, #threads)
 			end

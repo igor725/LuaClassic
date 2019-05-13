@@ -1,5 +1,5 @@
 local GEN_BIOME_STEP = 20
-
+local GEN_BIOME_RADIUS = 2
 
 local heightGrass
 local heightLava
@@ -26,19 +26,18 @@ local function biomsGenerate(dx, dz)
 		end
 	end
 
-	local radius = 2
-	local BIOME_COUNT = dx * dz / GEN_BIOME_STEP / radius / 512 + 1
+	local BIOME_COUNT = dx * dz / GEN_BIOME_STEP / GEN_BIOME_RADIUS / 512 + 1
 	--local BIOME_COUNT = 10
 	--local radius = math.floor(dx * dz / BIOME_COUNT / GEN_BIOME_STEP / 32)
-	local radius2 = radius * radius
+	local radius2 = GEN_BIOME_RADIUS ^ 2
 
 	for i = 1, BIOME_COUNT do
 		local x = math.random(biomesSizeX)
 		local z = math.random(biomesSizeZ)
 		local biome = math.random(1, 3)
 
-		for dx = -radius, radius do
-			for dz = -radius, radius do
+		for dx = -GEN_BIOME_RADIUS, GEN_BIOME_RADIUS do
+			for dz = -GEN_BIOME_RADIUS, GEN_BIOME_RADIUS do
 				if
 				dx*dx + dz*dz < radius2
 				and biomes[x + dx] ~= nil and biomes[x + dx][z + dz] ~= nil
