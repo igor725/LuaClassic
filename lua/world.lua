@@ -23,7 +23,7 @@ local function delayedWaterCreate(world, sx, sy, sz, x, y, z)
 		timer.Simple(.2, function()
 			if world:getBlock(x, y, z) == 0 then
 				world:setBlock(x, y, z, 8)
-				updateWaterBlock(world, sx, sy, sz, x, y, z)
+				world:updateWaterBlock(sx, sy, sz, x, y, z)
 			end
 		end)
 	end
@@ -45,7 +45,7 @@ local world_mt = {
 		data.spawnpointeye = data.spawnpointeye or newAngle(0, 0)
 		self.size = sz
 		self.ldata = ffi.new('uchar[?]', sz)
-		local szint = ffi.new('int[1]', bswap(sz-4))
+		local szint = ffi.new('int[1]', bswap(sz - 4))
 		ffi.copy(self.ldata, szint, 4)
 		self.data = data
 		return true
