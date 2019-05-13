@@ -1,24 +1,24 @@
 packets = {
-	[0x00] = '>BBc64c64B',
+	[0x00] = 'BBc64c64B',
 	[0x05] = '>hhhBB',
 	[0x08] = '>bhhhBB',
-	[0x0d] = '>Bc64'
+	[0x0d] = 'Bc64'
 }
 
 svpackets = {
-	[0x00] = '>BBc64c64B',
-	[0x01] = '>Bb',
-	[0x04] = '>Bhhh',
-	[0x06] = '>BhhhB',
-	[0x07] = '>Bbc64hhhBB',
-	[0x08] = '>BbhhhBB',
-	[0x09] = '>BbbbbBB',
-	[0x0a] = '>Bbbbb',
-	[0x0b] = '>BbBB',
-	[0x0c] = '>Bb',
-	[0x0d] = '>Bbc64',
-	[0x0e] = '>Bc64',
-	[0x0f] = '>BB'
+	[0x00] = 'bbc64c64b',
+	[0x01] = 'bb',
+	[0x04] = '>bhhh',
+	[0x06] = '>bhhhb',
+	[0x07] = '>bbc64hhhbb',
+	[0x08] = '>bbhhhbb',
+	[0x09] = 'bbbbbbb',
+	[0x0a] = 'bbbbb',
+	[0x0b] = 'bbbb',
+	[0x0c] = 'bb',
+	[0x0d] = 'bbc64',
+	[0x0e] = 'bc64',
+	[0x0f] = 'bb'
 }
 
 psizes = {}
@@ -38,7 +38,7 @@ function registerSvPacket(id, fmt)
 end
 
 for id, fmt in pairs(packets)do
-	if id>0 then
+	if id > 0 then
 		registerClPacket(id, fmt)
 	end
 end
@@ -47,7 +47,5 @@ function generatePacket(id, ...)
 	local fmt = svpackets[id]
 	if fmt then
 		return struct.pack(fmt, id, ...)
-	else
-		return''
 	end
 end

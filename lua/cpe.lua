@@ -64,8 +64,6 @@ function cpe:generatePacket(id, ...)
 	local fmt = self.packets.sv[id]
 	if fmt then
 		return struct.pack(fmt, id, ...)
-	else
-		return''
 	end
 end
 
