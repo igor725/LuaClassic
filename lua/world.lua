@@ -264,7 +264,7 @@ local world_mt = {
 				end
 			end
 		end
-	end
+	end,
 
 	readGZIPData = function(self, wh)
 		local ptr = self.ldata
