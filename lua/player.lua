@@ -650,7 +650,7 @@ player_mt.__index = player_mt
 function playersForEach(func)
 	for player, id in pairs(players)do
 		local ret = func(player, id)
-		if ret~=nil then
+		if ret ~= nil then
 			return ret
 		end
 	end
@@ -664,7 +664,7 @@ function getPlayerByName(name)
 	if not name then return end
 	name = name:lower()
 	return playersForEach(function(ply)
-		if ply:getName():lower()==name then
+		if ply:getName():lower() == name then
 			return ply
 		end
 	end)
@@ -674,7 +674,7 @@ function findPlayer(namepart)
 	if not namepart then return end
 	namepart = namepart:lower()
 	return playersForEach(function(ply)
-		if ply:getName():lower():find(namepart) then
+		if ply:getName():lower():find(namepart)then
 			return ply
 		end
 	end)
@@ -688,12 +688,12 @@ function findFreeID(player)
 	local s = 1
 	while IDS[s]do
 		s = s + 1
-		if s>127 then
+		if s > 127 then
 			return -1
 		end
 	end
 	local mp = config:get('max-players')
-	if s>mp then s = -1 end
+	if s > mp then s = -1 end
 	return s
 end
 
@@ -705,7 +705,7 @@ end
 
 function broadcast(str, exid)
 	playersForEach(function(player, id)
-		if id~=exid then
+		if id ~= exid then
 			player:sendNetMesg(str)
 		end
 	end)
@@ -713,12 +713,12 @@ end
 
 function newPlayer(cl)
 	return setmetatable({
-		kickTimeout = CTIME+getKickTimeout(),
+		kickTimeout = CTIME + getKickTimeout(),
 		connectTime = CTIME,
-		pos = newVector(0,0,0),
+		pos = newVector(0, 0, 0),
 		isSpawned = false,
 		waitingExts = -1,
-		eye = newAngle(0,0),
+		eye = newAngle(0, 0),
 		extensions = {},
 		client = cl
 	}, player_mt)

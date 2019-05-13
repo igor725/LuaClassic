@@ -7,7 +7,7 @@ return function(player, extName, extVer)
 	extName = extName:lower()
 	player.extensions[extName] = extVer
 	player.waitingExts = player.waitingExts - 1
-	if player.waitingExts==0 then
+	if player.waitingExts == 0 then
 		player.handshakeStage2 = true
 	end
 end

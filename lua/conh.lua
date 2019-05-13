@@ -5,11 +5,11 @@ this place.
 ]]
 
 function initCmdHandler(cbfunc)
-	if type(cbfunc)~='function'then return false end
+	if type(cbfunc) ~= 'function'then return false end
 	local cmdlinda = lanes.linda()
 	local thread = lanes.gen('io', function()
 		set_debug_threadname('CommandsHandler')
-		
+
 		while true do
 			local stp = select(2, cmdlinda:receive(.1,'stp'))
 			if stp ~= nil then break end

@@ -18,10 +18,10 @@ local world_mt = {
 		return self:getName()
 	end,
 
-	createWorld = function(self,data)
+	createWorld = function(self, data)
 		local dim = data.dimensions
 		local sz = gBufSize(dim)
-		if sz>1533634564 then
+		if sz > 1533634564 then
 			log.error(WORLD_TOOBIGDIM)
 			return false, WORLD_TOOBIGDIM
 		end
@@ -128,7 +128,7 @@ local world_mt = {
 		local dim = self.data.dimensions
 		return dim.x, dim.y, dim.z
 	end,
-	getOffset = function(self,x,y,z)
+	getOffset = function(self, x, y, z)
 		if not self.ldata then return false end
 		local dx, dy, dz = self:getDimensions()
 		local offset = math.floor(z*dx+y*(dx*dz)+x+4)
@@ -136,7 +136,7 @@ local world_mt = {
 		offset = math.max(math.min(offset, fs), 4)
 		return offset
 	end,
-	getBlock = function(self,x,y,z)
+	getBlock = function(self, x, y, z)
 		if not self.ldata then return false end
 		return self.ldata[self:getOffset(x,y,z)]
 	end,
@@ -162,13 +162,13 @@ local world_mt = {
 		return sp.x, sp.y, sp.z, spe.yaw, spe.pitch
 	end,
 
-	setBlock = function(self,x,y,z,id)
+	setBlock = function(self, x, y, z, id)
 		if not self.ldata then return false end
 		if self:isReadOnly()then return false end
 		local offset = self:getOffset(x,y,z)
 		self.ldata[offset] = id
 	end,
-	setSpawn = function(self,x,y,z,ay,ap)
+	setSpawn = function(self, x, y, z, ay, ap)
 		if not x or not y or not z then return false end
 		ay, ap = ay or 0, ap or 0
 		local sp = self:getData('spawnpoint')
@@ -178,20 +178,20 @@ local world_mt = {
 		eye.yaw, eye.pitch = ay, ap
 		return true
 	end,
-	setName = function(self,name)
+	setName = function(self, name)
 		if type(name)~='string' then return false end
 		self.wname = name
 		return true
 	end,
-	setData = function(self,key,val)
+	setData = function(self, key, val)
 		if not self.data then return false end
 		self.data[key] = val
 		return val
 	end,
-	setDataInv = function(self,key)
+	setDataInv = function(self, key)
 		return self:setData(key, not self:getData(key))
 	end,
-	setReadOnly = function(self,b)
+	setReadOnly = function(self, b)
 		self:setData('readonly', b)
 		return true
 	end,
@@ -204,15 +204,15 @@ local world_mt = {
 		return self.data.readonly
 	end,
 
-	fillBlocks = function(self,x1,y1,z1,x2,y2,z2,id)
+	fillBlocks = function(self, x1, y1, z1, x2, y2, z2, id)
 		if self:isReadOnly()then return false end
-		x1,y1,z1,x2,y2,z2 = makeNormalCube(x1,y1,z1,x2,y2,z2)
+		x1,y1,z1,x2,y2,z2 = makeNormalCube(x1, y1, z1, x2, y2, z2)
 		local buf = ''
-		for x=x2,x1-1 do
-			for y=y2,y1-1 do
-				for z=z2,z1-1 do
-					self:setBlock(x,y,z,id)
-					buf = buf .. generatePacket(0x06,x,y,z,id)
+		for x=x2, x1-1 do
+			for y=y2, y1-1 do
+				for z=z2, z1-1 do
+					self:setBlock(x, y, z, id)
+					buf = buf .. generatePacket(0x06, x, y, z, id)
 				end
 			end
 		end
@@ -384,9 +384,9 @@ end
 
 function loadWorld(wname)
 	if worlds[wname]then return true end
-	local lvlh = io.open('worlds/'+wname+'.map', 'rb')
+	local lvlh = io.open('worlds/' + wname + '.map', 'rb')
 	if not lvlh then return false end
-	local status, world = pcall(newWorld,lvlh,wname)
+	local status, world = pcall(newWorld, lvlh, wname)
 	if status then
 		worlds[wname] = world
 		return true
@@ -417,7 +417,7 @@ end
 
 function createWorld(wname, dims, gen, seed)
 	if world[wname]then return false end
-	local data = {dimensions=dims}
+	local data = {dimensions = dims}
 	local tmpWorld = newWorld()
 	if tmpWorld:createWorld(data)then
 		tmpWorld:setName(wname)
@@ -429,7 +429,7 @@ function createWorld(wname, dims, gen, seed)
 end
 
 function openGenerator(name)
-	local chunk, err = loadfile('generators/'+name+'.lua')
+	local chunk, err = loadfile('generators/' + name + '.lua')
 	if chunk then
 		local status, ret = pcall(chunk)
 		return status and ret, ret
@@ -455,7 +455,7 @@ function regenerateWorld(world, gentype, seed)
 					player:despawn()
 				end
 			end)
-			ffi.fill(world.ldata+4, world.size)
+			ffi.fill(world.ldata + 4, world.size)
 			seed = seed or CTIME
 			local t = socket.gettime()
 			local succ, err = pcall(gen, world, seed)
@@ -476,8 +476,7 @@ function regenerateWorld(world, gentype, seed)
 end
 
 function newWorld(wh, wn)
-	local world =
-	setmetatable({data={}}, world_mt)
+	local world = setmetatable({data = {}}, world_mt)
 
 	if wh and wn then
 		if world:readLevelInfo(wh)then

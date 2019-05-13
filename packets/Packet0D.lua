@@ -1,5 +1,5 @@
 return function(player, isPartial, message)
-	if isPartial==1 then
+	if isPartial == 1 then
 		player.messageBuffer = player.messageBuffer..message
 		return
 	end
