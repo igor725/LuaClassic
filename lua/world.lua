@@ -435,6 +435,9 @@ function regenerateWorld(world, gentype, seed)
 			world.data.colors = nil
 			world.data.map_aspects = nil
 			world.data.texPack = nil
+			world.data.spawnpoint = nil
+			world.data.spawnpointeye = nil
+			world.data.weather = nil
 			playersForEach(function(player)
 				if player:isInWorld(world)then
 					player:despawn()

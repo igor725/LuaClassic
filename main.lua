@@ -377,6 +377,10 @@ function serviceMessages()
 end
 
 function init()
+	local loglvl  = tonumber(os.getenv('LOGLEVEL'))
+	if loglvl then
+		log.setLevel(loglvl)
+	end
 	log.info(CON_START)
 	players, IDS = {}, {}
 	worlds, generators = {}, {}
@@ -453,7 +457,7 @@ function init()
 		log.fatal(CON_WLOADERR)
 	end
 
-	local add = ''
+	local add
 	if wsServer then
 		add = (CON_WSBINDSUCC):format(wsPort)
 	end
