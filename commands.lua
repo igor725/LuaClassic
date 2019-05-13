@@ -162,11 +162,7 @@ addChatCommand('setspawn', function(player)
 	local world = getWorld(player)
 	local x, y, z = player:getPos()
 	local ay, ap = player:getEyePos()
-	local wd = world.data
-	local sp = wd.spawnpoint
-	local eye = wd.spawnpointeye
-	sp[1] = x sp[2] = y sp[3] = z
-	eye[1] = ay eye[2] = ap
+	world:setSpawn(x, y, z, ay, ap)
 	return CMD_SPAWNSET
 end)
 

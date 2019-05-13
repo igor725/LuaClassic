@@ -221,18 +221,7 @@ local player_mt = {
 	end,
 	moveToSpawn = function(self)
 		local world = getWorld(self)
-		local ld = world.data
-		local sp = ld.spawnpoint
-		local eye = ld.spawnpointeye
-		self:setPos(unpack(sp))
-		self:setEyePos(unpack(eye))
-		self:teleportTo(
-			sp[1],
-			sp[2],
-			sp[3],
-			eye[1],
-			eye[2]
-		)
+		self:teleportTo(world:getSpawnPoint())
 	end,
 	changeWorld = function(self, wname, force, x, y, z, ay, ap)
 		if not force and self:isInWorld(wname)then
@@ -240,16 +229,15 @@ local player_mt = {
 		end
 		local world = getWorld(wname)
 		if world then
-			local wsp = world.data.spawnpoint
-			local wse = world.data.spawnpointeye
+			local sx, sy, sz, say, sap = world:getSpawnPoint()
 			self:despawn()
 			self.worldName = wname
 			self.handshakeStage2 = true
-			self.eye.yaw = ay or wse[1]
-			self.eye.pitch = ap or wse[2]
-			self.pos.x = x or wsp[1]
-			self.pos.y = y or wsp[2]
-			self.pos.z = z or wsp[3]
+			self.eye.yaw = ay or sap
+			self.eye.pitch = ap or say
+			self.pos.x = x or sx
+			self.pos.y = y or sy
+			self.pos.z = z or sz
 			return true
 		end
 		return false, 0
@@ -287,8 +275,8 @@ local player_mt = {
 			local spawn = cwd.spawnpoint
 			local sx, sy, sz, ay, ap
 			if dat.spawnX == 0 and dat.spawnY == 0 and dat.spawnZ == 0 then
-				sx, sy, sz = unpack(spawn)
-				ay, ap = unpack(eye)
+				sx, sy, sz = spawn.x, spawn.y, spawn.z
+				ay, ap = eye.yaw, eye.pitch
 			else
 				sx, sy, sz = dat.spawnX, dat.spawnY, dat.spawnZ
 				ay, ap = dat.spawnYaw, dat.spawnPitch
@@ -615,8 +603,8 @@ local player_mt = {
 				local mesg = self.thread[1]
 				if mesg then
 					if mesg == 0 then
-						local dim = worlds[self.worldName].data.dimensions
-						self:sendPacket(false, 0x04, unpack(dim))
+						local dim = getWorld(self):getData('dimensions')
+						self:sendPacket(false, 0x04, dim.x, dim.y, dim.z)
 						self:spawn()
 					else
 						log.error('MAPSEND ERROR', mesg)

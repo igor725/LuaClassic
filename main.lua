@@ -438,7 +438,7 @@ function init()
 			end
 			world = newWorld()
 			world:setName(wn)
-			if world:createWorld({dimensions={x,y,z}})then
+			if world:createWorld({dimensions=newVector(x, y, z)})then
 				generator(world,sdlist[num]or CTIME)
 			end
 		end

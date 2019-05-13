@@ -1,5 +1,5 @@
-local function gBufSize(x,y,z)
-	return x*y*z+4
+local function gBufSize(vec)
+	return vec.x*vec.y*vec.z+4
 end
 
 local function packTo(file, fmt, ...)
@@ -20,13 +20,13 @@ local world_mt = {
 
 	createWorld = function(self,data)
 		local dim = data.dimensions
-		local sz = gBufSize(unpack(dim))
+		local sz = gBufSize(dim)
 		if sz>1533634564 then
 			log.error(WORLD_TOOBIGDIM)
 			return false, WORLD_TOOBIGDIM
 		end
-		data.spawnpoint = data.spawnpoint or{0,0,0}
-		data.spawnpointeye = data.spawnpointeye or{0,0}
+		data.spawnpoint = data.spawnpoint or newVector(0, 0, 0)
+		data.spawnpointeye = data.spawnpointeye or newAngle(0, 0)
 		self.size = sz
 		self.ldata = ffi.new('uchar[?]', sz)
 		local szint = ffi.new('int[1]', bswap(sz-4))
@@ -41,11 +41,11 @@ local world_mt = {
 		wh:write('LCW\0')
 		for k, v in pairs(self.data)do
 			if k == 'dimensions'then
-				packTo(wh, '>bHHH', 0, unpack(v))
+				packTo(wh, '>bHHH', 0, v.x, v.y, v.z)
 			elseif k == 'spawnpoint'then
-				packTo(wh, '>bfff', 1, unpack(v))
+				packTo(wh, '>bfff', 1, v.x, v.y, v.z)
 			elseif k == 'spawnpointeye'then
-				packTo(wh, '>bff', 2, unpack(v))
+				packTo(wh, '>bff', 2, v.yaw, v.pitch)
 			elseif k == 'isNether'then
 				packTo(wh, '>bb', 3, (v and 1)or 0)
 			elseif k == 'colors'then
@@ -125,7 +125,8 @@ local world_mt = {
 	end,
 
 	getDimensions = function(self)
-		return unpack(self.data.dimensions)
+		local dim = self.data.dimensions
+		return dim.x, dim.y, dim.z
 	end,
 	getOffset = function(self,x,y,z)
 		if not self.ldata then return false end
@@ -155,6 +156,11 @@ local world_mt = {
 	getData = function(self,key)
 		return self.data[key]
 	end,
+	getSpawnPoint = function(self)
+		local sp = self:getData('spawnpoint')
+		local spe = self:getData('spawnpointeye')
+		return sp.x, sp.y, sp.z, spe.yaw, spe.pitch
+	end,
 
 	setBlock = function(self,x,y,z,id)
 		if not self.ldata then return false end
@@ -168,8 +174,8 @@ local world_mt = {
 		local sp = self:getData('spawnpoint')
 		local eye = self:getData('spawnpointeye')
 
-		sp[1] = x sp[2] = y sp[3] = z
-		eye[1] = ay eye[2] = ap
+		sp.x, sp.y, sp.z = x, y, z
+		eye.yaw, eye.pitch = ay, ap
 		return true
 	end,
 	setName = function(self,name)
@@ -232,17 +238,25 @@ local world_mt = {
 				local id = wh:read(1)
 
 				if id == '\0'then
-					local dx, dy, dz = unpackFrom(wh, '>HHH')
-					local sz = gBufSize(dx, dy, dz)
-					self.data.dimensions = {dx, dy, dz}
+					local dim = newVector(unpackFrom(wh, '>HHH'))
+					local sz = gBufSize(dim)
+					self.data.dimensions = dim
 					self.ldata = ffi.new('char[?]', sz)
 					self.size = sz
 				elseif id == '\1'then
-					local sx, sy, sz = unpackFrom(wh, '>fff')
-					self.data.spawnpoint = {sx, sy, sz}
+					local sp = self.data.spawnpoint
+					if sp then
+						sp.x, sp.y, sp.z = unpackFrom(wh, '>fff')
+					else
+						self:setData('spawnpoint', newVector(unpackFrom(wh, '>fff')))
+					end
 				elseif id == '\2'then
-					local ay, ap = unpackFrom(wh, '>ff')
-					self.data.spawnpointeye = {ay, ap}
+					local sp = self.data.spawnpointeye
+					if sp then
+						sp.yaw, sp.pitch = unpackFrom(wh, '>ff')
+					else
+						self.data.spawnpointeye = newAngle(unpackFrom(wh, '>ff'))
+					end
 				elseif id == '\3'then
 					self.data.isNether = wh:read(1)=='\1'
 				elseif id == '\4'then
@@ -282,7 +296,7 @@ local world_mt = {
 				elseif id == '\255'then
 					break
 				else
-					io.write(WORLD_CORRUPT)
+					log.error(WORLD_CORRUPT)
 					return false
 				end
 			end
