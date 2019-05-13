@@ -13,6 +13,22 @@ local function unpackFrom(file, fmt)
 	return struct.unpack(fmt, data)
 end
 
+local function distance(x1, z1, x2, z2)
+	return math.sqrt((x2 - x1) ^ 2 + (z2 - z1) ^ 2)
+end
+
+local function delayedWaterCreate(world, sx, sy, sz, x, y, z)
+	local dst = distance(sx, sz, x, z)
+	if dst < 30 then
+		timer.Simple(.2, function()
+			if world:getBlock(x, y, z) == 0 then
+				world:setBlock(x, y, z, 8)
+				updateWaterBlock(world, sx, sy, sz, x, y, z)
+			end
+		end)
+	end
+end
+
 local world_mt = {
 	__tostring = function(self)
 		return self:getName()
@@ -167,6 +183,9 @@ local world_mt = {
 		if self:isReadOnly()then return false end
 		local offset = self:getOffset(x,y,z)
 		self.ldata[offset] = id
+		playersForEach(function(player)
+			player:sendPacket(false, 0x06, x, y, z, id)
+		end)
 	end,
 	setSpawn = function(self,x,y,z,ay,ap)
 		if not x or not y or not z then return false end
@@ -206,13 +225,15 @@ local world_mt = {
 
 	fillBlocks = function(self,x1,y1,z1,x2,y2,z2,id)
 		if self:isReadOnly()then return false end
-		x1,y1,z1,x2,y2,z2 = makeNormalCube(x1,y1,z1,x2,y2,z2)
+		local dx, dy, dz = self:getDimensions()
+		x1, y1, z1, x2, y2, z2 = makeNormalCube(x1, y1, z1, x2, y2, z2)
 		local buf = ''
-		for x=x2,x1-1 do
-			for y=y2,y1-1 do
-				for z=z2,z1-1 do
-					self:setBlock(x,y,z,id)
-					buf = buf .. generatePacket(0x06,x,y,z,id)
+		for x=x2, x1-1 do
+			for y=y2, y1-1 do
+				for z=z2, z1-1 do
+					local offset = z * dx + y * (dx * dz) + x + 4
+					self.ldata[offset] = id
+					buf = buf .. generatePacket(0x06, x, y, z, id)
 				end
 			end
 		end
@@ -222,6 +243,30 @@ local world_mt = {
 			end
 		end)
 	end,
+	updateWaterBlock = function(self, sx, sy, sz, x, y, z)
+		if not x then
+			x, y, z = sx, sy, sz
+		end
+		local id = self:getBlock(x, y, z)
+		if id == 8 then
+			if self:getBlock(x, y - 1, z) == 0 then
+				delayedWaterCreate(self, sx, sy, sz, x, y - 1, z)
+			else
+				if self:getBlock(x + 1, y, z) == 0 then
+					delayedWaterCreate(self, sx, sy, sz, x + 1, y, z)
+				end
+				if self:getBlock(x - 1, y, z) == 0 then
+					delayedWaterCreate(self, sx, sy, sz, x - 1, y, z)
+				end
+				if self:getBlock(x, y, z + 1) == 0 then
+					delayedWaterCreate(self, sx, sy, sz, x, y, z + 1)
+				end
+				if self:getBlock(x, y, z - 1) == 0 then
+					delayedWaterCreate(self, sx, sy, sz, x, y, z - 1)
+				end
+			end
+		end
+	end
 
 	readGZIPData = function(self, wh)
 		local ptr = self.ldata
