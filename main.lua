@@ -23,14 +23,14 @@ end
 
 if os.getenv('DEBUG')then
 	local path = os.getenv('MDPATH')
-	path = path or '../mobdebug.lua'
+	path = path or'../mobdebug.lua'
 	loadfile(path)().start()
 end
 
 require('utils')
 require('commands')
 dirForEach('lua', 'lua', function(file)
-	require(file:sub(1,-5))
+	require(file:sub(1, -5))
 end)
 
 function onConnectionAttempt(ip, port)
@@ -74,7 +74,7 @@ function onPlayerDestroy(player)
 		local world = player.worldName
 		local otime
 		if player.lastOnlineTime then
-			otime = floor(player.lastOnlineTime + (CTIME-player.connectTime))
+			otime = floor(player.lastOnlineTime + (CTIME - player.connectTime))
 		end
 		if x and world and otime then
 			assert(sql.insertData(player:getVeriKey(), {'spawnX', 'spawnY', 'spawnZ', 'spawnYaw', 'spawnPitch', 'lastWorld', 'onlineTime'}, {x, y, z, ay, ap, world, otime}))
@@ -94,7 +94,7 @@ function onPlayerChatMessage(player, message)
 	end
 	local starts = message:sub(1,1)
 	if not message:startsWith('#', '>', '/')then
-		message = message:gsub('%%(%x)','&%1')
+		message = message:gsub('%%(%x)', '&%1')
 	end
 	log.chat(('%s: %s'):format(player, message))
 
@@ -102,7 +102,7 @@ function onPlayerChatMessage(player, message)
 		if player:checkPermission('server.luaexec')then
 			local code = message:sub(2)
 			if code:sub(1,1) == '='then
-				code = 'return '..code:sub(2)
+				code = 'return ' + code:sub(2)
 			end
 			local chunk, err = loadstring(code)
 			if chunk then
@@ -249,7 +249,7 @@ function wsDoHandshake()
 			end
 		elseif data.state == 'headers'then
 			local ln = cl:receive()
-			if ln==''then
+			if ln == ''then
 				data.state = 'genresp'
 			elseif ln then
 				local k, v = ln:match('(.+):%s(.+)')
@@ -271,7 +271,7 @@ function wsDoHandshake()
 			upgrd:lower()=='websocket'and
 			conn:lower():find('upgrade')and
 			tonumber(wsver) == 13 then
-				wskey = wskey+WSGUID
+				wskey = wskey + WSGUID
 				wskey = b64enc(sha1(wskey))
 				local response =
 				('HTTP/1.1 101 Switching Protocols\r\n' +
@@ -323,7 +323,7 @@ function handleConsoleCommand(cmd)
 	if cmd:sub(1,1) == '#'then
 		local code = cmd:sub(2)
 		if code:sub(1,1)=='='then
-			code = 'return '..code:sub(2)
+			code = 'return ' + code:sub(2)
 		end
 
 		local chunk, err = loadstring(code)
@@ -351,8 +351,8 @@ function handleConsoleCommand(cmd)
 		if cmdf then
 			local rtval, str = cmdf(args, argstr)
 			if not rtval then
-				local str = _G['CU_'+cmd:upper()]
-				if str then log.info(CON_USE%str)end
+				local str = _G['CU_' + cmd:upper()]
+				if str then log.info((CON_USE):format(str))end
 			elseif rtval == true then
 				if str == nil then return end
 				log.info(str)
@@ -445,10 +445,10 @@ function init()
 		if world then
 			worlds[wn] = world
 			world.emptyfrom = CTIME
-			if num==1 then
+			if num == 1 then
 				worlds['default'] = world
 			end
-			local tm = (MESG_DONEIN):format((socket.gettime()-st)*1000)
+			local tm = (MESG_DONEIN):format((socket.gettime() - st) * 1000)
 			log.debug(wn, 'loading', tm)
 		end
 	end

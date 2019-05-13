@@ -71,7 +71,7 @@ end
 
 function ec:prePlayerSpawn(player)
 	local colors = getClrs(player.worldName)
-	for i=0,4 do
+	for i = 0, 4 do
 		local c = colors[i]
 		if c then
 			updateEnvColorsFor(player, i, c.r, c.g, c.b)

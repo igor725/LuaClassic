@@ -1,5 +1,5 @@
 local function gBufSize(vec)
-	return vec.x*vec.y*vec.z+4
+	return vec.x * vec.y * vec.z + 4
 end
 
 local function packTo(file, fmt, ...)
@@ -29,14 +29,14 @@ local world_mt = {
 		data.spawnpointeye = data.spawnpointeye or newAngle(0, 0)
 		self.size = sz
 		self.ldata = ffi.new('uchar[?]', sz)
-		local szint = ffi.new('int[1]', bswap(sz-4))
+		local szint = ffi.new('int[1]', bswap(sz - 4))
 		ffi.copy(self.ldata, szint, 4)
 		self.data = data
 		return true
 	end,
 	save = function(self)
 		if not self.ldata then return true end
-		local pt = 'worlds/'+self.wname+'.map'
+		local pt = 'worlds/' + self.wname + '.map'
 		local wh = assert(io.open(pt, 'wb'))
 		wh:write('LCW\0')
 		for k, v in pairs(self.data)do
@@ -93,9 +93,9 @@ local world_mt = {
 		end
 		wh:write('\255')
 		local gStatus, gErr = gz.compress(self.ldata, self.size, 4, function(out, stream)
-			local chunksz = 1024-stream.avail_out
+			local chunksz = 1024 - stream.avail_out
 			C.fwrite(out, 1, chunksz, wh)
-			if C.ferror(wh)~=0 then
+			if C.ferror(wh) ~= 0 then
 				log.error(WORLD_WRITEFAIL)
 				gz.defEnd(stream)
 			end
@@ -104,7 +104,7 @@ local world_mt = {
 		return gStatus, gErr
 	end,
 	unload = function(self)
-		if self.players>0 or self.unloadLocked then return false end
+		if self.players > 0 or self.unloadLocked then return false end
 		self:save()
 		self.ldata = nil
 		collectgarbage()
@@ -131,14 +131,14 @@ local world_mt = {
 	getOffset = function(self, x, y, z)
 		if not self.ldata then return false end
 		local dx, dy, dz = self:getDimensions()
-		local offset = math.floor(z*dx+y*(dx*dz)+x+4)
+		local offset = math.floor(z * dx + y * (dx * dz) + x + 4)
 		local fs = ffi.sizeof(self.ldata)
 		offset = math.max(math.min(offset, fs), 4)
 		return offset
 	end,
 	getBlock = function(self, x, y, z)
 		if not self.ldata then return false end
-		return self.ldata[self:getOffset(x,y,z)]
+		return self.ldata[self:getOffset(x, y, z)]
 	end,
 	getAddr = function(self)
 		return getAddr(self.ldata)
@@ -148,7 +148,7 @@ local world_mt = {
 	end,
 	getPath = function(self)
 		local name = self:getName()
-		return 'worlds/'+name+'.map'
+		return 'worlds/' + name + '.map'
 	end,
 	getName = function(self)
 		return self.wname
@@ -165,7 +165,7 @@ local world_mt = {
 	setBlock = function(self, x, y, z, id)
 		if not self.ldata then return false end
 		if self:isReadOnly()then return false end
-		local offset = self:getOffset(x,y,z)
+		local offset = self:getOffset(x, y, z)
 		self.ldata[offset] = id
 	end,
 	setSpawn = function(self, x, y, z, ay, ap)
@@ -206,13 +206,13 @@ local world_mt = {
 
 	fillBlocks = function(self, x1, y1, z1, x2, y2, z2, id)
 		if self:isReadOnly()then return false end
-		x1,y1,z1,x2,y2,z2 = makeNormalCube(x1, y1, z1, x2, y2, z2)
+		x1, y1, z1, x2, y2, z2 = makeNormalCube(x1, y1, z1, x2, y2, z2)
 		local buf = ''
-		for x=x2, x1-1 do
-			for y=y2, y1-1 do
-				for z=z2, z1-1 do
+		for x = x2, x1 - 1 do
+			for y = y2, y1 - 1 do
+				for z = z2, z1 - 1 do
 					self:setBlock(x, y, z, id)
-					buf = buf .. generatePacket(0x06, x, y, z, id)
+					buf = buf + generatePacket(0x06, x, y, z, id)
 				end
 			end
 		end
@@ -226,7 +226,7 @@ local world_mt = {
 	readGZIPData = function(self, wh)
 		local ptr = self.ldata
 		return gz.decompress(wh, function(out,stream)
-			local chunksz = 1024-stream.avail_out
+			local chunksz = 1024 - stream.avail_out
 			ffi.copy(ptr, out, chunksz)
 			ptr = ptr + chunksz
 		end)
@@ -258,7 +258,7 @@ local world_mt = {
 						self.data.spawnpointeye = newAngle(unpackFrom(wh, '>ff'))
 					end
 				elseif id == '\3'then
-					self.data.isNether = wh:read(1)=='\1'
+					self.data.isNether = wh:read(1) == '\1'
 				elseif id == '\4'then
 					local ct, r, g, b = unpackFrom(wh, 'BBBB')
 					self.data.colors = self.data.colors or{}
@@ -270,12 +270,12 @@ local world_mt = {
 				elseif id == '\6'then
 					self.data.weather = wh:read(1):byte()
 				elseif id == '\7'then
-					self.data.readonly = wh:read(1)=='\1'
+					self.data.readonly = wh:read(1) == '\1'
 				elseif id == '\8'then
 					self.data.portals = self.data.portals or{}
 					local p1x, p1y, p1z,
 					p2x, p2y, p2z, strsz = unpackFrom(wh, '>HHHHHHH')
-					table.insert(self.data.portals,{
+					table.insert(self.data.portals, {
 						pt1 = {p1x, p1y, p1z},
 						pt2 = {p2x, p2y, p2z},
 						tpTo = wh:read(strsz)
@@ -306,8 +306,8 @@ local world_mt = {
 	end,
 
 	addScript = function(self, name, body)
-		if type(name)~='string' or #name>255 then return false end
-		if type(body)~='string' or #body>65535 then return false end
+		if type(name) ~= 'string' or #name > 255 then return false end
+		if type(body) ~= 'string' or #body > 65535 then return false end
 		self.data.wscripts = self.data.wscripts or{}
 		self.data.wscripts[name] = {
 			body = body
@@ -315,8 +315,8 @@ local world_mt = {
 		return true
 	end,
 	addScriptFile = function(self, name, filename)
-		if type(name)~='string' or #name>255 then return false end
-		if type(filename)~='string' then return false end
+		if type(name) ~= 'string' or #name > 255 then return false end
+		if type(filename) ~= 'string' then return false end
 		local f = io.open(filename, 'rb')
 		if not f then return false end
 		local body = f:read(65535)
@@ -469,7 +469,7 @@ function regenerateWorld(world, gentype, seed)
 					player.handshakeStage2 = true
 				end
 			end)
-			return true, e-t
+			return true, e - t
 		end
 	end
 	return false, IE_UE

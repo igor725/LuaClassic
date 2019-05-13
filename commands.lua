@@ -99,7 +99,7 @@ addChatCommand('time', function(player, wname, name)
 		return CMD_TIMEDISALLOW
 	end
 
-	for i=0, 4 do
+	for i = 0, 4 do
 		local c = colors[i]
 		world:setEnvColor(i, c.r, c.g, c.b)
 	end
