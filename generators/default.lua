@@ -641,7 +641,7 @@ return function(world, seed)
 		endX = math.floor(dx * (i + 1) / thlimit) - 1
 
 		table.insert(threads, terrain_gen(mapaddr, dx, dy, dz, startX, endX))
-		log.debug(('TerrainGenerator: #%d thread spawned'):format(threads))
+		log.debug(('TerrainGenerator: #%d thread spawned'):format(#threads))
 	end
 	watchThreads(threads)
 

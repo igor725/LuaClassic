@@ -152,8 +152,36 @@ function printf(...)
 	return str
 end
 
+local function woSpaces(...) -- It works faster than string.match
+	local idx = 1
+	local stStart, stEnd
+
+	while true do
+		local b = select(idx, ...)
+		if not stStart then
+			if b ~= 32 then
+				stStart = idx
+				idx = select('#', ...)
+			else
+				idx = idx + 1
+			end
+		else
+			if b ~= 32 then
+				stEnd = idx
+				break
+			end
+			idx = idx - 1
+			if idx == 1 then
+				break
+			end
+		end
+	end
+
+	return stStart, stEnd
+end
+
 function trimStr(str)
-	return str:match('^%s*(.-)%s*$')
+	return str:sub(woSpaces(str:byte(1,-1)))
 end
 
 function getAddr(void)
