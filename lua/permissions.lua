@@ -49,8 +49,8 @@ end
 function permissions:delFor(k, perm)
 	self.list[k] = self.list[k]or{}
 	local lst = self.list[k]
-	for i=#lst, 1, -1 do
-		if perm:lower()==lst[i]then
+	for i = #lst, 1, -1 do
+		if perm:lower() == lst[i]then
 			table.remove(lst, i)
 			self.changed = true
 			break
@@ -69,7 +69,7 @@ function permissions:save()
 	if h then
 		for key, plist in pairs(self.list)do
 			h:write(key + '\n')
-			for i=1,#plist do
+			for i = 1, #plist do
 				h:write(('\t%s\n'):format(plist[i]))
 			end
 		end

@@ -6,7 +6,7 @@ local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
 	set_debug_threadname('MapSender')
 
 	local ext = (jit.os=='Windows'and'dll')or'so'
-	package.cpath = './bin/'..jit.arch..'/?.'..ext
+	package.cpath = './bin/' .. jit.arch .. '/?.'..ext
 
 	do
 		local path = package.searchpath('socket.core', package.cpath)
@@ -469,13 +469,13 @@ local player_mt = {
 			(self.isOP and 0x64)or 0x00
 		)
 	end,
-	sendMessage = function(self,mesg, id)
+	sendMessage = function(self, mesg, id)
 		mesg = tostring(mesg)
 		local lastcolor = ''
 		if not self:isSupported('FullCP437')then
 			mesg = mesg:gsub('.',function(s)
 				local bt = s:byte()
-				if bt>127 then
+				if bt > 127 then
 					return ('\\x%02X'):format(bt)
 				end
 			end)
@@ -484,17 +484,17 @@ local player_mt = {
 		id = id or 0
 		local parts
 		if id == 0 then
-			parts = ceil(#mesg/62)
+			parts = ceil(#mesg / 62)
 		else
 			parts = 1
 		end
-		if parts>1 then
-			for i=1,parts do
+		if parts > 1 then
+			for i = 1, parts do
 				local mpart = mesg:sub(i*62-61,i*62)
-				if i==parts then
-					mpart = lastcolor..mpart
+				if i == parts then
+					mpart = lastcolor + mpart
 				end
-				self:sendPacket(false, 0x0d, id, lastcolor..mpart)
+				self:sendPacket(false, 0x0d, id, lastcolor + mpart)
 				lastcolor = mpart:match('.*(&%x)')or''
 			end
 		else
@@ -526,7 +526,7 @@ local player_mt = {
 
 		prePlayerSpawn(self)
 		playersForEach(function(ply,id)
-			local sId = (pId==id and -1)or id
+			local sId = (pId == id and -1)or id
 			local cx, cy, cz = ply:getPos(true)
 			local cay, cap = ply:getEyePos(true)
 			local cname = ply:getName()
@@ -586,7 +586,7 @@ local player_mt = {
 			return
 		end
 
-		if CTIME>self.kickTimeout then
+		if CTIME > self.kickTimeout then
 			if self.isSpawned then
 				self:kick(KICK_TIMEOUT)
 				return
