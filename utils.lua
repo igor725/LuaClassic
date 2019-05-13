@@ -80,16 +80,16 @@ do
 	end
 end
 
-function newColor(r,g,b)
+function newColor(r, g, b)
 	r, g, b = r or 255, g or 255, b or 255
 	return ffi.new('color', r, g, b)
 end
 
-function newAngle(y,p)
+function newAngle(y, p)
 	return ffi.new('angle', y, p)
 end
 
-function newVector(x,y,z)
+function newVector(x, y, z)
 	return ffi.new('vector', x, y, z)
 end
 
@@ -179,14 +179,14 @@ function getAddr(void)
 end
 
 function table.hasValue(tbl, ...)
-	for k, v in pairs(tbl)do
+	for i=1, #tbl do
 		local idx = 1
 		while true do
 			local tv = select(idx, ...)
 			if tv == nil then
 				break
 			end
-			if tv == v then
+			if tv == tbl[i] then
 				return true
 			end
 			idx = idx + 1
@@ -196,8 +196,8 @@ function table.hasValue(tbl, ...)
 end
 
 function string.split(self, sep)
-	local sep, fields = sep or ":", {}
-	local pattern = string.format("([^%s]+)", sep)
+	local sep, fields = sep or ':', {}
+	local pattern = string.format('([^%s]+)', sep)
 	self:gsub(pattern, function(c) fields[#fields + 1] = c end)
 	return fields
 end
@@ -222,7 +222,7 @@ function dirForEach(dir, ext, func)
 		local fp = dir + '/' + file
 		if lfs.attributes(fp, 'mode')=='file'and
 		file:sub(-#ext)==ext then
-			func(file,fp)
+			func(file, fp)
 		end
 	end
 end
@@ -231,23 +231,23 @@ function makeNormalCube(x1, y1, z1, x2, y2, z2)
 	local px1, py1, pz1 = x1, y1, z1
 	local px2, py2, pz2 = x2, y2, z2
 
-	if x1-x2<0 then
-		px1 = x2+1
+	if x1 - x2 < 0 then
+		px1 = x2 + 1
 		px2 = x1
 	else
-		px1 = x1+1
+		px1 = x1 + 1
 	end
-	if y1-y2<0 then
-		py1 = y2+1
+	if y1 - y2 < 0 then
+		py1 = y2 + 1
 		py2 = y1
 	else
-		py1 = y1+1
+		py1 = y1 + 1
 	end
-	if z1-z2<0 then
-		pz1 = z2+1
+	if z1 - z2 < 0 then
+		pz1 = z2 + 1
 		pz2 = z1
 	else
-		pz1 = z1+1
+		pz1 = z1 + 1
 	end
 
 	return px1, py1, pz1, px2, py2, pz2

@@ -1,5 +1,5 @@
 return function(player, appName, extCount)
-	if extCount<1 then
+	if extCount < 1 then
 		player:kick(KICK_CPEEXTCOUNT)
 		return
 	end

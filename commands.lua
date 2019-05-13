@@ -45,7 +45,7 @@ addChatCommand('restart', function()
 	_STOP = 'restart'
 end)
 
-addChatCommand('weather',function(player,wname,wtt)
+addChatCommand('weather',function(player, wname, wtt)
 	local world
 	if wname == nil then
 		world = getWorld(player)
@@ -66,7 +66,7 @@ addChatCommand('weather',function(player,wname,wtt)
 	end
 
 	if wtt then
-		wtt = math.min(math.max(wtt,0),2)
+		wtt = math.min(math.max(wtt, 0), 2)
 		if world:setWeather(wtt)then
 			return (CMD_WTCHANGE):format(world, WT[wtt])
 		end
@@ -75,7 +75,7 @@ addChatCommand('weather',function(player,wname,wtt)
 	end
 end)
 
-addChatCommand('time', function(player,wname,name)
+addChatCommand('time', function(player, wname, name)
 	if not wname then return end
 	local world, colors
 	if time_presets[wname]then
@@ -99,7 +99,7 @@ addChatCommand('time', function(player,wname,name)
 		return CMD_TIMEDISALLOW
 	end
 
-	for i=0,4 do
+	for i=0, 4 do
 		local c = colors[i]
 		world:setEnvColor(i, c.r, c.g, c.b)
 	end
@@ -121,12 +121,12 @@ addChatCommand('sel', function(player)
 	if not player.onPlaceBlock then
 		player.onPlaceBlock = function(x, y, z, id)
 			if player.cuboidP1 then
-				player.cuboidP2 = {x,y,z}
+				player.cuboidP2 = {x, y, z}
 				local sx, sy, sz = unpack(player.cuboidP1)
 				SelectionCuboid:create(player, 0, '', sx, sy, sz, x, y, z)
 				return true
 			end
-			player.cuboidP1 = {x,y,z}
+			player.cuboidP1 = {x, y, z}
 			return true
 		end
 	else
@@ -143,7 +143,7 @@ addChatCommand('mkportal', function(player, pname, wname)
 		local cworld = getWorld(player)
 		if getWorld(wname)then
 			cworld.data.portals = cworld.data.portals or{}
-			local x1, y1, z1, x2, y2, z2 = makeNormalCube(p1[1],p1[2],p1[3],unpack(p2))
+			local x1, y1, z1, x2, y2, z2 = makeNormalCube(p1[1], p1[2], p1[3], unpack(p2))
 			cworld.data.portals[pname]={
 				tpTo = wname,
 				pt1 = {x1, y1, z1},
@@ -177,8 +177,8 @@ addChatCommand('set', function(player, id)
 		local p1, p2 = player.cuboidP1, player.cuboidP2
 		if p1 and p2 then
 			world:fillBlocks(
-				p1[1],p1[2],p1[3],
-				p2[1],p2[2],p2[3],
+				p1[1], p1[2], p1[3],
+				p2[1], p2[2], p2[3],
 				tonumber(id)
 			)
 			return MESG_DONE
@@ -238,9 +238,9 @@ end)
 addChatCommand('list', function(player)
 	player:sendMessage(CMD_WORLDLST)
 	for wn, world in pairs(worlds)do
-		if wn~='default'then
-			local dfld = (worlds['default']==world and' (default)')or''
-			player:sendMessage('   - '+wn+dfld)
+		if wn ~= 'default'then
+			local dfld = (worlds['default'] == world and' (default)')or''
+			player:sendMessage('   - ' + wn + dfld)
 		end
 	end
 end)
@@ -249,7 +249,7 @@ addChatCommand('regen', function(player, gen, seed)
 	local world = getWorld(player.worldName)
 	gen = tonumber(gen)or gen
 
-	if type(gen)~='number'then
+	if type(gen) ~= 'number'then
 		gen = gen or'default'
 		seed = tonumber(seed)or os.time()
 	else
@@ -303,9 +303,9 @@ end)
 addConsoleCommand('list', function()
 	log.info(CMD_WORLDLST)
 	for wn, world in pairs(worlds)do
-		if wn~='default'then
-			local dfld = (worlds['default']==world and' (default)')or''
-			print('   - '+wn+dfld)
+		if wn ~= 'default'then
+			local dfld = (worlds['default'] == world and' (default)')or''
+			print('   - ' + wn + dfld)
 		end
 	end
 	return true
@@ -387,7 +387,7 @@ addConsoleCommand('tp', function(args)
 			return true, (MESG_PLAYERNFA):format(pn2)
 		end
 		local wp2 = getWorld(p2)
-		if getWorld(p1)~=wp2 then
+		if getWorld(p1) ~= wp2 then
 			p1:changeWorld(wp2, false, p2:getPos())
 		else
 			p1:teleportTo(p2:getPos())

@@ -68,7 +68,7 @@ local function infstreamend(stream)
 	return _zlib.inflateEnd(stream)
 end
 
-local function deflate(_in,len,level,callback)
+local function deflate(_in, len, level, callback)
 	level = level or 4
 	local stream = ffi.new('z_stream')
 	local streamsz = ffi.sizeof(stream)
@@ -102,7 +102,7 @@ local function deflate(_in,len,level,callback)
 	return true
 end
 
-local function inflate(file,callback)
+local function inflate(file, callback)
 	local stream = ffi.new('z_stream')
 	local ret = _zlib.inflateInit2_(stream,GZ_WINDOWBITS,Z_VER,ffi.sizeof('z_stream'))
 

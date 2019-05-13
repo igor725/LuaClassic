@@ -46,7 +46,7 @@ function sql.getData(pkey, rows)
 	local sql = ('SELECT %s FROM players WHERE pkey=%q'):format(rows, pkey)
 	for row in DB:nrows(sql)do
 		local _, c = rows:gsub(',','')
-		if c>=0 then
+		if c >= 0 then
 			return row
 		else
 			return row[rows]
@@ -80,7 +80,7 @@ function sql.close()
 end
 
 function sql.init()
-	local r = DB:exec[[
+	local ecode = DB:exec[[
 	CREATE TABLE IF NOT EXISTS players (
 			id                     INTEGER PRIMARY KEY AUTOINCREMENT,
 			onlineTime             INTEGER default 0,
@@ -93,7 +93,7 @@ function sql.init()
 			spawnPitch             float(24) default 0,
 			lastIP                 VARCHAR(15) NOT NULL default "0.0.0.0"
 	);]]
-	if r~=sqlite3.OK then
+	if ecode ~= sqlite3.OK then
 		error(DB:errmsg())
 	else
 		assert(sql.addColumn('onlineTime', 'INTEGER default 0'))

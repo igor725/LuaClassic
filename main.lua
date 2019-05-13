@@ -13,7 +13,7 @@ do
 		local ver = jit.version
 		local beta = ver:match('.+%-beta(%d+)')
 		beta = tonumber(beta)
-		if beta and beta<11 then
+		if beta and beta < 11 then
 			vermismatch()
 		end
 	elseif jit.version_num < 20000 then
@@ -58,14 +58,14 @@ function onPlayerDespawn(player)
 	hooks:call('onPlayerDespawn', player)
 	local world = worlds[player.worldName]
 	world.players = world.players - 1
-	if world.players==0 then
+	if world.players == 0 then
 		world.emptyfrom = CTIME
 	end
 end
 
 function onPlayerDestroy(player)
 	local msg = printf(MESG_DISCONN, player:getName(), player.leavereason)
-	newChatMessage('&e'..msg)
+	newChatMessage('&e' + msg)
 	cpe:extCallHook('onPlayerDestroy', player)
 	hooks:call('onPlayerDestroy', player)
 	if player.handshaked then
@@ -84,7 +84,7 @@ end
 
 function onPlayerHandshakeDone(player)
 	local msg = printf(MESG_CONN, player:getName())
-	newChatMessage(msg)
+	newChatMessage('&e' + msg)
 end
 
 function onPlayerChatMessage(player, message)
@@ -106,12 +106,12 @@ function onPlayerChatMessage(player, message)
 			end
 			local chunk, err = loadstring(code)
 			if chunk then
-				world = worlds[player.worldName]
+				world = getWorld(player)
 				self = player
 				local ret = {pcall(chunk)}
 				self = nil
 				world = nil
-				for i=2,#ret do
+				for i=2, #ret do
 					ret[i] = tostring(ret[i])
 				end
 				if ret[1] then
@@ -131,14 +131,14 @@ function onPlayerChatMessage(player, message)
 		end
 	elseif starts == '/'then
 		local args = message:split(' ')
-		if #args>0 then
+		if #args > 0 then
 			local cmd = table.remove(args, 1):sub(2)
 			cmd = cmd:lower()
 			local cmf = commands[cmd]
 			if cmf then
-				if player:checkPermission('commands.'+cmd)then
+				if player:checkPermission('commands.' + cmd)then
 					local out = cmf(player, unpack(args))
-					if out~= nil then
+					if out ~= nil then
 						player:sendMessage(out)
 					end
 				end
@@ -156,9 +156,9 @@ function onPlayerChatMessage(player, message)
 			end
 		end
 	elseif starts == '!'then -- Message to global chat
-		newChatMessage(player:getName()+': '+message:sub(2))
+		newChatMessage(player:getName() + ': '+message:sub(2))
 	else -- Message to local chat
-		local cmsg = player:getName()+': '+message
+		local cmsg = player:getName() + ': ' + message
 		playersForEach(function(ply)
 			if ply:isInWorld(player)then
 				ply:sendMessage(cmsg)

@@ -75,8 +75,8 @@ function config:parse()
 	for line in f:lines()do
 		local key, value = line:match'(.*)=(.*)'
 		if key then
-			if value=='true'or value=='false'then
-				value = (value=='true')
+			if value == 'true'or value == 'false'then
+				value = (value == 'true')
 			end
 			value = tonumber(value)or value
 			local typ = self.types[key]
