@@ -614,14 +614,12 @@ end
 
 local lanelibs = 'math,ffi'
 
--- Main
 return function(world, seed)
 	log.debug('DefaultGenerator: START')
 	seed = seed or (os.clock()*os.time())
 	local dx, dy, dz = world:getDimensions()
 	math.randomseed(seed)
 
-	-- Generate map
 	biomesGenerate(dx, dz)
 
 	heightSet(dy)
@@ -645,7 +643,6 @@ return function(world, seed)
 	end
 	watchThreads(threads)
 
-	-- ores
 	if GEN_ENABLE_ORES then
 		local ores_gen = lanes.gen(lanelibs, generateOre)
 		table.insert(threads, ores_gen(mapaddr, dx, dy, dz))
@@ -656,7 +653,6 @@ return function(world, seed)
 		watchThreads(threads)
 	end
 
-	-- trees
 	if GEN_ENABLE_TREES then
 		local trees_gen = lanes.gen(lanelibs, generateTrees)
 		table.insert(threads, trees_gen(mapaddr, dx, dy, dz, seed))
@@ -667,7 +663,6 @@ return function(world, seed)
 		watchThreads(threads)
 	end
 
-	-- houses
 	if GEN_ENABLE_HOUSES then
 		local houses_gen = lanes.gen(lanelibs, generateHouse)
 		table.insert(threads, houses_gen(mapaddr, dx, dy, dz))

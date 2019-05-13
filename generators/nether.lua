@@ -266,7 +266,6 @@ local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightLava, startX,
 	end
 end
 
--- Main
 return function(world, seed)
 	seed = seed or (os.clock()*os.time())
 	local dx, dy, dz = world:getDimensions()
@@ -277,7 +276,6 @@ return function(world, seed)
 	ffi.fill(world.ldata + 4, dx * dz, 7)
 	ffi.fill(world.ldata + 4 + dx * dz * (dy - 1), dx * dz, 7)
 
-	-- Generate map
 	biomsGenerate(dx, dz)
 
 	heightSet(dy)

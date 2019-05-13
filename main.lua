@@ -89,11 +89,11 @@ end
 
 function onPlayerChatMessage(player, message)
 	local prt = hooks:call('onPlayerChat', player, message)
-	if prt~=nil then
+	if prt ~= nil then
 		message = tostring(prt)
 	end
 	local starts = message:sub(1,1)
-	if not message:startsWith('#','>','/')then
+	if not message:startsWith('#', '>', '/')then
 		message = message:gsub('%%(%x)','&%1')
 	end
 	log.chat(('%s: %s'):format(player, message))
@@ -101,7 +101,7 @@ function onPlayerChatMessage(player, message)
 	if starts == '#'then
 		if player:checkPermission('server.luaexec')then
 			local code = message:sub(2)
-			if code:sub(1,1)=='='then
+			if code:sub(1,1) == '='then
 				code = 'return '..code:sub(2)
 			end
 			local chunk, err = loadstring(code)

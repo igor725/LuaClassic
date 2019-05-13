@@ -4,16 +4,6 @@ ffi.cdef[[
 	typedef unsigned char uchar;
 
 	typedef struct {
-		char *fpos;
-		void *base;
-		unsigned short handle;
-		short flags;
-		short unget;
-		unsigned long alloc;
-		unsigned short buffincrement;
-	} FILE;
-
-	typedef struct {
 		uchar r;
 		uchar g;
 		uchar b;
@@ -28,9 +18,9 @@ ffi.cdef[[
 		float pitch;
 	} angle;
 
-	size_t fread(const void * ptr, size_t size, size_t count, FILE *stream);
-	size_t fwrite(const void * ptr, size_t size, size_t count, FILE *stream);
-	int    ferror(FILE *stream);
+	size_t fread(const void* ptr, size_t size, size_t count, void* stream);
+	size_t fwrite(const void* ptr, size_t size, size_t count, void* stream);
+	int    ferror(void* stream);
 ]]
 
 local ext = (jit.os=='Windows'and'dll')or'so'
