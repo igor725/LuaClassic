@@ -12,9 +12,10 @@ return function(player, x, y, z, mode, id)
 	if cblock ~= id then
 		if not onPlayerPlaceBlock(player, x, y, z, id)then
 			world:setBlock(x, y, z, id)
-			broadcast(generatePacket(0x06, x, y, z, id))
 		else
 			player:sendPacket(false, 0x06, x, y, z, cblock)
+			return
 		end
+		postPlayerPlaceBlock(player, x, y, z, id)
 	end
 end

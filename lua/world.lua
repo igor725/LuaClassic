@@ -19,7 +19,7 @@ end
 
 local function delayedWaterCreate(world, sx, sy, sz, x, y, z)
 	local dst = distance(sx, sz, x, z)
-	if dst < 30 then
+	if dst < 25 then
 		timer.Simple(.2, function()
 			if world:getBlock(x, y, z) == 0 then
 				world:setBlock(x, y, z, 8)
@@ -246,10 +246,11 @@ local world_mt = {
 			x, y, z = sx, sy, sz
 		end
 		local id = self:getBlock(x, y, z)
-		if id == 8 then
-			if self:getBlock(x, y - 1, z) == 0 then
+		if id == 8 or id == 9 then
+			local under = self:getBlock(x, y - 1, z)
+			if under == 0 then
 				delayedWaterCreate(self, sx, sy, sz, x, y - 1, z)
-			else
+			elseif under ~= 8 and under ~= 9 then
 				if self:getBlock(x + 1, y, z) == 0 then
 					delayedWaterCreate(self, sx, sy, sz, x + 1, y, z)
 				end
