@@ -34,14 +34,14 @@ HCOLORS[47] = HCOLORS[5]
 
 ffi.cdef[[
 	typedef void (*func)(void*,const char*);
-	void png_init_io(void*,void*);
-	void png_set_IHDR(void*,void*,uint32_t,uint32_t,int,int,int,int,int);
-	void *png_create_write_struct(const char*,void*,func,func);
-	void png_destroy_write_struct(void*,void*);
-	void *png_create_info_struct(void*);
-	void png_write_info(void*,void*);
-	void png_write_row(void*,const char*);
-	void png_write_end(void*,void*);
+	void  png_init_io(void*,void*);
+	void  png_set_IHDR(void*,void*,uint32_t,uint32_t,int,int,int,int,int);
+	void* png_create_write_struct(const char*,void*,func,func);
+	void  png_destroy_write_struct(void*,void*);
+	void* png_create_info_struct(void*);
+	void  png_write_info(void*,void*);
+	void  png_write_row(void*,const char*);
+	void  png_write_end(void*,void*);
 ]]
 local PNG_VER = '1.5.0'
 local PNG_ERR
