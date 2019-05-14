@@ -132,8 +132,9 @@ local function getLayerMultiplier(layer, x, z)
 end
 
 -- Generate
-local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightLava, startX, endX, layers)
+local function threadTerrain(mapaddr, dx, dy, dz, startX, endX, seed)
 	set_debug_threadname('TerrainGenerator')
+	math.randomseed(seed)
 
 	local map = ffi.cast('char*', mapaddr)
 	local size = dx * dy * dz + 4
@@ -267,10 +268,9 @@ local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightLava, startX,
 end
 
 return function(world, seed)
-	seed = seed or (os.clock()*os.time())
 	local dx, dy, dz = world:getDimensions()
+	seed = seed or (os.clock()*os.time())
 	dy = math.min(dy, 128)
-
 	math.randomseed(seed)
 
 	ffi.fill(world.ldata + 4, dx * dz, 7)
@@ -287,13 +287,14 @@ return function(world, seed)
 
 	local threads = {}
 
+	local terrain_gen = lanes.gen('math,ffi', threadTerrain)
 	local count = config:get('generator-threads-count')
+
 	for i = 0, count-1 do
 		startX = math.floor(dx * i / count)
 		endX = math.floor(dx * (i + 1) / count) - 1
 
-		local terrain_gen = lanes.gen('math,ffi', threadTerrain)
-		table.insert(threads, terrain_gen(mapaddr, dx, dy, dz, heightMap, heightLava, startX, endX, layers))
+		table.insert(threads, terrain_gen(mapaddr, dx, dy, dz, startX, endX, seed + i))
 	end
 
 	watchThreads(threads)
