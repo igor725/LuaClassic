@@ -241,7 +241,7 @@ function wsDoHandshake()
 
 		if data.state == 'initial'then
 			local req = cl:receive()
-			if req and req:find('GET%s(.+)%sHTTP/1.1')then
+			if req and req:lower():find('get%s*(.+)%s*http/1.1')then
 				data.state = 'headers'
 			else
 				data.state = 'badrequest'
@@ -252,8 +252,10 @@ function wsDoHandshake()
 			if ln == ''then
 				data.state = 'genresp'
 			elseif ln then
-				local k, v = ln:match('(.+):%s(.+)')
+				local k, v = ln:match('(.+)%s*:%s*(.+)')
 				if k then
+					k = k:lower()
+					v = v:lower()
 					data.headers[k] = v
 				else
 					data.state = 'badrequest'
@@ -262,14 +264,14 @@ function wsDoHandshake()
 			end
 		elseif data.state == 'genresp'then
 			local hdr = data.headers
-			local wskey = hdr['Sec-WebSocket-Key']
-			local wsver = hdr['Sec-WebSocket-Version']
-			local conn = hdr['Connection']
-			local upgrd = hdr['Upgrade']
+			local wskey = hdr['sec-websocket-key']
+			local wsver = hdr['sec-websocket-version']
+			local conn = hdr['connection']
+			local upgrd = hdr['upgrade']
 
 			if upgrd and wskey and conn and
-			upgrd:lower()=='websocket'and
-			conn:lower():find('upgrade')and
+			upgrd == 'websocket'and
+			conn:find('upgrade')and
 			tonumber(wsver) == 13 then
 				wskey = wskey + WSGUID
 				wskey = b64enc(sha1(wskey))
@@ -287,6 +289,7 @@ function wsDoHandshake()
 			local msg = data.emsg or MESG_NOTWSCONN
 			local response =
 			('HTTP/1.1 400 Bad request\r\n' +
+			'Content-Type: text/plain; charset=utf-8\r\n' +
 			'Content-Length: %d\r\n\r\nBad request: %s')
 			:format(#msg + 13, msg)
 			cl:send(response)
