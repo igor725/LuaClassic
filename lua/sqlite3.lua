@@ -4,7 +4,7 @@ sql = {
 	db = DB
 }
 
-function sql.createPlayer(key)
+function sql:createPlayer(key)
 	local created = false
 	local sql = ([[
 		SELECT pkey FROM players WHERE pkey=%q;
@@ -25,7 +25,7 @@ function sql.createPlayer(key)
 	return true
 end
 
-function sql.addColumn(col, type)
+function sql:addColumn(col, type)
 	local sql = ([[
 		ALTER TABLE players ADD %s %s;
 	]]):format(col, type)
@@ -42,7 +42,7 @@ function sql.addColumn(col, type)
 	end
 end
 
-function sql.getData(pkey, rows)
+function sql:getData(pkey, rows)
 	local sql = ('SELECT %s FROM players WHERE pkey=%q'):format(rows, pkey)
 	for row in DB:nrows(sql)do
 		local _, c = rows:gsub(',','')
@@ -54,7 +54,7 @@ function sql.getData(pkey, rows)
 	end
 end
 
-function sql.insertData(pkey, rows, values)
+function sql:insertData(pkey, rows, values)
 	local dat = ''
 	if #rows ~= #values then
 		return false
@@ -75,11 +75,11 @@ function sql.insertData(pkey, rows, values)
 	return true
 end
 
-function sql.close()
+function sql:close()
 	return DB:close()
 end
 
-function sql.init()
+function sql:init()
 	local ecode = DB:exec[[
 	CREATE TABLE IF NOT EXISTS players (
 			id                     INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,8 +96,8 @@ function sql.init()
 	if ecode ~= sqlite3.OK then
 		error(DB:errmsg())
 	else
-		assert(sql.addColumn('onlineTime', 'INTEGER default 0'))
-		assert(sql.addColumn('lastIP', 'VARCHAR(15) NOT NULL default "0.0.0.0"'))
+		assert(self:addColumn('onlineTime', 'INTEGER default 0'))
+		assert(self:addColumn('lastIP', 'VARCHAR(15) NOT NULL default "0.0.0.0"'))
 	end
 	return true
 end

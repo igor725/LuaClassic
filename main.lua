@@ -77,7 +77,7 @@ function onPlayerDestroy(player)
 			otime = floor(player.lastOnlineTime + (CTIME - player.connectTime))
 		end
 		if x and world and otime then
-			assert(sql.insertData(player:getVeriKey(), {'spawnX', 'spawnY', 'spawnZ', 'spawnYaw', 'spawnPitch', 'lastWorld', 'onlineTime'}, {x, y, z, ay, ap, world, otime}))
+			assert(sql:insertData(player:getVeriKey(), {'spawnX', 'spawnY', 'spawnZ', 'spawnYaw', 'spawnPitch', 'lastWorld', 'onlineTime'}, {x, y, z, ay, ap, world, otime}))
 		end
 	end
 end
@@ -252,7 +252,7 @@ function wsDoHandshake()
 
 		if data.state == 'initial'then
 			local req = cl:receive()
-			if req and req:find('GET%s(.+)%sHTTP/1.1')then
+			if req and req:lower():find('get%s*(.+)%s*http/1.1')then
 				data.state = 'headers'
 			else
 				data.state = 'badrequest'
@@ -263,8 +263,10 @@ function wsDoHandshake()
 			if ln == ''then
 				data.state = 'genresp'
 			elseif ln then
-				local k, v = ln:match('(.+):%s(.+)')
+				local k, v = ln:match('(.+)%s*:%s*(.+)')
 				if k then
+					k = k:lower()
+					v = v:lower()
 					data.headers[k] = v
 				else
 					data.state = 'badrequest'
@@ -273,14 +275,14 @@ function wsDoHandshake()
 			end
 		elseif data.state == 'genresp'then
 			local hdr = data.headers
-			local wskey = hdr['Sec-WebSocket-Key']
-			local wsver = hdr['Sec-WebSocket-Version']
-			local conn = hdr['Connection']
-			local upgrd = hdr['Upgrade']
+			local wskey = hdr['sec-websocket-key']
+			local wsver = hdr['sec-websocket-version']
+			local conn = hdr['connection']
+			local upgrd = hdr['upgrade']
 
 			if upgrd and wskey and conn and
-			upgrd:lower()=='websocket'and
-			conn:lower():find('upgrade')and
+			upgrd == 'websocket'and
+			conn:find('upgrade')and
 			tonumber(wsver) == 13 then
 				wskey = wskey + WSGUID
 				wskey = b64enc(sha1(wskey))
@@ -298,6 +300,7 @@ function wsDoHandshake()
 			local msg = data.emsg or MESG_NOTWSCONN
 			local response =
 			('HTTP/1.1 400 Bad request\r\n' +
+			'Content-Type: text/plain; charset=utf-8\r\n' +
 			'Content-Length: %d\r\n\r\nBad request: %s')
 			:format(#msg + 13, msg)
 			cl:send(response)
@@ -399,7 +402,7 @@ function init()
 	permissions:parse()
 	config:parse()
 	cpe:init()
-	sql.init()
+	sql:init()
 
 	uwa = config:get('unload-world-after')
 	local ip = config:get('server-ip')
@@ -432,7 +435,7 @@ function init()
 		wn = wn:lower()
 		local st = socket.gettime()
 		local world
-		local lvlh = io.open('worlds/'+wn+'.map', 'rb')
+		local lvlh = io.open('worlds/' + wn + '.map', 'rb')
 		if lvlh then
 			world = newWorld(lvlh, wn)
 		else
@@ -536,7 +539,7 @@ if INITED then
 	end
 end
 
-if sql then sql.close()end
+if sql then sql:close()end
 if server then server:close()end
 if wsServer then wsServer:close()end
 

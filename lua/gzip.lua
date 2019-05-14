@@ -1,6 +1,6 @@
 ffi.cdef[[
-typedef void*    (* z_alloc_func)( void* opaque, unsigned items, unsigned size );
-typedef void     (* z_free_func) ( void* opaque, void* address );
+typedef void* (* z_alloc_func) (void*, unsigned, unsigned);
+typedef void  (* z_free_func)  (void*, void*);
 typedef struct z_stream_s {
 	char*         next_in;
 	unsigned      avail_in;
@@ -17,15 +17,15 @@ typedef struct z_stream_s {
 	unsigned long adler;
 	unsigned long reserved;
 } z_stream;
-const char*   zlibVersion();
-const char*   zError(int);
-int deflate(z_stream*, int flush);
-int inflate(z_stream*, int flush);
-int inflateEnd(z_stream*);
-int deflateEnd(z_stream*);
-int deflateInit2_(z_stream*, int level, int method, int windowBits,
-	int memLevel, int strategy, const char *version, int stream_size);
-int inflateInit2_(z_stream*, int windowBits, const char *version, int stream_size);
+
+const char* zlibVersion();
+const char* zError(int);
+int         inflateEnd(z_stream*);
+int         deflateEnd(z_stream*);
+int         deflate(z_stream*, int);
+int         inflate(z_stream*, int);
+int         inflateInit2_(z_stream*, int, const char *, int);
+int         deflateInit2_(z_stream*, int, int, int, int, int, const char *, int);
 ]]
 
 local Z_NO_FLUSH         =  0
@@ -41,7 +41,7 @@ local GZ_WINDOWBITS      = 31
 local CHUNK_SIZE         = 1024
 local GZ_ERR             = 'gzip %s error: %s'
 
-local zLoaded, _zlib = pcall(ffi.load,'z')
+local zLoaded, _zlib = pcall(ffi.load, 'z')
 if not zLoaded then
 	local ext = (jit.os=='Windows'and'dll')or'so'
 	local path = ('./bin/%s/z.%s'):format(jit.arch, ext)
@@ -49,8 +49,8 @@ if not zLoaded then
 end
 
 local Z_VER = _zlib.zlibVersion()
-local outbuff = ffi.new('char[?]',CHUNK_SIZE)
-local inbuff = ffi.new('char[?]',CHUNK_SIZE)
+local outbuff = ffi.new('char[?]', CHUNK_SIZE)
+local inbuff = ffi.new('char[?]', CHUNK_SIZE)
 
 local function gzerr(i,e)
 	print((GZ_ERR):format(i, e))
@@ -72,11 +72,11 @@ local function deflate(_in, len, level, callback)
 	level = level or 4
 	local stream = ffi.new('z_stream')
 	local streamsz = ffi.sizeof(stream)
-	local ret =  _zlib.deflateInit2_(stream,level,Z_DEFLATED,GZ_WINDOWBITS,Z_MEMLEVEL,Z_DEFAULT_STRATEGY,Z_VER,streamsz)
+	local ret = _zlib.deflateInit2_(stream, level, Z_DEFLATED, GZ_WINDOWBITS, Z_MEMLEVEL, Z_DEFAULT_STRATEGY, Z_VER, streamsz)
 
 	if ret ~= Z_OK then
-		defstreamend(stream)
 		local err = gzerrstr(ret)
+		defstreamend(stream)
 		gzerr('init', err)
 		return false, err
 	end
@@ -104,12 +104,12 @@ end
 
 local function inflate(file, callback)
 	local stream = ffi.new('z_stream')
-	local ret = _zlib.inflateInit2_(stream,GZ_WINDOWBITS,Z_VER,ffi.sizeof('z_stream'))
+	local ret = _zlib.inflateInit2_(stream, GZ_WINDOWBITS, Z_VER, ffi.sizeof('z_stream'))
 
 	if ret ~= Z_OK then
 		local err = gzerrstr(ret)
-		gzerr('init', err)
 		infstreamend(stream)
+		gzerr('init', err)
 		return false, err
 	end
 
@@ -139,13 +139,14 @@ local function inflate(file, callback)
 			callback(outbuff, stream)
 		until stream.avail_out ~= 0
 	until ret == Z_STREAM_END
-
 	infstreamend(stream)
+
 	return true
 end
 
 gz = {
 	compress = deflate,
 	decompress = inflate,
-	defEnd = defstreamend
+	defEnd = defstreamend,
+	infEnd = infstreamend
 }
