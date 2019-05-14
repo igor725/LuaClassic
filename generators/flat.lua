@@ -1,7 +1,7 @@
 return function(world, seed)
 	local dx, dy, dz = world:getDimensions()
 	local data = world.ldata
-	local flr = dz*dx
+	local flr = dz * dx
 	local sz = flr * (dy / 4 - 2)
 	ffi.fill(data + 4, flr, 7)
 	ffi.fill(data + flr + 4, sz, 3)

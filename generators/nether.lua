@@ -10,15 +10,9 @@ local biomes
 local function biomsGenerate(dx, dz)
 	biomes = {}
 
-	-- 1	normal
-	-- 2	high
-	-- 3	trees
-	-- 4	sand
-	-- 5	water
-
 	-- Circles
-	local biomesSizeX = math.floor(dx / GEN_BIOME_STEP + 1)
-	local biomesSizeZ = math.floor(dz / GEN_BIOME_STEP + 1)
+	local biomesSizeX = math.ceil(dx / GEN_BIOME_STEP)
+	local biomesSizeZ = math.ceil(dz / GEN_BIOME_STEP)
 	for x = 0, biomesSizeX do
 		biomes[x] = {}
 		for z = 0, biomesSizeZ do
@@ -39,7 +33,7 @@ local function biomsGenerate(dx, dz)
 		for dx = -GEN_BIOME_RADIUS, GEN_BIOME_RADIUS do
 			for dz = -GEN_BIOME_RADIUS, GEN_BIOME_RADIUS do
 				if
-				dx*dx + dz*dz < radius2
+				dx * dx + dz * dz < radius2
 				and biomes[x + dx] ~= nil and biomes[x + dx][z + dz] ~= nil
 				then
 					biomes[x + dx][z + dz] = biome
@@ -50,11 +44,11 @@ local function biomsGenerate(dx, dz)
 end
 
 local function getBiome(x, z)
-	return biomes[math.floor(x/GEN_BIOME_STEP)][math.floor(z/GEN_BIOME_STEP)]
+	return biomes[math.floor(x / GEN_BIOME_STEP)][math.floor(z / GEN_BIOME_STEP)]
 end
 
 local function heightSet(dy)
-	heightGrass = 7 --dy / 10
+	heightGrass = 7
 	heightLava = heightGrass
 	heightLava = 7
 end
@@ -70,13 +64,13 @@ local function heightMapGenerate(dx, dz)
 end
 
 local function getHeight(x, z)
-	local hx, hz = math.floor(x/GEN_BIOME_STEP), math.floor(z/GEN_BIOME_STEP)
+	local hx, hz = math.floor(x / GEN_BIOME_STEP), math.floor(z / GEN_BIOME_STEP)
 	local percentX = x / GEN_BIOME_STEP - hx
 	local percentZ = z / GEN_BIOME_STEP - hz
 
 	return math.floor(
-		  (heightMap[hx][hz  ] * (1 - percentX) + heightMap[hx+1][hz  ] * percentX) * (1 - percentZ)
-		+ (heightMap[hx][hz+1] * (1 - percentX) + heightMap[hx+1][hz+1] * percentX) * percentZ
+		  (heightMap[hx][hz  ] * (1 - percentX) + heightMap[hx + 1][hz  ] * percentX) * (1 - percentZ)
+		+ (heightMap[hx][hz + 1] * (1 - percentX) + heightMap[hx + 1][hz + 1] * percentX) * percentZ
 		+ 0.5
 	)
 end
@@ -90,8 +84,8 @@ local function layersGenerate(dx, dy, dz)
 		layers[layer] = {}
 
 		-- Circles
-		local biomesSizeX = math.floor(dx / GEN_BIOME_STEP + 1)
-		local biomesSizeZ = math.floor(dz / GEN_BIOME_STEP + 1)
+		local biomesSizeX = math.ceil(dx / GEN_BIOME_STEP)
+		local biomesSizeZ = math.ceil(dz / GEN_BIOME_STEP)
 		for x = 0, biomesSizeX do
 			layers[layer][x] = {}
 			for z = 0, biomesSizeZ do
@@ -123,43 +117,35 @@ local function layersGenerate(dx, dy, dz)
 end
 
 local function getLayerMultiplier(layer, x, z)
-	local hx, hz = math.floor(x/GEN_BIOME_STEP), math.floor(z/GEN_BIOME_STEP)
+	local hx, hz = math.floor(x / GEN_BIOME_STEP), math.floor(z / GEN_BIOME_STEP)
 	local percentX = x / GEN_BIOME_STEP - hx
 	local percentZ = z / GEN_BIOME_STEP - hz
 
-	return (layers[layer][hx][hz  ] * (1 - percentX) + layers[layer][hx+1][hz  ] * percentX) * (1 - percentZ)
-		+ (layers[layer][hx][hz+1] * (1 - percentX) + layers[layer][hx+1][hz+1] * percentX) * percentZ
+	return (layers[layer][hx][hz  ] * (1 - percentX) + layers[layer][hx + 1][hz  ] * percentX) * (1 - percentZ)
+		+ (layers[layer][hx][hz + 1] * (1 - percentX) + layers[layer][hx + 1][hz + 1] * percentX) * percentZ
 end
 
 -- Generate
-local function threadTerrain(mapaddr, dx, dy, dz, startX, endX, seed)
+local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightLava, startX, endX, layers)
 	set_debug_threadname('TerrainGenerator')
-	math.randomseed(seed)
 
 	local map = ffi.cast('char*', mapaddr)
 	local size = dx * dy * dz + 4
 
-	--local GEN_BIOME_STEP = 20
-
 	local SetBlock = function(x, y, z, id)
-		--[[local offset = math.floor(z * dx + y * (dx * dz) + x + 4)
-		if offset < size then -- <=
-			map[offset] = id
-		end]]--
-		--map[y * dz * dx + z * dx + x + 4] = id
 		map[(y * dz + z) * dx + x + 4] = id
 	end
 
 	local height1, biome
 	local offsetX, offsetY
 	for x = startX, endX do
-		local hx = math.floor(x/GEN_BIOME_STEP)
+		local hx = math.floor(x / GEN_BIOME_STEP)
 		local percentPosX = x / GEN_BIOME_STEP - hx
 		local percentNegX = 1 - percentPosX
 
 		local biomePosX = math.floor(x/GEN_BIOME_STEP)
 		local b0 = biomes[biomePosX]
-		local b1 = biomes[biomePosX+1]
+		local b1 = biomes[biomePosX + 1]
 		local biomePosZOld = nil
 		local b00 = nil
 		local b01 = b0[0]
@@ -167,17 +153,16 @@ local function threadTerrain(mapaddr, dx, dy, dz, startX, endX, seed)
 		local b11 = b1[0]
 
 		for z = 0, dz - 1 do
-			local hz = math.floor(z/GEN_BIOME_STEP)
+			local hz = math.floor(z / GEN_BIOME_STEP)
 			local percentZ = z / GEN_BIOME_STEP - hz
 
 			height1 = math.floor(
-				  (heightMap[hx][hz  ] * percentNegX + heightMap[hx+1][hz  ] * percentPosX) * (1 - percentZ)
-				+ (heightMap[hx][hz+1] * percentNegX + heightMap[hx+1][hz+1] * percentPosX) * percentZ
+				  (heightMap[hx][hz  ] * percentNegX + heightMap[hx + 1][hz  ] * percentPosX) * (1 - percentZ)
+				+ (heightMap[hx][hz + 1] * percentNegX + heightMap[hx + 1][hz + 1] * percentPosX) * percentZ
 				+ 0.5
 			)
 
-			-- Biom depend
-			local biomePosZ = math.floor(z/GEN_BIOME_STEP)
+			local biomePosZ = math.floor(z / GEN_BIOME_STEP)
 			if biomePosZ ~= biomePosZOld then
 				biomePosZOld = biomePosZ
 				b00 = b01
@@ -196,7 +181,7 @@ local function threadTerrain(mapaddr, dx, dy, dz, startX, endX, seed)
 
 			-- angle around 01
 			elseif b00 == b11 and b00 == b10 then
-				if percentPosX * percentPosX + (1 - percentZ)^2 > 0.25 then
+				if percentPosX * percentPosX + (1 - percentZ) ^ 2 > 0.25 then
 					biome = b00
 				else
 					biome = b01
@@ -217,15 +202,13 @@ local function threadTerrain(mapaddr, dx, dy, dz, startX, endX, seed)
 				else
 					biome = b11
 				end
-
-			-- else
 			else
-				biome = biomes[math.floor(x / GEN_BIOME_STEP + 0.5)][math.floor(z / GEN_BIOME_STEP + 0.5)]
+				biome = biomes[math.ceil(x / GEN_BIOME_STEP)][math.ceil(z / GEN_BIOME_STEP)]
 				--biome = getBiome(x + GEN_BIOME_STEP / 2, z + GEN_BIOME_STEP / 2)
 			end
 
 			local block = 4
-			-- normal or trees
+
 			if biome == 1 then
 				block = 45
 			elseif biome == 2 then
@@ -236,6 +219,7 @@ local function threadTerrain(mapaddr, dx, dy, dz, startX, endX, seed)
 
 			local offset = z * dx + x + 4
 			local step = dz * dx
+
 			for y = 1, height1 do
 				map[offset + y * step] = block
 			end
@@ -257,7 +241,7 @@ local function threadTerrain(mapaddr, dx, dy, dz, startX, endX, seed)
 					local layerHeight = dy * layer / (#layers + 1)
 					local height2 = (height1 - heightGrass) / 2 * multiplier
 					for y = math.floor(layerHeight - height2 + 1), layerHeight + height2 do
-						if 1 < y and y < dy-1 then
+						if 1 < y and y < dy - 1 then
 							map[offset + y * step] = 45
 						end
 					end
@@ -268,9 +252,10 @@ local function threadTerrain(mapaddr, dx, dy, dz, startX, endX, seed)
 end
 
 return function(world, seed)
-	local dx, dy, dz = world:getDimensions()
 	seed = seed or (os.clock()*os.time())
+	local dx, dy, dz = world:getDimensions()
 	dy = math.min(dy, 128)
+
 	math.randomseed(seed)
 
 	ffi.fill(world.ldata + 4, dx * dz, 7)
@@ -287,14 +272,13 @@ return function(world, seed)
 
 	local threads = {}
 
-	local terrain_gen = lanes.gen('math,ffi', threadTerrain)
 	local count = config:get('generator-threads-count')
-
-	for i = 0, count-1 do
+	for i = 0, count - 1 do
 		startX = math.floor(dx * i / count)
 		endX = math.floor(dx * (i + 1) / count) - 1
 
-		table.insert(threads, terrain_gen(mapaddr, dx, dy, dz, startX, endX, seed + i))
+		local terrain_gen = lanes.gen('math,ffi', threadTerrain)
+		table.insert(threads, terrain_gen(mapaddr, dx, dy, dz, heightMap, heightLava, startX, endX, layers))
 	end
 
 	watchThreads(threads)
@@ -310,7 +294,7 @@ return function(world, seed)
 		end
 	end
 
-	world:setSpawn(x, y+2, z)
+	world:setSpawn(x, y + 2, z)
 	world:setEnvProp(MEP_SIDESBLOCK, 0)
 	world:setEnvProp(MEP_EDGEBLOCK, 11)
 	world:setEnvProp(MEP_EDGELEVEL, heightLava + 1)
