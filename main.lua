@@ -77,7 +77,7 @@ function onPlayerDestroy(player)
 			otime = floor(player.lastOnlineTime + (CTIME - player.connectTime))
 		end
 		if x and world and otime then
-			assert(sql.insertData(player:getVeriKey(), {'spawnX', 'spawnY', 'spawnZ', 'spawnYaw', 'spawnPitch', 'lastWorld', 'onlineTime'}, {x, y, z, ay, ap, world, otime}))
+			assert(sql:insertData(player:getVeriKey(), {'spawnX', 'spawnY', 'spawnZ', 'spawnYaw', 'spawnPitch', 'lastWorld', 'onlineTime'}, {x, y, z, ay, ap, world, otime}))
 		end
 	end
 end
@@ -391,7 +391,7 @@ function init()
 	permissions:parse()
 	config:parse()
 	cpe:init()
-	sql.init()
+	sql:init()
 
 	uwa = config:get('unload-world-after')
 	local ip = config:get('server-ip')
@@ -424,7 +424,7 @@ function init()
 		wn = wn:lower()
 		local st = socket.gettime()
 		local world
-		local lvlh = io.open('worlds/'+wn+'.map', 'rb')
+		local lvlh = io.open('worlds/' + wn + '.map', 'rb')
 		if lvlh then
 			world = newWorld(lvlh, wn)
 		else
@@ -528,7 +528,7 @@ if INITED then
 	end
 end
 
-if sql then sql.close()end
+if sql then sql:close()end
 if server then server:close()end
 if wsServer then wsServer:close()end
 

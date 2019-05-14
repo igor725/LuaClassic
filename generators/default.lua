@@ -139,8 +139,9 @@ local function getHeight(x, z)
 end
 
 -- Generate
-local function threadTerrain(mapaddr, dx, dy, dz, startX, endX)
+local function threadTerrain(mapaddr, dx, dy, dz, startX, endX, seed)
 	set_debug_threadname('TerrainGenerator')
+	math.randomseed(seed)
 
 	local map = ffi.cast('char*', mapaddr)
 	local size = dx * dy * dz + 4
@@ -318,8 +319,9 @@ local function threadTerrain(mapaddr, dx, dy, dz, startX, endX)
 	end
 end
 
-local function generateTrees(mapaddr, dx, dy, dz)
+local function generateTrees(mapaddr, dx, dy, dz, seed)
 	set_debug_threadname('TreesGenerator')
+	math.randomseed(seed)
 
 	local map = ffi.cast('char*', mapaddr)
 	local size = dx * dy * dz + 4
@@ -408,8 +410,9 @@ local function generateTrees(mapaddr, dx, dy, dz)
 	end
 end
 
-local function generateHouse(mapaddr, dimx, dimy, dimz)
+local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 	set_debug_threadname('HousesGenerator')
+	math.randomseed(seed)
 
 	local map = ffi.cast('char*', mapaddr)
 	local size = dimx * dimy * dimz + 4
@@ -510,8 +513,9 @@ local function generateHouse(mapaddr, dimx, dimy, dimz)
 	end
 end
 
-local function generateOre(mapaddr, dimx, dimy, dimz)
+local function generateOre(mapaddr, dimx, dimy, dimz, seed)
 	set_debug_threadname('OreGenerator')
+	math.randomseed(seed)
 
 	local map = ffi.cast('char*', mapaddr)
 	local size = dimx * dimy * dimz + 4
@@ -543,8 +547,9 @@ local function generateOre(mapaddr, dimx, dimy, dimz)
 	end
 end
 
-local function generateCaves(mapaddr, dimx, dimy, dimz)
+local function generateCaves(mapaddr, dimx, dimy, dimz, seed)
 	set_debug_threadname('CavesGenerator')
+	math.randomseed(seed)
 
 	local map = ffi.cast('char*', mapaddr)
 	local size = dimx * dimy * dimz + 4
@@ -638,14 +643,14 @@ return function(world, seed)
 		startX = math.floor(dx * i / thlimit)
 		endX = math.floor(dx * (i + 1) / thlimit) - 1
 
-		table.insert(threads, terrain_gen(mapaddr, dx, dy, dz, startX, endX))
+		table.insert(threads, terrain_gen(mapaddr, dx, dy, dz, startX, endX, seed + i))
 		log.debug(('TerrainGenerator: #%d thread spawned'):format(#threads))
 	end
 	watchThreads(threads)
 
 	if GEN_ENABLE_ORES then
 		local ores_gen = lanes.gen(lanelibs, generateOre)
-		table.insert(threads, ores_gen(mapaddr, dx, dy, dz))
+		table.insert(threads, ores_gen(mapaddr, dx, dy, dz, seed))
 		log.debug('OresGenerator: started')
 	end
 
@@ -665,7 +670,7 @@ return function(world, seed)
 
 	if GEN_ENABLE_HOUSES then
 		local houses_gen = lanes.gen(lanelibs, generateHouse)
-		table.insert(threads, houses_gen(mapaddr, dx, dy, dz))
+		table.insert(threads, houses_gen(mapaddr, dx, dy, dz, seed))
 		log.debug('HousesGenerator: started')
 	end
 
@@ -673,11 +678,12 @@ return function(world, seed)
 
 	if GEN_ENABLE_CAVES then
 		log.debug('CavesGenerator: started')
-		local caves_gen = lanes.gen(lanelibs, generateCaves)
 
+		local caves_gen = lanes.gen(lanelibs, generateCaves)
 		local CAVES_COUNT = dx * dy * dz / 700000
+
 		for i = 1, CAVES_COUNT do
-			if i%thlimit == 0 then
+			if i % thlimit == 0 then
 				watchThreads(threads)
 				log.debug(('CaveGenerator: %d threads done'):format(thlimit))
 			end

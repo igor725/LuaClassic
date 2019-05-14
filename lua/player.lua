@@ -255,15 +255,15 @@ local player_mt = {
 				self:kick(KICK_NAMETAKEN)
 				return
 			end
-			if not sql.createPlayer(key)then
+			if not sql:createPlayer(key)then
 				self:kick((KICK_INTERR):format(IE_SQL))
 				return
 			end
 			self.handshaked = true
 			self.handshakeStage2 = true
 			onPlayerHandshakeDone(self)
-			local dat = sql.getData(key, 'spawnX, spawnY, spawnZ, spawnYaw, spawnPitch, lastWorld, onlineTime')
-			sql.insertData(key, {'lastIP'}, {self.ip})
+			local dat = sql:getData(key, 'spawnX, spawnY, spawnZ, spawnYaw, spawnPitch, lastWorld, onlineTime')
+			sql:insertData(key, {'lastIP'}, {self.ip})
 
 			self.lastOnlineTime = dat.onlineTime
 			self.worldName = dat.lastWorld
