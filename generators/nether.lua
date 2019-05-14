@@ -21,8 +21,6 @@ local function biomsGenerate(dx, dz)
 	end
 
 	local BIOME_COUNT = dx * dz / GEN_BIOME_STEP / GEN_BIOME_RADIUS / 512 + 1
-	--local BIOME_COUNT = 10
-	--local radius = math.floor(dx * dz / BIOME_COUNT / GEN_BIOME_STEP / 32)
 	local radius2 = GEN_BIOME_RADIUS ^ 2
 
 	for i = 1, BIOME_COUNT do
@@ -236,7 +234,6 @@ local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightLava, startX,
 			-- temp for layers
 			for layer = 1, #layers do
 				local multiplier = getLayerMultiplier(layer, x, z)
-				--if layers[layer][biomePosX][biomePosZ] > 0 then
 				if multiplier > 0 then
 					local layerHeight = dy * layer / (#layers + 1)
 					local height2 = (height1 - heightGrass) / 2 * multiplier
