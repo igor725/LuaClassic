@@ -369,7 +369,7 @@ end
 function acceptClients()
 	local cl = server:accept()
 	if not cl then return end
-	cl:settimeout(0)
+	cl:settimeout(.0001)
 	createPlayer(cl, false)
 end
 
