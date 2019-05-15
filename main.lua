@@ -65,7 +65,7 @@ end
 
 function onPlayerDestroy(player)
 	local msg = printf(MESG_DISCONN, player:getName(), player.leavereason)
-	newChatMessage('&e' + msg)
+	newChatMessage('&e' .. msg)
 	cpe:extCallHook('onPlayerDestroy', player)
 	hooks:call('onPlayerDestroy', player)
 	if player.handshaked then
@@ -84,7 +84,7 @@ end
 
 function onPlayerHandshakeDone(player)
 	local msg = printf(MESG_CONN, player:getName())
-	newChatMessage('&e' + msg)
+	newChatMessage('&e' .. msg)
 end
 
 function onPlayerChatMessage(player, message)
@@ -102,7 +102,7 @@ function onPlayerChatMessage(player, message)
 		if player:checkPermission('server.luaexec')then
 			local code = message:sub(2)
 			if code:sub(1,1) == '='then
-				code = 'return ' + code:sub(2)
+				code = 'return ' .. code:sub(2)
 			end
 			local chunk, err = loadstring(code)
 			if chunk then
@@ -136,7 +136,7 @@ function onPlayerChatMessage(player, message)
 			cmd = cmd:lower()
 			local cmf = commands[cmd]
 			if cmf then
-				if player:checkPermission('commands.' + cmd)then
+				if player:checkPermission('commands.' .. cmd)then
 					local out = cmf(player, unpack(args))
 					if out ~= nil then
 						player:sendMessage(out)
@@ -156,9 +156,9 @@ function onPlayerChatMessage(player, message)
 			end
 		end
 	elseif starts == '!'then -- Message to global chat
-		newChatMessage(player:getName() + ': '+message:sub(2))
+		newChatMessage(player:getName() .. ': ' .. message:sub(2))
 	else -- Message to local chat
-		local cmsg = player:getName() + ': ' + message
+		local cmsg = player:getName() .. ': ' .. message
 		playersForEach(function(ply)
 			if ply:isInWorld(player)then
 				ply:sendMessage(cmsg)
@@ -172,7 +172,7 @@ function onUpdate(dt)
 	hooks:call('onUpdate', dt)
 	timer.Update(dt)
 
-	if uwa>0 then
+	if uwa > 0 then
 		for _, world in pairs(worlds)do
 			if world.emptyfrom then
 				if CTIME-world.emptyfrom>uwa then
@@ -192,9 +192,9 @@ function onPlayerMove(player, dx, dy, dz)
 		local x, y, z = player:getPos()
 		for _, portal in pairs(portals)do
 			y = floor(y)
-			if (portal.pt1[1]>=x and portal.pt2[1]<=x)
-			and(portal.pt1[2]>=y and portal.pt2[2]<=y)
-			and(portal.pt1[3]>=z and portal.pt2[3]<=z)then
+			if (portal.pt1[1] >= x and portal.pt2[1] <= x)
+			and(portal.pt1[2] >= y and portal.pt2[2] <= y)
+			and(portal.pt1[3] >= z and portal.pt2[3] <= z)then
 				player:changeWorld(portal.tpTo, true)
 				break
 			end
@@ -273,11 +273,11 @@ function wsDoHandshake()
 			upgrd == 'websocket'and
 			conn:find('upgrade')and
 			tonumber(wsver) == 13 then
-				wskey = wskey + WSGUID
+				wskey = wskey .. WSGUID
 				wskey = b64enc(sha1(wskey))
 				local response =
-				('HTTP/1.1 101 Switching Protocols\r\n' +
-				'Upgrade: websocket\r\nConnection: Upgrade\r\n' +
+				('HTTP/1.1 101 Switching Protocols\r\n' ..
+				'Upgrade: websocket\r\nConnection: Upgrade\r\n' ..
 				'Sec-WebSocket-Accept: %s\r\n\r\n'):format(wskey)
 				cl:send(response)
 				wsHandshake[cl] = nil
@@ -288,8 +288,8 @@ function wsDoHandshake()
 		elseif data.state == 'badrequest'then
 			local msg = data.emsg or MESG_NOTWSCONN
 			local response =
-			('HTTP/1.1 400 Bad request\r\n' +
-			'Content-Type: text/plain; charset=utf-8\r\n' +
+			('HTTP/1.1 400 Bad request\r\n' ..
+			'Content-Type: text/plain; charset=utf-8\r\n' ..
 			'Content-Length: %d\r\n\r\nBad request: %s')
 			:format(#msg + 13, msg)
 			cl:send(response)
@@ -326,13 +326,13 @@ function handleConsoleCommand(cmd)
 	if cmd:sub(1,1) == '#'then
 		local code = cmd:sub(2)
 		if code:sub(1,1)=='='then
-			code = 'return ' + code:sub(2)
+			code = 'return ' .. code:sub(2)
 		end
 
 		local chunk, err = loadstring(code)
 		if chunk then
 			local ret = {pcall(chunk)}
-			for i=2,#ret do
+			for i=2, #ret do
 				ret[i] = tostring(ret[i])
 			end
 			if ret[1] then
@@ -354,7 +354,7 @@ function handleConsoleCommand(cmd)
 		if cmdf then
 			local rtval, str = cmdf(args, argstr)
 			if not rtval then
-				local str = _G['CU_' + cmd:upper()]
+				local str = _G['CU_' .. cmd:upper()]
 				if str then log.info((CON_USE):format(str))end
 			elseif rtval == true then
 				if str == nil then return end
@@ -424,7 +424,7 @@ function init()
 		wn = wn:lower()
 		local st = socket.gettime()
 		local world
-		local lvlh = io.open('worlds/' + wn + '.map', 'rb')
+		local lvlh = io.open('worlds/' .. wn .. '.map', 'rb')
 		if lvlh then
 			world = newWorld(lvlh, wn)
 		else
@@ -478,7 +478,7 @@ succ, err = xpcall(function()
 
 		if not INITED then INITED=init()end
 		if ETIME then
-			dt = CTIME-ETIME
+			dt = CTIME - ETIME
 			dt = math.min(.1, dt)
 			onUpdate(dt)
 		end

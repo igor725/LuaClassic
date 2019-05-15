@@ -11,7 +11,7 @@ if not status then
 end
 if not status then
 	function pngSave()
-		return false, 'libpng not loaded: '+tostring(LIB)
+		return false, 'libpng not loaded: ' .. tostring(LIB)
 	end
 	return false
 end
@@ -68,8 +68,8 @@ function pngSave(world, filename, flipx, flipz)
 
 		local function getBlockColor(x,z)
 			local bid = 0
-			for y=wy-1, 0, -1 do
-				local offset = z*iw+y*(iw*ih)+x+4
+			for y = wy - 1, 0, -1 do
+				local offset = z * iw + y * (iw * ih) + x + 4
 				bid = world.ldata[offset]
 				if HCOLORS[bid]then
 					return HCOLORS[bid]
@@ -82,19 +82,19 @@ function pngSave(world, filename, flipx, flipz)
 		LIB.png_set_IHDR(png, info, iw, ih, 8, 2, 0, 0, 0)
 		LIB.png_write_info(png, info)
 
-		local zStart, zEnd, zStep = 0, ih-1, 1
+		local zStart, zEnd, zStep = 0, ih - 1, 1
 		if flipz then
-			zStart, zEnd, zStep = ih-1, 0, -1
+			zStart, zEnd, zStep = ih - 1, 0, -1
 		end
 
-		local irow = ffi.new('uchar[?]', 3*iw)
+		local irow = ffi.new('uchar[?]', 3 * iw)
 		for z = zStart, zEnd, zStep do
-			for x = 0, iw-1 do
+			for x = 0, iw - 1 do
 				local col = getBlockColor(x, z)
 				if flipx then
-					x = iw-1-x
+					x = iw - 1 - x
 				end
-				ffi.copy(irow+x*3, col, 3)
+				ffi.copy(irow + x * 3, col, 3)
 			end
 			LIB.png_write_row(png, irow)
 		end

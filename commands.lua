@@ -240,7 +240,7 @@ addChatCommand('list', function(player)
 	for wn, world in pairs(worlds)do
 		if wn ~= 'default'then
 			local dfld = (worlds['default'] == world and' (default)')or''
-			player:sendMessage('   - ' + wn + dfld)
+			player:sendMessage('   - ' .. wn .. dfld)
 		end
 	end
 end)
@@ -305,7 +305,7 @@ addConsoleCommand('list', function()
 	for wn, world in pairs(worlds)do
 		if wn ~= 'default'then
 			local dfld = (worlds['default'] == world and' (default)')or''
-			print('   - ' + wn + dfld)
+			print('   - ' .. wn .. dfld)
 		end
 	end
 	return true

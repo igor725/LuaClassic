@@ -233,7 +233,6 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 				end
 			else
 				biome = biomes[math.floor(x / GEN_BIOME_STEP + .5)][math.floor(z / GEN_BIOME_STEP + .5)]
-				--biome = getBiome(x + GEN_BIOME_STEP / 2, z + GEN_BIOME_STEP / 2)
 			end
 
 			if biome == BIOME_NORMAL or biome == BIOME_TREES then

@@ -185,7 +185,7 @@ local player_mt = {
 	checkPermission = function(self,nm)
 		local sect = nm:match('(.*)%.')
 		local perms = permissions:getFor(self.verikey)
-		if table.hasValue(perms, '*.*', sect+'.*', nm)then
+		if table.hasValue(perms, '*.*', sect .. '.*', nm)then
 			return true
 		else
 			self:sendMessage((MESG_PERMERROR):format(nm))
@@ -375,8 +375,8 @@ local player_mt = {
 			end
 			self.cpeRewrite = false
 			self.kickTimeout = CTIME + getKickTimeout()
-			pHandlers[id](self, struct.unpack(fmt, self.wsBuf:sub(2, psz+1)))
-			self.wsBuf = self.wsBuf:sub(psz+2)
+			pHandlers[id](self, struct.unpack(fmt, self.wsBuf:sub(2, psz + 1)))
+			self.wsBuf = self.wsBuf:sub(psz + 2)
 		end
 	end,
 	readRawData = function(self)
@@ -490,11 +490,11 @@ local player_mt = {
 		end
 		if parts > 1 then
 			for i = 1, parts do
-				local mpart = mesg:sub(i*62-61,i*62)
+				local mpart = mesg:sub(i * 62 - 61, i * 62)
 				if i == parts then
-					mpart = lastcolor + mpart
+					mpart = lastcolor .. mpart
 				end
-				self:sendPacket(false, 0x0d, id, lastcolor + mpart)
+				self:sendPacket(false, 0x0d, id, lastcolor .. mpart)
 				lastcolor = mpart:match('.*(&%x)')or''
 			end
 		else

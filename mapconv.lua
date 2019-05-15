@@ -532,13 +532,13 @@ end
 local oldname = arg[1]
 local newname = arg[2]or arg[1]
 
-local idata = assert(io.open('worlds/'+oldname+'/data.json', 'rb'))
-local ldata = assert(io.open('worlds/'+oldname+'/level.dat', 'rb'))
+local idata = assert(io.open('worlds/' .. oldname .. '/data.json', 'rb'))
+local ldata = assert(io.open('worlds/' .. oldname .. '/level.dat', 'rb'))
 local icont = idata:read('*a')
 local lcont = ldata:read('*a')
 idata:close()ldata:close()
 local info = assert(json.decode(icont))
-local nw = assert(io.open('worlds/'+newname+'.map', 'wb'))
+local nw = assert(io.open('worlds/' .. newname .. '.map', 'wb'))
 nw:write('LCW\0')
 for k, v in pairs(info)do
 	if k == 'dimensions'then

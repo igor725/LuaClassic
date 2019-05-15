@@ -40,24 +40,6 @@ ENABLE_ANSI = checkEnv('ConEmuANSI', 'on')or checkEnv('TERM', 'xterm')or
 checkEnv('TERM', 'screen')
 require('log')
 
-local meta = debug.getmetatable('')
-meta.__mod = function(self,vars)
-	local info = debug.getinfo(2)
-	log.warn('Deprecated metamethod used on line', info.currentline, 'in file', info.short_src)
-	if type(vars)=='table'then
-		return self:format(unpack(vars))
-	else
-		return self:format(vars)
-	end
-end
-meta.__add = function(self,add)
-	if add ~= nil then
-		return self..tostring(add)
-	else
-		return self
-	end
-end
-
 lanes = require('lanes').configure{
 	with_timers = false
 }
@@ -219,9 +201,9 @@ end
 
 function dirForEach(dir, ext, func)
 	for file in lfs.dir(dir)do
-		local fp = dir + '/' + file
+		local fp = dir .. '/' .. file
 		if lfs.attributes(fp, 'mode')=='file'and
-		file:sub(-#ext)==ext then
+		file:sub(-#ext) == ext then
 			func(file, fp)
 		end
 	end
