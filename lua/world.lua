@@ -52,7 +52,7 @@ local world_mt = {
 	end,
 	save = function(self)
 		if not self.ldata then return true end
-		local pt = 'worlds/' + self.wname + '.map'
+		local pt = 'worlds/' .. self.wname .. '.map'
 		local wh = assert(io.open(pt, 'wb'))
 		wh:write('LCW\0')
 		for k, v in pairs(self.data)do
@@ -164,7 +164,7 @@ local world_mt = {
 	end,
 	getPath = function(self)
 		local name = self:getName()
-		return 'worlds/' + name + '.map'
+		return 'worlds/' .. name .. '.map'
 	end,
 	getName = function(self)
 		return self.wname
@@ -231,7 +231,7 @@ local world_mt = {
 			for y = y2, y1 - 1 do
 				for z = z2, z1 - 1 do
 					self:setBlock(x, y, z, id)
-					buf = buf + generatePacket(0x06, x, y, z, id)
+					buf = buf .. generatePacket(0x06, x, y, z, id)
 				end
 			end
 		end
@@ -428,7 +428,7 @@ end
 
 function loadWorld(wname)
 	if worlds[wname]then return true end
-	local lvlh = io.open('worlds/' + wname + '.map', 'rb')
+	local lvlh = io.open('worlds/' .. wname .. '.map', 'rb')
 	if not lvlh then return false end
 	local status, world = pcall(newWorld, lvlh, wname)
 	if status then
@@ -473,7 +473,7 @@ function createWorld(wname, dims, gen, seed)
 end
 
 function openGenerator(name)
-	local chunk, err = loadfile('generators/' + name + '.lua')
+	local chunk, err = loadfile('generators/' .. name .. '.lua')
 	if chunk then
 		local status, ret = pcall(chunk)
 		return status and ret, ret

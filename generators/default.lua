@@ -83,9 +83,6 @@ local function heightMapGenerate(dimx, dimz)
 	for x = 0, dimx / GEN_BIOME_STEP + 1 do
 		heightMap[x] = {}
 		for z = 0, dimz / GEN_BIOME_STEP + 1 do
-			--local r = math.random(0,80)
-			--heightMap[x][z] = heightGrass + math.random(-5, 10) + ((r>77 and 13)or 0)
-
 			local biome = biomes[x][z]
 
 			if biome == BIOME_NORMAL then
@@ -177,7 +174,6 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 			heightStone1 = height1 + math.random(-6, -4)
 
 			local step = dimz * dimx
-			--for y = 1, heightStone1 - 1 do
 			for y = heightStone, heightStone1 - 1 do
 				map[offset + y * step] = 1
 			end
@@ -237,7 +233,6 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 				end
 			else
 				biome = biomes[math.floor(x / GEN_BIOME_STEP + .5)][math.floor(z / GEN_BIOME_STEP + .5)]
-				--biome = getBiome(x + GEN_BIOME_STEP / 2, z + GEN_BIOME_STEP / 2)
 			end
 
 			if biome == BIOME_NORMAL or biome == BIOME_TREES then
@@ -515,6 +510,14 @@ local function generateCaves(mapaddr, dimx, dimy, dimz, seed)
 	local map = ffi.cast('char*', mapaddr)
 	local size = dimx * dimy * dimz + 4
 
+	local GetBlock = function(x, y, z)
+		local offset = (y * dimz + z) * dimx + x + 4
+		if offset < size then
+			return map[offset]
+		end
+		return 0
+	end
+
 	local SetBlock = function(x, y, z, id)
 		local offset = (y * dimz + z) * dimx + x + 4
 		if offset < size then
@@ -529,13 +532,8 @@ local function generateCaves(mapaddr, dimx, dimy, dimz, seed)
 
 	local ddx, ddy, ddz, length, directionX, directionY, directionZ
 
-	--[[local directionX = (math.random() - 0.5) * 0.3
-	local directionY = (math.random() - 0.5) * 0.1
-	local directionZ = (math.random() - 0.5) * 0.3]]--
-
 	local x = math.random(GEN_CAVE_RADIUS, dimx - GEN_CAVE_RADIUS)
 	local z = math.random(GEN_CAVE_RADIUS, dimz - GEN_CAVE_RADIUS)
-	--y = math.random(heightGrass / 4, heightGrass / 2)
 	local y = math.random(10, heightGrass - 20)
 
 	for j = 1, CAVE_LENGTH do
@@ -549,7 +547,7 @@ local function generateCaves(mapaddr, dimx, dimy, dimz, seed)
 		ddy = (math.random() - 0.5) * 0.4 + directionY
 		ddz = math.random() - 0.5 + directionZ
 
-		length = 1--math.sqrt(ddx^2 + ddy^2 + ddz^2)
+		length = 1 --math.sqrt(ddx^2 + ddy^2 + ddz^2)
 
 		x = math.floor(x + ddx * GEN_CAVE_RADIUS / length + 0.5)
 		y = math.floor(y + ddy * GEN_CAVE_RADIUS / length + 0.5)
@@ -564,7 +562,11 @@ local function generateCaves(mapaddr, dimx, dimy, dimz, seed)
 						and 1 < x + dx and x + dx < dimx - 1
 						and 1 < z + dz and z + dz < dimz - 1
 					then
-						SetBlock(x + dx, y + dy, z + dz, (y + dy > heightLava and 0)or 11)
+						local bx, by, bz = x + dx, y + dy, z + dz
+						local cblock = GetBlock(bx, by, bz)
+						if cblock < 8 or cblock > 9 then
+							SetBlock(bx, by, bz, (by > heightLava and 0)or 11)
+						end
 					end
 				end
 			end

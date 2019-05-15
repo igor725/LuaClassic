@@ -60,9 +60,9 @@ function sql:insertData(pkey, rows, values)
 		return false
 	end
 	for i=1, #rows do
-		dat = dat + ('%s = %q'):format(rows[i], values[i])
+		dat = dat .. ('%s = %q'):format(rows[i], values[i])
 		if #rows ~= i then
-			dat = dat + ', '
+			dat = dat .. ', '
 		end
 	end
 	local sql = ([[

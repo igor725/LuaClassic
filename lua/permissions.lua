@@ -68,7 +68,7 @@ function permissions:save()
 	local h, err = io.open('permissions.txt', 'wb')
 	if h then
 		for key, plist in pairs(self.list)do
-			h:write(key + '\n')
+			h:write(key .. '\n')
 			for i = 1, #plist do
 				h:write(('\t%s\n'):format(plist[i]))
 			end
