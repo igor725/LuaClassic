@@ -516,6 +516,7 @@ local function generateCaves(mapaddr, dimx, dimy, dimz, seed)
 		if offset < size then
 			return map[offset]
 		end
+		return 0
 	end
 
 	local SetBlock = function(x, y, z, id)
