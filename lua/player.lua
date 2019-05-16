@@ -127,7 +127,7 @@ local player_mt = {
 		if not self.isSpawned then return false end
 		local pos = self.pos
 		local lx, ly, lz = pos.x, pos.y, pos.z
-		if lx~=x or ly~=y or z~=z then
+		if lx ~= x or ly ~= y or z ~= z then
 			pos.x = x
 			pos.y = y
 			pos.z = z
@@ -139,7 +139,7 @@ local player_mt = {
 		if not self.isSpawned then return false end
 		local eye = self.eye
 		local ly, lp = eye.yaw, eye.pitch
-		if ly~=y or lp~=p then
+		if ly ~= y or lp ~= p then
 			eye.yaw = y
 			eye.pitch = p
 			onPlayerRotate(self, y, p)
@@ -165,7 +165,7 @@ local player_mt = {
 		if not self.isWS then return false end
 		local data = self:readWsFrame()
 		if data then
-			if #data~=131 then
+			if #data ~= 131 then
 				self:kick(KICK_PACKETSIZE)
 				return false
 			end
@@ -332,7 +332,8 @@ local player_mt = {
 				end
 			end
 		else
-			opcode, plen, mask = unpack(self.wsData)
+			local wd = self.wsData
+			opcode, plen, mask = wd[1], wd[2], wd[3]
 		end
 
 		if opcode and plen then

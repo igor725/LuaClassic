@@ -28,11 +28,11 @@ end)
 
 addChatCommand('info', function(player)
 	player:sendMessage((CMD_SVINFO1):format(jit.os, jit.arch, jit.version))
-	player:sendMessage((CMD_SVINFO2):format(gcinfo()/1024))
+	player:sendMessage((CMD_SVINFO2):format(gcinfo() / 1024))
 end)
 
 addChatCommand('clear', function(player)
-	for i=1,25 do
+	for i = 1, 25 do
 		player:sendMessage('')
 	end
 end)
@@ -45,7 +45,7 @@ addChatCommand('restart', function()
 	_STOP = 'restart'
 end)
 
-addChatCommand('weather',function(player, wname, wtt)
+addChatCommand('weather', function(player, wname, wtt)
 	local world
 	if wname == nil then
 		world = getWorld(player)
