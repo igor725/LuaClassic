@@ -445,7 +445,7 @@ function init()
 				generator(world,sdlist[num]or CTIME)
 			end
 		end
-		if world then
+		if world and world.isWorld then
 			worlds[wn] = world
 			world.emptyfrom = CTIME
 			if num == 1 then

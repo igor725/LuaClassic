@@ -26,6 +26,7 @@ local BIOME_TREES  = 3
 local BIOME_SAND   = 4
 local BIOME_WATER  = 5
 
+local lanelibs = 'math,ffi'
 local heightStone
 local heightGrass
 local heightWater
@@ -239,7 +240,6 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 					biome = b11
 				end
 			else
-				-- biome = biomes[][]
 				biome = getBiome2(math.floor(x / GEN_BIOME_STEP + .5), math.floor(z / GEN_BIOME_STEP + .5))
 			end
 
@@ -498,7 +498,7 @@ local function generateOre(mapaddr, dimx, dimy, dimz, seed)
 		z = math.random(GEN_ORE_VEIN_SIZE, dimz - GEN_ORE_VEIN_SIZE)
 		y = math.random(5, heightGrass / 2)
 
-		ore = math.random(14,16)
+		ore = math.random(14, 16)
 		for dx = 1, GEN_ORE_VEIN_SIZE do
 			for dz = 1, GEN_ORE_VEIN_SIZE do
 				for dy = 1, GEN_ORE_VEIN_SIZE do
@@ -586,8 +586,6 @@ local function fillStone(world, dimx, dimz)
 	ffi.fill(world.ldata + 4, dimx * dimz, 7)
 	ffi.fill(world.ldata + 4 + dimx * dimz, dimx * dimz * (heightStone - 1), 1)
 end
-
-local lanelibs = 'math,ffi'
 
 return function(world, seed)
 	log.debug('DefaultGenerator: START')
