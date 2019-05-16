@@ -15,7 +15,7 @@ function initCmdHandler(cbfunc)
 			if stp ~= nil then break end
 			local line = io.read('*l')
 			if not line then break end
-			if #line>0 then
+			if #line > 0 then
 				cmdlinda:send('cmd', line)
 			end
 		end

@@ -84,14 +84,14 @@ local player_mt = {
 	getVeriKey = function(self)
 		return self.verikey
 	end,
-	getPos = function(self,forNet)
+	getPos = function(self, forNet)
 		if forNet then
 			return self.pos.x*32, self.pos.y*32-22, self.pos.z*32
 		else
 			return self.pos.x, self.pos.y, self.pos.z
 		end
 	end,
-	getEyePos = function(self,forNet)
+	getEyePos = function(self, forNet)
 		local eye = self.eye
 		if forNet then
 			return floor((eye.yaw/360)*255), floor((eye.pitch/360)*255)
@@ -120,10 +120,10 @@ local player_mt = {
 		IDS[id] = self
 		players[self] = id
 	end,
-	setVeriKey = function(self,key)
+	setVeriKey = function(self, key)
 		self.verikey = key
 	end,
-	setPos = function(self,x,y,z)
+	setPos = function(self, x, y, z)
 		if not self.isSpawned then return false end
 		local pos = self.pos
 		local lx, ly, lz = pos.x, pos.y, pos.z
@@ -131,7 +131,7 @@ local player_mt = {
 			pos.x = x
 			pos.y = y
 			pos.z = z
-			onPlayerMove(self, lx-x, ly-y, lz-z)
+			onPlayerMove(self, lx - x, ly - y, lz - z)
 			return true
 		end
 	end,
@@ -182,7 +182,7 @@ local player_mt = {
 		end
 		return false
 	end,
-	checkPermission = function(self,nm)
+	checkPermission = function(self, nm)
 		local sect = nm:match('(.*)%.')
 		local perms = permissions:getFor(self.verikey)
 		if table.hasValue(perms, '*.*', sect .. '.*', nm)then
@@ -196,7 +196,7 @@ local player_mt = {
 	isWebClient = function(self)
 		return self.isWS
 	end,
-	isSupported = function(self,extName,extVer)
+	isSupported = function(self, extName, extVer)
 		extVer = extVer or 1
 		extName = extName:lower()
 		local ext = self.extensions[extName]
@@ -206,7 +206,7 @@ local player_mt = {
 		return worlds[self.worldName] == getWorld(wname)
 	end,
 
-	teleportTo = function(self,x,y,z,ay,ap)
+	teleportTo = function(self, x, y, z, ay, ap)
 		x = floor(x * 32)
 		y = floor(y * 32)
 		z = floor(z * 32)
@@ -356,10 +356,10 @@ local player_mt = {
 				self.wsBuf = self.wsBuf .. data
 			end
 		end
-		if self.wsBuf and#self.wsBuf>0 then
+		if self.wsBuf and #self.wsBuf > 0 then
 			local id = self.wsBuf:byte()
 			local psz = psizes[id]
-			if not psz or #self.wsBuf<psz then return end
+			if not psz or #self.wsBuf < psz then return end
 			local cpesz = cpe.psizes[id]
 			if cpesz then
 				if self:isSupported(cpe.pexts[id])then
@@ -508,7 +508,7 @@ local player_mt = {
 		if not self.isSpawned then return false end
 		self.isSpawned = false
 		local sId = self:getID()
-		playersForEach(function(ply,id)
+		playersForEach(function(ply)
 			if ply:isInWorld(self)then
 				ply:sendPacket(false, 0x0c, sId)
 			end
@@ -526,7 +526,7 @@ local player_mt = {
 		local dat2, dat2cpe
 
 		prePlayerSpawn(self)
-		playersForEach(function(ply,id)
+		playersForEach(function(ply, id)
 			local sId = (pId == id and -1)or id
 			local cx, cy, cz = ply:getPos(true)
 			local cay, cap = ply:getEyePos(true)
@@ -572,7 +572,7 @@ local player_mt = {
 		self:getClient():close()
 		self.handshaked = false
 	end,
-	kick = function(self,reason)
+	kick = function(self, reason)
 		reason = reason or KICK_NOREASON
 		self:sendPacket(false, 0x0e, reason)
 		self.leavereason = reason

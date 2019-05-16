@@ -15,7 +15,7 @@ function ep:load()
 		player.entProps[ptype] = val
 		playersForEach(function(ply)
 			if ply:isSupported('EntityProperty')then
-				local id = (ply==player and -1)or player:getID()
+				local id = (ply == player and -1)or player:getID()
 				entPropFor(ply, id, ptype, val)
 			end
 		end)

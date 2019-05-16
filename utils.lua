@@ -24,7 +24,7 @@ ffi.cdef[[
 ]]
 
 local ext = (jit.os=='Windows'and'dll')or'so'
-package.cpath = ('./bin/%s/?.%s;'):format(jit.arch,ext)
+package.cpath = ('./bin/%s/?.%s;'):format(jit.arch, ext)
 package.path = './lua/?.lua;./?.lua'
 
 function checkEnv(ev, val)
@@ -153,7 +153,7 @@ local function woSpaces(...) -- It works faster than string.match
 end
 
 function trimStr(str)
-	return str:sub(woSpaces(str:byte(1,-1)))
+	return str:sub(woSpaces(str:byte(1, -1)))
 end
 
 function getAddr(void)

@@ -13,6 +13,10 @@ local function unpackFrom(file, fmt)
 	return struct.unpack(fmt, data)
 end
 
+local function getWorldPath(wname)
+	return 'worlds/' .. wname .. '.map'
+end
+
 local world_mt = {
 	__tostring = function(self)
 		return self:getName()
@@ -36,7 +40,7 @@ local world_mt = {
 	end,
 	save = function(self)
 		if not self.ldata then return true end
-		local pt = 'worlds/' .. self.wname .. '.map'
+		local pt = self:getPath()
 		local wh = assert(io.open(pt, 'wb'))
 		wh:write('LCW\0')
 		for k, v in pairs(self.data)do
@@ -147,8 +151,7 @@ local world_mt = {
 		return self.size
 	end,
 	getPath = function(self)
-		local name = self:getName()
-		return 'worlds/' .. name .. '.map'
+		return getWorldPath(self:getName())
 	end,
 	getName = function(self)
 		return self.wname
@@ -179,7 +182,7 @@ local world_mt = {
 		return true
 	end,
 	setName = function(self, name)
-		if type(name)~='string' then return false end
+		if type(name) ~= 'string' then return false end
 		self.wname = name
 		return true
 	end,
@@ -255,22 +258,18 @@ local world_mt = {
 					if sp then
 						sp.yaw, sp.pitch = unpackFrom(wh, '>ff')
 					else
-						self.data.spawnpointeye = newAngle(unpackFrom(wh, '>ff'))
+						self:setData('spawnpointeye', newAngle(unpackFrom(wh, '>ff')))
 					end
 				elseif id == '\3'then
-					self.data.isNether = wh:read(1) == '\1'
+					self:setData('isNether', wh:read(1) == '\1')
 				elseif id == '\4'then
-					local ct, r, g, b = unpackFrom(wh, 'BBBB')
-					self.data.colors = self.data.colors or{}
-					self.data.colors[ct] = newColor(r,g,b)
+					self:setEnvColor(unpackFrom(wh, 'BBBB'))
 				elseif id == '\5'then
-					local ct, val = unpackFrom(wh, '>bI')
-					self.data.map_aspects = self.data.map_aspects or{}
-					self.data.map_aspects[ct] = val
+					self:setEnvProp(unpackFrom(wh, '>bI'))
 				elseif id == '\6'then
-					self.data.weather = wh:read(1):byte()
+					self:setData('weather', wh:read(1):byte())
 				elseif id == '\7'then
-					self.data.readonly = wh:read(1) == '\1'
+					self:setData('readonly', wh:read(1) == '\1')
 				elseif id == '\8'then
 					self.data.portals = self.data.portals or{}
 					local p1x, p1y, p1z,
@@ -282,7 +281,7 @@ local world_mt = {
 					})
 				elseif id == '\9'then
 					local len = wh:read(1):byte()
-					self.data.texPack = wh:read(len)
+					self:setTexPack(wh:read(len))
 				elseif id == '\10'then
 					local nl, sl = unpackFrom(wh, '>BH')
 					self.data.wscripts = self.data.wscripts or{}
@@ -384,7 +383,7 @@ end
 
 function loadWorld(wname)
 	if worlds[wname]then return true end
-	local lvlh = io.open('worlds/' .. wname .. '.map', 'rb')
+	local lvlh = io.open(getWorldPath(wname), 'rb')
 	if not lvlh then return false end
 	local status, world = pcall(newWorld, lvlh, wname)
 	if status then

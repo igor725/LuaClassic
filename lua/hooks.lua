@@ -28,7 +28,7 @@ function hooks:call(hookname, ...)
 	if hks then
 		for _, fnc in pairs(hks)do
 			local x = fnc(...)
-			if x~=nil then
+			if x ~= nil then
 				return x
 			end
 		end

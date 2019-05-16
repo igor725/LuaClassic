@@ -9,26 +9,28 @@ local status, LIB = pcall(ffi.load, 'png15')
 if not status then
 	status, LIB = pcall(ffi.load, 'png')
 end
+
 if not status then
 	function pngSave()
 		return false, 'libpng not loaded: ' .. tostring(LIB)
 	end
 	return false
 end
+
 local HCOLORS = {
-	[-1] = newColor(0,0,0),
-	[1]  = newColor(116,116,116),
-	[2]  = newColor(118,177,79),
-	[3]  = newColor(121,85,58),
-	[4]  = newColor(82,82,82),
-	[5]  = newColor(188,152,98),
-	[8]  = newColor(35,62,140),
-	[10] = newColor(224,142,46),
-	[12] = newColor(220,213,159),
-	[18] = newColor(90,250,58),
-	[45] = newColor(177,52,17)
+	[-1] = newColor(000, 000, 000),
+	[01]  = newColor(116, 116, 116),
+	[02]  = newColor(118, 177, 079),
+	[03]  = newColor(121, 085, 058),
+	[04]  = newColor(082, 082, 082),
+	[05]  = newColor(188, 152, 098),
+	[08]  = newColor(035, 062, 140),
+	[10] = newColor(224, 142, 046),
+	[12] = newColor(220, 213, 159),
+	[18] = newColor(090, 250, 058),
+	[45] = newColor(177, 052, 017)
 }
-HCOLORS[9] = HCOLORS[8]
+HCOLORS[9]  = HCOLORS[8]
 HCOLORS[11] = HCOLORS[10]
 HCOLORS[47] = HCOLORS[5]
 

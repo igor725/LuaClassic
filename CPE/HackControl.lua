@@ -1,6 +1,6 @@
 local hc = {
 	global = true,
-	defaults = {1,1,1,1,1,-1}
+	defaults = {1, 1, 1, 1, 1, -1}
 }
 
 HC_FLYING   = 1
