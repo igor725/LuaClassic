@@ -81,7 +81,7 @@ function config:parse()
 			value = tonumber(value)or value
 			local typ = self.types[key]
 			local gtyp = type(value)
-			if typ and gtyp~=typ then
+			if typ and gtyp ~= typ then
 				log.error((CONF_VTYPERR):format(key, typ, gtyp))
 				return
 			end

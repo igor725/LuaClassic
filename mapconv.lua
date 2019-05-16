@@ -579,12 +579,12 @@ for k, v in pairs(info)do
 			print('portal to', val.tpTo)
 		end
 	elseif k == 'texPack'then
-		if #v>64 then error('TexturePack URL too long')end
+		if #v > 64 then error('TexturePack URL too long')end
 		nw:write(string.char(9, #v))
 		nw:write(v)
 		print('TexturePack:', v)
 	else
-		print('Warning: Unknown MAPOPT %q skipped!'%k)
+		print(('Warning: Unknown MAPOPT %q skipped!'):format(k))
 	end
 end
 nw:write('\255')

@@ -3,7 +3,7 @@ local wt = {}
 WT_SUNNY = 0
 WT_RAIN  = 1
 WT_SNOW  = 2
-WT = {[0]='sunny','rain','snow'}
+WT = {[0]='sunny', 'rain', 'snow'}
 WTN = {}
 for k, v in pairs(WT)do
 	WTN[v] = k

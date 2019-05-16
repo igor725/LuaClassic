@@ -8,31 +8,31 @@ EC_DIFFUSE = 4
 
 time_presets = {
 	dawn = {
-		[EC_DIFFUSE] = newColor(65,55,55),
-		[EC_AMBIENT] = newColor(50,50,50),
-		[EC_FOG] = newColor(60,47,40),
-		[EC_CLOUD] = newColor(60,47,40),
-		[EC_SKY] = newColor(91,43,18)
+		[EC_DIFFUSE] = newColor(065,055,055),
+		[EC_AMBIENT] = newColor(050,050,050),
+		[EC_FOG]     = newColor(060,047,040),
+		[EC_CLOUD]   = newColor(060,407,040),
+		[EC_SKY]     = newColor(091,403,018)
 	},
 	night = {
-		[EC_DIFFUSE] = newColor(85,85,85),
-		[EC_AMBIENT] = newColor(40,40,40),
-		[EC_FOG] = newColor(23,28,42),
-		[EC_CLOUD] = newColor(36,39,49),
-		[EC_SKY] = newColor(23,28,42)
+		[EC_DIFFUSE] = newColor(085,085,085),
+		[EC_AMBIENT] = newColor(040,040,040),
+		[EC_FOG]     = newColor(023,028,042),
+		[EC_CLOUD]   = newColor(036,039,049),
+		[EC_SKY]     = newColor(023,028,042)
 	},
 	day = {
 		[EC_DIFFUSE] = newColor(),
 		[EC_AMBIENT] = newColor(),
-		[EC_FOG] = newColor(240,240,240),
-		[EC_CLOUD] = newColor(253,253,253),
-		[EC_SKY] = newColor(153,204,255)
+		[EC_FOG]     = newColor(240,240,240),
+		[EC_CLOUD]   = newColor(253,253,253),
+		[EC_SKY]     = newColor(153,204,255)
 	}
 }
 
 local function updateEnvColorsFor(player, typ, r, g, b)
 	if player:isSupported('EnvColors')then
-		player:sendPacket(false, 0x19, typ, r or-1, g or-1, b or-1)
+		player:sendPacket(false, 0x19, typ, r or -1, g or -1, b or -1)
 	end
 end
 
@@ -54,7 +54,7 @@ function ec:load()
 		if clr then
 			clr.r, clr.g, clr.b = r, g, b
 		else
-			colors[typ] = newColor(r,g,b)
+			colors[typ] = newColor(r, g, b)
 		end
 		playersForEach(function(player)
 			if player:isInWorld(world)then

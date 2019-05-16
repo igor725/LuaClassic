@@ -22,7 +22,7 @@ do
 end
 
 if os.getenv('DEBUG')then
-	local path = os.getenv('MDPATH')
+	local path = os.getenv('DEBUG')
 	path = path or'../mobdebug.lua'
 	loadfile(path)().start()
 end
@@ -111,7 +111,7 @@ function onPlayerChatMessage(player, message)
 				local ret = {pcall(chunk)}
 				self = nil
 				world = nil
-				for i=2, #ret do
+				for i = 2, #ret do
 					ret[i] = tostring(ret[i])
 				end
 				if ret[1] then
@@ -175,7 +175,7 @@ function onUpdate(dt)
 	if uwa > 0 then
 		for _, world in pairs(worlds)do
 			if world.emptyfrom then
-				if CTIME-world.emptyfrom>uwa then
+				if CTIME - world.emptyfrom > uwa then
 					world:unload()
 					world.emptyfrom = nil
 				end
@@ -336,7 +336,7 @@ end
 function handleConsoleCommand(cmd)
 	if cmd:sub(1,1) == '#'then
 		local code = cmd:sub(2)
-		if code:sub(1,1)=='='then
+		if code:sub(1,1) == '='then
 			code = 'return ' .. code:sub(2)
 		end
 
@@ -346,7 +346,7 @@ function handleConsoleCommand(cmd)
 			for i=2, #ret do
 				ret[i] = tostring(ret[i])
 			end
-			if ret[1] then
+			if ret[1]then
 				log.info(table.concat(ret, ', ', 2))
 			else
 				log.error((MESG_ERROR):format(ret[2]))
@@ -456,7 +456,7 @@ function init()
 				generator(world,sdlist[num]or CTIME)
 			end
 		end
-		if world then
+		if world and world.isWorld then
 			worlds[wn] = world
 			world.emptyfrom = CTIME
 			if num == 1 then
@@ -487,7 +487,7 @@ succ, err = xpcall(function()
 		ETIME = CTIME
 		CTIME = socket.gettime()
 
-		if not INITED then INITED=init()end
+		if not INITED then INITED = init()end
 		if ETIME then
 			dt = CTIME - ETIME
 			dt = math.min(.1, dt)
@@ -533,7 +533,7 @@ if INITED then
 			if world:save()then
 				log.debug('World', wname, 'saved')
 			else
-				log.error(wname,'saving error')
+				log.error(wname, 'saving error')
 			end
 		end
 	end

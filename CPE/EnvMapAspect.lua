@@ -46,11 +46,11 @@ function ema:load()
 	end
 	getWorldMT().setTexPack = function(world, tpack)
 		world = getWorld(world)
-		if tpack:startsWith('http://')or tpack:startsWith('https://')or tpack==''then
-			if #tpack>64 then
+		if tpack:startsWith('http://')or tpack:startsWith('https://')or tpack == ''then
+			if #tpack > 64 then
 				return false, 'url_too_long'
 			end
-			world.data.texPack = tpack
+			world:setData('texPack', tpack)
 			playersForEach(function(player)
 				if player:isInWorld(world)then
 					setTexturePackFor(player, tpack)
@@ -70,8 +70,10 @@ function ema:prePlayerSpawn(player)
 	for typ, val in pairs(getMa(wn))do
 		updateMapPropertyFor(player, typ, val)
 	end
-	if world.data.texPack then
-		setTexturePackFor(player, world.data.texPack)
+
+	local tpack = world:getData('texPack')
+	if tpack then
+		setTexturePackFor(player, tpack)
 	else
 		setTexturePackFor(player, '')
 	end
