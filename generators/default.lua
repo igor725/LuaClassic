@@ -31,6 +31,7 @@ local heightGrass
 local heightWater
 local heightLava
 local heightMap
+local bsx, bsz
 local biomes
 
 local function biomesGenerate(dimx, dimz)
@@ -39,12 +40,10 @@ local function biomesGenerate(dimx, dimz)
 	-- Circles
 	local biomesSizeX = math.ceil(dimx / GEN_BIOME_STEP)
 	local biomesSizeZ = math.ceil(dimz / GEN_BIOME_STEP)
-
-	for x = 0, biomesSizeX do
-		biomes[x] = {}
-		for z = 0, biomesSizeZ do
-			biomes[x][z] = 1
-		end
+	bsx = biomesSizeX
+	bsz = biomesSizeZ
+	for i = 0, biomesSizeX * (biomesSizeZ + 1) do
+		biomes[i] = 1
 	end
 
 	local BIOME_COUNT = dimx * dimz / GEN_BIOME_STEP / GEN_BIOME_RADIUS / 64 + 1
@@ -57,67 +56,74 @@ local function biomesGenerate(dimx, dimz)
 
 		for dx = -GEN_BIOME_RADIUS, GEN_BIOME_RADIUS do
 			for dz = -GEN_BIOME_RADIUS, GEN_BIOME_RADIUS do
-				if
-				dx * dx + dz * dz < radius2
-				and biomes[x + dx] ~= nil and biomes[x + dx][z + dz] ~= nil
-				then
-					biomes[x + dx][z + dz] = biome
+				local nx, nz = x + dx, z + dz
+				if dx * dx + dz * dz < radius2 then
+					local offset = nx + nz * bsx
+					if offset >= 0 and offset <= #biomes then
+						biomes[offset] = biome
+					end
 				end
 			end
 		end
 	end
 end
 
+local function getBiome2(x, z)
+	return biomes[x + z * bsx]
+end
+
 local function getBiome(x, z)
-	return biomes[math.floor(x / GEN_BIOME_STEP)][math.floor(z / GEN_BIOME_STEP)]
+	x = math.floor(x / GEN_BIOME_STEP)
+	z = math.floor(z / GEN_BIOME_STEP)
+	return biomes[x + z * bsx]
 end
 
 local function heightSet(dimy)
-	heightGrass = floor(dimy / 2)
+	heightGrass = math.floor(dimy / 2)
+	heightStone = heightGrass - 3
 	heightWater = heightGrass
 	heightLava = 7
 end
 
 local function heightMapGenerate(dimx, dimz)
 	heightMap = {}
-	for x = 0, dimx / GEN_BIOME_STEP + 1 do
-		heightMap[x] = {}
-		for z = 0, dimz / GEN_BIOME_STEP + 1 do
-			local biome = biomes[x][z]
+
+	for x = 0, bsx do
+		for z = 0, bsz do
+			local biome = getBiome2(x, z)
+			local offset = x + z * bsx
 
 			if biome == BIOME_NORMAL then
 				if math.random(0, 6) == 0 then
-					heightMap[x][z] = heightGrass + math.random(-3, -1)
+					heightMap[offset] = heightGrass + math.random(-3, -1)
 				else
-					heightMap[x][z] = heightGrass + math.random(1, 3)
+					heightMap[offset] = heightGrass + math.random(1, 3)
 				end
 			elseif biome == BIOME_HIGH then
 				if math.random(0, 6) == 0 then
-					heightMap[x][z] = heightGrass + math.random(20, 30)
+					heightMap[offset] = heightGrass + math.random(20, 30)
 				else
-					heightMap[x][z] = heightGrass + math.random(-2, 20)
+					heightMap[offset] = heightGrass + math.random(-2, 20)
 				end
 			elseif biome == BIOME_TREES then
 				if math.random(0, 5) == 0 then
-					heightMap[x][z] = heightGrass + math.random(-3, -1)
+					heightMap[offset] = heightGrass + math.random(-3, -1)
 				else
-					heightMap[x][z] = heightGrass + math.random(1, 5)
+					heightMap[offset] = heightGrass + math.random(1, 5)
 				end
 			elseif biome == BIOME_SAND then
-				heightMap[x][z] = heightGrass + math.random(1, 4)
+				heightMap[offset] = heightGrass + math.random(1, 4)
 			elseif biome == BIOME_WATER then
 				if math.random(0, 10) == 0 then
-					heightMap[x][z] = heightGrass + math.random(-20, -3)
+					heightMap[offset] = heightGrass + math.random(-20, -3)
 				else
-					heightMap[x][z] = heightGrass + math.random(-10, -3)
+					heightMap[offset] = heightGrass + math.random(-10, -3)
 				end
 			else
-				heightMap[x][z] = heightGrass
+				heightMap[offset] = heightGrass
 			end
 		end
 	end
-
-	heightStone = heightGrass - 3
 end
 
 local function getHeight(x, z)
@@ -126,9 +132,10 @@ local function getHeight(x, z)
 	local percentZ = z / GEN_BIOME_STEP - hz
 
 	return math.floor(
-		  (heightMap[hx][hz  ] * (1 - percentX) + heightMap[hx + 1][hz  ] * percentX) * (1 - percentZ)
-		+ (heightMap[hx][hz + 1] * (1 - percentX) + heightMap[hx + 1][hz + 1] * percentX) * percentZ
-		+ 0.5
+		  (heightMap[hx + hz * bsx] * (1 - percentX)
+		+ heightMap[(hx + 1) + hz * bsx ] * percentX)
+		* (1 - percentZ) + (heightMap[hx + (hz + 1) * bsx]
+		* (1 - percentX) + heightMap[(hx + 1) + (hz + 1) * bsx] * percentX) * percentZ + 0.5
 	)
 end
 
@@ -151,22 +158,22 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 		local percentNegX = 1 - percentPosX
 
 		local biomePosX = math.floor(x / GEN_BIOME_STEP)
-		local b0 = biomes[biomePosX]
-		local b1 = biomes[biomePosX + 1]
+		local b0 = biomePosX
+		local b1 = b0 + 1
 		local biomePosZOld = nil
 		local b00 = nil
-		local b01 = b0[0]
+		local b01 = biomes[b0]
 		local b10 = nil
-		local b11 = b1[0]
+		local b11 = biomes[b1]
 
 		for z = 0, dimz - 1 do
 			local hz = math.floor(z / GEN_BIOME_STEP)
 			local percentZ = z / GEN_BIOME_STEP - hz
 
 			height1 = math.floor(
-				  (heightMap[hx][hz  ] * percentNegX + heightMap[hx + 1][hz  ] * percentPosX) * (1 - percentZ)
-				+ (heightMap[hx][hz + 1] * percentNegX + heightMap[hx + 1][hz + 1] * percentPosX) * percentZ
-				+ 0.5
+				  (heightMap[hx + hz * bsx ] * percentNegX + heightMap[(hx + 1) + hz * bsx] * percentPosX)
+				* (1 - percentZ)
+				+ (heightMap[hx + (hz + 1) * bsx] * percentNegX + heightMap[(hx + 1) + (hz + 1) * bsx] * percentPosX) * percentZ + 0.5
 			)
 
 			local offset = z * dimx + x + 4
@@ -188,9 +195,9 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 			if biomePosZ ~= biomePosZOld then
 				biomePosZOld = biomePosZ
 				b00 = b01
-				b01 = b0[biomePosZ + 1]
+				b01 = biomes[b0 + (biomePosZ + 1) * bsx]
 				b10 = b11
-				b11 = b1[biomePosZ + 1]
+				b11 = biomes[b1 + (biomePosZ + 1) * bsx]
 
 				if b01 == 3 then
 					b01 = 1
@@ -232,7 +239,8 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 					biome = b11
 				end
 			else
-				biome = biomes[math.floor(x / GEN_BIOME_STEP + .5)][math.floor(z / GEN_BIOME_STEP + .5)]
+				-- biome = biomes[][]
+				biome = getBiome2(math.floor(x / GEN_BIOME_STEP + .5), math.floor(z / GEN_BIOME_STEP + .5))
 			end
 
 			if biome == BIOME_NORMAL or biome == BIOME_TREES then
