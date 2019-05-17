@@ -2,11 +2,8 @@ local function getKickTimeout()
 	return config:get('player-timeout')
 end
 
-local function sendMap(fd,mapaddr,maplen,cmplvl,isWS)
+local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 	set_debug_threadname('MapSender')
-
-	local ext = (jit.os=='Windows'and'dll')or'so'
-	package.cpath = './bin/' .. jit.arch .. '/?.'..ext
 
 	do
 		local path = package.searchpath('socket.core', package.cpath)
@@ -86,7 +83,7 @@ local player_mt = {
 	end,
 	getPos = function(self, forNet)
 		if forNet then
-			return self.pos.x*32, self.pos.y*32-22, self.pos.z*32
+			return self.pos.x * 32, self.pos.y* 32 - 22, self.pos.z * 32
 		else
 			return self.pos.x, self.pos.y, self.pos.z
 		end
@@ -94,7 +91,7 @@ local player_mt = {
 	getEyePos = function(self, forNet)
 		local eye = self.eye
 		if forNet then
-			return floor((eye.yaw/360)*255), floor((eye.pitch/360)*255)
+			return floor((eye.yaw / 360) * 255), floor((eye.pitch / 360) * 255)
 		else
 			return eye.yaw, eye.pitch
 		end
@@ -149,7 +146,7 @@ local player_mt = {
 	setName = function(self,name)
 		local canUse = true
 		playersForEach(function(p)
-			if p:getName():lower()==name:lower()then
+			if p:getName():lower() == name:lower()then
 				canUse = false
 			end
 		end)
@@ -213,10 +210,10 @@ local player_mt = {
 		if not ay and not ap then
 			ay, ap = self:getEyePos(true)
 		else
+			ay, ap = ay % 360, ap % 360
 			ay = floor(ay / 360 * 255)
 			ap = floor(ap / 360 * 255)
 		end
-		local cl = self:getClient()
 		self:sendPacket(self:isSupported('ExtEntityPositions'), 0x08, -1, x, y, z, ay, ap)
 	end,
 	moveToSpawn = function(self)
@@ -304,7 +301,7 @@ local player_mt = {
 		if not self.wsData then
 			local hdr = cl:receive(2)
 			if hdr then
-				fin, masked, opcode, hint = readWsHeader(hdr:byte(1,2))
+				fin, masked, opcode, hint = readWsHeader(hdr:byte(1, 2))
 				if not fin or not masked then
 					cl:close()
 					return
@@ -448,9 +445,9 @@ local player_mt = {
 		if not self.handshaked then return end
 		local world = worlds[self.worldName]
 		if not world.ldata then
-			self:sendMessage(MESG_LEVELLOAD, 1)
+			self:sendMessage(MESG_LEVELLOAD, MT_STATUS1)
 			world:triggerLoad()
-			self:sendMessage('', 1)
+			self:sendMessage('', MT_STATUS1)
 		end
 		local addr = world:getAddr()
 		local size = world:getSize()
@@ -472,6 +469,8 @@ local player_mt = {
 	end,
 	sendMessage = function(self, mesg, id)
 		mesg = tostring(mesg)
+		id = id or MT_CHAT
+
 		local lastcolor = ''
 		if not self:isSupported('FullCP437')then
 			mesg = mesg:gsub('.',function(s)
@@ -481,8 +480,7 @@ local player_mt = {
 				end
 			end)
 		end
-		local cl = self:getClient()
-		id = id or 0
+
 		local parts
 		if id == 0 then
 			parts = ceil(#mesg / 62)
@@ -534,7 +532,6 @@ local player_mt = {
 
 			local dat, datcpe
 			if ply:isInWorld(self)then
-				local cl = self:getClient()
 				if self:isSupported('ExtEntityPositions')then
 					datcpe = datcpe or cpe:generatePacket(0x07, sId, cname, cx, cy, cz, cay, cap)
 					self:sendNetMesg(datcpe)

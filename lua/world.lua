@@ -296,13 +296,9 @@ local world_mt = {
 					self:setTexPack(wh:read(len))
 				elseif id == '\10'then
 					local nl, sl = unpackFrom(wh, '>BH')
-					self.data.wscripts = self.data.wscripts or{}
 					local name = wh:read(nl)
-					local sl = wh:read(sl)
-					local sctbl = {
-						body = sl
-					}
-					self.data.wscripts[name] = sctbl
+					local body = wh:read(sl)
+					self:addScript(name, body)
 					self:executeScript(name)
 				elseif id == '\255'then
 					break
@@ -456,7 +452,7 @@ function regenerateWorld(world, gentype, seed)
 	if not gen then
 		return false, err
 	else
-		if type(gen)=='function'then
+		if type(gen) == 'function'then
 			world.data.colors = nil
 			world.data.map_aspects = nil
 			world.data.texPack = nil
