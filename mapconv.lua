@@ -37,8 +37,8 @@ SOFTWARE.
 --]==]
 
 -- global dependencies:
-local pairs, type, tostring, tonumber, getmetatable, setmetatable, rawset =
-      pairs, type, tostring, tonumber, getmetatable, setmetatable, rawset
+local pairs, type, tostring, tonumber, setmetatable, rawset =
+      pairs, type, tostring, tonumber, setmetatable, rawset
 local error, require, pcall, select = error, require, pcall, select
 local floor, huge = math.floor, math.huge
 local strrep, gsub, strsub, strbyte, strchar, strfind, strlen, strformat =
@@ -50,13 +50,6 @@ local concat = table.concat
 local json = { version = "dkjson 2.5" }
 
 local _ENV = nil -- blocking globals in Lua 5.2
-
-pcall (function()
-  -- Enable access to blocked metatables.
-  -- Don't worry, this module doesn't change anything in them.
-  local debmeta = require "debug".getmetatable
-  if debmeta then getmetatable = debmeta end
-end)
 
 json.null = setmetatable ({}, {
   __tojson = function () return "null" end
@@ -535,7 +528,10 @@ local newname = arg[2]or arg[1]
 local idata = assert(io.open('worlds/' .. oldname .. '/data.json', 'rb'))
 local ldata = assert(io.open('worlds/' .. oldname .. '/level.dat', 'rb'))
 local icont = idata:read('*a')
-local lcont = ldata:read('*a')
+local datasize = ldata:seek('end')
+local lcont = ffi.new('uchar[?]', datasize)
+ldata:seek('set', 0)
+C.fread(lcont, datasize, 1, ldata)
 idata:close()ldata:close()
 local info = assert(json.decode(icont))
 local nw = assert(io.open('worlds/' .. newname .. '.map', 'wb'))
@@ -588,5 +584,14 @@ for k, v in pairs(info)do
 	end
 end
 nw:write('\255')
-nw:write(lcont)
+if lcont[0] == 0x1f and lcont[1] == 0x8b then
+	C.fwrite(lcont, datasize, 1, nw)
+else
+	print('Level data is not compressed, trying to compress...')
+	require('gzip')
+	gz.compress(lcont, datasize, 5, function(out, stream)
+		local chunksz = 1024 - stream.avail_out
+		C.fwrite(out, chunksz, 1, nw)
+	end)
+end
 nw:close()

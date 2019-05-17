@@ -7,7 +7,7 @@ do
 		os.exit(1)
 	end
 
-	if not (jit or jit.version)then
+	if not (jit and jit.version)then
 		vermismatch()
 	elseif jit.version_num == 20000 then
 		local ver = jit.version
