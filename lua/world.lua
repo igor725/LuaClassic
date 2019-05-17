@@ -271,14 +271,11 @@ local world_mt = {
 			elseif under ~= 8 and under ~= 9 then
 				if self:getBlock(x + 1, y, z) == 0 then
 					delayedWaterCreate(self, sx, sy, sz, x + 1, y, z)
-				end
-				if self:getBlock(x - 1, y, z) == 0 then
+				elseif self:getBlock(x - 1, y, z) == 0 then
 					delayedWaterCreate(self, sx, sy, sz, x - 1, y, z)
-				end
-				if self:getBlock(x, y, z + 1) == 0 then
+				elseif self:getBlock(x, y, z + 1) == 0 then
 					delayedWaterCreate(self, sx, sy, sz, x, y, z + 1)
-				end
-				if self:getBlock(x, y, z - 1) == 0 then
+				elseif self:getBlock(x, y, z - 1) == 0 then
 					delayedWaterCreate(self, sx, sy, sz, x, y, z - 1)
 				end
 			end
