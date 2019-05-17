@@ -150,15 +150,22 @@ local world_mt = {
 	end,
 	getOffset = function(self, x, y, z)
 		if not self.ldata then return false end
+		if x < 0 or y < 0 or z < 0 then return false end
 		local dx, dy, dz = self:getDimensions()
 		local offset = math.floor(z * dx + y * (dx * dz) + x + 4)
-		local fs = ffi.sizeof(self.ldata)
-		offset = math.max(math.min(offset, fs), 4)
-		return offset
+		if offset > 3 and offset < self.size then
+			return offset
+		end
+		return false
 	end,
 	getBlock = function(self, x, y, z)
 		if not self.ldata then return false end
-		return self.ldata[self:getOffset(x, y, z)]
+		local offset = self:getOffset(x, y, z)
+		if offset then
+			return self.ldata[offset]
+		else
+			return 0
+		end
 	end,
 	getAddr = function(self)
 		return getAddr(self.ldata)
@@ -185,10 +192,12 @@ local world_mt = {
 		if not self.ldata then return false end
 		if self:isReadOnly()then return false end
 		local offset = self:getOffset(x, y, z)
-		self.ldata[offset] = id
-		playersForEach(function(player)
-			player:sendPacket(false, 0x06, x, y, z, id)
-		end)
+		if offset then
+			self.ldata[offset] = id
+			playersForEach(function(player)
+				player:sendPacket(false, 0x06, x, y, z, id)
+			end)
+		end
 	end,
 	setSpawn = function(self, x, y, z, ay, ap)
 		if not x or not y or not z then return false end
