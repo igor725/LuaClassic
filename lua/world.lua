@@ -18,15 +18,21 @@ local function distance(x1, z1, x2, z2)
 end
 
 local function delayedWaterCreate(world, sx, sy, sz, x, y, z)
-	local dst = distance(sx, sz, x, z)
-	if dst < 25 then
+	--local dst = distance(sx, sz, x, z)
+	--if dst < 25 then
 		timer.Simple(.2, function()
 			if world:getBlock(x, y, z) == 0 then
 				world:setBlock(x, y, z, 8)
 				world:updateWaterBlock(sx, sy, sz, x, y, z)
 			end
 		end)
-	end
+		timer.Simple(2, function()
+			if world:getBlock(x, y, z) == 8 then
+				world:setBlock(x, y, z, 0)
+				world:updateWaterBlock(sx, sy, sz, x, y, z)
+			end
+		end)
+	--end
 end
 
 local function getWorldPath(wname)
