@@ -18,7 +18,7 @@ ffi.cdef[[
 		float pitch;
 	} angle;
 
-	size_t fread(const void* ptr, size_t size, size_t count, void* stream);
+	size_t fread(void* ptr, size_t size, size_t count, void* stream);
 	size_t fwrite(const void* ptr, size_t size, size_t count, void* stream);
 	int    ferror(void* stream);
 ]]
