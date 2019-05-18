@@ -29,9 +29,6 @@ end
 
 require('utils')
 require('commands')
-dirForEach('lua', 'lua', function(file)
-	require(file:sub(1, -5))
-end)
 
 function onConnectionAttempt(ip, port)
 end
@@ -299,7 +296,7 @@ function wsDoHandshake()
 	end
 end
 
-function createPlayer(cl,isWS)
+function createPlayer(cl, isWS)
 	local ip = cl:getpeername()
 	if not onConnectionAttempt(ip)then
 		local player = newPlayer(cl)

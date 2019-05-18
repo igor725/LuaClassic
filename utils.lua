@@ -260,3 +260,7 @@ function watchThreads(threads)
 		end
 	end
 end
+
+dirForEach('lua', 'lua', function(file)
+	require(file:sub(1, -5))
+end)
