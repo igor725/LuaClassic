@@ -97,7 +97,16 @@ local player_mt = {
 		end
 	end,
 	getOnlineTime = function(self)
-		return self.lastOnlineTime + (CTIME - self.connectTime)
+		return floor(self.lastOnlineTime + (CTIME - self.connectTime))
+	end,
+	getWorld = function(self)
+		return getWorld(self.worldName)
+	end,
+	getWorldName = function(self)
+		return self.worldName
+	end,
+	getLeaveReason = function(self)
+		return self.leavereason
 	end,
 	getName = function(self)
 		return self.name or'Unnamed'
@@ -197,6 +206,9 @@ local player_mt = {
 
 	isWebClient = function(self)
 		return self.isWS
+	end,
+	isHandshaked = function(self)
+		return self.handshakeStage2 and self.handshaked
 	end,
 	isSupported = function(self, extName, extVer)
 		extVer = extVer or 1
@@ -302,50 +314,41 @@ local player_mt = {
 	readWsFrame = function(self)
 		if not self.isWS then return false end
 		local cl = self:getClient()
-		local fin, masked, opcode, hint, mask, plen
-		if not self.wsData then
+		if not self.wsHint then
 			local hdr = cl:receive(2)
-			if hdr then
-				fin, masked, opcode, hint = readWsHeader(hdr:byte(1, 2))
-				if not fin or not masked then
-					cl:close()
-					return
-				end
-				if hint > 125 then
-					if hint == 126 then
-						local data = cl:receive(2)
-						if data then
-							plen = struct.unpack('>H', data)
-						else
-							cl:close()
-							return
-						end
-					else
-						cl:close()
-						return
+			if not hdr then return end
+			local fin, masked, opcode, hint = readWsHeader(hdr:byte(1, 2))
+			if not fin or not masked then
+				cl:close()
+				return
+			end
+			self.wsHint = hint
+			self.wsOpcode = opcode
+		elseif not self.wsPacketLen then
+			local hint = self.wsHint
+			local plen
+			if hint > 125 then
+				if hint == 126 then
+					local data = cl:receive(2)
+					if data then
+						plen = struct.unpack('>H', data)
 					end
 				else
-					plen = hint
-				end
-				mask = cl:receive(4)
-				if not mask then
 					cl:close()
 					return
 				end
+			else
+				plen = hint
 			end
+			self.wsPacketLen = plen
+		elseif not self.wsMask then
+			self.wsMask = cl:receive(4)
 		else
-			local wd = self.wsData
-			opcode, plen, mask = wd[1], wd[2], wd[3]
-		end
-
-		if opcode and plen then
-			local data = cl:receive(plen)
-			if not data and not self.wsData then
-				self.wsData = {opcode, plen, mask}
-			end
+			local data = cl:receive(self.wsPacketLen)
 			if data then
-				self.wsData = nil
-				return unmaskData(data, mask, plen), opcode
+				data = unmaskData(data, self.wsMask, #data)
+				self.wsHint, self.wsMask, self.wsPacketLen = nil
+				return data, self.wsOpcode
 			end
 		end
 	end,
@@ -703,6 +706,14 @@ end
 function newChatMessage(msg, id)
 	playersForEach(function(ply)
 		ply:sendMessage(msg, id)
+	end)
+end
+
+function newLocalChatMessage(world, msg, id)
+	playersForEach(function(ply)
+		if ply:isInWorld(world)then
+			ply:sendMessage(msg, id)
+		end
 	end)
 end
 

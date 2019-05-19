@@ -61,18 +61,16 @@ function onPlayerDespawn(player)
 end
 
 function onPlayerDestroy(player)
-	local msg = printf(MESG_DISCONN, player:getName(), player.leavereason)
+	local msg = printf(MESG_DISCONN, player, player:getLeaveReason())
 	newChatMessage('&e' .. msg)
 	cpe:extCallHook('onPlayerDestroy', player)
 	hooks:call('onPlayerDestroy', player)
-	if player.handshaked then
+	if player:isHandshaked()then
 		local x, y, z = player:getPos()
 		local ay, ap = player:getEyePos()
-		local world = player.worldName
-		local otime
-		if player.lastOnlineTime then
-			otime = floor(player.lastOnlineTime + (CTIME - player.connectTime))
-		end
+		local world = player:getWorldName()
+		local otime = player:getOnlineTime()
+
 		if x and world and otime then
 			assert(sql:insertData(player:getVeriKey(), {'spawnX', 'spawnY', 'spawnZ', 'spawnYaw', 'spawnPitch', 'lastWorld', 'onlineTime'}, {x, y, z, ay, ap, world, otime}))
 		end
@@ -80,7 +78,7 @@ function onPlayerDestroy(player)
 end
 
 function onPlayerHandshakeDone(player)
-	local msg = printf(MESG_CONN, player:getName())
+	local msg = printf(MESG_CONN, player)
 	newChatMessage('&e' .. msg)
 end
 
@@ -156,11 +154,7 @@ function onPlayerChatMessage(player, message)
 		newChatMessage(player:getName() .. ': ' .. message:sub(2))
 	else -- Message to local chat
 		local cmsg = player:getName() .. ': ' .. message
-		playersForEach(function(ply)
-			if ply:isInWorld(player)then
-				ply:sendMessage(cmsg)
-			end
-		end)
+		newLocalChatMessage(player, cmsg)
 	end
 end
 
@@ -232,12 +226,14 @@ end
 function wsAcceptClients()
 	local cl = wsServer:accept()
 	if not cl then return end
-	cl:settimeout(0)
+	cl:settimeout(.0001)
 	wsHandshake[cl] = {
 		state = 'initial',
 		headers = {}
 	}
 end
+
+local httpPattern = 'get%s+(.+)%s+http/'
 
 function wsDoHandshake()
 	for cl, data in pairs(wsHandshake)do
@@ -249,11 +245,22 @@ function wsDoHandshake()
 
 		if data.state == 'initial'then
 			local req = cl:receive()
-			if req and req:lower():find('get%s*(.+)%s*http/1.1')then
-				data.state = 'headers'
-			else
+			if req then
+				req = req:lower()
+				if req:find(httpPattern)then
+					local url = req:match(httpPattern)
+					url = url:gsub('%?(.*)', '') -- TODO: Put it in one pattern
+					if url == '/lua'then
+						data.isLuaClient = true
+					elseif url == '/'then
+						data.isMcClient = true
+					end
+					data.state = 'headers'
+				end
+			end
+			if data.state ~= 'headers'then
 				data.state = 'badrequest'
-				data.emsg = 'Not a HTTP request'
+				data.emsg = 'Not a GET request'
 			end
 		elseif data.state == 'headers'then
 			local ln = cl:receive()
@@ -263,7 +270,6 @@ function wsDoHandshake()
 				local k, v = ln:match('(.+)%s*:%s*(.+)')
 				if k then
 					k = k:lower()
-					v = v:lower()
 					data.headers[k] = v
 				else
 					data.state = 'badrequest'
@@ -278,8 +284,8 @@ function wsDoHandshake()
 			local upgrd = hdr['upgrade']
 
 			if upgrd and wskey and conn and
-			upgrd == 'websocket'and
-			conn:find('upgrade')and
+			upgrd:lower() == 'websocket'and
+			conn:find('[UuPpGgRrAaDdEe]+')and
 			tonumber(wsver) == 13 then
 				wskey = wskey .. WSGUID
 				wskey = b64enc(sha1(wskey))
@@ -289,7 +295,14 @@ function wsDoHandshake()
 				'Sec-WebSocket-Accept: %s\r\n\r\n'):format(wskey)
 				cl:send(response)
 				wsHandshake[cl] = nil
-				createPlayer(cl, true)
+				if data.isMcClient then
+					createPlayer(cl, true)
+				elseif data.isLuaClient then
+					wsCreateLuaSession(cl)
+				else
+					data.state = 'badrequest'
+					data.emsg = 'Unknown URL'
+				end
 			else
 				data.state = 'badrequest'
 			end
@@ -303,6 +316,86 @@ function wsDoHandshake()
 			cl:send(response)
 			cl:close()
 			wsHandshake[cl] = nil
+		end
+	end
+end
+
+function wsHandleLuaCommand(cmd)
+	local id = cmd:byte(1, 1)
+	local data = cmd:sub(2)
+
+	if id == 1 then
+		local chunk, err = loadstring(data)
+		if chunk then
+			local status, ret = pcall(chunk)
+			return '\0' .. tostring(ret)
+		else
+			return '\0' .. err
+		end
+	end
+end
+
+-- TODO: Remove duplicate WebSocket frame handling code
+
+function wsLuaCheck(cl, data)
+	local _, status = cl:receive(0)
+	if status == 'closed'then
+		luaSessions[cl] = nil
+		return
+	end
+	if not data.hint then
+		local hdr = cl:receive(2)
+		if not hdr then return end
+		local fin, masked, opcode, hint = readWsHeader(hdr:byte(1, 2))
+		if not fin or not masked then
+			cl:close()
+			return
+		end
+		data.hint = hint
+		data.opcode = opcode
+	elseif not data.packetLen then
+		local hint = data.hint
+		local plen
+		if hint > 125 then
+			if hint == 126 then
+				local data = cl:receive(2)
+				if data then
+					plen = struct.unpack('>H', data)
+				end
+			else
+				cl:close()
+				return
+			end
+		else
+			plen = hint
+		end
+		data.packetLen = plen
+	elseif not data.mask then
+		data.mask = cl:receive(4)
+	else
+		local msg = cl:receive(data.packetLen)
+		if msg then
+			msg = unmaskData(msg, data.mask, #msg)
+			data.hint, data.mask, data.packetLen = nil
+			local out = wsHandleLuaCommand(msg)
+			if out then
+				cl:send(encodeWsFrame(out, 0x02))
+			end
+		end
+	end
+end
+
+function wsHandleLuaSessions()
+	for cl, data in pairs(luaSessions)do
+		wsLuaCheck(cl, data)
+	end
+end
+
+function wsCreateLuaSession(cl)
+	if config:get('lua-exec')then
+		local ip = cl:getpeername()
+		if ip == '127.0.0.1'then -- TODO: Normal authorization
+			luaSessions[cl] = {}
 		end
 	end
 end
@@ -406,13 +499,28 @@ function init()
 	local port = config:get('server-port')
 	server = bindSock(ip, port)
 
-	local ws = config:get('allow-websocket')
-	if ws then
+	if config:get('allow-websocket')then
 		WSGUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 		wsPort = config:get('websocket-port')
 		wsServer = bindSock(ip, wsPort)
 		wsHandshake = {}
 		require('helper')
+		if config:get('lua-exec')then
+			if not config:get('luaexec-warn')then
+				local currLvl = log.level
+				log.setLevel(LOG_WARN)
+				log.warn(CON_LUAEXECWARN)
+				log.setLevel(currLvl)
+				local response = io.read()
+				if response == 'I agree'then
+					config:set('luaexec-warn', true)
+					config:save()
+				else
+					os.exit(0)
+				end
+			end
+			luaSessions = {}
+		end
 	end
 
 	log.info(CON_WLOAD)
@@ -497,6 +605,9 @@ succ, err = xpcall(function()
 		if wsServer then
 			wsAcceptClients()
 			wsDoHandshake()
+			if luaSessions then
+				wsHandleLuaSessions()
+			end
 		end
 
 		if cmdh then
