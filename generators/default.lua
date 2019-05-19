@@ -16,6 +16,7 @@ local GEN_CAVE_MAX_LENGTH = 500
 local GEN_TREES_COUNT_MULT = 1
 
 local GEN_ORE_VEIN_SIZE = 3
+local GEN_GRAVEL_VEIN_SIZE = 14
 
 local GEN_BIOME_STEP = 20
 local GEN_BIOME_RADIUS = 5
@@ -474,8 +475,8 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 			maxHeight = maxHeight + 4
 
 			for i = -1, math.min(endX - startX, endZ - startZ) / 2 do
-				ffi.fill(map + ((maxHeight + i) * dimz + startZ + i) * dimx + startX + i + 4, endX - startX - 2 * i + 1, 5)
-				ffi.fill(map + ((maxHeight + i) * dimz + endZ - i) * dimx + startX + i + 4, endX - startX - 2 * i + 1, 5)
+				ffi.fill(map + ((maxHeight + i) * dimz + startZ + i) * dimx + startX + i + 4, lengthX - 2 * i, 5)
+				ffi.fill(map + ((maxHeight + i) * dimz + endZ - i) * dimx + startX + i + 4, lengthX - 2 * i, 5)
 
 				for z = startZ + i + 1, endZ - i - 1 do
 					SetBlock(startX + i, maxHeight + i, z, 5)
@@ -522,11 +523,10 @@ local function generateOre(mapaddr, dimx, dimy, dimz, seed)
 		end
 	end
 	
-	local GEN_GRAVEL_VEIN_SIZE = 14
 	local GRAVEL_COUNT = dimx * dimy * dimz / 500000
 	for i = 1, GRAVEL_COUNT do
-		x = math.random(GEN_ORE_VEIN_SIZE, dimx - GEN_ORE_VEIN_SIZE)
-		z = math.random(GEN_ORE_VEIN_SIZE, dimz - GEN_ORE_VEIN_SIZE)
+		x = math.random(GEN_ORE_VEIN_SIZE, dimx - GEN_ORE_VEIN_SIZE * 2)
+		z = math.random(GEN_ORE_VEIN_SIZE, dimz - GEN_ORE_VEIN_SIZE * 2)
 		y = math.random(1, heightGrass - GEN_GRAVEL_VEIN_SIZE * 4)
 		
 		for dz = 1, GEN_GRAVEL_VEIN_SIZE do
