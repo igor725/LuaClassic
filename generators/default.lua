@@ -499,7 +499,7 @@ local function generateOre(mapaddr, dimx, dimy, dimz, seed)
 	for i = 1, ORE_COUNT do
 		x = math.random(GEN_ORE_VEIN_SIZE, dimx - GEN_ORE_VEIN_SIZE)
 		z = math.random(GEN_ORE_VEIN_SIZE, dimz - GEN_ORE_VEIN_SIZE)
-		y = math.random(1, heightGrass - GEN_ORE_VEIN_SIZE * 2)
+		y = math.random(1, heightGrass + 15)
 
 		ore = math.random(14, 16)
 		for dx = 1, GEN_ORE_VEIN_SIZE do
