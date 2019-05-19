@@ -6,6 +6,8 @@ CONF_INVALIDSYNTAX = 'Invalid syntax in %s file on line %d'
 
 TMR_ERR            = 'timer %q error: %s'
 
+CON_LUAEXECWARN    = 'LUAEXEC: This feature is experimental and may contain bugs, including security threats,\
+if you understand the risks type "I agree"'
 CON_PROPINVALID    = '&cInvalid server.properties configuration'
 CON_LJVER          = 'Server requires LuaJIT >= 2.0.0-beta11'
 CON_SAVESUCC       = 'Configuration saved successfully'

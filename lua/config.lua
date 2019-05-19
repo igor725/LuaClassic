@@ -5,6 +5,8 @@ local wsport = 'websocket-port'
 local sip = 'server-ip'
 local sport = 'server-port'
 local mplys = 'max-players'
+local lexec = 'lua-exec'
+local lwarn = 'luaexec-warn'
 
 local lseeds = 'level-seeds'
 local lnames = 'level-names'
@@ -26,6 +28,8 @@ config = {
 		[sip] = '0.0.0.0',
 		[sport] = 25565,
 		[mplys] = 20,
+		[lexec] = false,
+		[lwarn] = false,
 
 		[lseeds] = '',
 		[lnames] = 'world',
@@ -46,6 +50,8 @@ config = {
 		[sip] = 'string',
 		[sport] = 'number',
 		[mplys] = 'number',
+		[lexec] = 'boolean',
+		[lwarn] = 'boolean',
 
 		[lseeds] = 'string',
 		[lnames] = 'string',
