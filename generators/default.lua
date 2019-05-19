@@ -319,18 +319,19 @@ local function generateTrees(mapaddr, dimx, dimy, dimz, seed)
 
 				baseHeight2 = baseHeight + math.random(4, 6)
 
+				--for dx = x - 2, x + 2 do
+					for dz = z - 2, z + 2 do
+						--if dx ~= x or dz ~= z then
+							for y = baseHeight2 - 2, baseHeight2 - 1 do
+								--SetBlock(dx, y, dz, 18)
+								ffi.fill(map + (y * dimz + dz) * dimx + x - 2 + 4, 5, 18)
+							end
+						--end
+					end
+				--end
+
 				for y = baseHeight + 1, baseHeight2 do
 					SetBlock(x, y, z, 17)
-				end
-
-				for dx = x - 2, x + 2 do
-					for dz = z - 2, z + 2 do
-						if dx ~= x or dz ~= z then
-							for y = baseHeight2 - 2, baseHeight2 - 1 do
-								SetBlock(dx, y, dz, 18)
-							end
-						end
-					end
 				end
 
 				for dx = x - 1, x + 1 do
@@ -402,21 +403,25 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 	local materials = {4, 20, 5}
 
 	for i = 1, HOUSE_COUNT do
-		local startX = math.random(4, dimx - 8)
-		local startZ = math.random(4, dimz - 10)
-		local endX = startX + math.random(4, 6)
-		local endZ = startZ + math.random(6, 8)
+		local startX = math.random(4, dimx - 10)
+		local startZ = math.random(4, dimz - 8)
+		local endX = startX + math.random(6, 8)
+		local endZ = startZ + math.random(4, 6)
 
 		-- Find max height
 		local calcel = false
 
 		local maxHeight = 0
+		local minHeight = dimy
 		local tempHeight
 		for x = startX, endX do
 			for z = startZ, endZ do
 				tempHeight = getHeight(x, z)
 				if tempHeight > maxHeight then
 					maxHeight = tempHeight
+				end
+				if tempHeight < minHeight then
+					minHeight = tempHeight
 				end
 				if tempHeight < heightWater then
 					calcel = true
@@ -429,22 +434,28 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 			maxHeight = maxHeight + 1
 
 			-- floor
-			for x = startX, endX do
+			--[[for x = startX, endX do
 				for z = startZ, endZ do
 					for y = getHeight(x, z), maxHeight do
 						SetBlock(x, y, z, 4)
 					end
 				end
+			end]]--
+			
+			local lengthX = endX - startX + 1
+			for z = startZ, endZ do
+				for y = minHeight, maxHeight do
+					ffi.fill(map + (y * dimz + z) * dimx + startX + 4, lengthX, 4)
+				end
 			end
+
 
 			-- walls
 			for i = 1, #materials do
-				for x = startX, endX do
-					SetBlock(x, maxHeight + i, startZ, materials[i])
-					SetBlock(x, maxHeight + i, endZ, materials[i])
-				end
+				ffi.fill(map + ((maxHeight + i) * dimz + startZ) * dimx + startX + 4, lengthX, materials[i])
+				ffi.fill(map + ((maxHeight + i) * dimz + endZ) * dimx + startX + 4, lengthX, materials[i])
 
-				for z = startZ, endZ do
+				for z = startZ + 1, endZ - 1 do
 					SetBlock(startX, maxHeight + i, z, materials[i])
 					SetBlock(endX, maxHeight + i, z, materials[i])
 				end
@@ -463,12 +474,10 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 			maxHeight = maxHeight + 4
 
 			for i = -1, math.min(endX - startX, endZ - startZ) / 2 do
-				for x = startX + i, endX - i do
-					SetBlock(x, maxHeight + i, startZ + i, 5)
-					SetBlock(x, maxHeight + i, endZ - i, 5)
-				end
+				ffi.fill(map + ((maxHeight + i) * dimz + startZ + i) * dimx + startX + i + 4, endX - startX - 2 * i + 1, 5)
+				ffi.fill(map + ((maxHeight + i) * dimz + endZ - i) * dimx + startX + i + 4, endX - startX - 2 * i + 1, 5)
 
-				for z = startZ + i, endZ - i do
+				for z = startZ + i + 1, endZ - i - 1 do
 					SetBlock(startX + i, maxHeight + i, z, 5)
 					SetBlock(endX - i, maxHeight + i, z, 5)
 				end
