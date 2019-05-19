@@ -367,7 +367,7 @@ addConsoleCommand('regen', function(args)
 		local seed = tonumber(args[3]or os.time())
 		local ret, tm = regenerateWorld(world, gen, seed)
 		if not ret then
-			return true, (CMD_GENERR):foramt(tm)
+			return true, (CMD_GENERR):format(tm)
 		else
 			return true, (MESG_DONEIN):format(tm * 1000)
 		end
