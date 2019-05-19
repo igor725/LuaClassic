@@ -490,22 +490,39 @@ local function generateOre(mapaddr, dimx, dimy, dimz, seed)
 			map[offset] = id
 		end
 	end
-	local ORE_COUNT = dimx * dimy * dimz / 150 / 64
+	local GetBlock = function(x, y, z, id)
+		return map[(y * dimz + z) * dimx + x + 4]
+	end
+	local ORE_COUNT = dimx * dimy * dimz / 5000
 
 	local x, y, z, ore
 	for i = 1, ORE_COUNT do
 		x = math.random(GEN_ORE_VEIN_SIZE, dimx - GEN_ORE_VEIN_SIZE)
 		z = math.random(GEN_ORE_VEIN_SIZE, dimz - GEN_ORE_VEIN_SIZE)
-		y = math.random(5, heightGrass / 2)
+		y = math.random(1, heightGrass - GEN_ORE_VEIN_SIZE * 2)
 
 		ore = math.random(14, 16)
 		for dx = 1, GEN_ORE_VEIN_SIZE do
 			for dz = 1, GEN_ORE_VEIN_SIZE do
 				for dy = 1, GEN_ORE_VEIN_SIZE do
-					if math.random(0, 1) == 1 then
+					if math.random(0, 1) == 1 and GetBlock(x + dx, y + dy, z + dz) == 1 then
 						SetBlock(x + dx, y + dy, z + dz, ore)
 					end
 				end
+			end
+		end
+	end
+	
+	local GEN_GRAVEL_VEIN_SIZE = 14
+	local GRAVEL_COUNT = dimx * dimy * dimz / 500000
+	for i = 1, GRAVEL_COUNT do
+		x = math.random(GEN_ORE_VEIN_SIZE, dimx - GEN_ORE_VEIN_SIZE)
+		z = math.random(GEN_ORE_VEIN_SIZE, dimz - GEN_ORE_VEIN_SIZE)
+		y = math.random(1, heightGrass - GEN_GRAVEL_VEIN_SIZE * 4)
+		
+		for dz = 1, GEN_GRAVEL_VEIN_SIZE do
+			for dy = 1, GEN_GRAVEL_VEIN_SIZE do
+				ffi.fill(map + ((y + dy) * dimz + z + dz) * dimx + x + 4, GEN_GRAVEL_VEIN_SIZE, 13)
 			end
 		end
 	end
