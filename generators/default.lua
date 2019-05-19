@@ -474,7 +474,7 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 
 			maxHeight = maxHeight + 4
 
-			for i = -1, math.min(endX - startX, endZ - startZ) / 2 do
+			for i = -1, math.ceil(math.min(endX - startX - 1, endZ - startZ - 1) / 2) do
 				ffi.fill(map + ((maxHeight + i) * dimz + startZ + i) * dimx + startX + i + 4, lengthX - 2 * i, 5)
 				ffi.fill(map + ((maxHeight + i) * dimz + endZ - i) * dimx + startX + i + 4, lengthX - 2 * i, 5)
 
