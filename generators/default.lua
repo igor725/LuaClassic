@@ -411,7 +411,7 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 		local endZ = startZ + math.random(4, 6)
 
 		-- Find max height
-		local calcel = false
+		local cancel = false
 
 		local maxHeight = 0
 		local minHeight = dimy
@@ -425,24 +425,15 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 				if tempHeight < minHeight then
 					minHeight = tempHeight
 				end
-				if tempHeight < heightWater then
-					calcel = true
+				if tempHeight < heightWater or tempHeight > dimy - 10 then
+					cancel = true
 					break
 				end
 			end
 		end
 
-		if not calcel then
+		if not cancel then
 			maxHeight = maxHeight + 1
-
-			-- floor
-			--[[for x = startX, endX do
-				for z = startZ, endZ do
-					for y = getHeight(x, z), maxHeight do
-						SetBlock(x, y, z, 4)
-					end
-				end
-			end]]--
 
 			local lengthX = endX - startX + 1
 			for z = startZ, endZ do
@@ -476,14 +467,8 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 			maxHeight = maxHeight + 4
 
 			for i = -1, math.ceil(math.min(endX - startX - 1, endZ - startZ - 1) / 2) do
-				local offset1 = ((maxHeight + i) * dimz + startZ + i) * dimx + startX + i + 4
-				local offset2 = ((maxHeight + i) * dimz + endZ - i) * dimx + startX + i + 4
-				if offset1 < size and offset2 < size then
-					ffi.fill(map + offset1, lengthX - 2 * i, 5)
-					ffi.fill(map + offset2, lengthX - 2 * i, 5)
-				else
-					print('OUT OF BOUNDS', offset1, offset2, maxHeight, tempHeight)
-				end
+				ffi.fill(map + ((maxHeight + i) * dimz + startZ + i) * dimx + startX + i + 4, lengthX - 2 * i, 5)
+				ffi.fill(map + ((maxHeight + i) * dimz + endZ - i) * dimx + startX + i + 4, lengthX - 2 * i, 5)
 
 				for z = startZ + i + 1, endZ - i - 1 do
 					SetBlock(startX + i, maxHeight + i, z, 5)
