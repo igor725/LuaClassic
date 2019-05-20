@@ -144,10 +144,10 @@ addChatCommand('mkportal', function(player, pname, wname)
 		if getWorld(wname)then
 			cworld.data.portals = cworld.data.portals or{}
 			local x1, y1, z1, x2, y2, z2 = makeNormalCube(p1[1], p1[2], p1[3], unpack(p2))
-			cworld.data.portals[pname]={
+			cworld.data.portals[pname] = {
 				tpTo = wname,
-				pt1 = {x1, y1, z1},
-				pt2 = {x2, y2, z2}
+				pt1 = newVector(x1, y1, z1),
+				pt2 = newVector(x2, y2, z2)
 			}
 			return CMD_CRPORTAL
 		else

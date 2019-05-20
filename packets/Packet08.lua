@@ -1,6 +1,6 @@
 return function(player, id, x, y, z, yaw, pitch)
-	player:setPos(x/32, y/32, z/32)
-	player:setEyePos((yaw/255)*360, (pitch/255)*360)
+	player:setPos(x / 32, y / 32, z / 32)
+	player:setEyePos((yaw / 255) * 360, (pitch / 255) * 360)
 
 	if player:isSupported('HeldBlock')then
 		player.heldBlock = id

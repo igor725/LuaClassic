@@ -87,7 +87,7 @@ function onPlayerChatMessage(player, message)
 	if prt ~= nil then
 		message = tostring(prt)
 	end
-	local starts = message:sub(1,1)
+	local starts = message:sub(1, 1)
 	if not message:startsWith('#', '>', '/')then
 		message = message:gsub('%%(%x)', '&%1')
 	end
@@ -96,7 +96,7 @@ function onPlayerChatMessage(player, message)
 	if starts == '#'then
 		if player:checkPermission('server.luaexec')then
 			local code = message:sub(2)
-			if code:sub(1,1) == '='then
+			if code:sub(1, 1) == '='then
 				code = 'return ' .. code:sub(2)
 			end
 			local chunk, err = loadstring(code)
@@ -109,7 +109,7 @@ function onPlayerChatMessage(player, message)
 				for i = 2, #ret do
 					ret[i] = tostring(ret[i])
 				end
-				if ret[1] then
+				if ret[1]then
 					if #ret > 1 then
 						return (MESG_EXECRET):format(table.concat(ret, ', ', 2))
 					else
@@ -183,9 +183,9 @@ function onPlayerMove(player, dx, dy, dz)
 		local x, y, z = player:getPos()
 		for _, portal in pairs(portals)do
 			y = floor(y)
-			if (portal.pt1[1] >= x and portal.pt2[1] <= x)
-			and(portal.pt1[2] >= y and portal.pt2[2] <= y)
-			and(portal.pt1[3] >= z and portal.pt2[3] <= z)then
+			if (portal.pt1.x >= x and portal.pt2.x <= x)
+			and(portal.pt1.y >= y and portal.pt2.y <= y)
+			and(portal.pt1.z >= z and portal.pt2.z <= z)then
 				player:changeWorld(portal.tpTo, true)
 				break
 			end
@@ -274,7 +274,7 @@ function wsDoHandshake()
 
 			if upgrd and wskey and conn and
 			upgrd:lower() == 'websocket'and
-			conn:find('[UuPpGgRrAaDdEe]+')and
+			conn:lower():find('upgrade')and
 			tonumber(wsver) == 13 then
 				wskey = wskey .. WSGUID
 				wskey = b64enc(sha1(wskey))
@@ -527,7 +527,6 @@ function init()
 
 	for num, wn in pairs(wlist)do
 		wn = wn:lower()
-		local st = socket.gettime()
 		local world
 		local lvlh = io.open('worlds/' .. wn .. '.map', 'rb')
 		if lvlh then
@@ -547,7 +546,7 @@ function init()
 			world = newWorld()
 			world:setName(wn)
 			if world:createWorld({dimensions=newVector(x, y, z)})then
-				generator(world,sdlist[num]or CTIME)
+				generator(world, sdlist[num]or CTIME)
 			end
 		end
 		if world and world.isWorld then
@@ -556,8 +555,6 @@ function init()
 			if num == 1 then
 				worlds['default'] = world
 			end
-			local tm = (MESG_DONEIN):format((socket.gettime() - st) * 1000)
-			log.debug(wn, 'loading', tm)
 		end
 	end
 	generators = nil
@@ -626,7 +623,6 @@ if INITED then
 	log.info(CON_WSAVE)
 	for wname, world in pairs(worlds)do
 		if wname ~= 'default'then
-			local s = socket.gettime()
 			if world:save()then
 				log.debug('World', wname, 'saved')
 			else

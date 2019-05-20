@@ -168,7 +168,7 @@ function table.hasValue(tbl, ...)
 			if tv == nil then
 				break
 			end
-			if tv == tbl[i] then
+			if tv == tbl[i]then
 				return true
 			end
 			idx = idx + 1

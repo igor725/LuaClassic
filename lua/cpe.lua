@@ -28,7 +28,7 @@ function cpe:init()
 
 	local f = true
 	log.info('Loading Classic Protocol Extensions...')
-	dirForEach('CPE','lua', function(filename, fullpath)
+	dirForEach('CPE', 'lua', function(filename, fullpath)
 		local chunk = assert(loadfile(fullpath))
 		local ext = setmetatable(chunk(), ext_mt)
 		local extn = filename:sub(1,-5)
