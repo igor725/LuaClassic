@@ -321,16 +321,11 @@ local function generateTrees(mapaddr, dimx, dimy, dimz, seed)
 
 				baseHeight2 = baseHeight + math.random(4, 6)
 
-				--for dx = x - 2, x + 2 do
 					for dz = z - 2, z + 2 do
-						--if dx ~= x or dz ~= z then
-							for y = baseHeight2 - 2, baseHeight2 - 1 do
-								--SetBlock(dx, y, dz, 18)
-								ffi.fill(map + (y * dimz + dz) * dimx + x - 2 + 4, 5, 18)
-							end
-						--end
+						for y = baseHeight2 - 2, baseHeight2 - 1 do
+							ffi.fill(map + (y * dimz + dz) * dimx + x - 2 + 4, 5, 18)
+						end
 					end
-				--end
 
 				for y = baseHeight + 1, baseHeight2 do
 					SetBlock(x, y, z, 17)
@@ -386,19 +381,11 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 	local size = dimx * dimy * dimz + 4
 
 	local SetBlock = function(x, y, z, id)
-		local offset = (y * dimz + z) * dimx + x + 4
-		if 3 < offset and offset < size then
-			map[offset] = id
-		end
+		map[(y * dimz + z) * dimx + x + 4] = id
 	end
 
 	local GetBlock = function(x, y, z)
-		local offset = (y * dimz + z) * dimx + x + 4
-		if 0 < offset and offset < size then
-			return map[offset]
-		else
-			return -1
-		end
+		return map[(y * dimz + z) * dimx + x + 4]
 	end
 
 	local HOUSE_COUNT = math.ceil(dimx * dimz / 70000)
@@ -456,7 +443,7 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 				SetBlock(startX + 2, maxHeight + i, startZ, 0)
 			end
 
-			SetBlock(startX + 2, maxHeight + i, startZ, 0)
+			-- SetBlock(startX + 2, maxHeight + i, startZ, 0)
 
 			local j = 1
 			while GetBlock(startX + 2, maxHeight - j, startZ - j) == 0 do
@@ -562,7 +549,7 @@ local function generateCaves(mapaddr, dimx, dimy, dimz, seed)
 		ddy = (math.random() - 0.5) * 0.4 + directionY
 		ddz = math.random() - 0.5 + directionZ
 
-		length = 1 --math.sqrt(ddx^2 + ddy^2 + ddz^2)
+		length = math.sqrt(ddx^2 + ddy^2 + ddz^2)
 
 		x = math.floor(x + ddx * GEN_CAVE_RADIUS / length + 0.5)
 		y = math.floor(y + ddy * GEN_CAVE_RADIUS / length + 0.5)
@@ -663,7 +650,7 @@ return function(world, seed)
 				log.debug(('CaveGenerator: %d threads done'):format(thlimit))
 			end
 
-			table.insert(threads, caves_gen(mapaddr, dimx, dimy, dimz, seed + i))
+			table.insert(threads, caves_gen(mapaddr, dimx, dimy, dimz, seed + i * math.random(0, 100)))
 			log.debug(('CaveGenerator: #%d thread spawned'):format(#threads))
 		end
 	end
