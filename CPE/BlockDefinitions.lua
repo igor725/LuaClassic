@@ -66,6 +66,12 @@ local function defineBlockFor(player, opts)
 	end
 end
 
+local function removeDefinedBlock(player, id)
+	if player:isSupported('BlockDefinitions')then
+		player:sendPacket(false, 0x24, id)
+	end
+end
+
 function bd:load()
 	registerSvPacket(0x23, 'bbc64bbbbbbbbbbbbbb')
 	registerSvPacket(0x24, 'bb')
@@ -74,17 +80,13 @@ end
 function bd:remove(id)
 	self.definedBlocks[id] = nil
 	playersForEach(function(player)
-		if player:isSupported('BlockDefinitions')then
-			removeDefinedBlock(player, id)
-		end
+		removeDefinedBlock(player, id)
 	end)
 end
 
 function bd:prePlayerSpawn(player)
-	if player:isSupported('BlockDefinitions')then
-		for id, opts in pairs(self.definedBlocks)do
-			defineBlockFor(player, opts)
-		end
+	for id, opts in pairs(self.definedBlocks)do
+		defineBlockFor(player, opts)
 	end
 end
 

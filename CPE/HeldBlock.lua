@@ -6,7 +6,9 @@ function hb:load()
 		return player.heldBlock or -1
 	end
 	getPlayerMT().holdThis = function(player, block, preventChange)
-		player:sendPacket(false, 0x14, block, (preventChange and 1)or 0)
+		if player:isSupported('heldBlock')then
+			player:sendPacket(false, 0x14, block, (preventChange and 1)or 0)
+		end
 	end
 end
 
