@@ -44,7 +44,6 @@ lanes = require('lanes').configure{
 	with_timers = false
 }
 struct = require('struct')
-lfs = require('lfs')
 
 do
 	local path = package.searchpath('socket.core', package.cpath)
@@ -199,12 +198,107 @@ function string.startsWith(self, ...)
 	return false
 end
 
+if jit.os == 'Windows'then
+	ffi.cdef[[
+		typedef struct {
+		  unsigned int dwLowDateTime;
+		  unsigned int dwHighDateTime;
+		} filetime;
+
+		typedef struct _WIN32_FIND_DATA {
+			unsigned int dwFileAttributes;
+			filetime  ftCreationTime;
+			filetime  ftLastAccessTime;
+			filetime  ftLastWriteTime;
+			unsigned int     nFileSizeHigh;
+			unsigned int     nFileSizeLow;
+			unsigned int     dwReserved0;
+			unsigned int     dwReserved1;
+			char     cFileName[260];
+			char     cAlternateFileName[14];
+		} WIN32_FIND_DATA, *PWIN32_FIND_DATA;
+
+		void* FindFirstFileA(const char*, void*);
+		bool  FindNextFileA(void*, void*);
+		bool  FindClose(void*);
+		void  free(void*);
+	]]
+
+	function scanDir(path, ext)
+		local fdata = ffi.new('WIN32_FIND_DATA')
+		local file
+
+		local function getName()
+			local name = ffi.string(fdata.cFileName)
+			if #name > 0 then
+				return name
+			end
+		end
+
+		if not ext then
+			ext = '*'
+		end
+
+		return function()
+			if not file then
+				file = C.FindFirstFileA(path .. '\\*.' .. ext, fdata)
+				local isFile
+				if file == ffi.cast('void*', -1)then
+					return
+				else
+					isFile = bit.band(fdata.dwFileAttributes, 16) == 0
+				end
+				return getName(), isFile
+			end
+			if C.FindNextFileA(file, fdata)then
+				return getName(), bit.band(fdata.dwFileAttributes, 16) == 0
+			else
+				C.FindClose(file)
+			end
+		end
+	end
+elseif jit.os == 'Linux'then
+	ffi.cdef[[
+		struct dirent {
+			unsigned long  d_ino;
+			unsigned long  d_off;
+			unsigned short d_reclen;
+			unsigned char  d_type;
+			char           d_name[256];
+		};
+		void* opendir(const char*);
+		struct dirent* readdir(void*);
+	]]
+
+	local function scanNext(dir, ext)
+		while true do
+			local _ent = C.readdir(dir)
+			if _ent == nil then return end
+			local name = ffi.string(_ent.d_name)
+			if name:sub(-#ext) == ext then
+				return name, _ent.d_type == 8
+			end
+		end
+	end
+
+	function scanDir(dir, ext)
+		local _dir = C.opendir(dir)
+		if _dir == nil then return end
+
+		return function()
+			return scanNext(_dir, ext)
+		end
+	end
+else
+	function scanDir()
+		error('Directory scanner is not implemented for this OS')
+	end
+end
+
 function dirForEach(dir, ext, func)
-	for file in lfs.dir(dir)do
-		local fp = dir .. '/' .. file
-		if lfs.attributes(fp, 'mode')=='file'and
-		file:sub(-#ext) == ext then
-			func(file, fp)
+	for name, isFile in scanDir(dir, ext)do
+		if isFile then
+			func(name, dir .. '/' .. name)
 		end
 	end
 end
