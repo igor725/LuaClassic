@@ -205,7 +205,7 @@ if jit.os == 'Windows'then
 		  unsigned int dwHighDateTime;
 		} filetime;
 
-		typedef struct _WIN32_FIND_DATA {
+		typedef struct {
 			unsigned int dwFileAttributes;
 			filetime  ftCreationTime;
 			filetime  ftLastAccessTime;
@@ -216,7 +216,7 @@ if jit.os == 'Windows'then
 			unsigned int     dwReserved1;
 			char     cFileName[260];
 			char     cAlternateFileName[14];
-		} WIN32_FIND_DATA, *PWIN32_FIND_DATA;
+		} WIN32_FIND_DATA;
 
 		void* FindFirstFileA(const char*, void*);
 		bool  FindNextFileA(void*, void*);
@@ -273,7 +273,7 @@ elseif jit.os == 'Linux'then
 	local function scanNext(dir, ext)
 		while true do
 			local _ent = C.readdir(dir)
-			if _ent == nil then return end
+			if _ent == nil then break end
 			local name = ffi.string(_ent.d_name)
 			if name:sub(-#ext) == ext then
 				return name, _ent.d_type == 8
@@ -290,9 +290,7 @@ elseif jit.os == 'Linux'then
 		end
 	end
 else
-	function scanDir()
-		error('Directory scanner is not implemented for this OS')
-	end
+	log.fatal('Directory scanner is not implemented for this OS')
 end
 
 function dirForEach(dir, ext, func)
