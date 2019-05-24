@@ -472,13 +472,13 @@ function regenerateWorld(world, gentype, seed)
 			end)
 			ffi.fill(world.ldata + 4, world.size)
 			seed = seed or CTIME
-			local t = socket.gettime()
+			local t = gettime()
 			local succ, err = pcall(gen, world, seed)
 			if not succ then
 				logWorldError(world, err)
 				return false, err
 			end
-			local e = socket.gettime()
+			local e = gettime()
 			playersForEach(function(player)
 				if player:isInWorld(world)then
 					player.handshakeStage2 = true

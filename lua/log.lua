@@ -31,7 +31,7 @@ local function printlogline(ltype, ...)
 	if log.level < ltype then return end
 	local color = (log.colors and log.colors[ltype])or nil
 	local fmt
-	local time, mtime = math.modf(socket.gettime())
+	local time, mtime = math.modf(gettime())
 	mtime = mtime * 1000
 
 	if color then

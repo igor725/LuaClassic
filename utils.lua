@@ -45,21 +45,21 @@ lanes = require('lanes').configure{
 }
 struct = require('struct')
 
-do
-	local path = package.searchpath('socket.core', package.cpath)
-	if path then
-		local lib = package.loadlib(path, 'luaopen_socket_core')
-		if not lib then
-			lib = package.loadlib(path, 'luaopen_lanes_core')
-		end
-		if lib then
-			socket = lib()
-		end
-	end
-	if not socket then
-		error('Can\'t load socket library')
-	end
-end
+-- do
+-- 	local path = package.searchpath('socket.core', package.cpath)
+-- 	if path then
+-- 		local lib = package.loadlib(path, 'luaopen_socket_core')
+-- 		if not lib then
+-- 			lib = package.loadlib(path, 'luaopen_lanes_core')
+-- 		end
+-- 		if lib then
+-- 			socket = lib()
+-- 		end
+-- 	end
+-- 	if not socket then
+-- 		error('Can\'t load socket library')
+-- 	end
+-- end
 
 function newColor(r, g, b)
 	r, g, b = r or 255, g or 255, b or 255
@@ -218,11 +218,23 @@ if jit.os == 'Windows'then
 			char     cAlternateFileName[14];
 		} WIN32_FIND_DATA;
 
-		void* FindFirstFileA(const char*, void*);
-		bool  FindNextFileA(void*, void*);
+		void  GetSystemTimeAsFileTime(filetime*);
+		void* FindFirstFileA(const char*, WIN32_FIND_DATA*);
+		bool  FindNextFileA(void*, WIN32_FIND_DATA*);
+		void  Sleep(unsigned int);
 		bool  FindClose(void*);
-		void  free(void*);
 	]]
+
+	function gettime()
+		local ft = ffi.new('filetime')
+		C.GetSystemTimeAsFileTime(ft)
+		local wtime = ft.dwLowDateTime / 1.0e7 + ft.dwHighDateTime * 429.4967296
+		return wtime - 11644473600
+	end
+
+	function usleep(ms)
+		C.Sleep(ms)
+	end
 
 	function scanDir(path, ext)
 		local fdata = ffi.new('WIN32_FIND_DATA')
@@ -257,7 +269,7 @@ if jit.os == 'Windows'then
 			end
 		end
 	end
-elseif jit.os == 'Linux'then
+else
 	ffi.cdef[[
 		struct dirent {
 			unsigned long  d_ino;
@@ -266,6 +278,14 @@ elseif jit.os == 'Linux'then
 			unsigned char  d_type;
 			char           d_name[256];
 		};
+
+		struct timeval {
+			long tv_sec;
+			long tv_usec;
+		};
+
+		void  gettimeofday(struct timeval*, void*);
+		void  usleep(unsigned int);
 		void* opendir(const char*);
 		struct dirent* readdir(void*);
 	]]
@@ -281,6 +301,16 @@ elseif jit.os == 'Linux'then
 		end
 	end
 
+	function usleep(ms)
+		C.usleep(ms)
+	end
+
+	function gettime()
+		local t = ffi.new('struct timeval')
+		C.gettimeofday(t, nil)
+		return t.tv_sec + 1e-6 * t.tv_usec
+	end
+
 	function scanDir(dir, ext)
 		local _dir = C.opendir(dir)
 		if _dir == nil then return end
@@ -289,8 +319,6 @@ elseif jit.os == 'Linux'then
 			return scanNext(_dir, ext)
 		end
 	end
-else
-	log.fatal('Directory scanner is not implemented for this OS')
 end
 
 function dirForEach(dir, ext, func)
@@ -327,16 +355,6 @@ function makeNormalCube(x1, y1, z1, x2, y2, z2)
 	return px1, py1, pz1, px2, py2, pz2
 end
 
-function bindSock(ip, port)
-	local sock = (socket.tcp4 and socket.tcp4())or socket.tcp()
-	assert(sock:setoption('tcp-nodelay', true))
-	assert(sock:setoption('reuseaddr', true))
-	assert(sock:settimeout(0))
-	assert(sock:bind(ip, port))
-	assert(sock:listen())
-	return sock
-end
-
 function watchThreads(threads)
 	while #threads > 0 do
 		local thread = threads[#threads]
@@ -348,7 +366,7 @@ function watchThreads(threads)
 				table.remove(threads, #threads)
 			end
 		else
-			socket.sleep(.05)
+			usleep(.05)
 		end
 	end
 end

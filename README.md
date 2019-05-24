@@ -16,6 +16,5 @@ Server tested on Debian Stretch/Buster, Arch Linux, Raspbian and Windows 10. On 
 * [LuaJIT](http://luajit.org/download.html)
 * [zlib](https://www.zlib.net/)
 * [LuaLanes](https://github.com/LuaLanes/lanes)
-* [luasocket-lanes](https://github.com/LuaDist-testing/luasocket-lanes)
 * [lsqlite3](https://github.com/LuaDist/lsqlite3)
 * Libraries from src dir
