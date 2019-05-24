@@ -286,6 +286,46 @@ function receiveString(fd, len, flags)
 	end
 end
 
+local lines = {}
+
+--TODO: Omg, improve this sometime
+function receiveLine(fd)
+	if not lines[fd]then
+		lines[fd] = {
+			recvbuf = ffi.new'char[100]',
+			linebuf = ffi.new'char[8192]',
+			recvbufpos = 0,
+			recvbuflen = 0,
+			linepos = 0
+		}
+	end
+	local lns = lines[fd]
+	if lns.recvbufpos == 0 then
+		lns.recvbuflen = receiveMesg(fd, lns.recvbuf, 100)
+	end
+	if lns.linepos == 0 then
+		ffi.fill(lns.linebuf, 8192)
+	end
+	while lns.recvbufpos <= lns.recvbuflen do
+		local sym = lns.recvbuf[lns.recvbufpos]
+		if sym == 10 then
+			local str = ffi.string(lns.linebuf, lns.linepos)
+			lns.linepos = 0
+			lns.recvbufpos = lns.recvbufpos + 1
+			return str
+		elseif sym ~= 13 then
+			lns.linebuf[lns.linepos] = sym
+			lns.linepos = lns.linepos + 1
+		end
+		lns.recvbufpos = lns.recvbufpos + 1
+		if lns.recvbufpos == lns.recvbuflen then
+			lns.recvbuflen = receiveMesg(fd, lns.recvbuf, 100)
+			lns.recvbufpos = 0
+		end
+	end
+	lns.recvbufpos = 0
+end
+
 function checkSock(fd)
 	local ret = sck.recv(fd, nil, 0, 0)
 	if ret < 0 then
@@ -296,6 +336,7 @@ function checkSock(fd)
 end
 
 function closeSock(fd)
+	lines[fd] = nil
 	if jit.os == 'Windows'then
 		return sck.closesocket(fd) == 0
 	else

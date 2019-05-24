@@ -234,7 +234,7 @@ function wsDoHandshake()
 		end
 
 		if data.state == 'initial'then
-			local req = cl:receive()
+			local req = receiveLine(cl)
 			if req then
 				req = req:lower()
 				if req:find(httpPattern)then
@@ -253,7 +253,7 @@ function wsDoHandshake()
 				data.emsg = 'Not a GET request'
 			end
 		elseif data.state == 'headers'then
-			local ln = cl:receive()
+			local ln = receiveLine(cl)
 			if ln == ''then
 				data.state = 'genresp'
 			elseif ln then
