@@ -207,12 +207,12 @@ function setSockOpt(fd, level, opt, val)
 end
 
 --TODO: DNS resolver
-function bindSock(port, backlog)
+function bindSock(ip, port, backlog)
 	local fd = sck.socket(AF_INET, SOCK_STREAM, 0)
 	local ssa = ffi.new('struct sockaddr_in[1]', {{
 		sin_family = AF_INET,
 		sin_addr = {
-			s_addr = sck.inet_addr('0.0.0.0')
+			s_addr = sck.inet_addr(ip)
 		},
 		sin_port = sck.htons(port)
 	}})
@@ -288,7 +288,6 @@ end
 
 local lines = {}
 
---TODO: Omg, improve this sometime
 function receiveLine(fd)
 	if not lines[fd]then
 		lines[fd] = {
@@ -352,7 +351,7 @@ function shutdownSock()
 end
 
 if not ... then
-	server = assert(bindSock(25565))
+	server = assert(bindSock('0.0.0.0', 25565))
 
 	while true do
 		local client = acceptClient(server)

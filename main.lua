@@ -484,12 +484,12 @@ function init()
 	uwa = config:get('unload-world-after')
 	local ip = config:get('server-ip')
 	local port = config:get('server-port')
-	server = bindSock(port)
+	server = bindSock(ip, port)
 
 	if config:get('allow-websocket')then
 		WSGUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 		wsPort = config:get('websocket-port')
-		wsServer = bindSock(wsPort)
+		wsServer = bindSock(ip, wsPort)
 		wsHandshake = {}
 		require('helper')
 		if config:get('lua-exec')then
