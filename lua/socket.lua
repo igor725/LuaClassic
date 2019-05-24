@@ -240,7 +240,7 @@ function bindSock(port, backlog)
 		if flags < 0 then
 			return false, geterror()
 		end
-		flags = bit.bor(flags, 0x0004) -- NON BLOCKING FLAG
+		flags = bit.bor(flags, 4000) -- NON BLOCKING FLAG
 		if ffi.C.fcntl(fd, 4, ffi.new('int', flags)) < 0 then
 			return false, geterror()
 		end
