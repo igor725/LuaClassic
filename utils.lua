@@ -366,7 +366,7 @@ function watchThreads(threads)
 				table.remove(threads, #threads)
 			end
 		else
-			usleep(.05)
+			usleep(40)
 		end
 	end
 end
