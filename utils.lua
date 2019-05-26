@@ -216,7 +216,7 @@ if jit.os == 'Windows'then
 		return wtime - 11644473600
 	end
 
-	function usleep(ms)
+	function sleep(ms)
 		C.Sleep(ms)
 	end
 
@@ -285,8 +285,8 @@ else
 		end
 	end
 
-	function usleep(ms)
-		C.usleep(ms)
+	function sleep(ms)
+		C.usleep(ms * 1000)
 	end
 
 	function gettime()
@@ -350,7 +350,7 @@ function watchThreads(threads)
 				table.remove(threads, #threads)
 			end
 		else
-			usleep(40)
+			sleep(40)
 		end
 	end
 end

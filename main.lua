@@ -597,7 +597,7 @@ succ, err = xpcall(function()
 		if cmdh then
 			cmdh()
 		end
-		usleep(10)
+		sleep(20)
 	end
 end,debug.traceback)
 
