@@ -45,22 +45,6 @@ lanes = require('lanes').configure{
 }
 struct = require('struct')
 
--- do
--- 	local path = package.searchpath('socket.core', package.cpath)
--- 	if path then
--- 		local lib = package.loadlib(path, 'luaopen_socket_core')
--- 		if not lib then
--- 			lib = package.loadlib(path, 'luaopen_lanes_core')
--- 		end
--- 		if lib then
--- 			socket = lib()
--- 		end
--- 	end
--- 	if not socket then
--- 		error('Can\'t load socket library')
--- 	end
--- end
-
 function newColor(r, g, b)
 	r, g, b = r or 255, g or 255, b or 255
 	return ffi.new('color', r, g, b)
@@ -229,7 +213,7 @@ if jit.os == 'Windows'then
 		local ft = ffi.new('filetime')
 		C.GetSystemTimeAsFileTime(ft)
 		local wtime = ft.dwLowDateTime / 1.0e7 + ft.dwHighDateTime * 429.4967296
-		return tonumber(wtime - 11644473600)
+		return wtime - 11644473600
 	end
 
 	function usleep(ms)
@@ -308,7 +292,7 @@ else
 	function gettime()
 		local t = ffi.new('struct timeval')
 		C.gettimeofday(t, nil)
-		return tonumber(t.tv_sec + 1e-6 * t.tv_usec)
+		return tonumber(t.tv_sec) + 1e-6 * tonumber(t.tv_usec)
 	end
 
 	function scanDir(dir, ext)
