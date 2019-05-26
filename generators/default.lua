@@ -4,21 +4,26 @@
 -- for LuaClassic server
 --
 
-local GEN_ENABLE_CAVES = true
-local GEN_ENABLE_TREES = true
-local GEN_ENABLE_ORES = true
-local GEN_ENABLE_HOUSES = true
+local GEN_ENABLE_CAVES     = true
+local GEN_ENABLE_TREES     = true
+local GEN_ENABLE_ORES      = true
+local GEN_ENABLE_HOUSES    = true
 
-local GEN_CAVE_RADIUS = 3
-local GEN_CAVE_MIN_LENGTH = 100
-local GEN_CAVE_MAX_LENGTH = 500
+local GEN_CAVE_RADIUS      = 3
+local GEN_CAVE_MIN_LENGTH  = 100
+local GEN_CAVE_MAX_LENGTH  = 500
 
 local GEN_TREES_COUNT_MULT = 1
 
-local GEN_ORE_VEIN_SIZE = 3
+local GEN_ORE_VEIN_SIZE    = 3
+local GEN_GRAVEL_VEIN_SIZE = 14
 
-local GEN_BIOME_STEP = 20
-local GEN_BIOME_RADIUS = 5
+local GEN_BIOME_STEP       = 20
+local GEN_BIOME_RADIUS     = 5
+
+--[[
+	GENERATOR CODE START
+]]
 
 local BIOME_NORMAL = 1
 local BIOME_HIGH   = 2
@@ -297,10 +302,7 @@ local function generateTrees(mapaddr, dimx, dimy, dimz, seed)
 	local size = dimx * dimy * dimz + 4
 
 	local SetBlock = function(x, y, z, id)
-		local offset = (y * dimz + z) * dimx + x + 4
-		if offset < size then
-			map[offset] = id
-		end
+		map[(y * dimz + z) * dimx + x + 4] = id
 	end
 
 	local TREES_COUNT = (dimx * dimz / 700) * GEN_TREES_COUNT_MULT
@@ -313,24 +315,20 @@ local function generateTrees(mapaddr, dimx, dimy, dimz, seed)
 		x, z = math.random(6, dimx - 6), math.random(6, dimz - 6)
 
 		baseHeight = getHeight(x, z)
-		if baseHeight > heightWater then
+		if baseHeight > heightWater and baseHeight + 8 < dimy then
 			if getBiome(x, z) == BIOME_TREES then
 				i = i + 1
 
 				baseHeight2 = baseHeight + math.random(4, 6)
 
-				for y = baseHeight + 1, baseHeight2 do
-					SetBlock(x, y, z, 17)
-				end
-
-				for dx = x - 2, x + 2 do
 					for dz = z - 2, z + 2 do
-						if dx ~= x or dz ~= z then
-							for y = baseHeight2 - 2, baseHeight2 - 1 do
-								SetBlock(dx, y, dz, 18)
-							end
+						for y = baseHeight2 - 2, baseHeight2 - 1 do
+							ffi.fill(map + (y * dimz + dz) * dimx + x - 2 + 4, 5, 18)
 						end
 					end
+
+				for y = baseHeight + 1, baseHeight2 do
+					SetBlock(x, y, z, 17)
 				end
 
 				for dx = x - 1, x + 1 do
@@ -383,34 +381,27 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 	local size = dimx * dimy * dimz + 4
 
 	local SetBlock = function(x, y, z, id)
-		local offset = (y * dimz + z) * dimx + x + 4
-		if 0 < offset and offset < size then
-			map[offset] = id
-		end
+		map[(y * dimz + z) * dimx + x + 4] = id
 	end
 
 	local GetBlock = function(x, y, z)
-		local offset = (y * dimz + z) * dimx + x + 4
-		if 0 < offset and offset < size then
-			return map[offset]
-		else
-			return -1
-		end
+		return map[(y * dimz + z) * dimx + x + 4]
 	end
 
-	local HOUSE_COUNT = dimx * dimz / 70000
+	local HOUSE_COUNT = math.ceil(dimx * dimz / 70000)
 	local materials = {4, 20, 5}
 
 	for i = 1, HOUSE_COUNT do
-		local startX = math.random(4, dimx - 8)
-		local startZ = math.random(4, dimz - 10)
-		local endX = startX + math.random(4, 6)
-		local endZ = startZ + math.random(6, 8)
+		local startX = math.random(4, dimx - 10)
+		local startZ = math.random(4, dimz - 8)
+		local endX = startX + math.random(6, 8)
+		local endZ = startZ + math.random(4, 6)
 
 		-- Find max height
-		local calcel = false
+		local cancel = false
 
 		local maxHeight = 0
+		local minHeight = dimy
 		local tempHeight
 		for x = startX, endX do
 			for z = startZ, endZ do
@@ -418,33 +409,33 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 				if tempHeight > maxHeight then
 					maxHeight = tempHeight
 				end
-				if tempHeight < heightWater then
-					calcel = true
+				if tempHeight < minHeight then
+					minHeight = tempHeight
+				end
+				if tempHeight < heightWater or tempHeight > dimy - 10 then
+					cancel = true
 					break
 				end
 			end
 		end
 
-		if not calcel then
+		if not cancel then
 			maxHeight = maxHeight + 1
 
-			-- floor
-			for x = startX, endX do
-				for z = startZ, endZ do
-					for y = getHeight(x, z), maxHeight do
-						SetBlock(x, y, z, 4)
-					end
+			local lengthX = endX - startX + 1
+			for z = startZ, endZ do
+				for y = minHeight, maxHeight do
+					ffi.fill(map + (y * dimz + z) * dimx + startX + 4, lengthX, 4)
 				end
 			end
 
+
 			-- walls
 			for i = 1, #materials do
-				for x = startX, endX do
-					SetBlock(x, maxHeight + i, startZ, materials[i])
-					SetBlock(x, maxHeight + i, endZ, materials[i])
-				end
+				ffi.fill(map + ((maxHeight + i) * dimz + startZ) * dimx + startX + 4, lengthX, materials[i])
+				ffi.fill(map + ((maxHeight + i) * dimz + endZ) * dimx + startX + 4, lengthX, materials[i])
 
-				for z = startZ, endZ do
+				for z = startZ + 1, endZ - 1 do
 					SetBlock(startX, maxHeight + i, z, materials[i])
 					SetBlock(endX, maxHeight + i, z, materials[i])
 				end
@@ -452,7 +443,7 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 				SetBlock(startX + 2, maxHeight + i, startZ, 0)
 			end
 
-			SetBlock(startX + 2, maxHeight + i, startZ, 0)
+			-- SetBlock(startX + 2, maxHeight + i, startZ, 0)
 
 			local j = 1
 			while GetBlock(startX + 2, maxHeight - j, startZ - j) == 0 do
@@ -462,13 +453,11 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 
 			maxHeight = maxHeight + 4
 
-			for i = -1, math.min(endX - startX, endZ - startZ) / 2 do
-				for x = startX + i, endX - i do
-					SetBlock(x, maxHeight + i, startZ + i, 5)
-					SetBlock(x, maxHeight + i, endZ - i, 5)
-				end
+			for i = -1, math.ceil(math.min(endX - startX - 1, endZ - startZ - 1) / 2) do
+				ffi.fill(map + ((maxHeight + i) * dimz + startZ + i) * dimx + startX + i + 4, lengthX - 2 * i, 5)
+				ffi.fill(map + ((maxHeight + i) * dimz + endZ - i) * dimx + startX + i + 4, lengthX - 2 * i, 5)
 
-				for z = startZ + i, endZ - i do
+				for z = startZ + i + 1, endZ - i - 1 do
 					SetBlock(startX + i, maxHeight + i, z, 5)
 					SetBlock(endX - i, maxHeight + i, z, 5)
 				end
@@ -485,27 +474,40 @@ local function generateOre(mapaddr, dimx, dimy, dimz, seed)
 	local size = dimx * dimy * dimz + 4
 
 	local SetBlock = function(x, y, z, id)
-		local offset = (y * dimz + z) * dimx + x + 4
-		if offset < size then
-			map[offset] = id
-		end
+		map[(y * dimz + z) * dimx + x + 4] = id
 	end
-	local ORE_COUNT = dimx * dimy * dimz / 150 / 64
+	local GetBlock = function(x, y, z, id)
+		return map[(y * dimz + z) * dimx + x + 4]
+	end
+	local ORE_COUNT = dimx * dimy * dimz / 5000
 
 	local x, y, z, ore
 	for i = 1, ORE_COUNT do
 		x = math.random(GEN_ORE_VEIN_SIZE, dimx - GEN_ORE_VEIN_SIZE)
 		z = math.random(GEN_ORE_VEIN_SIZE, dimz - GEN_ORE_VEIN_SIZE)
-		y = math.random(5, heightGrass / 2)
+		y = math.random(1, heightGrass + 15)
 
 		ore = math.random(14, 16)
 		for dx = 1, GEN_ORE_VEIN_SIZE do
 			for dz = 1, GEN_ORE_VEIN_SIZE do
 				for dy = 1, GEN_ORE_VEIN_SIZE do
-					if math.random(0, 1) == 1 then
+					if math.random(0, 1) == 1 and GetBlock(x + dx, y + dy, z + dz) == 1 then
 						SetBlock(x + dx, y + dy, z + dz, ore)
 					end
 				end
+			end
+		end
+	end
+
+	local GRAVEL_COUNT = dimx * dimy * dimz / 500000
+	for i = 1, GRAVEL_COUNT do
+		x = math.random(1, dimx - GEN_ORE_VEIN_SIZE + 1)
+		z = math.random(1, dimz - GEN_ORE_VEIN_SIZE + 1)
+		y = math.random(1, heightGrass - GEN_GRAVEL_VEIN_SIZE + 1)
+
+		for dz = 1, GEN_GRAVEL_VEIN_SIZE do
+			for dy = 1, GEN_GRAVEL_VEIN_SIZE do
+				ffi.fill(map + ((y + dy) * dimz + z + dz) * dimx + x + 4, GEN_GRAVEL_VEIN_SIZE, 13)
 			end
 		end
 	end
@@ -519,18 +521,10 @@ local function generateCaves(mapaddr, dimx, dimy, dimz, seed)
 	local size = dimx * dimy * dimz + 4
 
 	local GetBlock = function(x, y, z)
-		local offset = (y * dimz + z) * dimx + x + 4
-		if offset < size then
-			return map[offset]
-		end
-		return 0
+		return map[(y * dimz + z) * dimx + x + 4]
 	end
-
 	local SetBlock = function(x, y, z, id)
-		local offset = (y * dimz + z) * dimx + x + 4
-		if offset < size then
-			map[offset] = id
-		end
+		map[(y * dimz + z) * dimx + x + 4] = id
 	end
 
 	local CAVE_LENGTH = math.random(GEN_CAVE_MIN_LENGTH, GEN_CAVE_MAX_LENGTH)
@@ -555,7 +549,7 @@ local function generateCaves(mapaddr, dimx, dimy, dimz, seed)
 		ddy = (math.random() - 0.5) * 0.4 + directionY
 		ddz = math.random() - 0.5 + directionZ
 
-		length = 1 --math.sqrt(ddx^2 + ddy^2 + ddz^2)
+		length = math.sqrt(ddx^2 + ddy^2 + ddz^2)
 
 		x = math.floor(x + ddx * GEN_CAVE_RADIUS / length + 0.5)
 		y = math.floor(y + ddy * GEN_CAVE_RADIUS / length + 0.5)
@@ -564,13 +558,13 @@ local function generateCaves(mapaddr, dimx, dimy, dimz, seed)
 		for dx = -GEN_CAVE_RADIUS, GEN_CAVE_RADIUS do
 			for dz = -GEN_CAVE_RADIUS, GEN_CAVE_RADIUS do
 				for dy = -GEN_CAVE_RADIUS, GEN_CAVE_RADIUS do
+					local bx, by, bz = x + dx, y + dy, z + dz
 					if
 						dx * dx + dz * dz + dy * dy < CAVE_RADIUS2
-						and y + dy > 0
-						and 1 < x + dx and x + dx < dimx - 1
-						and 1 < z + dz and z + dz < dimz - 1
+						and 1 < by and by < dimy - 1
+						and 1 < bx and bx < dimx - 1
+						and 1 < bz and bz < dimz - 1
 					then
-						local bx, by, bz = x + dx, y + dy, z + dz
 						local cblock = GetBlock(bx, by, bz)
 						if cblock < 8 or cblock > 9 then
 							SetBlock(bx, by, bz, (by > heightLava and 0)or 11)
@@ -656,7 +650,7 @@ return function(world, seed)
 				log.debug(('CaveGenerator: %d threads done'):format(thlimit))
 			end
 
-			table.insert(threads, caves_gen(mapaddr, dimx, dimy, dimz, seed + i))
+			table.insert(threads, caves_gen(mapaddr, dimx, dimy, dimz, seed + i * math.random(0, 100)))
 			log.debug(('CaveGenerator: #%d thread spawned'):format(#threads))
 		end
 	end

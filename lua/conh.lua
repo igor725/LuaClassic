@@ -11,7 +11,7 @@ function initCmdHandler(cbfunc)
 		set_debug_threadname('CommandsHandler')
 
 		while true do
-			local stp = select(2, cmdlinda:receive(.1,'stp'))
+			local stp = select(2, cmdlinda:receive(.1, 'stp'))
 			if stp ~= nil then break end
 			local line = io.read('*l')
 			if not line then break end
@@ -26,7 +26,7 @@ function initCmdHandler(cbfunc)
 		thread.status == 'running'
 		or thread.status == 'waiting'
 		then
-			local cmd = select(2, cmdlinda:receive(0,'cmd'))
+			local cmd = select(2, cmdlinda:receive(0, 'cmd'))
 			if cmd then
 				cbfunc(cmd)
 				cmdlinda:send('stp', _STOP)

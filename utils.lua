@@ -44,23 +44,6 @@ lanes = require('lanes').configure{
 	with_timers = false
 }
 struct = require('struct')
-lfs = require('lfs')
-
-do
-	local path = package.searchpath('socket.core', package.cpath)
-	if path then
-		local lib = package.loadlib(path, 'luaopen_socket_core')
-		if not lib then
-			lib = package.loadlib(path, 'luaopen_lanes_core')
-		end
-		if lib then
-			socket = lib()
-		end
-	end
-	if not socket then
-		error('Can\'t load socket library')
-	end
-end
 
 function newColor(r, g, b)
 	r, g, b = r or 255, g or 255, b or 255
@@ -168,7 +151,7 @@ function table.hasValue(tbl, ...)
 			if tv == nil then
 				break
 			end
-			if tv == tbl[i] then
+			if tv == tbl[i]then
 				return true
 			end
 			idx = idx + 1
@@ -199,12 +182,133 @@ function string.startsWith(self, ...)
 	return false
 end
 
+if jit.os == 'Windows'then
+	ffi.cdef[[
+		typedef struct {
+		  unsigned int dwLowDateTime;
+		  unsigned int dwHighDateTime;
+		} filetime;
+
+		typedef struct {
+			unsigned int dwFileAttributes;
+			filetime  ftCreationTime;
+			filetime  ftLastAccessTime;
+			filetime  ftLastWriteTime;
+			unsigned int     nFileSizeHigh;
+			unsigned int     nFileSizeLow;
+			unsigned int     dwReserved0;
+			unsigned int     dwReserved1;
+			char     cFileName[260];
+			char     cAlternateFileName[14];
+		} WIN32_FIND_DATA;
+
+		void  GetSystemTimeAsFileTime(filetime*);
+		void* FindFirstFileA(const char*, WIN32_FIND_DATA*);
+		bool  FindNextFileA(void*, WIN32_FIND_DATA*);
+		void  Sleep(unsigned int);
+		bool  FindClose(void*);
+	]]
+
+	function gettime()
+		local ft = ffi.new('filetime')
+		C.GetSystemTimeAsFileTime(ft)
+		local wtime = ft.dwLowDateTime / 1.0e7 + ft.dwHighDateTime * 429.4967296
+		return wtime - 11644473600
+	end
+
+	function sleep(ms)
+		C.Sleep(ms)
+	end
+
+	function scanDir(path, ext)
+		local fdata = ffi.new('WIN32_FIND_DATA')
+		local file
+
+		local function getName()
+			local name = ffi.string(fdata.cFileName)
+			if #name > 0 then
+				return name
+			end
+		end
+
+		if not ext then
+			ext = '*'
+		end
+
+		return function()
+			if not file then
+				file = C.FindFirstFileA(path .. '\\*.' .. ext, fdata)
+				local isFile
+				if file == ffi.cast('void*', -1)then
+					return
+				else
+					isFile = bit.band(fdata.dwFileAttributes, 16) == 0
+				end
+				return getName(), isFile
+			end
+			if C.FindNextFileA(file, fdata)then
+				return getName(), bit.band(fdata.dwFileAttributes, 16) == 0
+			else
+				C.FindClose(file)
+			end
+		end
+	end
+else
+	ffi.cdef[[
+		struct dirent {
+			unsigned long  d_ino;
+			unsigned long  d_off;
+			unsigned short d_reclen;
+			unsigned char  d_type;
+			char           d_name[256];
+		};
+
+		struct timeval {
+			long tv_sec;
+			long tv_usec;
+		};
+
+		void  gettimeofday(struct timeval*, void*);
+		void  usleep(unsigned int);
+		void* opendir(const char*);
+		struct dirent* readdir(void*);
+	]]
+
+	local function scanNext(dir, ext)
+		while true do
+			local _ent = C.readdir(dir)
+			if _ent == nil then break end
+			local name = ffi.string(_ent.d_name)
+			if name:sub(-#ext) == ext then
+				return name, _ent.d_type == 8
+			end
+		end
+	end
+
+	function sleep(ms)
+		C.usleep(ms * 1000)
+	end
+
+	function gettime()
+		local t = ffi.new('struct timeval')
+		C.gettimeofday(t, nil)
+		return tonumber(t.tv_sec) + 1e-6 * tonumber(t.tv_usec)
+	end
+
+	function scanDir(dir, ext)
+		local _dir = C.opendir(dir)
+		if _dir == nil then return end
+
+		return function()
+			return scanNext(_dir, ext)
+		end
+	end
+end
+
 function dirForEach(dir, ext, func)
-	for file in lfs.dir(dir)do
-		local fp = dir .. '/' .. file
-		if lfs.attributes(fp, 'mode')=='file'and
-		file:sub(-#ext) == ext then
-			func(file, fp)
+	for name, isFile in scanDir(dir, ext)do
+		if isFile then
+			func(name, dir .. '/' .. name)
 		end
 	end
 end
@@ -235,16 +339,6 @@ function makeNormalCube(x1, y1, z1, x2, y2, z2)
 	return px1, py1, pz1, px2, py2, pz2
 end
 
-function bindSock(ip, port)
-	local sock = (socket.tcp4 and socket.tcp4())or socket.tcp()
-	assert(sock:setoption('tcp-nodelay', true))
-	assert(sock:setoption('reuseaddr', true))
-	assert(sock:settimeout(0))
-	assert(sock:bind(ip, port))
-	assert(sock:listen())
-	return sock
-end
-
 function watchThreads(threads)
 	while #threads > 0 do
 		local thread = threads[#threads]
@@ -256,7 +350,7 @@ function watchThreads(threads)
 				table.remove(threads, #threads)
 			end
 		else
-			socket.sleep(.05)
+			sleep(40)
 		end
 	end
 end

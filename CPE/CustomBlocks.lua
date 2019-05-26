@@ -8,7 +8,9 @@ function cb:load()
 end
 
 function cb:prePlayerSpawn(player)
-	player:sendPacket(false, 0x13, 1)
+	if player:isSupported('CustomBlocks')then
+		player:sendPacket(false, 0x13, 1)
+	end
 end
 
 return cb

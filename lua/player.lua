@@ -5,33 +5,16 @@ end
 local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 	set_debug_threadname('MapSender')
 
-	do
-		local path = package.searchpath('socket.core', package.cpath)
-		if path then
-			local lib = package.loadlib(path, 'luaopen_socket_core')
-			if not lib then
-				lib = package.loadlib(path, 'luaopen_lanes_core')
-			end
-			if lib then
-				socket = lib()
-			end
-		end
-		if not socket then
-			error('Can\'t load socket library')
-		end
-	end
-
 	struct = require('struct')
 	ffi = require('ffi')
+	require('socket')
 	require('gzip')
 
 	if isWS then
 		require('helper')
 	end
 
-	local newTCP = socket.tcp4 or socket.tcp
 	local fmt = '>Bhc1024b'
-	local cl = newTCP(fd)
 	local map = ffi.cast('char*', mapaddr)
 	local gErr = nil
 
@@ -41,7 +24,7 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 		mapStart = '\2'
 	end
 
-	cl:send(mapStart)
+	sendMesg(fd, mapStart)
 	local succ, gErr = gz.compress(map, maplen, cmplvl, function(out, stream)
 		local chunksz = 1024 - stream.avail_out
 		local cdat = ffi.string(out, 1024)
@@ -50,7 +33,7 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 			dat = encodeWsFrame(dat, 0x02)
 		end
 
-		local _, err = cl:send(dat)
+		local _, err = sendMesg(fd, dat, #dat)
 		if err == 'closed'then
 			gz.defEnd(stream)
 			gErr = err
@@ -60,7 +43,6 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 		end
 	end)
 
-	cl:setfd(-1)
 	return gErr or 0
 end
 
@@ -116,9 +98,6 @@ local player_mt = {
 	end,
 	getClient = function(self)
 		return self.client
-	end,
-	getClientFd = function(self)
-		return self.client:getfd()
 	end,
 
 	setID = function(self,id)
@@ -187,7 +166,7 @@ local player_mt = {
 	checkForRawHandshake = function(self)
 		if self.isWS then return false end
 		local cl = self:getClient()
-		local msg = cl:receive(131)
+		local msg = receiveString(cl, 131)
 		if msg then
 			return self:readHandShakeData(msg)
 		end
@@ -315,11 +294,11 @@ local player_mt = {
 		if not self.isWS then return false end
 		local cl = self:getClient()
 		if not self.wsHint then
-			local hdr = cl:receive(2)
+			local hdr = receiveString(cl, 2)
 			if not hdr then return end
 			local fin, masked, opcode, hint = readWsHeader(hdr:byte(1, 2))
 			if not fin or not masked then
-				cl:close()
+				closeSock(cl)
 				return
 			end
 			self.wsHint = hint
@@ -329,12 +308,12 @@ local player_mt = {
 			local plen
 			if hint > 125 then
 				if hint == 126 then
-					local data = cl:receive(2)
+					local data = receiveString(cl, 2)
 					if data then
 						plen = struct.unpack('>H', data)
 					end
 				else
-					cl:close()
+					closeSock(cl)
 					return
 				end
 			else
@@ -342,9 +321,9 @@ local player_mt = {
 			end
 			self.wsPacketLen = plen
 		elseif not self.wsMask then
-			self.wsMask = cl:receive(4)
+			self.wsMask = receiveString(cl, 4)
 		else
-			local data = cl:receive(self.wsPacketLen)
+			local data = receiveString(cl, self.wsPacketLen)
 			if data then
 				data = unmaskData(data, self.wsMask, #data)
 				self.wsHint, self.wsMask, self.wsPacketLen = nil
@@ -390,7 +369,7 @@ local player_mt = {
 		local cl = self:getClient()
 		local id = self.waitPacket
 		if not id then
-			local pId = cl:receive(1)
+			local pId = receiveString(cl, 1)
 			if pId then
 				id = pId:byte()
 				local psz = psizes[id]
@@ -420,7 +399,7 @@ local player_mt = {
 				fmt = packets[id]
 				sz = psizes[id]
 			end
-			local data = cl:receive(sz)
+			local data = receiveString(cl, sz)
 			if data then
 				self.waitPacket = nil
 				self.cpeRewrite = false
@@ -432,13 +411,10 @@ local player_mt = {
 
 	sendNetMesg = function(self, msg, opcode)
 		local cl = self:getClient()
-		local s, err
 		if self.isWS then
-			s, err = cl:send(encodeWsFrame(msg, opcode or 0x02))
-		else
-			s, err = cl:send(msg)
+			msg = encodeWsFrame(msg, opcode or 0x02)
 		end
-		return s ~= nil, err
+		sendMesg(cl, msg, #msg)
 	end,
 	sendPacket = function(self, isCPE, ...)
 		local rawPacket
@@ -461,7 +437,7 @@ local player_mt = {
 		local size = world:getSize()
 		local sendMap_gen = lanes.gen('*', sendMap)
 		local cmplvl = config:get('gzip-compression-level')
-		self.thread = sendMap_gen(self:getClientFd(), addr, size, cmplvl, self.isWS)
+		self.thread = sendMap_gen(self:getClient(), addr, size, cmplvl, self.isWS)
 	end,
 	sendMOTD = function(self, sname, smotd)
 		sname = sname or config:get('server-name')
@@ -574,7 +550,7 @@ local player_mt = {
 		if self.handshaked then
 			onPlayerDestroy(self)
 		end
-		self:getClient():close()
+		closeSock(self:getClient())
 		self.handshaked = false
 	end,
 	kick = function(self, reason)
@@ -586,7 +562,7 @@ local player_mt = {
 	end,
 
 	serviceMessages = function(self)
-		local _, status = self:getClient():receive(0)
+		local status = checkSock(self:getClient())
 		if status == 'closed'then
 			self:destroy()
 			return

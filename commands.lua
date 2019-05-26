@@ -144,10 +144,10 @@ addChatCommand('mkportal', function(player, pname, wname)
 		if getWorld(wname)then
 			cworld.data.portals = cworld.data.portals or{}
 			local x1, y1, z1, x2, y2, z2 = makeNormalCube(p1[1], p1[2], p1[3], unpack(p2))
-			cworld.data.portals[pname]={
+			cworld.data.portals[pname] = {
 				tpTo = wname,
-				pt1 = {x1, y1, z1},
-				pt2 = {x2, y2, z2}
+				pt1 = newVector(x1, y1, z1),
+				pt2 = newVector(x2, y2, z2)
 			}
 			return CMD_CRPORTAL
 		else
@@ -367,7 +367,7 @@ addConsoleCommand('regen', function(args)
 		local seed = tonumber(args[3]or os.time())
 		local ret, tm = regenerateWorld(world, gen, seed)
 		if not ret then
-			return true, (CMD_GENERR):foramt(tm)
+			return true, (CMD_GENERR):format(tm)
 		else
 			return true, (MESG_DONEIN):format(tm * 1000)
 		end

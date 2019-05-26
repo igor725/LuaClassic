@@ -31,6 +31,7 @@ require('utils')
 require('commands')
 
 function onConnectionAttempt(ip, port)
+	-- return true
 end
 
 function postPlayerSpawn(player)
@@ -87,7 +88,7 @@ function onPlayerChatMessage(player, message)
 	if prt ~= nil then
 		message = tostring(prt)
 	end
-	local starts = message:sub(1,1)
+	local starts = message:sub(1, 1)
 	if not message:startsWith('#', '>', '/')then
 		message = message:gsub('%%(%x)', '&%1')
 	end
@@ -96,7 +97,7 @@ function onPlayerChatMessage(player, message)
 	if starts == '#'then
 		if player:checkPermission('server.luaexec')then
 			local code = message:sub(2)
-			if code:sub(1,1) == '='then
+			if code:sub(1, 1) == '='then
 				code = 'return ' .. code:sub(2)
 			end
 			local chunk, err = loadstring(code)
@@ -109,7 +110,7 @@ function onPlayerChatMessage(player, message)
 				for i = 2, #ret do
 					ret[i] = tostring(ret[i])
 				end
-				if ret[1] then
+				if ret[1]then
 					if #ret > 1 then
 						return (MESG_EXECRET):format(table.concat(ret, ', ', 2))
 					else
@@ -183,9 +184,9 @@ function onPlayerMove(player, dx, dy, dz)
 		local x, y, z = player:getPos()
 		for _, portal in pairs(portals)do
 			y = floor(y)
-			if (portal.pt1[1] >= x and portal.pt2[1] <= x)
-			and(portal.pt1[2] >= y and portal.pt2[2] <= y)
-			and(portal.pt1[3] >= z and portal.pt2[3] <= z)then
+			if (portal.pt1.x >= x and portal.pt2.x <= x)
+			and(portal.pt1.y >= y and portal.pt2.y <= y)
+			and(portal.pt1.z >= z and portal.pt2.z <= z)then
 				player:changeWorld(portal.tpTo, true)
 				break
 			end
@@ -224,12 +225,12 @@ function postPlayerPlaceBlock(player, x, y, z, id)
 end
 
 function wsAcceptClients()
-	local cl = wsServer:accept()
+	local cl, ip = acceptClient(wsServer)
 	if not cl then return end
-	cl:settimeout(.0001)
 	wsHandshake[cl] = {
 		state = 'initial',
-		headers = {}
+		headers = {},
+		ip = ip
 	}
 end
 
@@ -237,14 +238,14 @@ local httpPattern = 'get%s+(.+)%s+http/'
 
 function wsDoHandshake()
 	for cl, data in pairs(wsHandshake)do
-		local _, status = cl:receive(0)
+		local status = checkSock(cl)
+
 		if status == 'closed'then
 			wsHandshake[cl] = nil
-			return
 		end
 
 		if data.state == 'initial'then
-			local req = cl:receive()
+			local req = receiveLine(cl)
 			if req then
 				req = req:lower()
 				if req:find(httpPattern)then
@@ -263,7 +264,7 @@ function wsDoHandshake()
 				data.emsg = 'Not a GET request'
 			end
 		elseif data.state == 'headers'then
-			local ln = cl:receive()
+			local ln = receiveLine(cl)
 			if ln == ''then
 				data.state = 'genresp'
 			elseif ln then
@@ -285,7 +286,7 @@ function wsDoHandshake()
 
 			if upgrd and wskey and conn and
 			upgrd:lower() == 'websocket'and
-			conn:find('[UuPpGgRrAaDdEe]+')and
+			conn:lower():find('upgrade')and
 			tonumber(wsver) == 13 then
 				wskey = wskey .. WSGUID
 				wskey = b64enc(sha1(wskey))
@@ -293,12 +294,12 @@ function wsDoHandshake()
 				('HTTP/1.1 101 Switching Protocols\r\n' ..
 				'Upgrade: websocket\r\nConnection: Upgrade\r\n' ..
 				'Sec-WebSocket-Accept: %s\r\n\r\n'):format(wskey)
-				cl:send(response)
+				sendMesg(cl, response)
 				wsHandshake[cl] = nil
 				if data.isMcClient then
-					createPlayer(cl, true)
+					createPlayer(cl, data.ip, true)
 				elseif data.isLuaClient then
-					wsCreateLuaSession(cl)
+					wsCreateLuaSession(cl, data.ip)
 				else
 					data.state = 'badrequest'
 					data.emsg = 'Unknown URL'
@@ -313,8 +314,8 @@ function wsDoHandshake()
 			'Content-Type: text/plain; charset=utf-8\r\n' ..
 			'Content-Length: %d\r\n\r\nBad request: %s')
 			:format(#msg + 13, msg)
-			cl:send(response)
-			cl:close()
+			sendMesg(cl, response)
+			closeSock(cl)
 			wsHandshake[cl] = nil
 		end
 	end
@@ -338,7 +339,7 @@ end
 -- TODO: Remove duplicate WebSocket frame handling code
 
 function wsLuaCheck(cl, data)
-	local _, status = cl:receive(0)
+	local status = checkSock(cl)
 	if status == 'closed'then
 		luaSessions[cl] = nil
 		return
@@ -358,7 +359,7 @@ function wsLuaCheck(cl, data)
 		local plen
 		if hint > 125 then
 			if hint == 126 then
-				local data = cl:receive(2)
+				local data = receiveString(cl, 2)
 				if data then
 					plen = struct.unpack('>H', data)
 				end
@@ -371,9 +372,9 @@ function wsLuaCheck(cl, data)
 		end
 		data.packetLen = plen
 	elseif not data.mask then
-		data.mask = cl:receive(4)
+		data.mask = receiveString(cl, 4)
 	else
-		local msg = cl:receive(data.packetLen)
+		local msg = receiveString(cl, data.packetLen)
 		if msg then
 			msg = unmaskData(msg, data.mask, #msg)
 			data.hint, data.mask, data.packetLen = nil
@@ -391,17 +392,15 @@ function wsHandleLuaSessions()
 	end
 end
 
-function wsCreateLuaSession(cl)
+function wsCreateLuaSession(cl, ip)
 	if config:get('lua-exec')then
-		local ip = cl:getpeername()
 		if ip == '127.0.0.1'then -- TODO: Normal authorization
 			luaSessions[cl] = {}
 		end
 	end
 end
 
-function createPlayer(cl, isWS)
-	local ip = cl:getpeername()
+function createPlayer(cl, ip, isWS)
 	if not onConnectionAttempt(ip)then
 		local player = newPlayer(cl)
 		player.isWS = isWS
@@ -416,9 +415,9 @@ function createPlayer(cl, isWS)
 	else
 		local rawPacket = generatePacket(0x0e, KICK_CONNREJ)
 		if isWS then
-			cl:send(encodeWsFrame(rawPacket, 0x02))
+			sendMesg(cl, encodeWsFrame(rawPacket, 0x02))
 		else
-			cl:send(rawPacket)
+			sendMesg(cl, rawPacket)
 		end
 	end
 end
@@ -468,10 +467,9 @@ function handleConsoleCommand(cmd)
 end
 
 function acceptClients()
-	local cl = server:accept()
+	local cl, ip = acceptClient(server)
 	if not cl then return end
-	cl:settimeout(.0001)
-	createPlayer(cl, false)
+	createPlayer(cl, ip, false)
 end
 
 function serviceMessages()
@@ -538,7 +536,6 @@ function init()
 
 	for num, wn in pairs(wlist)do
 		wn = wn:lower()
-		local st = socket.gettime()
 		local world
 		local lvlh = io.open('worlds/' .. wn .. '.map', 'rb')
 		if lvlh then
@@ -558,7 +555,7 @@ function init()
 			world = newWorld()
 			world:setName(wn)
 			if world:createWorld({dimensions=newVector(x, y, z)})then
-				generator(world,sdlist[num]or CTIME)
+				generator(world, sdlist[num]or CTIME)
 			end
 		end
 		if world and world.isWorld then
@@ -567,8 +564,6 @@ function init()
 			if num == 1 then
 				worlds['default'] = world
 			end
-			local tm = (MESG_DONEIN):format((socket.gettime() - st) * 1000)
-			log.debug(wn, 'loading', tm)
 		end
 	end
 	generators = nil
@@ -583,14 +578,14 @@ function init()
 	log.info((CON_BINDSUCC):format(ip, port), add)
 	cmdh = initCmdHandler(handleConsoleCommand)
 	log.info(CON_HELP)
-	CTIME = socket.gettime()
+	CTIME = gettime()
 	return true
 end
 
 succ, err = xpcall(function()
 	while not _STOP do
 		ETIME = CTIME
-		CTIME = socket.gettime()
+		CTIME = gettime()
 
 		if not INITED then INITED = init()end
 		if ETIME then
@@ -613,7 +608,7 @@ succ, err = xpcall(function()
 		if cmdh then
 			cmdh()
 		end
-		socket.sleep(.01)
+		sleep(20)
 	end
 end,debug.traceback)
 
@@ -637,7 +632,6 @@ if INITED then
 	log.info(CON_WSAVE)
 	for wname, world in pairs(worlds)do
 		if wname ~= 'default'then
-			local s = socket.gettime()
 			if world:save()then
 				log.debug('World', wname, 'saved')
 			else
@@ -648,8 +642,9 @@ if INITED then
 end
 
 if sql then sql:close()end
-if server then server:close()end
-if wsServer then wsServer:close()end
+if server then closeSock(server)end
+if wsServer then closeSock(wsServer)end
+shutdownSock()
 
 if not succ then
 	err = tostring(err)

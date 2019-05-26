@@ -39,6 +39,14 @@ local function getWorldPath(wname)
 	return 'worlds/' .. wname .. '.map'
 end
 
+local function logWorldWarn(world, str)
+	log.warn(world:getName() .. ': ' .. str)
+end
+
+local function logWorldError(world, str)
+	log.error(world:getName() .. ': ' .. str)
+end
+
 local world_mt = {
 	__tostring = function(self)
 		return self:getName()
@@ -48,7 +56,7 @@ local world_mt = {
 		local dim = data.dimensions
 		local sz = gBufSize(dim)
 		if sz > 1533634564 then
-			log.error(WORLD_TOOBIGDIM)
+			logWorldError(self, WORLD_TOOBIGDIM)
 			return false, WORLD_TOOBIGDIM
 		end
 		data.spawnpoint = data.spawnpoint or newVector(0, 0, 0)
@@ -88,10 +96,10 @@ local world_mt = {
 				packTo(wh, '>bb', 7, (v and 1)or 0)
 			elseif k == 'portals'then
 				for id, val in pairs(v)do
-					local p1x, p1y, p1z = unpack(val.pt1)
-					local p2x, p2y, p2z = unpack(val.pt2)
-					packTo(wh, '>bHHHHHHH', 8, p1x, p1y, p1z,
-					p2x, p2y, p2z, #val.tpTo)
+					local p1 = val.pt1
+					local p2 = val.pt2
+					packTo(wh, '>bHHHHHHH', 8, p1.x, p1.y, p1.z,
+					p2.x, p2.y, p2.z, #val.tpTo)
 					wh:write(val.tpTo)
 				end
 			elseif k == 'texPack'then
@@ -99,7 +107,7 @@ local world_mt = {
 					wh:write(string.char(9, #v))
 					wh:write(v)
 				else
-					log.warn(WORLD_TPSTRLEN)
+					logWorldWarn(self, WORLD_TPSTRLEN)
 				end
 			elseif k == 'wscripts'then
 				for name, script in pairs(v)do
@@ -110,11 +118,11 @@ local world_mt = {
 						wh:write(name)
 						wh:write(script.body)
 					else
-						log.warn(WORLD_SCRSVERR)
+						logWorldWarn(self, WORLD_SCRSVERR)
 					end
 				end
 			else
-				log.warn((WORLD_MAPOPT):format(k))
+				logWorldWarn(self, (WORLD_MAPOPT):format(k))
 			end
 		end
 		wh:write('\255')
@@ -122,7 +130,7 @@ local world_mt = {
 			local chunksz = 1024 - stream.avail_out
 			C.fwrite(out, 1, chunksz, wh)
 			if C.ferror(wh) ~= 0 then
-				log.error(WORLD_WRITEFAIL)
+				logWorldError(self, WORLD_WRITEFAIL)
 				gz.defEnd(stream)
 			end
 		end)
@@ -216,7 +224,7 @@ local world_mt = {
 		return true
 	end,
 	setName = function(self, name)
-		if type(name) ~= 'string' then return false end
+		if type(name) ~= 'string'then return false end
 		self.wname = name
 		return true
 	end,
@@ -331,8 +339,8 @@ local world_mt = {
 					local p1x, p1y, p1z,
 					p2x, p2y, p2z, strsz = unpackFrom(wh, '>HHHHHHH')
 					table.insert(self.data.portals, {
-						pt1 = {p1x, p1y, p1z},
-						pt2 = {p2x, p2y, p2z},
+						pt1 = newVector(p1x, p1y, p1z),
+						pt2 = newVector(p2x, p2y, p2z),
 						tpTo = wh:read(strsz)
 					})
 				elseif id == '\9'then
@@ -347,7 +355,7 @@ local world_mt = {
 				elseif id == '\255'then
 					break
 				else
-					log.error(WORLD_CORRUPT)
+					logWorldError(self, WORLD_CORRUPT)
 					return false
 				end
 			end
@@ -357,8 +365,8 @@ local world_mt = {
 	end,
 
 	addScript = function(self, name, body)
-		if type(name) ~= 'string' or #name > 255 then return false end
-		if type(body) ~= 'string' or #body > 65535 then return false end
+		if type(name) ~= 'string'or #name > 255 then return false end
+		if type(body) ~= 'string'or #body > 65535 then return false end
 		self.data.wscripts = self.data.wscripts or{}
 		self.data.wscripts[name] = {
 			body = body
@@ -366,8 +374,8 @@ local world_mt = {
 		return true
 	end,
 	addScriptFile = function(self, name, filename)
-		if type(name) ~= 'string' or #name > 255 then return false end
-		if type(filename) ~= 'string' then return false end
+		if type(name) ~= 'string'or #name > 255 then return false end
+		if type(filename) ~= 'string'then return false end
 		local f = io.open(filename, 'rb')
 		if not f then return false end
 		local body = f:read(65535)
@@ -508,13 +516,13 @@ function regenerateWorld(world, gentype, seed)
 			end)
 			ffi.fill(world.ldata + 4, world.size)
 			seed = seed or CTIME
-			local t = socket.gettime()
+			local t = gettime()
 			local succ, err = pcall(gen, world, seed)
 			if not succ then
-				log.error(err)
+				logWorldError(world, err)
 				return false, err
 			end
-			local e = socket.gettime()
+			local e = gettime()
 			playersForEach(function(player)
 				if player:isInWorld(world)then
 					player.handshakeStage2 = true
@@ -530,8 +538,8 @@ function newWorld(wh, wn)
 	local world = setmetatable({data = {}}, world_mt)
 
 	if wh and wn then
+		world:setName(wn)
 		if world:readLevelInfo(wh)then
-			world:setName(wn)
 			if not world:readGZIPData(wh)then
 				wh:close()
 				return false

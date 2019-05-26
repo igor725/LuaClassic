@@ -10,9 +10,11 @@ local bp = {
 }
 
 local function setBlockPermFor(player, id, allowPlace, allowDelete)
-	allowPlace = (allowPlace and 1)or 0
-	allowDelete = (allowDelete and 1)or 0
-	player:sendPacket(false, 0x1C, id, allowPlace, allowDelete)
+	if player:isSupported('BlockPermissions')then
+		allowPlace = (allowPlace and 1)or 0
+		allowDelete = (allowDelete and 1)or 0
+		player:sendPacket(false, 0x1C, id, allowPlace, allowDelete)
+	end
 end
 
 function bp:load()

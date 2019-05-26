@@ -117,6 +117,10 @@ local function inflate(file, callback)
 		stream.next_in = inbuff
 		stream.avail_in = C.fread(inbuff, 1, CHUNK_SIZE, file)
 
+		if stream.avail_in == 0 then
+			break
+		end
+
 		local ferr = C.ferror(file)
 		if ferr ~= 0 then
 			infstreamend(stream)
@@ -128,6 +132,7 @@ local function inflate(file, callback)
 			stream.next_out = outbuff
 			stream.avail_out = CHUNK_SIZE
 			ret = _zlib.inflate(stream, Z_NO_FLUSH)
+
 			if ret ~= Z_OK and ret ~= Z_STREAM_END and
 			ret ~= Z_BUF_ERROR then
 				local err = gzerrstr(ret)
