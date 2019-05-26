@@ -229,7 +229,7 @@ if jit.os == 'Windows'then
 		local ft = ffi.new('filetime')
 		C.GetSystemTimeAsFileTime(ft)
 		local wtime = ft.dwLowDateTime / 1.0e7 + ft.dwHighDateTime * 429.4967296
-		return wtime - 11644473600
+		return tonumber(wtime - 11644473600)
 	end
 
 	function usleep(ms)
@@ -308,7 +308,7 @@ else
 	function gettime()
 		local t = ffi.new('struct timeval')
 		C.gettimeofday(t, nil)
-		return t.tv_sec + 1e-6 * t.tv_usec
+		return tonumber(t.tv_sec + 1e-6 * t.tv_usec)
 	end
 
 	function scanDir(dir, ext)
