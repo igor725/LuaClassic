@@ -187,7 +187,7 @@ local player_mt = {
 		return self.isWS
 	end,
 	isHandshaked = function(self)
-		return self.handshakeStage2 and self.handshaked
+		return (not self.handshakeStage2) and self.handshaked
 	end,
 	isSupported = function(self, extName, extVer)
 		extVer = extVer or 1
