@@ -99,6 +99,9 @@ local player_mt = {
 	getClient = function(self)
 		return self.client
 	end,
+	getIP = function(self)
+		return self.ip
+	end,
 
 	setID = function(self,id)
 		if id > 0 then
@@ -114,25 +117,27 @@ local player_mt = {
 		self.verikey = key
 	end,
 	setPos = function(self, x, y, z)
-		if not self.isSpawned then return false end
 		local pos = self.pos
 		local lx, ly, lz = pos.x, pos.y, pos.z
 		if lx ~= x or ly ~= y or z ~= z then
 			pos.x = x
 			pos.y = y
 			pos.z = z
-			onPlayerMove(self, lx - x, ly - y, lz - z)
+			if self.isSpawned then
+				onPlayerMove(self, lx - x, ly - y, lz - z)
+			end
 			return true
 		end
 	end,
 	setEyePos = function(self,y,p)
-		if not self.isSpawned then return false end
 		local eye = self.eye
 		local ly, lp = eye.yaw, eye.pitch
 		if ly ~= y or lp ~= p then
 			eye.yaw = y
 			eye.pitch = p
-			onPlayerRotate(self, y, p)
+			if self.isSpawned then
+				onPlayerRotate(self, y, p)
+			end
 			return true
 		end
 	end,
@@ -151,27 +156,6 @@ local player_mt = {
 		end
 	end,
 
-	checkForWsHandshake = function(self)
-		if not self.isWS then return false end
-		local data = self:readWsFrame()
-		if data then
-			if #data ~= 131 then
-				self:kick(KICK_PACKETSIZE)
-				return false
-			end
-			return self:readHandShakeData(data)
-		end
-		return false
-	end,
-	checkForRawHandshake = function(self)
-		if self.isWS then return false end
-		local cl = self:getClient()
-		local msg = receiveString(cl, 131)
-		if msg then
-			return self:readHandShakeData(msg)
-		end
-		return false
-	end,
 	checkPermission = function(self, nm)
 		local sect = nm:match('(.*)%.')
 		local perms = permissions:getFor(self.verikey)
@@ -236,60 +220,6 @@ local player_mt = {
 		return false, 0
 	end,
 
-	readHandShakeData = function(self, data)
-		local fmt = packets[0x00]
-		local pid, protover, uname, verikey, magicNumber = struct.unpack(fmt, data)
-		if protover == 0x07 then
-			local name = trimStr(uname)
-			local key = trimStr(verikey)
-
-			self:setVeriKey(key)
-			if not self:setName(name)then
-				self:kick(KICK_NAMETAKEN)
-				return
-			end
-			if not sql:createPlayer(key)then
-				self:kick((KICK_INTERR):format(IE_SQL))
-				return
-			end
-			self.handshaked = true
-			self.handshakeStage2 = true
-			onPlayerHandshakeDone(self)
-			local dat = sql:getData(key, 'spawnX, spawnY, spawnZ, spawnYaw, spawnPitch, lastWorld, onlineTime')
-			sql:insertData(key, {'lastIP'}, {self.ip})
-
-			self.lastOnlineTime = dat.onlineTime
-			self.worldName = dat.lastWorld
-			if not worlds[self.worldName]then
-				self.worldName = 'default'
-			end
-			local cwd = worlds[self.worldName].data
-			local eye = cwd.spawnpointeye
-			local spawn = cwd.spawnpoint
-			local sx, sy, sz, ay, ap
-			if dat.spawnX == 0 and dat.spawnY == 0 and dat.spawnZ == 0 then
-				sx, sy, sz = spawn.x, spawn.y, spawn.z
-				ay, ap = eye.yaw, eye.pitch
-			else
-				sx, sy, sz = dat.spawnX, dat.spawnY, dat.spawnZ
-				ay, ap = dat.spawnYaw, dat.spawnPitch
-			end
-			self.pos.x = sx
-			self.pos.y = sy
-			self.pos.z = sz
-			self.eye.yaw = ay
-			self.eye.pitch = ap
-
-			if magicNumber == 0x42 then
-				cpe:startFor(self)
-				self.handshakeStage2 = false
-			end
-			return true
-		else
-			self:kick(KICK_PROTOVER)
-		end
-		return false
-	end,
 	readWsFrame = function(self)
 		if not self.isWS then return false end
 		local cl = self:getClient()
@@ -602,27 +532,17 @@ local player_mt = {
 			return
 		end
 
-		if not self.handshaked then
-			if self.isWS then
-				self.handshaked = self:checkForWsHandshake()
-			else
-				self.handshaked = self:checkForRawHandshake()
-			end
+
+		if self.handshakeStage2 then
+			self:sendMOTD()self:sendMap()
+			self.handshakeStage2 = false
 			return
-		else
-			if self.handshakeStage2 then
-				self:sendMOTD()self:sendMap()
-				self.handshakeStage2 = false
-				return
-			end
 		end
 
-		if self.handshaked then
-			if self.isWS then
-				self:readWsData()
-			else
-				self:readRawData()
-			end
+		if self:isWebClient()then
+			self:readWsData()
+		else
+			self:readRawData()
 		end
 	end,
 	isPlayer = true

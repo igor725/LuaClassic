@@ -1,5 +1,5 @@
 packets = {
-	[0x00] = 'BBc64c64B',
+	[0x00] = 'Bc64c64B',
 	[0x05] = '>hhhBB',
 	[0x08] = '>bhhhBB',
 	[0x0d] = 'Bc64'
@@ -38,9 +38,7 @@ function registerSvPacket(id, fmt)
 end
 
 for id, fmt in pairs(packets)do
-	if id > 0 then
-		registerClPacket(id, fmt)
-	end
+	registerClPacket(id, fmt)
 end
 
 function generatePacket(id, ...)
