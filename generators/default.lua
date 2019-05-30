@@ -13,7 +13,7 @@ local GEN_CAVE_RADIUS      = 3
 local GEN_CAVE_MIN_LENGTH  = 100
 local GEN_CAVE_MAX_LENGTH  = 500
 
-local GEN_TREES_COUNT_MULT = 1
+local GEN_TREES_COUNT_MULT = 0.007
 
 local GEN_ORE_VEIN_SIZE    = 3
 local GEN_GRAVEL_VEIN_SIZE = 14
@@ -79,8 +79,8 @@ local function getBiome2(x, z)
 end
 
 local function getBiome(x, z)
-	x = math.floor(x / GEN_BIOME_STEP)
-	z = math.floor(z / GEN_BIOME_STEP)
+	x = math.floor(x / GEN_BIOME_STEP + 0.5)
+	z = math.floor(z / GEN_BIOME_STEP + 0.5)
 	return biomes[x + z * bsx]
 end
 
@@ -304,16 +304,35 @@ local function generateTrees(mapaddr, dimx, dimy, dimz, seed)
 	local SetBlock = function(x, y, z, id)
 		map[(y * dimz + z) * dimx + x + 4] = id
 	end
+	
+	local biomesWithTrees = {}
+	
+	for i=1, #biomes do
+		if biomes[i] == BIOME_TREES or biomes[i] == BIOME_SAND then
+			biomesWithTrees[#biomesWithTrees + 1] = i
+		end
+	end
 
-	local TREES_COUNT = (dimx * dimz / 700) * GEN_TREES_COUNT_MULT
+	local TREES_COUNT = dimx * dimz * GEN_TREES_COUNT_MULT * (#biomesWithTrees / #biomes)
 
-	local i = 1
-	local fail = 0
-
-	local x, z, baseHeight, baseHeight2
-	while i < TREES_COUNT do
-		x, z = math.random(6, dimx - 6), math.random(6, dimz - 6)
-
+	local x, z, baseHeight, baseHeight2, randBiome
+	for i = 1, TREES_COUNT do
+		randBiome = math.random(1, #biomesWithTrees)
+		x = (biomesWithTrees[randBiome] % bsx) * GEN_BIOME_STEP + math.random(GEN_BIOME_STEP) - GEN_BIOME_STEP / 2
+		z = math.floor(biomesWithTrees[randBiome] / bsx) * GEN_BIOME_STEP + math.random(GEN_BIOME_STEP) - GEN_BIOME_STEP / 2
+		
+		if x > dimx - 6 then
+			x = dimx - 6
+		elseif x < 6 then
+			x = 6
+		end
+		
+		if z > dimz - 6 then
+			z = dimz - 6
+		elseif z < 6 then
+			z = 6
+		end
+		
 		baseHeight = getHeight(x, z)
 		if baseHeight > heightWater and baseHeight + 8 < dimy then
 			if getBiome(x, z) == BIOME_TREES then
@@ -354,20 +373,6 @@ local function generateTrees(mapaddr, dimx, dimy, dimz, seed)
 				for y = baseHeight + 1, baseHeight2 do
 					SetBlock(x, y, z, 18)
 				end
-			else
-				fail = fail + 1
-
-				if fail > 1000 then
-					fail = 0
-					break
-				end
-			end
-		else
-			fail = fail + 1
-
-			if fail > 1000 then
-				fail = 0
-				break
 			end
 		end
 	end
