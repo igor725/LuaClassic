@@ -3,6 +3,8 @@
 	because it is not an integral part of the server.
 
 	P.S. libPNG binary can be grabbed here: https://luapower.com/libpng/download
+	P.P.S. This script works only with the latest version of LuaJIT (at this moment 2.1.0-beta2)
+	On versions below can lead to server crash.
 ]]
 
 local status, LIB = pcall(ffi.load, 'png15')
@@ -19,12 +21,12 @@ end
 
 local HCOLORS = {
 	[-1] = newColor(000, 000, 000),
-	[01]  = newColor(116, 116, 116),
-	[02]  = newColor(118, 177, 079),
-	[03]  = newColor(121, 085, 058),
-	[04]  = newColor(082, 082, 082),
-	[05]  = newColor(188, 152, 098),
-	[08]  = newColor(035, 062, 140),
+	[01] = newColor(116, 116, 116),
+	[02] = newColor(118, 177, 079),
+	[03] = newColor(121, 085, 058),
+	[04] = newColor(082, 082, 082),
+	[05] = newColor(188, 152, 098),
+	[08] = newColor(035, 062, 140),
 	[10] = newColor(224, 142, 046),
 	[12] = newColor(220, 213, 159),
 	[18] = newColor(090, 250, 058),
@@ -62,7 +64,7 @@ function pngSave(world, filename, flipx, flipz)
 	local f, err = io.open(filename or'hmap.png', 'wb')
 	if not f then return false, err end
 	local succ, err = pcall(function()
-		local png = LIB.png_create_write_struct(PNG_VER, nil, eHandler, eHandler)
+		local png = LIB.png_create_write_struct(PNG_VER, nil, eHandler, nil)
 		if png == 0 then return false, 'PNG struct not created'end
 		local info = LIB.png_create_info_struct(png)
 		if info == 0 then return false, 'INFO struct not created'end
