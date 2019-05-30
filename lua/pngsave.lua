@@ -3,8 +3,6 @@
 	because it is not an integral part of the server.
 
 	P.S. libPNG binary can be grabbed here: https://luapower.com/libpng/download
-	P.P.S. This script works only with the latest version of LuaJIT (at this moment 2.1.0-beta2)
-	On versions below can lead to server crash.
 ]]
 
 local status, LIB = pcall(ffi.load, 'png15')
