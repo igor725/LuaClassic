@@ -38,7 +38,6 @@ end
 
 ENABLE_ANSI = checkEnv('ConEmuANSI', 'on')or checkEnv('TERM', 'xterm')or
 checkEnv('TERM', 'screen')
-require('log')
 
 lanes = require('lanes').configure{
 	with_timers = false
