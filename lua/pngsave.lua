@@ -65,7 +65,7 @@ function pngSave(world, filename, flipx, flipz)
 		local png = LIB.png_create_write_struct(PNG_VER, nil, eHandler, eHandler)
 		if png == 0 then return false, 'PNG struct not created'end
 		local info = LIB.png_create_info_struct(png)
-		if png == 1 then return false, 'INFO struct not created'end
+		if info == 0 then return false, 'INFO struct not created'end
 		local iw, wy, ih = world:getDimensions()
 
 		local function getBlockColor(x,z)
@@ -102,8 +102,6 @@ function pngSave(world, filename, flipx, flipz)
 		end
 		LIB.png_write_end(png, nil)
 	end)
-
 	f:close()
-	LIB.png_destroy_write_struct(png, info)
 	return succ, PNG_ERR or err
 end

@@ -221,7 +221,7 @@ local player_mt = {
 	end,
 
 	readWsFrame = function(self)
-		if not self.isWS then return false end
+		if not self:isWebClient()then return false end
 		local cl = self:getClient()
 		if not self.wsHint then
 			local hdr = receiveString(cl, 2)
@@ -262,7 +262,7 @@ local player_mt = {
 		end
 	end,
 	readWsData = function(self)
-		if not self.isWS then return end
+		if not self:isWebClient()then return end
 		local data, opcode = self:readWsFrame()
 		if data then
 			if opcode == 0x02 or opcode == 0x01 then
@@ -295,7 +295,7 @@ local player_mt = {
 		end
 	end,
 	readRawData = function(self)
-		if self.isWS then return end
+		if self:isWebClient()then return end
 		local cl = self:getClient()
 		local id = self.waitPacket
 		if not id then
@@ -341,7 +341,7 @@ local player_mt = {
 
 	sendNetMesg = function(self, msg, opcode)
 		local cl = self:getClient()
-		if self.isWS then
+		if self:isWebClient()then
 			msg = encodeWsFrame(msg, opcode or 0x02)
 		end
 		sendMesg(cl, msg, #msg)
@@ -367,7 +367,7 @@ local player_mt = {
 		local size = world:getSize()
 		local sendMap_gen = lanes.gen('*', sendMap)
 		local cmplvl = config:get('gzip-compression-level')
-		self.thread = sendMap_gen(self:getClient(), addr, size, cmplvl, self.isWS)
+		self.thread = sendMap_gen(self:getClient(), addr, size, cmplvl, self:isWebClient())
 	end,
 	sendMOTD = function(self, sname, smotd)
 		sname = sname or config:get('server-name')
