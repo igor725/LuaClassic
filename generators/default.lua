@@ -503,7 +503,7 @@ local function generateOre(mapaddr, dimx, dimy, dimz, seed)
 	for i = 1, GRAVEL_COUNT do
 		x = math.random(1, dimx - GEN_ORE_VEIN_SIZE + 1)
 		z = math.random(1, dimz - GEN_ORE_VEIN_SIZE + 1)
-		y = math.random(1, heightGrass - GEN_GRAVEL_VEIN_SIZE + 1)
+		y = math.random(1, heightGrass - 20 - GEN_GRAVEL_VEIN_SIZE + 1)
 
 		for dz = 1, GEN_GRAVEL_VEIN_SIZE do
 			for dy = 1, GEN_GRAVEL_VEIN_SIZE do
