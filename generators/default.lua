@@ -91,7 +91,7 @@ local function heightSet(dimy)
 	heightLava = 7
 end
 
-local function heightMapGenerate(dimx, dimz)
+local function heightMapGenerate(dimx, dimy, dimz)
 	heightMap = {}
 
 	for x = 0, bsx do
@@ -106,17 +106,13 @@ local function heightMapGenerate(dimx, dimz)
 					heightMap[offset] = heightGrass + math.random(1, 3)
 				end
 			elseif biome == BIOME_HIGH then
-				if math.random(0, 6) == 0 then
-					heightMap[offset] = heightGrass + math.random(20, 30)
+				if math.random(0, 30) == 0 then
+					heightMap[offset] = heightGrass + math.random(20, math.min(dimy - 1 - heightGrass, 40))
 				else
 					heightMap[offset] = heightGrass + math.random(-2, 20)
 				end
 			elseif biome == BIOME_TREES then
-				if math.random(0, 5) == 0 then
-					heightMap[offset] = heightGrass + math.random(-3, -1)
-				else
-					heightMap[offset] = heightGrass + math.random(1, 5)
-				end
+				heightMap[offset] = heightGrass + math.random(1, 5)
 			elseif biome == BIOME_SAND then
 				heightMap[offset] = heightGrass + math.random(1, 4)
 			elseif biome == BIOME_WATER then
@@ -191,11 +187,6 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 				map[offset + y * step] = 1
 			end
 
-			-- Dirt
-			for y = heightStone1, height1 - 2 do
-				map[offset + y * step] = 3
-			end
-
 			-- Biome depend
 			local biomePosZ = math.floor(z / GEN_BIOME_STEP)
 			if biomePosZ ~= biomePosZOld then
@@ -249,6 +240,11 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 			end
 
 			if biome == BIOME_NORMAL or biome == BIOME_TREES then
+				-- Dirt
+				for y = heightStone1, height1 - 2 do
+					map[offset + y * step] = 3
+				end
+				
 				if height1 > heightWater then
 					-- Grass
 					SetBlock(x, height1 - 1, z, 3)
@@ -264,25 +260,31 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 				end
 			elseif biome == BIOME_HIGH then
 				-- Rock
-				SetBlock(x, height1 - 1, z, 1)
-				SetBlock(x, height1, z, 1)
+				for y = heightStone1, height1 do
+					map[offset + y * step] = 1
+				end
 
+				-- Water
 				for y = height1 + 1, heightWater do
 					SetBlock(x, y, z, 8)
 				end
 			elseif biome == BIOME_SAND then
 				-- Sand
-				SetBlock(x, height1 - 1, z, 12)
-				SetBlock(x, height1, z, 12)
-
+				for y = heightStone1, height1 do
+					map[offset + y * step] = 12
+				end
+				
+				-- Water
 				for y = height1 + 1, heightWater do
 					SetBlock(x, y, z, 8)
 				end
 			elseif biome == BIOME_WATER then
-				-- Dirt
-				SetBlock(x, height1 - 1, z, 3)
-				SetBlock(x, height1, z, 3)
+				-- Rock
+				for y = heightStone1, height1 do
+					map[offset + y * step] = 3
+				end
 
+				-- Water
 				for y = height1 + 1, heightWater do
 					SetBlock(x, y, z, 8)
 				end
@@ -543,8 +545,11 @@ local function generateCaves(mapaddr, dimx, dimy, dimz, seed)
 	local z = math.random(GEN_CAVE_RADIUS, dimz - GEN_CAVE_RADIUS)
 	local y = math.random(10, heightGrass - 20)
 
+	directionX = (math.random() - 0.5) * 0.6
+	directionY = -math.random() * 0.1
+	directionZ = (math.random() - 0.5) * 0.6
 	for j = 1, CAVE_LENGTH do
-		if j % CAVE_CHANGE_DIRECTION == 1 then
+		if j % CAVE_CHANGE_DIRECTION == 0 then
 			directionX = (math.random() - 0.5) * 0.6
 			directionY = (math.random() - 0.5) * 0.2
 			directionZ = (math.random() - 0.5) * 0.6
@@ -562,7 +567,7 @@ local function generateCaves(mapaddr, dimx, dimy, dimz, seed)
 
 		for dx = -GEN_CAVE_RADIUS, GEN_CAVE_RADIUS do
 			for dz = -GEN_CAVE_RADIUS, GEN_CAVE_RADIUS do
-				for dy = -GEN_CAVE_RADIUS, GEN_CAVE_RADIUS do
+				for dy = GEN_CAVE_RADIUS, -GEN_CAVE_RADIUS, -1 do
 					local bx, by, bz = x + dx, y + dy, z + dz
 					if
 						dx * dx + dz * dz + dy * dy < CAVE_RADIUS2
@@ -573,6 +578,8 @@ local function generateCaves(mapaddr, dimx, dimy, dimz, seed)
 						local cblock = GetBlock(bx, by, bz)
 						if cblock < 8 or cblock > 9 then
 							SetBlock(bx, by, bz, (by > heightLava and 0)or 11)
+						else
+							SetBlock(bx, by - 1, bz, 8)
 						end
 					end
 				end
@@ -595,7 +602,7 @@ return function(world, seed)
 	biomesGenerate(dimx, dimz)
 
 	heightSet(dimy)
-	heightMapGenerate(dimx, dimz)
+	heightMapGenerate(dimx, dimy, dimz)
 
 	fillStone(world, dimx, dimz)
 
