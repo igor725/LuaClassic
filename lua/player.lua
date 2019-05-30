@@ -5,7 +5,6 @@ end
 local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 	set_debug_threadname('MapSender')
 
-	struct = require('struct')
 	ffi = require('ffi')
 	require('socket')
 	require('gzip')
@@ -14,7 +13,6 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 		require('helper')
 	end
 
-	local fmt = '>Bhc1024b'
 	local map = ffi.cast('char*', mapaddr)
 	local gErr = nil
 
@@ -27,8 +25,10 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 	sendMesg(fd, mapStart)
 	local succ, gErr = gz.compress(map, maplen, cmplvl, function(out, stream)
 		local chunksz = 1024 - stream.avail_out
-		local cdat = ffi.string(out, 1024)
-		local dat = struct.pack(fmt, 3, chunksz, cdat, 100)
+		local gzchunk = ffi.string(out, 1024)
+		local b1 = math.floor(chunksz / 256)
+		local b2 = chunksz % 256
+		local dat = string.char(0x03, b1, b2) .. gzchunk .. '\100'
 		if isWS then
 			dat = encodeWsFrame(dat, 0x02)
 		end

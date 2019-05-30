@@ -31,7 +31,6 @@ require('utils')
 require('commands')
 
 function onConnectionAttempt(ip, port)
-	-- return true
 end
 
 function postPlayerSpawn(player)
@@ -72,9 +71,7 @@ function onPlayerDestroy(player)
 		local world = player:getWorldName()
 		local otime = player:getOnlineTime()
 
-		if x and world and otime then
-			assert(sql:insertData(player:getVeriKey(), {'spawnX', 'spawnY', 'spawnZ', 'spawnYaw', 'spawnPitch', 'lastWorld', 'onlineTime'}, {x, y, z, ay, ap, world, otime}))
-		end
+		assert(sql:insertData(player:getVeriKey(), {'spawnX', 'spawnY', 'spawnZ', 'spawnYaw', 'spawnPitch', 'lastWorld', 'onlineTime'}, {x, y, z, ay, ap, world, otime}))
 	end
 end
 
