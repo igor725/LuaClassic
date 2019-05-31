@@ -408,7 +408,7 @@ local player_mt = {
 					mpart = lastcolor .. mpart
 				end
 				self:sendPacket(false, 0x0d, id, lastcolor .. mpart)
-				lastcolor = mpart:match('.*(&%x)')or''
+				lastcolor = mpart:match('.*(&%x)')or lastcolor or''
 			end
 		else
 			mesg = mesg

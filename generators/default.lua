@@ -244,7 +244,7 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 				for y = heightStone1, height1 - 2 do
 					map[offset + y * step] = 3
 				end
-				
+
 				if height1 > heightWater then
 					-- Grass
 					SetBlock(x, height1 - 1, z, 3)
@@ -273,7 +273,7 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 				for y = heightStone1, height1 do
 					map[offset + y * step] = 12
 				end
-				
+
 				-- Water
 				for y = height1 + 1, heightWater do
 					SetBlock(x, y, z, 8)
@@ -306,9 +306,9 @@ local function generateTrees(mapaddr, dimx, dimy, dimz, seed)
 	local SetBlock = function(x, y, z, id)
 		map[(y * dimz + z) * dimx + x + 4] = id
 	end
-	
+
 	local biomesWithTrees = {}
-	
+
 	for i=1, #biomes do
 		if biomes[i] == BIOME_TREES or biomes[i] == BIOME_SAND then
 			biomesWithTrees[#biomesWithTrees + 1] = i
@@ -322,19 +322,19 @@ local function generateTrees(mapaddr, dimx, dimy, dimz, seed)
 		randBiome = math.random(1, #biomesWithTrees)
 		x = (biomesWithTrees[randBiome] % bsx) * GEN_BIOME_STEP + math.random(GEN_BIOME_STEP) - GEN_BIOME_STEP / 2
 		z = math.floor(biomesWithTrees[randBiome] / bsx) * GEN_BIOME_STEP + math.random(GEN_BIOME_STEP) - GEN_BIOME_STEP / 2
-		
+
 		if x > dimx - 6 then
 			x = dimx - 6
 		elseif x < 6 then
 			x = 6
 		end
-		
+
 		if z > dimz - 6 then
 			z = dimz - 6
 		elseif z < 6 then
 			z = 6
 		end
-		
+
 		baseHeight = getHeight(x, z)
 		if baseHeight > heightWater and baseHeight + 8 < dimy then
 			if getBiome(x, z) == BIOME_TREES then
