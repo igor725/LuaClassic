@@ -99,6 +99,8 @@ local world_mt = {
 						logWorldWarn(self, WORLD_SCRSVERR)
 					end
 				end
+			elseif k == 'seed'then
+				packTo(wh, '>bd', 11, tonumber(v)or -1)
 			else
 				logWorldWarn(self, (WORLD_MAPOPT):format(k))
 			end
@@ -308,6 +310,8 @@ local world_mt = {
 					local body = wh:read(sl)
 					self:addScript(name, body)
 					self:executeScript(name)
+				elseif id == '\11'then
+					self:setData('seed', unpackFrom(wh, '>d'))
 				elseif id == '\255'then
 					break
 				else
@@ -471,7 +475,6 @@ function regenerateWorld(world, gentype, seed)
 				end
 			end)
 			ffi.fill(world.ldata + 4, world.size)
-			seed = seed or CTIME
 			local t = gettime()
 			local succ, err = pcall(gen, world, seed)
 			if not succ then

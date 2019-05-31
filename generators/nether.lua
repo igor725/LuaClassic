@@ -249,7 +249,7 @@ local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightLava, startX,
 end
 
 return function(world, seed)
-	seed = seed or (os.clock()*os.time())
+	seed = seed or os.time()
 	local dx, dy, dz = world:getDimensions()
 	dy = math.min(dy, 128)
 
