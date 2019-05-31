@@ -33,12 +33,47 @@ require('commands')
 function onConnectionAttempt(ip, port)
 end
 
-function postPlayerSpawn(player)
-	cpe:extCallHook('postPlayerSpawn', player)
-	hooks:call('postPlayerSpawn', player)
-	local world = worlds[player.worldName]
-	world.players = world.players + 1
-	world.emptyfrom = nil
+
+function onPlayerAuth(player, name, key)
+	player:setVeriKey(key)
+	player:setPermKey(key)
+	if not player:setName(name)then
+		player:kick(KICK_NAMETAKEN)
+		return
+	end
+	if not sql:createPlayer(key)then
+		player:kick((KICK_INTERR):format(IE_SQL))
+		return
+	end
+
+	local dat = sql:getData(key, 'spawnX, spawnY, spawnZ, spawnYaw, spawnPitch, lastWorld, onlineTime')
+	sql:insertData(key, {'lastIP'}, {player:getIP()})
+	player.lastOnlineTime = dat.onlineTime
+	player.worldName = dat.lastWorld
+	if not worlds[player.worldName]then
+		player.worldName = 'default'
+	end
+
+	local cwd = worlds[player.worldName].data
+	local eye = cwd.spawnpointeye
+	local spawn = cwd.spawnpoint
+	local sx, sy, sz, ay, ap
+	if dat.spawnX == 0 and dat.spawnY == 0 and dat.spawnZ == 0 then
+		sx, sy, sz = spawn.x, spawn.y, spawn.z
+		ay, ap = eye.yaw, eye.pitch
+	else
+		sx, sy, sz = dat.spawnX, dat.spawnY, dat.spawnZ
+		ay, ap = dat.spawnYaw, dat.spawnPitch
+	end
+	player:setPos(sx, sy, sz)
+	player:setEyePos(ay, ap)
+
+	return true
+end
+
+function onPlayerHandshakeDone(player)
+	local msg = printf(MESG_CONN, player)
+	newChatMessage('&e' .. msg)
 end
 
 function prePlayerSpawn(player)
@@ -46,8 +81,12 @@ function prePlayerSpawn(player)
 	hooks:call('prePlayerSpawn', player)
 end
 
-function onPlayerClick(...)
-	hooks:call('onPlayerClick', ...)
+function postPlayerSpawn(player)
+	cpe:extCallHook('postPlayerSpawn', player)
+	hooks:call('postPlayerSpawn', player)
+	local world = worlds[player.worldName]
+	world.players = world.players + 1
+	world.emptyfrom = nil
 end
 
 function onPlayerDespawn(player)
@@ -75,9 +114,8 @@ function onPlayerDestroy(player)
 	end
 end
 
-function onPlayerHandshakeDone(player)
-	local msg = printf(MESG_CONN, player)
-	newChatMessage('&e' .. msg)
+function onPlayerClick(...)
+	hooks:call('onPlayerClick', ...)
 end
 
 function onPlayerChatMessage(player, message)

@@ -113,6 +113,9 @@ local player_mt = {
 			return false
 		end
 	end,
+	setPermKey = function(self, key)
+		self.permkey = key
+	end,
 	setVeriKey = function(self, key)
 		self.verikey = key
 	end,
@@ -158,7 +161,7 @@ local player_mt = {
 
 	checkPermission = function(self, nm)
 		local sect = nm:match('(.*)%.')
-		local perms = permissions:getFor(self.verikey)
+		local perms = permissions:getFor(self.permkey)
 		if table.hasValue(perms, '*.*', sect .. '.*', nm)then
 			return true
 		else
