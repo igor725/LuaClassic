@@ -60,8 +60,8 @@ local player_mt = {
 	getID = function(self)
 		return self.id or -1
 	end,
-	getVeriKey = function(self)
-		return self.verikey
+	getUID = function(self)
+		return self.uid
 	end,
 	getPos = function(self, forNet)
 		if forNet then
@@ -113,11 +113,8 @@ local player_mt = {
 			return false
 		end
 	end,
-	setPermKey = function(self, key)
-		self.permkey = key
-	end,
-	setVeriKey = function(self, key)
-		self.verikey = key
+	setUID = function(self, uid)
+		self.uid = uid
 	end,
 	setPos = function(self, x, y, z)
 		local pos = self.pos
@@ -161,7 +158,7 @@ local player_mt = {
 
 	checkPermission = function(self, nm)
 		local sect = nm:match('(.*)%.')
-		local perms = permissions:getFor(self.permkey)
+		local perms = permissions:getFor(self:getUID())
 		if table.hasValue(perms, '*.*', sect .. '.*', nm)then
 			return true
 		else

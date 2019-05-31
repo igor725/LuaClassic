@@ -35,8 +35,7 @@ end
 
 
 function onPlayerAuth(player, name, key)
-	player:setVeriKey(key)
-	player:setPermKey(key)
+	player:setUID(key)
 	if not player:setName(name)then
 		player:kick(KICK_NAMETAKEN)
 		return
@@ -46,8 +45,8 @@ function onPlayerAuth(player, name, key)
 		return
 	end
 
-	local dat = sql:getData(key, 'spawnX, spawnY, spawnZ, spawnYaw, spawnPitch, lastWorld, onlineTime')
-	sql:insertData(key, {'lastIP'}, {player:getIP()})
+	local dat = sql:getData(player:getUID(), 'spawnX, spawnY, spawnZ, spawnYaw, spawnPitch, lastWorld, onlineTime')
+	sql:insertData(player:getUID(), {'lastIP'}, {player:getIP()})
 	player.lastOnlineTime = dat.onlineTime
 	player.worldName = dat.lastWorld
 	if not worlds[player.worldName]then
@@ -110,7 +109,7 @@ function onPlayerDestroy(player)
 		local world = player:getWorldName()
 		local otime = player:getOnlineTime()
 
-		assert(sql:insertData(player:getVeriKey(), {'spawnX', 'spawnY', 'spawnZ', 'spawnYaw', 'spawnPitch', 'lastWorld', 'onlineTime'}, {x, y, z, ay, ap, world, otime}))
+		assert(sql:insertData(player:getUID(), {'spawnX', 'spawnY', 'spawnZ', 'spawnYaw', 'spawnPitch', 'lastWorld', 'onlineTime'}, {x, y, z, ay, ap, world, otime}))
 	end
 end
 
