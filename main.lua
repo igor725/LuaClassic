@@ -368,7 +368,7 @@ function wsLuaCheck(cl, data)
 		return
 	end
 	if not data.hint then
-		local hdr = cl:receive(2)
+		local hdr = receiveString(cl, 2)
 		if not hdr then return end
 		local fin, masked, opcode, hint = readWsHeader(hdr:byte(1, 2))
 		if not fin or not masked then
@@ -387,7 +387,7 @@ function wsLuaCheck(cl, data)
 					plen = struct.unpack('>H', data)
 				end
 			else
-				cl:close()
+				closeSock(cl)
 				return
 			end
 		else
@@ -403,7 +403,7 @@ function wsLuaCheck(cl, data)
 			data.hint, data.mask, data.packetLen = nil
 			local out = wsHandleLuaCommand(msg)
 			if out then
-				cl:send(encodeWsFrame(out, 0x02))
+				sendMesg(cl, encodeWsFrame(out, 0x02))
 			end
 		end
 	end
