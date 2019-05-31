@@ -15,7 +15,10 @@ local GEN_CAVE_MAX_LENGTH  = 500
 
 local GEN_TREES_COUNT_MULT = 0.007
 
+local GEN_HOUSES_COUNT_MULT = 1 / 70000
+
 local GEN_ORE_VEIN_SIZE    = 3
+local GEN_ORE_COUNT_MULT   = 1 / 2000
 local GEN_GRAVEL_VEIN_SIZE = 14
 
 local GEN_BIOME_STEP       = 20
@@ -395,7 +398,7 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 		return map[(y * dimz + z) * dimx + x + 4]
 	end
 
-	local HOUSE_COUNT = math.ceil(dimx * dimz / 70000)
+	local HOUSE_COUNT = math.ceil(dimx * dimz * GEN_HOUSES_COUNT_MULT)
 	local materials = {4, 20, 5}
 
 	for i = 1, HOUSE_COUNT do
@@ -486,13 +489,14 @@ local function generateOre(mapaddr, dimx, dimy, dimz, seed)
 	local GetBlock = function(x, y, z, id)
 		return map[(y * dimz + z) * dimx + x + 4]
 	end
-	local ORE_COUNT = dimx * dimy * dimz / 5000
+	local ORE_COUNT = dimx * dimy * dimz * GEN_ORE_COUNT_MULT
 
 	local x, y, z, ore
 	for i = 1, ORE_COUNT do
 		x = math.random(GEN_ORE_VEIN_SIZE, dimx - GEN_ORE_VEIN_SIZE)
 		z = math.random(GEN_ORE_VEIN_SIZE, dimz - GEN_ORE_VEIN_SIZE)
-		y = math.random(1, heightGrass + 15)
+		--y = math.random(1, heightGrass + 15)
+		y = math.floor(1 + math.random() ^ 3 * (heightGrass + 15))
 
 		ore = math.random(14, 16)
 		for dx = 1, GEN_ORE_VEIN_SIZE do
@@ -571,7 +575,7 @@ local function generateCaves(mapaddr, dimx, dimy, dimz, seed)
 					local bx, by, bz = x + dx, y + dy, z + dz
 					if
 						dx * dx + dz * dz + dy * dy < CAVE_RADIUS2
-						and 1 < by and by < dimy - 1
+						and 0 < by and by < dimy - 1
 						and 1 < bx and bx < dimx - 1
 						and 1 < bz and bz < dimz - 1
 					then
