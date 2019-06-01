@@ -690,6 +690,7 @@ return function(world, seed)
 	world:setEnvProp(MEP_EDGELEVEL, heightWater + 1)
 	world:setEnvProp(MEP_MAPSIDESOFFSET, 0)
 	world:setData('isNether', false)
+	world:setData('seed', seed)
 	collectgarbage()
 	log.debug('DefaultGenerator: DONE')
 

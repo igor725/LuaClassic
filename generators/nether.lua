@@ -300,6 +300,7 @@ return function(world, seed)
 	world:setEnvColor(EC_SKY, 255, 0, 0)
 	world:setEnvColor(EC_FOG, 250, 10, 10)
 	world:setData('isNether', true)
+	world:setData('seed', seed)
 	collectgarbage()
 
 	return true

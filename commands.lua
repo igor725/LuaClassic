@@ -247,6 +247,7 @@ end)
 
 addChatCommand('regen', function(player, gen, seed)
 	local world = getWorld(player.worldName)
+	if not world then return WORLD_NE end
 	gen = tonumber(gen)or gen
 
 	if type(gen) ~= 'number'then
@@ -263,6 +264,15 @@ addChatCommand('regen', function(player, gen, seed)
 		return (CMD_GENERR):format(tm)
 	else
 		return (MESG_DONEIN):format(tm * 1000)
+	end
+end)
+
+addChatCommand('seed', function(player)
+	local world = getWorld(player)
+	local seed = world:getData('seed')
+
+	if seed then
+		return (CMD_SEED):format(seed)
 	end
 end)
 
@@ -363,13 +373,29 @@ end)
 addConsoleCommand('regen', function(args)
 	if #args >= 1 then
 		local world = getWorld(args[1])
-		local gen = args[2]or'default'
-		local seed = tonumber(args[3]or os.time())
-		local ret, tm = regenerateWorld(world, gen, seed)
-		if not ret then
-			return true, (CMD_GENERR):format(tm)
+		if world then
+			local gen = args[2]or'default'
+			local seed = tonumber(args[3]or os.time())
+			local ret, tm = regenerateWorld(world, gen, seed)
+			if not ret then
+				return true, (CMD_GENERR):format(tm)
+			else
+				return true, (MESG_DONEIN):format(tm * 1000)
+			end
 		else
-			return true, (MESG_DONEIN):format(tm * 1000)
+			return true, WORLD_NE
+		end
+	end
+end)
+
+addConsoleCommand('seed', function(args)
+	if #args >= 1 then
+		local world = getWorld(args[1])
+
+		if world then
+			return true, (CMD_SEED):format(world:getData('seed'))
+		else
+			return true, WORLD_NE
 		end
 	end
 end)
