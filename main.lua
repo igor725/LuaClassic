@@ -33,7 +33,6 @@ require('commands')
 function onConnectionAttempt(ip, port)
 end
 
-
 function onPlayerAuth(player, name, key)
 	player:setUID(key)
 	if not player:setName(name)then
@@ -372,7 +371,7 @@ function wsLuaCheck(cl, data)
 		if not hdr then return end
 		local fin, masked, opcode, hint = readWsHeader(hdr:byte(1, 2))
 		if not fin or not masked then
-			cl:close()
+			closeSock(cl)
 			return
 		end
 		data.hint = hint
@@ -577,7 +576,7 @@ function init()
 			end
 			world = newWorld()
 			world:setName(wn)
-			if world:createWorld({dimensions=newVector(x, y, z)})then
+			if world:createWorld({dimensions = newVector(x, y, z)})then
 				generator(world, sdlist[num]or CTIME)
 			end
 		end

@@ -10,11 +10,12 @@ return function(player, pver, name, vkey, magic)
 
 		player.handshaked = true
 		player.handshakeStage2 = true
-		onPlayerHandshakeDone(player)
 
 		if magic == 0x42 then
 			cpe:startFor(player)
 			player.handshakeStage2 = false
+		else
+			onPlayerHandshakeDone(player)
 		end
 	else
 		player:kick(KICK_PROTOVER)
