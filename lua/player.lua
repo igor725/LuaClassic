@@ -329,6 +329,10 @@ local player_mt = {
 				fmt = packets[id]
 				sz = psizes[id]
 			end
+			if not sz then
+				self:kick(KICK_INVALIDPACKET)
+				return
+			end
 			local data = receiveString(cl, sz)
 			if data then
 				self.waitPacket = nil
