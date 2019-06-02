@@ -62,6 +62,47 @@ local function checkForPortal(player, x, y, z)
 	end
 end
 
+local savers = {
+	['pos'] = function(f, v)
+		packTo(f, '>fff', v.x, v.y, v.z)
+	end,
+	['eye'] = function(f, v)
+		packTo(f, '>ff', v.yaw, v.pitch)
+	end,
+	['worldName'] = writeString,
+	['lastOnlineTime'] = function(f, v)
+		packTo(f, '>f', v)
+	end,
+	['name'] = writeString,
+	['ip'] = writeString
+}
+
+local readers = {
+	['pos'] = function(f, player)
+		local p = player.pos
+		p.x, p.y, p.z = unpackFrom(f, '>fff')
+	end,
+	['eye'] = function(f, player)
+		local e = player.eye
+		e.yaw, e.pitch = unpackFrom(f, '>ff')
+	end,
+	['worldName'] = function(f, player)
+		player.worldName = readString(f)
+		if getWorld(player) == nil then
+			player.worldName = 'default'
+		end
+	end,
+	['lastOnlineTime'] = function(f, player)
+		player.lastOnlineTime = unpackFrom(f, '>f')
+	end,
+	['ip'] = function(f, player)
+		player.lastip = readString(f)
+	end,
+	['name'] = function(f, player)
+		player.lastname = readString(f)
+	end
+}
+
 local player_mt = {
 	__tostring = function(self)
 		return self:getName()
@@ -130,6 +171,7 @@ local player_mt = {
 		end
 	end,
 	setUID = function(self, uid)
+		self.uidhex = toHex(sha1(uid))
 		self.uid = uid
 	end,
 	setPos = function(self, x, y, z)
@@ -204,7 +246,7 @@ local player_mt = {
 		return (ext and ext == extVer)or false
 	end,
 	isInWorld = function(self, wname)
-		return worlds[self.worldName] == getWorld(wname)
+		return getWorld(self) == getWorld(wname)
 	end,
 
 	teleportTo = function(self, x, y, z, ay, ap)
@@ -385,7 +427,7 @@ local player_mt = {
 	end,
 	sendMap = function(self)
 		if not self.handshaked then return end
-		local world = worlds[self.worldName]
+		local world = getWorld(self)
 		if not world.ldata then
 			self:sendMessage(MESG_LEVELLOAD, MT_STATUS1)
 			world:triggerLoad()
@@ -579,10 +621,10 @@ local player_mt = {
 					end
 					self.thread = nil
 					self.kickTimeout = CTIME + getKickTimeout()
-					worlds[self.worldName].unloadLocked = false
+					getWorld(self).unloadLocked = false
 				end
 			elseif self.thread.status == 'running' then --TODO: Improve this
-				worlds[self.worldName].unloadLocked = true
+				getWorld(self).unloadLocked = true
 			end
 			return
 		end
@@ -599,6 +641,46 @@ local player_mt = {
 		else
 			self:readRawData()
 		end
+	end,
+
+	savePath = function(self)
+		return 'playerdata/' .. self.uidhex .. '.dat'
+	end,
+	saveAdd = function(self, key, reader, saver)
+		if type(key) ~= 'string'then return false end
+		if type(saver) ~= 'function'then return false end
+		if type(reader) ~= 'function'then return false end
+		readers[key] = reader
+		savers[key] = saver
+		return true
+	end,
+	saveRead = function(self)
+		if self.isSpawned then return true end
+		local f = io.open(self:savePath(), 'rb')
+		if not f then return true end
+		local fend = f:seek('end')
+		f:seek('set', 0)
+		assert(f:read(6) == 'pdata\0', 'Invalid header')
+		while f:seek('cur') ~= fend do
+			local key = readString(f)
+			local reader = assert(readers[key], 'No reader for ' .. key)
+			reader(f, self)
+		end
+		f:close()
+	end,
+	saveWrite = function(self)
+		local f = assert(io.open(self:savePath(), 'wb'))
+		f:write('pdata\0')
+
+		for k, v in pairs(self)do
+			local saver = savers[k]
+			if saver then
+				writeString(f, k)
+				saver(f, v)
+			end
+		end
+		f:close()
+		return true
 	end,
 	isPlayer = true
 }
@@ -677,13 +759,19 @@ function broadcast(str, exid)
 end
 
 function newPlayer(cl)
+	local dworld = getWorld('default')
+	local sx, sy, sz, syaw, spitch = dworld:getSpawnPoint()
+	local pos = newVector(sx, sy, sz)
+	local eye = newAngle(syaw, spitch)
+
 	return setmetatable({
 		kickTimeout = CTIME + getKickTimeout(),
 		connectTime = CTIME,
-		pos = newVector(0, 0, 0),
+		worldName = 'default',
+		pos = pos,
 		isSpawned = false,
 		waitingExts = -1,
-		eye = newAngle(0, 0),
+		eye = eye,
 		extensions = {},
 		client = cl
 	}, player_mt)

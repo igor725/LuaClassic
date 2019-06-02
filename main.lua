@@ -36,33 +36,7 @@ function onPlayerAuth(player, name, key)
 		player:kick(KICK_NAMETAKEN)
 		return
 	end
-	if not sql:createPlayer(key)then
-		player:kick((KICK_INTERR):format(IE_SQL))
-		return
-	end
-
-	local dat = sql:getData(player:getUID(), 'spawnX, spawnY, spawnZ, spawnYaw, spawnPitch, lastWorld, onlineTime')
-	sql:insertData(player:getUID(), {'lastIP'}, {player:getIP()})
-	player.lastOnlineTime = dat.onlineTime
-	player.worldName = dat.lastWorld
-	if not worlds[player.worldName]then
-		player.worldName = 'default'
-	end
-
-	local cwd = worlds[player.worldName].data
-	local eye = cwd.spawnpointeye
-	local spawn = cwd.spawnpoint
-	local sx, sy, sz, ay, ap
-	if dat.spawnX == 0 and dat.spawnY == 0 and dat.spawnZ == 0 then
-		sx, sy, sz = spawn.x, spawn.y, spawn.z
-		ay, ap = eye.yaw, eye.pitch
-	else
-		sx, sy, sz = dat.spawnX, dat.spawnY, dat.spawnZ
-		ay, ap = dat.spawnYaw, dat.spawnPitch
-	end
-	player:setPos(sx, sy, sz)
-	player:setEyePos(ay, ap)
-
+	player:saveRead()
 	return true
 end
 
@@ -76,11 +50,7 @@ function onPlayerDestroy(player)
 	newChatMessage('&e' .. msg)
 
 	if player:isHandshaked()then
-		local x, y, z = player:getPos()
-		local ay, ap = player:getEyePos()
-		local world = player:getWorldName()
-		local otime = player:getOnlineTime()
-		assert(sql:insertData(player:getUID(), {'spawnX', 'spawnY', 'spawnZ', 'spawnYaw', 'spawnPitch', 'lastWorld', 'onlineTime'}, {x, y, z, ay, ap, world, otime}))
+		player:saveWrite()
 	end
 end
 
@@ -422,7 +392,6 @@ function init()
 	permissions:parse()
 	config:parse()
 	cpe:init()
-	sql:init()
 
 	uwa = config:get('unload-world-after')
 	local ip = config:get('server-ip')
@@ -499,7 +468,7 @@ function init()
 		end
 	end
 	generators = nil
-	if not worlds['default']then
+	if not getWorld('default')then
 		log.fatal(CON_WLOADERR)
 	end
 
@@ -595,7 +564,6 @@ if INITED then
 	end
 end
 
-if sql then sql:close()end
 if server then closeSock(server)end
 if wsServer then closeSock(wsServer)end
 shutdownSock()

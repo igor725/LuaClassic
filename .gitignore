@@ -1,5 +1,7 @@
 worlds/*
 !worlds/.keep
+playerdata/*
+!playerdata/.keep
 /test*.lua
 *.properties
 *.log

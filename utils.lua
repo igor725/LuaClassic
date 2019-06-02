@@ -44,6 +44,28 @@ lanes = require('lanes').configure{
 }
 struct = require('struct')
 
+function packTo(file, fmt, ...)
+	local data = struct.pack(fmt, ...)
+	return file:write(data)
+end
+
+function unpackFrom(file, fmt)
+	local sz = struct.size(fmt)
+	local data = file:read(sz)
+	return struct.unpack(fmt, data)
+end
+
+function writeString(f, v)
+	if #v > 255 then
+		error('String too long')
+	end
+	f:write(string.char(#v), v)
+end
+
+function readString(f)
+	return f:read(f:read(1):byte())
+end
+
 function newColor(r, g, b)
 	r, g, b = r or 255, g or 255, b or 255
 	return ffi.new('color', r, g, b)
@@ -90,6 +112,13 @@ else
 	colorReplace = function()
 		return ''
 	end
+end
+
+function toHex(str)
+	str = str:gsub('.', function(sym)
+		return string.format('%02x', sym:byte())
+	end)
+	return str
 end
 
 function mc2ansi(str)

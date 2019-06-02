@@ -2,17 +2,6 @@ local function gBufSize(vec)
 	return vec.x * vec.y * vec.z + 4
 end
 
-local function packTo(file, fmt, ...)
-	local data = struct.pack(fmt, ...)
-	return file:write(data)
-end
-
-local function unpackFrom(file, fmt)
-	local sz = struct.size(fmt)
-	local data = file:read(sz)
-	return struct.unpack(fmt, data)
-end
-
 local function getWorldPath(wname)
 	return 'worlds/' .. wname .. '.map'
 end
@@ -402,7 +391,7 @@ function getWorld(w)
 end
 
 function loadWorld(wname)
-	if worlds[wname]then return true end
+	if getWorld(wname)then return true end
 	local lvlh = io.open(getWorldPath(wname), 'rb')
 	if not lvlh then return false end
 	local status, world = pcall(newWorld, lvlh, wname)
@@ -415,7 +404,7 @@ end
 
 function unloadWorld(wname)
 	local world = getWorld(wname)
-	if world == worlds['default']then
+	if world == getWorld('default')then
 		return false
 	end
 

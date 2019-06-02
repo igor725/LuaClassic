@@ -37,7 +37,6 @@ CU_TP              = 'tp <player> <to> - Teleport player to another player'
 CU_REGEN           = 'regen <world> [generator] [seed] - Regenerate specified world'
 CU_PUT             = 'put <playername> <worldname> - Teleport player to specified world'
 
-IE_SQL             = 'SQL troubles'
 IE_GZ              = 'Map compression failed'
 IE_UE              = 'Unexpected error'
 
