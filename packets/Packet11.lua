@@ -12,5 +12,6 @@ return function(player, extName, extVer)
 		if onPlayerHandshakeDone then
 			onPlayerHandshakeDone(player)
 		end
+		hooks:call('onPlayerHandshakeDone', player)
 	end
 end

@@ -6,8 +6,10 @@ hooks = {
 		['onPlayerRotate'] = {},
 		['prePlayerSpawn'] = {},
 		['onPlayerDespawn'] = {},
+		['onPlayerDestroy'] = {},
 		['postPlayerSpawn'] = {},
-		['onPlayerPlaceBlock'] = {}
+		['onPlayerPlaceBlock'] = {},
+		['onPlayerHandshakeDone'] = {}
 	}
 }
 

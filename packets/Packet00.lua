@@ -22,6 +22,7 @@ return function(player, pver, name, vkey, magic)
 			if onPlayerHandshakeDone then
 				onPlayerHandshakeDone(player)
 			end
+			hooks:call('onPlayerHandshakeDone', player)
 		end
 	else
 		player:kick(KICK_PROTOVER)
