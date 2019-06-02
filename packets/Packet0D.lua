@@ -4,9 +4,15 @@ return function(player, isPartial, message)
 		return
 	end
 	message = trimStr(message)
-	local out = onPlayerChatMessage(player, player.messageBuffer .. message)
+	message = player.messageBuffer .. message
 	player.messageBuffer = ''
+
+	local out = hooks:call('onPlayerChat', player, message)
+	out = (out == false and nil)or(out == nil and message)or tostring(out)
 	if out then
-		player:sendMessage(tostring(out))
+		out = onPlayerChatMessage(player, out)
+		if out then
+			player:sendMessage(tostring(out))
+		end
 	end
 end

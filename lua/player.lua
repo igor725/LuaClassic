@@ -46,6 +46,22 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 	return gErr or 0
 end
 
+local function checkForPortal(player, x, y, z)
+	local world = getWorld(player)
+	local portals = world:getData('portals')
+	if portals then
+		for _, portal in pairs(portals)do
+			y = floor(y)
+			if (portal.pt1.x >= x and portal.pt2.x <= x)
+			and(portal.pt1.y >= y and portal.pt2.y <= y)
+			and(portal.pt1.z >= z and portal.pt2.z <= z)then
+				player:changeWorld(portal.tpTo, true)
+				break
+			end
+		end
+	end
+end
+
 local player_mt = {
 	__tostring = function(self)
 		return self:getName()
@@ -124,7 +140,12 @@ local player_mt = {
 			pos.y = y
 			pos.z = z
 			if self.isSpawned then
-				onPlayerMove(self, lx - x, ly - y, lz - z)
+				local dx, dy, dz = lx - x, ly - y, lz - z
+				hooks:call('onPlayerMove', self, dx, dy, dz)
+				if onPlayerMove then
+					onPlayerMove(self, dx, dy, dz)
+				end
+				checkForPortal(self, x, y, z)
 			end
 			return true
 		end
@@ -136,7 +157,10 @@ local player_mt = {
 			eye.yaw = y
 			eye.pitch = p
 			if self.isSpawned then
-				onPlayerRotate(self, y, p)
+				hooks:call('onPlayerRotate', self, y, p)
+				if onPlayerRotate then
+					onPlayerRotate(self, y, p)
+				end
 			end
 			return true
 		end
@@ -429,7 +453,16 @@ local player_mt = {
 				ply:sendPacket(false, 0x0c, sId)
 			end
 		end)
-		onPlayerDespawn(self)
+		cpe:extCallHook('postPlayerDespawn', self)
+		hooks:call('onPlayerDespawn', self)
+		local world = getWorld(self)
+		world.players = world.players - 1
+		if world.players == 0 then
+			world.emptyfrom = CTIME
+		end
+		if onPlayerDespawn then
+			onPlayerDespawn(self)
+		end
 		return true
 	end,
 	spawn = function(self)
@@ -441,7 +474,11 @@ local player_mt = {
 		local ay, ap = self:getEyePos(true)
 		local dat2, dat2cpe
 
-		prePlayerSpawn(self)
+		cpe:extCallHook('prePlayerSpawn', self)
+		hooks:call('prePlayerSpawn', self)
+		if prePlayerSpawn then
+			prePlayerSpawn(self)
+		end
 		playersForEach(function(ply, id)
 			local sId = (pId == id and -1)or id
 			local cx, cy, cz = ply:getPos(true)
@@ -469,8 +506,15 @@ local player_mt = {
 				end
 			end
 		end)
-		postPlayerSpawn(self)
+		cpe:extCallHook('postPlayerSpawn', self)
+		hooks:call('postPlayerSpawn', self)
+		local world = getWorld(self)
+		world.players = world.players + 1
+		world.emptyfrom = nil
 		self.isSpawned = true
+		if postPlayerSpawn then
+			postPlayerSpawn(self)
+		end
 		return true
 	end,
 	destroy = function(self)
@@ -482,7 +526,11 @@ local player_mt = {
 		IDS[id] = nil
 		self.leavereason = self.leavereason or'Disconnected'
 		if self.handshaked then
-			onPlayerDestroy(self)
+			cpe:extCallHook('onPlayerDestroy', self)
+			hooks:call('onPlayerDestroy', self)
+			if onPlayerDestroy then
+				onPlayerDestroy(self)
+			end
 		end
 		closeSock(self:getClient())
 		self.handshaked = false

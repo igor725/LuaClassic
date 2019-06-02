@@ -1,5 +1,5 @@
 return function(player, x, y, z, mode, id)
-	local world = worlds[player.worldName]
+	local world = getWorld(player)
 	local cblock = world:getBlock(x, y, z)
 
 	if mode == 0x00 then
@@ -10,7 +10,21 @@ return function(player, x, y, z, mode, id)
 		end
 	end
 	if cblock ~= id then
-		if not onPlayerPlaceBlock(player, x, y, z, id)then
+		local cantPlace
+		if world:isReadOnly()then
+			player:sendMessage(WORLD_RO, MT_ANNOUNCE)
+			cantPlace = true
+		end
+		if not cantPlace then
+			cantPlace = hooks:call('onPlayerPlaceBlock', player, dy, dp)
+		end
+		if not cantPlace and player.onPlaceBlock then
+			cantPlace = player.onPlaceBlock(x, y, z, id)
+		end
+		if not cantPlace and onPlayerPlaceBlock then
+			cantPlace = onPlayerPlaceBlock(player, x, y, z, id)
+		end
+		if not cantPlace then
 			world:setBlock(x, y, z, id)
 			broadcast(generatePacket(0x06, x, y, z, id))
 		else

@@ -3,7 +3,7 @@ return function(player, pver, name, vkey, magic)
 		name = trimStr(name)
 		vkey = trimStr(vkey)
 
-		if not onPlayerAuth(player, name, vkey)then
+		if not onPlayerAuth or not onPlayerAuth(player, name, vkey)then
 			player:kick(KICK_AUTH)
 			return
 		end
@@ -15,7 +15,9 @@ return function(player, pver, name, vkey, magic)
 			cpe:startFor(player)
 			player.handshakeStage2 = false
 		else
-			onPlayerHandshakeDone(player)
+			if onPlayerHandshakeDone then
+				onPlayerHandshakeDone(player)
+			end
 		end
 	else
 		player:kick(KICK_PROTOVER)
