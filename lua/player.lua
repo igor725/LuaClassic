@@ -646,14 +646,6 @@ local player_mt = {
 	savePath = function(self)
 		return 'playerdata/' .. self.uidhex .. '.dat'
 	end,
-	saveAdd = function(self, key, reader, saver)
-		if type(key) ~= 'string'then return false end
-		if type(saver) ~= 'function'then return false end
-		if type(reader) ~= 'function'then return false end
-		readers[key] = reader
-		savers[key] = saver
-		return true
-	end,
 	saveRead = function(self)
 		if self.isSpawned then return true end
 		local f = io.open(self:savePath(), 'rb')
@@ -697,6 +689,15 @@ end
 
 function getPlayerMT()
 	return player_mt
+end
+
+function saveAdd(key, reader, saver)
+	if type(key) ~= 'string'then return false end
+	if type(saver) ~= 'function'then return false end
+	if type(reader) ~= 'function'then return false end
+	readers[key] = reader
+	savers[key] = saver
+	return true
 end
 
 function getPlayerByName(name)
