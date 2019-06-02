@@ -16,7 +16,7 @@ return function(player, x, y, z, mode, id)
 			cantPlace = true
 		end
 		if not cantPlace then
-			cantPlace = hooks:call('onPlayerPlaceBlock', player, dy, dp)
+			cantPlace = hooks:call('onPlayerPlaceBlock', player, x, y, z, id)
 		end
 		if not cantPlace and player.onPlaceBlock then
 			cantPlace = player.onPlaceBlock(x, y, z, id)
