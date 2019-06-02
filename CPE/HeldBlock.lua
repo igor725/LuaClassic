@@ -2,6 +2,7 @@ local hb = {}
 
 function hb:load()
 	registerSvPacket(0x14, 'bbb')
+	hooks:create('onHeldBlockChange')
 	getPlayerMT().getHeldBlock = function(player)
 		return player.heldBlock or -1
 	end

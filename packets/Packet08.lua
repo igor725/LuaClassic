@@ -4,6 +4,7 @@ return function(player, id, x, y, z, yaw, pitch)
 
 	if player:isSupported('HeldBlock')then
 		player.heldBlock = id
+		hooks:call('onHeldBlockChange', player, id)
 	end
 
 	local pid = player:getID()
