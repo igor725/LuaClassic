@@ -468,17 +468,20 @@ local player_mt = {
 	spawn = function(self)
 		if self.isSpawned then return false end
 		if not self.handshaked then return false end
+
+		if prePlayerSpawn and prePlayerSpawn(self)then
+			return
+		end
+		if cpe:extCallHook('prePlayerSpawn', self)or
+		hooks:call('prePlayerSpawn', self)then
+			return
+		end
+
 		local pId = self:getID()
 		local name = self:getName()
 		local x, y, z = self:getPos(true)
 		local ay, ap = self:getEyePos(true)
 		local dat2, dat2cpe
-
-		cpe:extCallHook('prePlayerSpawn', self)
-		hooks:call('prePlayerSpawn', self)
-		if prePlayerSpawn then
-			prePlayerSpawn(self)
-		end
 		playersForEach(function(ply, id)
 			local sId = (pId == id and -1)or id
 			local cx, cy, cz = ply:getPos(true)

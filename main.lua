@@ -74,7 +74,7 @@ end
 function onPlayerDestroy(player)
 	local msg = printf(MESG_DISCONN, player, player:getLeaveReason())
 	newChatMessage('&e' .. msg)
-	
+
 	if player:isHandshaked()then
 		local x, y, z = player:getPos()
 		local ay, ap = player:getEyePos()
@@ -520,8 +520,11 @@ succ, err = xpcall(function()
 		CTIME = gettime()
 
 		if not INITED then
-			if init()and onInitDone then
-				onInitDone()
+			if init()then
+				if onInitDone then
+					onInitDone()
+				end
+				INITED = true
 			end
 		end
 		if ETIME then

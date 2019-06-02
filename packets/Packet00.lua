@@ -7,6 +7,10 @@ return function(player, pver, name, vkey, magic)
 			player:kick(KICK_AUTH)
 			return
 		end
+		if not hooks:call('onPlayerAuth', name, vkey)then
+			player:kick(KICK_AUTH)
+			return
+		end
 
 		player.handshaked = true
 		player.handshakeStage2 = true
