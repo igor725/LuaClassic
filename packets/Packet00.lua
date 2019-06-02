@@ -7,7 +7,7 @@ return function(player, pver, name, vkey, magic)
 			player:kick(KICK_AUTH)
 			return
 		end
-		if not hooks:call('onPlayerAuth', name, vkey)then
+		if hooks:call('onPlayerAuth', name, vkey) == false then
 			player:kick(KICK_AUTH)
 			return
 		end
