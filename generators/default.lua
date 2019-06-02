@@ -399,7 +399,7 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 	end
 
 	local HOUSE_COUNT = math.ceil(dimx * dimz * GEN_HOUSES_COUNT_MULT)
-	local materials = {4, 20, 5}
+	local materials = {(math.random(0, 100) == 0) and 41 or 4, 20, 5}
 
 	for i = 1, HOUSE_COUNT do
 		local startX = math.random(4, dimx - 10)
@@ -597,9 +597,42 @@ local function fillStone(world, dimx, dimz)
 	ffi.fill(world.ldata + 4 + dimx * dimz, dimx * dimz * (heightStone - 1), 1)
 end
 
+local function lavalavalava(world, dimx, dimy, dimz)
+	local GetBlock = function(x, y, z)
+		return map[(y * dimz + z) * dimx + x + 4]
+	end
+	local SetBlock = function(x, y, z, id)
+		map[(y * dimz + z) * dimx + x + 4] = id
+	end
+	
+	minHeight = 0
+	minHeightIndex = 0
+	for i=1, #biomes do
+		if biomes[i] == BIOME_NORMAL and heightMap[i] < minHeight then
+			minHeight = heightMap[i]
+			minHeightIndex = i
+		end
+	end
+	
+	if minHeight < 0 then
+		local x = (biomesWithTrees[i] % bsx) * GEN_BIOME_STEP
+		local z = math.floor(biomesWithTrees[i] / bsx) * GEN_BIOME_STEP
+		
+		for y = minHeight, heightGrass + 10 do
+			SetBlock(x, y, z, 1)
+		end
+		
+		for y = minHeight, heightGrass do
+			if GetBlock(x, y, z) == 8 then
+				SetBlock(x, y, z, 10)
+			end
+		end
+	end
+end
+
 return function(world, seed)
 	log.debug('DefaultGenerator: START')
-	seed = seed or (os.clock() * os.time())
+	seed = (seed and math.floor(seed)) or os.time()
 	local dimx, dimy, dimz = world:getDimensions()
 	math.randomseed(seed)
 
@@ -683,6 +716,8 @@ return function(world, seed)
 			break
 		end
 	end
+	
+	--lavalavalava(world, dimx, dimy, dimz)
 
 	world:setSpawn(x, y + 2, z)
 	world:setEnvProp(MEP_SIDESBLOCK, 0)
