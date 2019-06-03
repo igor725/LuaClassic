@@ -36,6 +36,9 @@ end
 function ema:load()
 	registerSvPacket(0x28, 'bc64')
 	registerSvPacket(0x29, '>bbi')
+	getPlayerMT().setEnvProp = function(player, typ, val)
+		updateMapPropertyFor(player, typ, val)
+	end
 	getWorldMT().setEnvProp = function(world, typ, val)
 		getMa(world)[typ] = val
 		playersForEach(function(player)
