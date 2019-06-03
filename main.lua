@@ -307,13 +307,14 @@ function createPlayer(cl, ip, isWS)
 		local player = newPlayer(cl)
 		player.isWS = isWS
 		player.ip = ip
-		local nid = findFreeID(player)
 
+		local nid = findFreeID(player)
 		if nid > 0 then
 			player:init(nid)
 		else
 			player:kick(KICK_SFULL)
 		end
+		hooks:call('onPlayerCreate', player)
 	else
 		local rawPacket = generatePacket(0x0e, KICK_CONNREJ)
 		if isWS then

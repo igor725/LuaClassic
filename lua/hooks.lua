@@ -5,6 +5,7 @@ hooks = {
 		['onPlayerChat'] = {},
 		['onPlayerRotate'] = {},
 		['prePlayerSpawn'] = {},
+		['onPlayerCreate'] = {},
 		['onPlayerDespawn'] = {},
 		['onPlayerDestroy'] = {},
 		['postPlayerSpawn'] = {},
