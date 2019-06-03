@@ -7,6 +7,12 @@ local cm = {
 		['sheep'] = 1,
 		['skeleton'] = 1,
 		['spider'] = 1
+	},
+	model_height = {
+		['chicken'] = 1,
+		['pig'] = 1,
+		['sheep'] = 1,
+		['spider'] = 1
 	}
 }
 
@@ -34,6 +40,14 @@ function cm:load()
 		end)
 		return true
 	end
+
+	getPlayerMT().getModelHeight = function(player)
+		return self.model_height[player.model]or 2
+	end
+
+	saveAdd('model', function(f, player)
+		player.model = readString(f)
+	end, writeString)
 end
 
 function cm:postPlayerSpawn(player)
