@@ -11,8 +11,8 @@ time_presets = {
 		[EC_DIFFUSE] = newColor(065,055,055),
 		[EC_AMBIENT] = newColor(050,050,050),
 		[EC_FOG]     = newColor(060,047,040),
-		[EC_CLOUD]   = newColor(060,407,040),
-		[EC_SKY]     = newColor(091,403,018)
+		[EC_CLOUD]   = newColor(060,047,040),
+		[EC_SKY]     = newColor(091,043,018)
 	},
 	night = {
 		[EC_DIFFUSE] = newColor(085,085,085),
