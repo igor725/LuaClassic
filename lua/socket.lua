@@ -195,10 +195,12 @@ function acceptClient(sfd)
 				return false, geterror()
 			end
 		end
+		assert(setSockOpt(cfd, SOL_TCP, TCP_NODELAY, 1))
 		return cfd, parseIPv4(addr[0])
 	end
 	return nil
 end
+
 function setSockOpt(fd, level, opt, val)
 	local vtype = type(val)
 
