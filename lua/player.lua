@@ -147,17 +147,17 @@ local player_mt = {
 	getLeaveReason = function(self)
 		return self.leavereason
 	end,
-	getWaterLevel = function(self)
+	getFluidLevel = function(self)
 		local world = getWorld(self)
 		local x, y, z = self:getPos()
 		x, y, z = floor(x), floor(y), floor(z)
 		local upblock = world:getBlock(x, y, z)
 		if upblock >= 8 and upblock <= 11 then
-			return 2
+			return 2, upblock == 10 or upblock == 11
 		else
 			local downblock = world:getBlock(x, y - 1, z)
 			if downblock >= 8 and downblock <= 11 then
-				return 1
+				return 1, downblock == 10 or downblock == 11
 			end
 		end
 		return 0
