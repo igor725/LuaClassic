@@ -4,9 +4,9 @@ EP_ROTX = 0
 EP_ROTY = 1
 EP_ROTZ = 2
 
-local function entPropFor(ply, id, ptype, val)
+local function entPropFor(player, id, ptype, val)
 	if player:isSupported('EntityProperty')then
-		ply:sendPacket(false, 0x2A, id, ptype, val)
+		player:sendPacket(false, 0x2A, id, ptype, val)
 	end
 end
 

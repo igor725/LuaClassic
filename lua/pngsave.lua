@@ -19,12 +19,12 @@ end
 
 local HCOLORS = {
 	[-1] = newColor(000, 000, 000),
-	[01]  = newColor(116, 116, 116),
-	[02]  = newColor(118, 177, 079),
-	[03]  = newColor(121, 085, 058),
-	[04]  = newColor(082, 082, 082),
-	[05]  = newColor(188, 152, 098),
-	[08]  = newColor(035, 062, 140),
+	[01] = newColor(116, 116, 116),
+	[02] = newColor(118, 177, 079),
+	[03] = newColor(121, 085, 058),
+	[04] = newColor(082, 082, 082),
+	[05] = newColor(188, 152, 098),
+	[08] = newColor(035, 062, 140),
 	[10] = newColor(224, 142, 046),
 	[12] = newColor(220, 213, 159),
 	[18] = newColor(090, 250, 058),
@@ -62,10 +62,10 @@ function pngSave(world, filename, flipx, flipz)
 	local f, err = io.open(filename or'hmap.png', 'wb')
 	if not f then return false, err end
 	local succ, err = pcall(function()
-		local png = LIB.png_create_write_struct(PNG_VER, nil, eHandler, eHandler)
+		local png = LIB.png_create_write_struct(PNG_VER, nil, eHandler, nil)
 		if png == 0 then return false, 'PNG struct not created'end
 		local info = LIB.png_create_info_struct(png)
-		if png == 1 then return false, 'INFO struct not created'end
+		if info == 0 then return false, 'INFO struct not created'end
 		local iw, wy, ih = world:getDimensions()
 
 		local function getBlockColor(x,z)
@@ -102,8 +102,6 @@ function pngSave(world, filename, flipx, flipz)
 		end
 		LIB.png_write_end(png, nil)
 	end)
-
 	f:close()
-	LIB.png_destroy_write_struct(png, info)
 	return succ, PNG_ERR or err
 end

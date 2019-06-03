@@ -9,5 +9,9 @@ return function(player, extName, extVer)
 	player.waitingExts = player.waitingExts - 1
 	if player.waitingExts == 0 then
 		player.handshakeStage2 = true
+		if onPlayerHandshakeDone then
+			onPlayerHandshakeDone(player)
+		end
+		hooks:call('onPlayerHandshakeDone', player)
 	end
 end

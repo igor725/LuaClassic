@@ -1,4 +1,4 @@
-return function(world, seed)
+return function(world)
 	local dx, dy, dz = world:getDimensions()
 	local data = world.ldata
 	local flr = dz * dx

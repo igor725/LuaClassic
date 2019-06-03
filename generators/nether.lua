@@ -249,7 +249,7 @@ local function threadTerrain(mapaddr, dx, dy, dz, heightMap, heightLava, startX,
 end
 
 return function(world, seed)
-	seed = seed or (os.clock()*os.time())
+	seed = seed or os.time()
 	local dx, dy, dz = world:getDimensions()
 	dy = math.min(dy, 128)
 
@@ -300,6 +300,7 @@ return function(world, seed)
 	world:setEnvColor(EC_SKY, 255, 0, 0)
 	world:setEnvColor(EC_FOG, 250, 10, 10)
 	world:setData('isNether', true)
+	world:setData('seed', seed)
 	collectgarbage()
 
 	return true

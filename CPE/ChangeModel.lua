@@ -1,11 +1,13 @@
 local cm = {
 	allowed_models = {
 		['chicken'] = 1,
-		['creeper'] = 1,
-		['humanoid'] = 1,
+		['creeper'] = 2,
+		['zombie'] = 2,
+		['humanoid'] = 2,
+		['sitting'] = 1,
 		['pig'] = 1,
 		['sheep'] = 1,
-		['skeleton'] = 1,
+		['skeleton'] = 2,
 		['spider'] = 1
 	}
 }
@@ -34,6 +36,14 @@ function cm:load()
 		end)
 		return true
 	end
+
+	getPlayerMT().getModelHeight = function(player)
+		return self.allowed_models[player.model]or 2
+	end
+
+	saveAdd('model', function(f, player)
+		player.model = readString(f)
+	end, writeString)
 end
 
 function cm:postPlayerSpawn(player)

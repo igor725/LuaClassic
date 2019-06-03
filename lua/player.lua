@@ -46,6 +46,63 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 	return gErr or 0
 end
 
+local function checkForPortal(player, x, y, z)
+	local world = getWorld(player)
+	local portals = world:getData('portals')
+	if portals then
+		for _, portal in pairs(portals)do
+			y = floor(y)
+			if (portal.pt1.x >= x and portal.pt2.x <= x)
+			and(portal.pt1.y >= y and portal.pt2.y <= y)
+			and(portal.pt1.z >= z and portal.pt2.z <= z)then
+				player:changeWorld(portal.tpTo, true)
+				break
+			end
+		end
+	end
+end
+
+local savers = {
+	['pos'] = function(f, v)
+		packTo(f, '>fff', v.x, v.y, v.z)
+	end,
+	['eye'] = function(f, v)
+		packTo(f, '>ff', v.yaw, v.pitch)
+	end,
+	['worldName'] = writeString,
+	['lastOnlineTime'] = function(f, v)
+		packTo(f, '>f', v)
+	end,
+	['name'] = writeString,
+	['ip'] = writeString
+}
+
+local readers = {
+	['pos'] = function(f, player)
+		local p = player.pos
+		p.x, p.y, p.z = unpackFrom(f, '>fff')
+	end,
+	['eye'] = function(f, player)
+		local e = player.eye
+		e.yaw, e.pitch = unpackFrom(f, '>ff')
+	end,
+	['worldName'] = function(f, player)
+		player.worldName = readString(f)
+		if getWorld(player) == nil then
+			player.worldName = 'default'
+		end
+	end,
+	['lastOnlineTime'] = function(f, player)
+		player.lastOnlineTime = unpackFrom(f, '>f')
+	end,
+	['ip'] = function(f, player)
+		player.lastip = readString(f)
+	end,
+	['name'] = function(f, player)
+		player.lastname = readString(f)
+	end
+}
+
 local player_mt = {
 	__tostring = function(self)
 		return self:getName()
@@ -60,8 +117,8 @@ local player_mt = {
 	getID = function(self)
 		return self.id or -1
 	end,
-	getVeriKey = function(self)
-		return self.verikey
+	getUID = function(self)
+		return self.uid
 	end,
 	getPos = function(self, forNet)
 		if forNet then
@@ -90,6 +147,28 @@ local player_mt = {
 	getLeaveReason = function(self)
 		return self.leavereason
 	end,
+	getFluidLevel = function(self)
+		local world = getWorld(self)
+		local x, y, z = self:getPos()
+		x, y, z = floor(x), floor(y), floor(z)
+		if self:getModelHeight() > 1 then
+			local upblock = world:getBlock(x, y, z)
+			if upblock >= 8 and upblock <= 11 then
+				return 2, upblock == 10 or upblock == 11
+			else
+				local downblock = world:getBlock(x, y - 1, z)
+				if downblock >= 8 and downblock <= 11 then
+					return 1, downblock == 10 or downblock == 11
+				end
+			end
+		else
+			local downblock = world:getBlock(x, y - 1, z)
+			if downblock >= 8 and downblock <= 11 then
+				return 2, downblock == 10 or downblock == 11
+			end
+		end
+		return 0
+	end,
 	getName = function(self)
 		return self.name or'Unnamed'
 	end,
@@ -113,8 +192,9 @@ local player_mt = {
 			return false
 		end
 	end,
-	setVeriKey = function(self, key)
-		self.verikey = key
+	setUID = function(self, uid)
+		self.uidhex = toHex(sha1(uid))
+		self.uid = uid
 	end,
 	setPos = function(self, x, y, z)
 		local pos = self.pos
@@ -124,7 +204,12 @@ local player_mt = {
 			pos.y = y
 			pos.z = z
 			if self.isSpawned then
-				onPlayerMove(self, lx - x, ly - y, lz - z)
+				local dx, dy, dz = lx - x, ly - y, lz - z
+				hooks:call('onPlayerMove', self, dx, dy, dz)
+				if onPlayerMove then
+					onPlayerMove(self, dx, dy, dz)
+				end
+				checkForPortal(self, x, y, z)
 			end
 			return true
 		end
@@ -136,7 +221,10 @@ local player_mt = {
 			eye.yaw = y
 			eye.pitch = p
 			if self.isSpawned then
-				onPlayerRotate(self, y, p)
+				hooks:call('onPlayerRotate', self, y, p)
+				if onPlayerRotate then
+					onPlayerRotate(self, y, p)
+				end
 			end
 			return true
 		end
@@ -158,7 +246,7 @@ local player_mt = {
 
 	checkPermission = function(self, nm)
 		local sect = nm:match('(.*)%.')
-		local perms = permissions:getFor(self.verikey)
+		local perms = permissions:getFor(self:getUID())
 		if table.hasValue(perms, '*.*', sect .. '.*', nm)then
 			return true
 		else
@@ -180,7 +268,7 @@ local player_mt = {
 		return (ext and ext == extVer)or false
 	end,
 	isInWorld = function(self, wname)
-		return worlds[self.worldName] == getWorld(wname)
+		return getWorld(self) == getWorld(wname)
 	end,
 
 	teleportTo = function(self, x, y, z, ay, ap)
@@ -221,7 +309,7 @@ local player_mt = {
 	end,
 
 	readWsFrame = function(self)
-		if not self.isWS then return false end
+		if not self:isWebClient()then return false end
 		local cl = self:getClient()
 		if not self.wsHint then
 			local hdr = receiveString(cl, 2)
@@ -262,7 +350,7 @@ local player_mt = {
 		end
 	end,
 	readWsData = function(self)
-		if not self.isWS then return end
+		if not self:isWebClient()then return end
 		local data, opcode = self:readWsFrame()
 		if data then
 			if opcode == 0x02 or opcode == 0x01 then
@@ -295,7 +383,7 @@ local player_mt = {
 		end
 	end,
 	readRawData = function(self)
-		if self.isWS then return end
+		if self:isWebClient()then return end
 		local cl = self:getClient()
 		local id = self.waitPacket
 		if not id then
@@ -329,6 +417,10 @@ local player_mt = {
 				fmt = packets[id]
 				sz = psizes[id]
 			end
+			if not sz then
+				self:kick(KICK_INVALIDPACKET)
+				return
+			end
 			local data = receiveString(cl, sz)
 			if data then
 				self.waitPacket = nil
@@ -341,10 +433,10 @@ local player_mt = {
 
 	sendNetMesg = function(self, msg, opcode)
 		local cl = self:getClient()
-		if self.isWS then
+		if self:isWebClient()then
 			msg = encodeWsFrame(msg, opcode or 0x02)
 		end
-		sendMesg(cl, msg, #msg)
+		return sendMesg(cl, msg, #msg)
 	end,
 	sendPacket = function(self, isCPE, ...)
 		local rawPacket
@@ -357,7 +449,7 @@ local player_mt = {
 	end,
 	sendMap = function(self)
 		if not self.handshaked then return end
-		local world = worlds[self.worldName]
+		local world = getWorld(self)
 		if not world.ldata then
 			self:sendMessage(MESG_LEVELLOAD, MT_STATUS1)
 			world:triggerLoad()
@@ -367,7 +459,7 @@ local player_mt = {
 		local size = world:getSize()
 		local sendMap_gen = lanes.gen('*', sendMap)
 		local cmplvl = config:get('gzip-compression-level')
-		self.thread = sendMap_gen(self:getClient(), addr, size, cmplvl, self.isWS)
+		self.thread = sendMap_gen(self:getClient(), addr, size, cmplvl, self:isWebClient())
 	end,
 	sendMOTD = function(self, sname, smotd)
 		sname = sname or config:get('server-name')
@@ -408,7 +500,7 @@ local player_mt = {
 					mpart = lastcolor .. mpart
 				end
 				self:sendPacket(false, 0x0d, id, lastcolor .. mpart)
-				lastcolor = mpart:match('.*(&%x)')or''
+				lastcolor = mpart:match('.*(&%x)')or lastcolor or''
 			end
 		else
 			mesg = mesg
@@ -425,19 +517,35 @@ local player_mt = {
 				ply:sendPacket(false, 0x0c, sId)
 			end
 		end)
-		onPlayerDespawn(self)
+		cpe:extCallHook('postPlayerDespawn', self)
+		hooks:call('onPlayerDespawn', self)
+		local world = getWorld(self)
+		world.players = world.players - 1
+		if world.players == 0 then
+			world.emptyfrom = CTIME
+		end
+		if onPlayerDespawn then
+			onPlayerDespawn(self)
+		end
 		return true
 	end,
 	spawn = function(self)
 		if self.isSpawned then return false end
 		if not self.handshaked then return false end
+
+		if prePlayerSpawn and prePlayerSpawn(self)then
+			return
+		end
+		if cpe:extCallHook('prePlayerSpawn', self)or
+		hooks:call('prePlayerSpawn', self)then
+			return
+		end
+
 		local pId = self:getID()
 		local name = self:getName()
 		local x, y, z = self:getPos(true)
 		local ay, ap = self:getEyePos(true)
 		local dat2, dat2cpe
-
-		prePlayerSpawn(self)
 		playersForEach(function(ply, id)
 			local sId = (pId == id and -1)or id
 			local cx, cy, cz = ply:getPos(true)
@@ -465,8 +573,15 @@ local player_mt = {
 				end
 			end
 		end)
-		postPlayerSpawn(self)
+		cpe:extCallHook('postPlayerSpawn', self)
+		hooks:call('postPlayerSpawn', self)
+		local world = getWorld(self)
+		world.players = world.players + 1
+		world.emptyfrom = nil
 		self.isSpawned = true
+		if postPlayerSpawn then
+			postPlayerSpawn(self)
+		end
 		return true
 	end,
 	destroy = function(self)
@@ -478,9 +593,14 @@ local player_mt = {
 		IDS[id] = nil
 		self.leavereason = self.leavereason or'Disconnected'
 		if self.handshaked then
-			onPlayerDestroy(self)
+			cpe:extCallHook('onPlayerDestroy', self)
+			hooks:call('onPlayerDestroy', self)
+			if onPlayerDestroy then
+				onPlayerDestroy(self)
+			end
 		end
-		closeSock(self:getClient())
+		-- Causes incorrect kick-packet sending
+		-- closeSock(self:getClient())
 		self.handshaked = false
 	end,
 	kick = function(self, reason)
@@ -524,10 +644,10 @@ local player_mt = {
 					end
 					self.thread = nil
 					self.kickTimeout = CTIME + getKickTimeout()
-					worlds[self.worldName].unloadLocked = false
+					getWorld(self).unloadLocked = false
 				end
 			elseif self.thread.status == 'running' then --TODO: Improve this
-				worlds[self.worldName].unloadLocked = true
+				getWorld(self).unloadLocked = true
 			end
 			return
 		end
@@ -545,6 +665,38 @@ local player_mt = {
 			self:readRawData()
 		end
 	end,
+
+	savePath = function(self)
+		return 'playerdata/' .. self.uidhex .. '.dat'
+	end,
+	saveRead = function(self)
+		if self.isSpawned then return true end
+		local f = io.open(self:savePath(), 'rb')
+		if not f then return true end
+		local fend = f:seek('end')
+		f:seek('set', 0)
+		assert(f:read(6) == 'pdata\0', 'Invalid header')
+		while f:seek('cur') ~= fend do
+			local key = readString(f)
+			local reader = assert(readers[key], 'No reader for ' .. key)
+			reader(f, self)
+		end
+		f:close()
+	end,
+	saveWrite = function(self)
+		local f = assert(io.open(self:savePath(), 'wb'))
+		f:write('pdata\0')
+
+		for k, v in pairs(self)do
+			local saver = savers[k]
+			if saver then
+				writeString(f, k)
+				saver(f, v)
+			end
+		end
+		f:close()
+		return true
+	end,
 	isPlayer = true
 }
 player_mt.__index = player_mt
@@ -560,6 +712,15 @@ end
 
 function getPlayerMT()
 	return player_mt
+end
+
+function saveAdd(key, reader, saver)
+	if type(key) ~= 'string'then return false end
+	if type(saver) ~= 'function'then return false end
+	if type(reader) ~= 'function'then return false end
+	readers[key] = reader
+	savers[key] = saver
+	return true
 end
 
 function getPlayerByName(name)
@@ -622,13 +783,19 @@ function broadcast(str, exid)
 end
 
 function newPlayer(cl)
+	local dworld = getWorld('default')
+	local sx, sy, sz, syaw, spitch = dworld:getSpawnPoint()
+	local pos = newVector(sx, sy, sz)
+	local eye = newAngle(syaw, spitch)
+
 	return setmetatable({
 		kickTimeout = CTIME + getKickTimeout(),
 		connectTime = CTIME,
-		pos = newVector(0, 0, 0),
+		worldName = 'default',
+		pos = pos,
 		isSpawned = false,
 		waitingExts = -1,
-		eye = newAngle(0, 0),
+		eye = eye,
 		extensions = {},
 		client = cl
 	}, player_mt)

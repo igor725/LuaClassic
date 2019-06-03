@@ -30,49 +30,14 @@ end
 require('utils')
 require('commands')
 
-function onConnectionAttempt(ip, port)
-end
-
-function postPlayerSpawn(player)
-	cpe:extCallHook('postPlayerSpawn', player)
-	hooks:call('postPlayerSpawn', player)
-	local world = worlds[player.worldName]
-	world.players = world.players + 1
-	world.emptyfrom = nil
-end
-
-function prePlayerSpawn(player)
-	cpe:extCallHook('prePlayerSpawn', player)
-	hooks:call('prePlayerSpawn', player)
-end
-
-function onPlayerClick(...)
-	hooks:call('onPlayerClick', ...)
-end
-
-function onPlayerDespawn(player)
-	cpe:extCallHook('postPlayerDespawn', player)
-	hooks:call('onPlayerDespawn', player)
-	local world = worlds[player.worldName]
-	world.players = world.players - 1
-	if world.players == 0 then
-		world.emptyfrom = CTIME
+function onPlayerAuth(player, name, key)
+	player:setUID(key)
+	if not player:setName(name)then
+		player:kick(KICK_NAMETAKEN)
+		return
 	end
-end
-
-function onPlayerDestroy(player)
-	local msg = printf(MESG_DISCONN, player, player:getLeaveReason())
-	newChatMessage('&e' .. msg)
-	cpe:extCallHook('onPlayerDestroy', player)
-	hooks:call('onPlayerDestroy', player)
-	if player:isHandshaked()then
-		local x, y, z = player:getPos()
-		local ay, ap = player:getEyePos()
-		local world = player:getWorldName()
-		local otime = player:getOnlineTime()
-
-		assert(sql:insertData(player:getVeriKey(), {'spawnX', 'spawnY', 'spawnZ', 'spawnYaw', 'spawnPitch', 'lastWorld', 'onlineTime'}, {x, y, z, ay, ap, world, otime}))
-	end
+	player:saveRead()
+	return true
 end
 
 function onPlayerHandshakeDone(player)
@@ -80,11 +45,27 @@ function onPlayerHandshakeDone(player)
 	newChatMessage('&e' .. msg)
 end
 
-function onPlayerChatMessage(player, message)
-	local prt = hooks:call('onPlayerChat', player, message)
-	if prt ~= nil then
-		message = tostring(prt)
+function onPlayerDestroy(player)
+	local msg = printf(MESG_DISCONN, player, player:getLeaveReason())
+	newChatMessage('&e' .. msg)
+
+	if player:isHandshaked()then
+		player:saveWrite()
 	end
+end
+
+function postPlayerPlaceBlock(player, x, y, z, id)
+	local world = getWorld(player)
+	for dx = -1, 1, 1 do -- Update neighboring blocks
+		for dy = -1, 1, 1 do
+			for dz = -1, 1, 1 do
+				world:updateWaterBlock(x - dx, y - dy, z - dz)
+			end
+		end
+	end
+end
+
+function onPlayerChatMessage(player, message)
 	local starts = message:sub(1, 1)
 	if not message:startsWith('#', '>', '/')then
 		message = message:gsub('%%(%x)', '&%1')
@@ -153,71 +134,6 @@ function onPlayerChatMessage(player, message)
 	else -- Message to local chat
 		local cmsg = player:getName() .. ': ' .. message
 		newLocalChatMessage(player, cmsg)
-	end
-end
-
-function onUpdate(dt)
-	cpe:extCallHook('onUpdate', dt)
-	hooks:call('onUpdate', dt)
-	timer.Update(dt)
-
-	if uwa > 0 then
-		for _, world in pairs(worlds)do
-			if world.emptyfrom then
-				if CTIME - world.emptyfrom > uwa then
-					world:unload()
-					world.emptyfrom = nil
-				end
-			end
-		end
-	end
-end
-
-function onPlayerMove(player, dx, dy, dz)
-	hooks:call('onPlayerMove', player, dx, dy, dz)
-	local world = getWorld(player)
-	local portals = world.data.portals
-	if portals then
-		local x, y, z = player:getPos()
-		for _, portal in pairs(portals)do
-			y = floor(y)
-			if (portal.pt1.x >= x and portal.pt2.x <= x)
-			and(portal.pt1.y >= y and portal.pt2.y <= y)
-			and(portal.pt1.z >= z and portal.pt2.z <= z)then
-				player:changeWorld(portal.tpTo, true)
-				break
-			end
-		end
-	end
-end
-
-function onPlayerRotate(player, dy, dp)
-	hooks:call('onPlayerRotate', player, dy, dp)
-end
-
-function onPlayerPlaceBlock(player, x, y, z, id)
-	local world = getWorld(player)
-	if world:isReadOnly()then
-		player:sendMessage(WORLD_RO, 100)
-		return true
-	end
-	local prt = hooks:call('onPlayerPlaceBlock', player, dy, dp)
-	if prt ~= nil then
-		return prt
-	end
-	if player.onPlaceBlock then
-		return player.onPlaceBlock(x, y, z, id)
-	end
-end
-
-function postPlayerPlaceBlock(player, x, y, z, id)
-	local world = getWorld(player)
-	for dx = -1, 1, 1 do -- Update neighboring blocks
-		for dy = -1, 1, 1 do
-			for dz = -1, 1, 1 do
-				world:updateWaterBlock(x - dx, y - dy, z - dz)
-			end
-		end
 	end
 end
 
@@ -342,11 +258,11 @@ function wsLuaCheck(cl, data)
 		return
 	end
 	if not data.hint then
-		local hdr = cl:receive(2)
+		local hdr = receiveString(cl, 2)
 		if not hdr then return end
 		local fin, masked, opcode, hint = readWsHeader(hdr:byte(1, 2))
 		if not fin or not masked then
-			cl:close()
+			closeSock(cl)
 			return
 		end
 		data.hint = hint
@@ -361,7 +277,7 @@ function wsLuaCheck(cl, data)
 					plen = struct.unpack('>H', data)
 				end
 			else
-				cl:close()
+				closeSock(cl)
 				return
 			end
 		else
@@ -377,7 +293,7 @@ function wsLuaCheck(cl, data)
 			data.hint, data.mask, data.packetLen = nil
 			local out = wsHandleLuaCommand(msg)
 			if out then
-				cl:send(encodeWsFrame(out, 0x02))
+				sendMesg(cl, encodeWsFrame(out, 0x02))
 			end
 		end
 	end
@@ -398,17 +314,18 @@ function wsCreateLuaSession(cl, ip)
 end
 
 function createPlayer(cl, ip, isWS)
-	if not onConnectionAttempt(ip)then
+	if not onConnectionAttempt or not onConnectionAttempt(ip)then
 		local player = newPlayer(cl)
 		player.isWS = isWS
 		player.ip = ip
-		local nid = findFreeID(player)
 
+		local nid = findFreeID(player)
 		if nid > 0 then
 			player:init(nid)
 		else
 			player:kick(KICK_SFULL)
 		end
+		hooks:call('onPlayerCreate', player)
 	else
 		local rawPacket = generatePacket(0x0e, KICK_CONNREJ)
 		if isWS then
@@ -487,7 +404,6 @@ function init()
 	permissions:parse()
 	config:parse()
 	cpe:init()
-	sql:init()
 
 	uwa = config:get('unload-world-after')
 	local ip = config:get('server-ip')
@@ -551,7 +467,7 @@ function init()
 			end
 			world = newWorld()
 			world:setName(wn)
-			if world:createWorld({dimensions=newVector(x, y, z)})then
+			if world:createWorld({dimensions = newVector(x, y, z)})then
 				generator(world, sdlist[num]or CTIME)
 			end
 		end
@@ -564,7 +480,7 @@ function init()
 		end
 	end
 	generators = nil
-	if not worlds['default']then
+	if not getWorld('default')then
 		log.fatal(CON_WLOADERR)
 	end
 
@@ -584,11 +500,33 @@ succ, err = xpcall(function()
 		ETIME = CTIME
 		CTIME = gettime()
 
-		if not INITED then INITED = init()end
+		if not INITED then
+			if init()then
+				if onInitDone then
+					onInitDone()
+				end
+				INITED = true
+			end
+		end
 		if ETIME then
 			dt = CTIME - ETIME
 			dt = math.min(.1, dt)
-			onUpdate(dt)
+			cpe:extCallHook('onUpdate', dt)
+			hooks:call('onUpdate', dt)
+			timer.Update(dt)
+			if uwa > 0 then
+				for _, world in pairs(worlds)do
+					if world.emptyfrom then
+						if CTIME - world.emptyfrom > uwa then
+							world:unload()
+							world.emptyfrom = nil
+						end
+					end
+				end
+			end
+			if onUpdate then
+				onUpdate(dt)
+			end
 		end
 
 		acceptClients()
@@ -638,7 +576,6 @@ if INITED then
 	end
 end
 
-if sql then sql:close()end
 if server then closeSock(server)end
 if wsServer then closeSock(wsServer)end
 shutdownSock()

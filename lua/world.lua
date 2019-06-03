@@ -2,17 +2,6 @@ local function gBufSize(vec)
 	return vec.x * vec.y * vec.z + 4
 end
 
-local function packTo(file, fmt, ...)
-	local data = struct.pack(fmt, ...)
-	return file:write(data)
-end
-
-local function unpackFrom(file, fmt)
-	local sz = struct.size(fmt)
-	local data = file:read(sz)
-	return struct.unpack(fmt, data)
-end
-
 local function distance(x1, z1, x2, z2)
 	return math.sqrt((x2 - x1) ^ 2 + (z2 - z1) ^ 2)
 end
@@ -121,6 +110,8 @@ local world_mt = {
 						logWorldWarn(self, WORLD_SCRSVERR)
 					end
 				end
+			elseif k == 'seed'then
+				packTo(wh, '>bd', 11, tonumber(v)or -1)
 			else
 				logWorldWarn(self, (WORLD_MAPOPT):format(k))
 			end
@@ -352,6 +343,8 @@ local world_mt = {
 					local body = wh:read(sl)
 					self:addScript(name, body)
 					self:executeScript(name)
+				elseif id == '\11'then
+					self:setData('seed', unpackFrom(wh, '>d'))
 				elseif id == '\255'then
 					break
 				else
@@ -442,7 +435,7 @@ function getWorld(w)
 end
 
 function loadWorld(wname)
-	if worlds[wname]then return true end
+	if getWorld(wname)then return true end
 	local lvlh = io.open(getWorldPath(wname), 'rb')
 	if not lvlh then return false end
 	local status, world = pcall(newWorld, lvlh, wname)
@@ -455,7 +448,7 @@ end
 
 function unloadWorld(wname)
 	local world = getWorld(wname)
-	if world == worlds['default']then
+	if world == getWorld('default')then
 		return false
 	end
 
@@ -515,7 +508,6 @@ function regenerateWorld(world, gentype, seed)
 				end
 			end)
 			ffi.fill(world.ldata + 4, world.size)
-			seed = seed or CTIME
 			local t = gettime()
 			local succ, err = pcall(gen, world, seed)
 			if not succ then

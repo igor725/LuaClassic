@@ -185,6 +185,17 @@ function acceptClient(sfd)
 	local cfd, err = sck.accept(sfd, addrp, addrsz)
 
 	if cfd ~= INVALID_SOCKET then
+		if jit.os == 'Linux'then
+			local flags = ffi.C.fcntl(cfd, 3, 0)
+			if flags < 0 then
+				return false, geterror()
+			end
+			flags = bit.bor(flags, 4000) -- NON BLOCKING FLAG
+			if ffi.C.fcntl(cfd, 4, ffi.new('int', flags)) < 0 then
+				return false, geterror()
+			end
+		end
+		assert(setSockOpt(cfd, SOL_TCP, TCP_NODELAY, 1))
 		return cfd, parseIPv4(addr[0])
 	end
 	return nil
@@ -257,13 +268,21 @@ end
 function sendMesg(fd, msg, len, flags)
 	flags = flags or dflags
 	len = len or ffi.C.strlen(msg)
-	if sck.send(fd, msg, len, flags) < 0 then
+	msg = ffi.cast('char*', msg)
+
+	local snlen = sck.send(fd, msg, len, flags)
+	if snlen < 0 then
 		local errno = currerr()
-		if errno == 3406 or errno == 10035 then -- Uh....
+		if errno == 3406 or errno == 10035 or errno == 11 then -- Uh....
 			return sendMesg(fd, msg, len, flags)
 		end
 		local err = geterror(errno)
 		return false, err
+	else
+		-- Is stack overflow possible here?
+		if snlen < len then
+			return sendMesg(fd, msg + snlen, len - snlen, flags)
+		end
 	end
 	return true
 end

@@ -5,9 +5,13 @@ hooks = {
 		['onPlayerChat'] = {},
 		['onPlayerRotate'] = {},
 		['prePlayerSpawn'] = {},
+		['onPlayerCreate'] = {},
 		['onPlayerDespawn'] = {},
+		['onPlayerDestroy'] = {},
 		['postPlayerSpawn'] = {},
-		['onPlayerPlaceBlock'] = {}
+		['onPlayerPlaceBlock'] = {},
+		['postPlayerPlaceBlock'] = {},
+		['onPlayerHandshakeDone'] = {}
 	}
 }
 
