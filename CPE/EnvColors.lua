@@ -8,25 +8,25 @@ EC_DIFFUSE = 4
 
 time_presets = {
 	dawn = {
-		[EC_DIFFUSE] = newColor(065,055,055),
-		[EC_AMBIENT] = newColor(050,050,050),
-		[EC_FOG]     = newColor(060,047,040),
-		[EC_CLOUD]   = newColor(060,047,040),
-		[EC_SKY]     = newColor(091,043,018)
+		[EC_DIFFUSE] = newColor(0x41, 0x37, 0x37),
+		[EC_AMBIENT] = newColor(0x32, 0x32, 0x32),
+		[EC_FOG]     = newColor(0x3C, 0x2F, 0x28),
+		[EC_CLOUD]   = newColor(0x3C, 0x2F, 0x28),
+		[EC_SKY]     = newColor(0x5B, 0x2B, 0x12)
 	},
 	night = {
-		[EC_DIFFUSE] = newColor(085,085,085),
-		[EC_AMBIENT] = newColor(040,040,040),
-		[EC_FOG]     = newColor(023,028,042),
-		[EC_CLOUD]   = newColor(036,039,049),
-		[EC_SKY]     = newColor(023,028,042)
+		[EC_DIFFUSE] = newColor(0x55, 0x55, 0x55),
+		[EC_AMBIENT] = newColor(0x28, 0x28, 0x28),
+		[EC_FOG]     = newColor(0x17, 0x1C, 0x42),
+		[EC_CLOUD]   = newColor(0x24, 0x27, 0x31),
+		[EC_SKY]     = newColor(0x17, 0x1C, 0x2A)
 	},
 	day = {
-		[EC_DIFFUSE] = newColor(),
-		[EC_AMBIENT] = newColor(),
-		[EC_FOG]     = newColor(240,240,240),
-		[EC_CLOUD]   = newColor(253,253,253),
-		[EC_SKY]     = newColor(153,204,255)
+		[EC_DIFFUSE] = newColor(0xFF, 0xFF, 0xFF),
+		[EC_AMBIENT] = newColor(0x9B, 0x9B, 0x9B),
+		[EC_FOG]     = newColor(0xFF, 0xFF, 0xFF),
+		[EC_CLOUD]   = newColor(0xFF, 0xFF, 0xFF),
+		[EC_SKY]     = newColor(0x99, 0xCC, 0xFF)
 	}
 }
 
