@@ -72,7 +72,7 @@ local function survRespawn(player)
 end
 
 local function survDamage(player, victim, damage)
-	survAddHealth(victim, -damage or-0.5)
+	survAddHealth(victim, (damage and -damage) or-0.5)
 	victim:setEnvProp(MEP_MAXFOGDIST, 1)
 	victim:setEnvColor(EC_FOG, 255, 40, 40)
 	timer.Create(victim:getName() .. '_hurt', 1, .07, function()
@@ -166,6 +166,9 @@ function onInitDone()
 		not player:isSupported('HeldBlock')then
 			player:kick('Your client does not support required CPE exts.')
 			return
+		end
+		for i = 1, 65 do
+			player:setBlockPermissions(i, false, false)
 		end
 		player:sendMessage('LuaClassic Survival Dev', MT_STATUS1)
 		timer.Create(player:getName() .. '_hp_regen', -1, 5, function()
