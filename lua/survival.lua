@@ -232,6 +232,18 @@ function onInitDone()
 		timer.Remove(name .. '_surv_brk')
 	end)
 
+	hooks:add('onPlayerMove', 'survival', function(player, dx, dy, dz)
+		local world = getWorld(player)
+		local x, y, z = player:getPos()
+		x, y, z = floor(x), floor(y - .5), floor(z)
+
+		local blk = world:getBlock(x, y - ceil(dy), z)
+
+		if blk ~= 0 and dy > .5 then
+			survDamage(nil, player, 2.3 * dy)
+		end
+	end)
+
 	hooks:add('postPlayerSpawn', 'survival', function(player)
 		survUpdateHealth(player)
 		local name = player:getName()
