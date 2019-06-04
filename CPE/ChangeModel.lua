@@ -38,7 +38,8 @@ function cm:load()
 	end
 
 	getPlayerMT().getModelHeight = function(player)
-		return self.allowed_models[player.model]or 2
+		local mdl = player.model
+		return self.allowed_models[mdl]or (tonumber(mdl)and 1)or 2
 	end
 
 	saveAdd('model', function(f, player)
