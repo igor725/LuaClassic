@@ -44,6 +44,10 @@ local survMiningSpeed = {
 	[46] = 0
 }
 
+local function distance(x1, y1, z1, x2, y2, z2)
+	return math.sqrt( (x2 - x1) ^ 2 + (y2 - y1) ^ 2 + (z2 - z1) ^ 2 )
+end
+
 local function survUpdateHealth(player)
 	local hstr = ('\3'):rep(math.ceil(player.health))
 	player:sendMessage('&c' .. hstr, MT_STATUS2)
@@ -113,7 +117,7 @@ local function survBreakBlock(player, x, y, z)
 	local world = getWorld(player)
 	local bid = world:getBlock(x, y, z)
 
-	if player:getHeldBlock() == 0 then
+	if player:getHeldBlock() ~= bid then
 		player:holdThis(bid)
 	end
 
@@ -239,7 +243,7 @@ function onInitDone()
 
 		local blk = world:getBlock(x, y - ceil(dy), z)
 
-		if blk ~= 0 and dy > .5 then
+		if blk ~= 0 and(blk < 8 or blk > 11)and dy > .5 then
 			survDamage(nil, player, 2.3 * dy)
 		end
 	end)
@@ -266,17 +270,35 @@ function onInitDone()
 		local tgent   = select(5, ...)
 		local x, y, z = select(6, ...)
 
+		if action == 1 then
+			survStopBreaking(player)
+			return
+		end
+
+		local dist_player = 9999
+		local dist_block = 9999
+		local tgplayer
+
 		if x ~= -1 and y ~= -1 and z ~= -1 then
+			dist_block = distance(x + .5, y + .5, z + .5, player:getPos())
+		end
+		if tgent > 0 then
+			tgplayer = getPlayerByID(tgent)
+			if tgplayer then
+				dist_player = distance(x, y, z, tgplayer:getPos())
+			end
+		end
+
+		print(dist_block, dist_player)
+
+		if dist_block < dist_player then
 			survBlockAction(player, button, action, x, y, z)
-		elseif tgent > 0 then
+		elseif dist_player < dist_block then
 			if button == 0 and action == 0 then
-				local ent = getPlayerByID(tgent)
-				if ent then
-					survDamage(player, ent)
+				if tgplayer then
+					survDamage(player, tgplayer)
 				end
 			end
-		else
-			survStopBreaking(player)
 		end
 	end)
 
@@ -294,16 +316,33 @@ function onInitDone()
 		survUpdateBlockInfo(player)
 	end)
 
+	addChatCommand('give', function(player, id, count)
+		id = tonumber(id)
+		count = tonumber(count)or 64
+		count = math.min(math.max(count, 1), 64)
+
+		if id and id > 0 and id < 66 then
+			player:holdThis(id)
+			player.inventory[id] = math.min(64, player.inventory[id] + count)
+			survUpdateBlockInfo(player)
+			return ('Block %s given'):format(survBlocknames[id])
+		else
+			return 'Invalid block id'
+		end
+	end)
+
 	saveAdd('health', function(f, player)
 		player.health = unpackFrom(f, '>f')
 	end, function(f, val)
 		packTo(f, '>f', val)
 	end)
+
 	saveAdd('oxygen', function(f, player)
 		player.oxygen = unpackFrom(f, '>f')
 	end, function(f, val)
 		packTo(f, '>f', val)
 	end)
+
 	saveAdd('inventory', function(f, player)
 		while true do
 			local id, quantity = unpackFrom(f, 'BB')
