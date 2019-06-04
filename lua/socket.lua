@@ -172,10 +172,9 @@ else -- POSIX
 	end
 end
 
--- TODO: Use builtin function
-function parseIPv4(sockaddr)
-	local str = ffi.string(sockaddr.sin_addr, 4)
-	return string.format('%d.%d.%d.%d', str:byte(1, 4))
+function parseIPv4(sin_addr)
+	local ptr = sck.inet_ntop(AF_INET, sin_addr, ffi.new('char[15]'), 15)
+	return ffi.string(ptr)
 end
 
 function acceptClient(sfd)
@@ -190,13 +189,13 @@ function acceptClient(sfd)
 			if flags < 0 then
 				return false, geterror()
 			end
-			flags = bit.bor(flags, 4000) -- NON BLOCKING FLAG
+			flags = bit.bor(flags, 4000)
 			if ffi.C.fcntl(cfd, 4, ffi.new('int', flags)) < 0 then
 				return false, geterror()
 			end
 		end
 		assert(setSockOpt(cfd, SOL_TCP, TCP_NODELAY, 1))
-		return cfd, parseIPv4(addr[0])
+		return cfd, parseIPv4(addr[0].sin_addr)
 	end
 	return nil
 end
@@ -217,7 +216,6 @@ function setSockOpt(fd, level, opt, val)
 	return sck.setsockopt(fd, level, opt, val, valsz) == 0
 end
 
---TODO: DNS resolver
 function bindSock(ip, port, backlog)
 	local fd = sck.socket(AF_INET, SOCK_STREAM, 0)
 	local ssa = ffi.new('struct sockaddr_in[1]', {{
@@ -237,7 +235,7 @@ function bindSock(ip, port, backlog)
 		return false, geterror()
 	end
 
-	if sck.listen(fd, backlog or 0) < 0 then
+	if sck.listen(fd, backlog or SOMAXCONN) < 0 then
 		return false, geterror()
 	end
 
