@@ -4,6 +4,29 @@ if not SURVIVAL_ENABLED then return end
 local SURV_ACT_NONE  = -1
 local SURV_ACT_BREAK = 1
 
+local survBlocknames = {
+	'Stone', 'Grass', 'Dirt', 'Cobblestone',
+	'Planks', 'Sapling', 'Bedrock', 'Water',
+	'Water', 'Lava', 'Lava', 'Sand', 'Gravel',
+	'Gold ore', 'Iron ore', 'Coal ore', 'Log',
+	'Leaves', 'Sponge', 'Glass', 'Red wool',
+	'Orange wool', 'Yellow wool', 'Lime wool',
+	'Green wool', 'Teal wool', 'Aqua wool',
+	'Cyan wool', 'Blue wool', 'Indigo wool',
+	'Violet wool', 'Magenta wool', 'Pink wool',
+	'Black wool', 'Gray wool', 'White wool',
+	'Dandelion', 'Rose', 'Brown mushroom',
+	'Red mushroom', 'Gold block', 'Iron block',
+	'Double slab', 'Slab', 'Brick', 'TNT',
+	'Bookshelf', 'Mossy stone', 'Obsidian',
+	'Cobblestone slab', 'Rope', 'Sandstone',
+	'Snow', 'Fire', 'Light pink wool',
+	'Forest green wool', 'Brown wool',
+	'Deep blue', 'Turquoise wool', 'Ice',
+	'Ceramic tile', 'Magma', 'Pillar',
+	'Crate', 'Stone brick'
+}
+
 local survMiningSpeed = {
 	[-1] =  .1,
 	[1]  =  .3,
@@ -30,7 +53,8 @@ local function survUpdateBlockInfo(player)
 	local id = player:getHeldBlock()
 	if id > 0 then
 		local quantity = player.inventory[id]
-		player:sendMessage('BlockID: ' .. id, MT_BRIGHT3)
+		local name = survBlocknames[id]or'UNKNOWN_BLOCK'
+		player:sendMessage('Block: ' .. name, MT_BRIGHT3)
 		player:sendMessage('Quantity: ' .. quantity, MT_BRIGHT2)
 		player:setBlockPermissions(id, quantity > 0 and (id < 7 or id > 11), false)
 	else
