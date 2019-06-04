@@ -243,8 +243,9 @@ function onInitDone()
 
 		local blk = world:getBlock(x, y - ceil(dy), z)
 
-		if blk ~= 0 and(blk < 8 or blk > 11)and dy > .5 then
-			survDamage(nil, player, 2.3 * dy)
+		if blk ~= 0 and(blk < 8 or blk > 11)and dy > 1.21 then
+			local damage = 1.3 * dy
+			survDamage(nil, player, damage)
 		end
 	end)
 
@@ -288,8 +289,6 @@ function onInitDone()
 				dist_player = distance(x, y, z, tgplayer:getPos())
 			end
 		end
-
-		print(dist_block, dist_player)
 
 		if dist_block < dist_player then
 			survBlockAction(player, button, action, x, y, z)
