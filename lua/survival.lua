@@ -41,8 +41,14 @@ local survMiningSpeed = {
 	[18] =  .04,
 	[20] =  .03,
 
-	[46] = 0
+	[46] = 0,
+	[51] = 0,
+	[54] = 0
 }
+
+for i = 37, 40 do
+	survMiningSpeed[i] = 0
+end
 
 local function distance(x1, y1, z1, x2, y2, z2)
 	return math.sqrt( (x2 - x1) ^ 2 + (y2 - y1) ^ 2 + (z2 - z1) ^ 2 )
@@ -199,7 +205,8 @@ function onInitDone()
 			player:setBlockPermissions(i, false, false)
 		end
 
-		timer.Create(player:getName() .. '_hp_regen', -1, 5, function()
+		local name = player:getName()
+		timer.Create(name .. '_hp_regen', -1, 5, function()
 			local ahp = math.min(10, player.health + .5)
 			if ahp ~= player.health then
 				survUpdateHealth(player)
@@ -207,7 +214,16 @@ function onInitDone()
 			player.health = ahp
 		end)
 
-		timer.Create(player:getName() .. '_oxygen', -1, .4, function()
+		timer.Create(name .. '_firecheck', -1, .6, function()
+			local x, y, z = player:getPos()
+			x, y, z = floor(x), floor(y - 1), floor(z)
+
+			if getWorld(player):getBlock(x, y, z) == 54 then
+				survDamage(nil, player)
+			end
+		end)
+
+		timer.Create(name .. '_oxygen', -1, .4, function()
 			local level, isLava = player:getFluidLevel()
 			if isLava then
 				survDamage(nil, player, 1)
@@ -235,6 +251,7 @@ function onInitDone()
 		timer.Remove(name .. '_oxygen')
 		timer.Remove(name .. '_hp_regen')
 		timer.Remove(name .. '_surv_brk')
+		timer.Remove(name .. '_firecheck')
 	end)
 
 	hooks:add('onPlayerMove', 'survival', function(player, dx, dy, dz)
@@ -267,6 +284,7 @@ function onInitDone()
 		local name = player:getName()
 		timer.Pause(name .. '_oxygen')
 		timer.Pause(name .. '_hp_regen')
+		timer.Pause(name .. '_firecheck')
 	end)
 
 	hooks:add('onPlayerClick', 'survival', function(player, ...)
@@ -328,9 +346,27 @@ function onInitDone()
 			player:holdThis(id)
 			player.inventory[id] = math.min(64, player.inventory[id] + count)
 			survUpdateBlockInfo(player)
-			return ('Block %s given'):format(survBlocknames[id])
+			return ('%d %s block(-s) given'):format(count, survBlocknames[id])
 		else
 			return 'Invalid block id'
+		end
+	end)
+
+	addChatCommand('heal', function(player)
+		player.health = 10
+		survUpdateHealth(player)
+		return 'You healed.'
+	end)
+
+	addChatCommand('full', function(player)
+		local id = player:getHeldBlock()
+
+		if id ~= 0 then
+			player.inventory[id] = 64
+			survUpdateBlockInfo(player)
+			return ('64 %s block(-s) given'):format(survBlocknames[id])
+		else
+			return 'Block not selected'
 		end
 	end)
 
