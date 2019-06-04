@@ -231,7 +231,6 @@ function bindSock(ip, port, backlog)
 	local cssa = ffi.cast('const struct sockaddr*', ssa)
 	local ssasz = ffi.sizeof(ssa[0])
 
-	assert(setSockOpt(fd, SOL_SOCKET, SO_REUSEADDR, 1))
 	assert(setSockOpt(fd, SOL_TCP, TCP_NODELAY, 1))
 
 	if sck.bind(fd, cssa, ssasz) < 0 then
