@@ -549,6 +549,11 @@ local player_mt = {
 		hooks:call('prePlayerSpawn', self)then
 			return
 		end
+		if self.firstSpawn then
+			if hooks:call('prePlayerFirstSpawn', self)then
+				return
+			end
+		end
 
 		local pId = self:getID()
 		local name = self:getName()
@@ -582,8 +587,13 @@ local player_mt = {
 				end
 			end
 		end)
+		
 		cpe:extCallHook('postPlayerSpawn', self)
 		hooks:call('postPlayerSpawn', self)
+		if self.firstSpawn then
+			hooks:call('postPlayerFirstSpawn', self)
+			self.firstSpawn = false
+		end
 		local world = getWorld(self)
 		world.players = world.players + 1
 		world.emptyfrom = nil
@@ -808,6 +818,7 @@ function newPlayer(cl)
 		lposc = 1,
 		pos = pos,
 		isSpawned = false,
+		firstSpawn = true,
 		waitingExts = -1,
 		eye = eye,
 		extensions = {},
