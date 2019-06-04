@@ -249,7 +249,7 @@ function onInitDone()
 		end
 	end)
 
-	hooks:add('onPlayerFirstSpawn', 'survival', function(player)
+	hooks:add('postPlayerFirstSpawn', 'survival', function(player)
 		player:sendMessage('LuaClassic Survival Dev', MT_STATUS1)
 	end)
 
