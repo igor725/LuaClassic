@@ -39,7 +39,7 @@ local survMiningSpeed = {
 	[15] =  .4,
 	[16] =  .4,
 	[18] =  .04,
-	[20] = .03,
+	[20] =  .03,
 
 	[46] = 0
 }
@@ -178,10 +178,10 @@ end
 function onInitDone()
 	log.info('Survival Test Gamemode Loaded!')
 	hooks:add('onPlayerCreate', 'survival', function(player)
-		player.action = SURV_ACT_NONE
 		player.lastClickedBlock = newVector(0, 0, 0)
 		player.currClickedBlock = newVector(0, 0, 0)
 		player.inventory = ffi.new('uchar[65]')
+		player.action = SURV_ACT_NONE
 		player.oxyshow = false
 		player.oxygen = 10
 		player.health = 10
@@ -198,7 +198,7 @@ function onInitDone()
 		for i = 1, 65 do
 			player:setBlockPermissions(i, false, false)
 		end
-		player:sendMessage('LuaClassic Survival Dev', MT_STATUS1)
+
 		timer.Create(player:getName() .. '_hp_regen', -1, 5, function()
 			local ahp = math.min(10, player.health + .5)
 			if ahp ~= player.health then
@@ -206,6 +206,7 @@ function onInitDone()
 			end
 			player.health = ahp
 		end)
+
 		timer.Create(player:getName() .. '_oxygen', -1, .4, function()
 			local level, isLava = player:getFluidLevel()
 			if isLava then
@@ -244,9 +245,12 @@ function onInitDone()
 		local blk = world:getBlock(x, y - ceil(dy), z)
 
 		if blk ~= 0 and(blk < 8 or blk > 11)and dy > 1.21 then
-			local damage = 1.3 * dy
-			survDamage(nil, player, damage)
+			survDamage(nil, player, 1.3 * dy)
 		end
+	end)
+
+	hooks:add('onPlayerFirstSpawn', 'survival', function(player)
+		player:sendMessage('LuaClassic Survival Dev', MT_STATUS1)
 	end)
 
 	hooks:add('postPlayerSpawn', 'survival', function(player)
