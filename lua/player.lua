@@ -198,16 +198,23 @@ local player_mt = {
 	end,
 	setPos = function(self, x, y, z)
 		local pos = self.pos
+		local lp = self.lpos
 		local lx, ly, lz = pos.x, pos.y, pos.z
+
 		if lx ~= x or ly ~= y or z ~= z then
 			pos.x = x
 			pos.y = y
 			pos.z = z
 			if self.isSpawned then
-				local dx, dy, dz = lx - x, ly - y, lz - z
+				local dx, dy, dz = lp.x - x, lp.y - y, lp.z - z
 				hooks:call('onPlayerMove', self, dx, dy, dz)
 				if onPlayerMove then
 					onPlayerMove(self, dx, dy, dz)
+				end
+				self.lposc = self.lposc + 1
+				if self.lposc > 2 then
+					lp.x, lp.y, lp.z = x, y, z
+					self.lposc = 1
 				end
 				checkForPortal(self, x, y, z)
 			end
@@ -282,6 +289,8 @@ local player_mt = {
 			ay = floor(ay / 360 * 255)
 			ap = floor(ap / 360 * 255)
 		end
+		local lp = self.lpos
+		lp.x, lp.y, lp.z = x, y, z
 		self:sendPacket(self:isSupported('ExtEntityPositions'), 0x08, -1, x, y, z, ay, ap)
 	end,
 	moveToSpawn = function(self)
@@ -579,6 +588,8 @@ local player_mt = {
 		world.players = world.players + 1
 		world.emptyfrom = nil
 		self.isSpawned = true
+		local lp = self.lpos
+		lp.x, lp.y, lp.z = x, y, z
 		if postPlayerSpawn then
 			postPlayerSpawn(self)
 		end
@@ -787,11 +798,14 @@ function newPlayer(cl)
 	local sx, sy, sz, syaw, spitch = dworld:getSpawnPoint()
 	local pos = newVector(sx, sy, sz)
 	local eye = newAngle(syaw, spitch)
+	local lpos = newVector(sx, sy, sz)
 
 	return setmetatable({
 		kickTimeout = CTIME + getKickTimeout(),
 		connectTime = CTIME,
 		worldName = 'default',
+		lpos = lpos,
+		lposc = 1,
 		pos = pos,
 		isSpawned = false,
 		waitingExts = -1,
