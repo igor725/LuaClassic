@@ -1,17 +1,17 @@
-local SURVIVAL_ENABLED = true
-if not SURVIVAL_ENABLED then return end
+SURV_ENABLED = true
+if not SURV_ENABLED then return end
 
-local SURV_MAX_HEALTH = 10
-local SURV_MAX_OXYGEN = 10
+SURV_MAX_HEALTH = 10
+SURV_MAX_OXYGEN = 10
 
-local SURV_ACT_NONE  = -1
-local SURV_ACT_BREAK = 1
+SURV_ACT_NONE  = -1
+SURV_ACT_BREAK = 1
 
-local SURV_DMG_PLAYER = 1
-local SURV_DMG_FALL = 2
-local SURV_DMG_WATER = 3
-local SURV_DMG_LAVA = 4
-local SURV_DMG_FIRE = 5
+SURV_DMG_PLAYER = 1
+SURV_DMG_FALL = 2
+SURV_DMG_WATER = 3
+SURV_DMG_LAVA = 4
+SURV_DMG_FIRE = 5
 
 local survBlocknames = {
 	'Stone', 'Grass', 'Dirt', 'Cobblestone',
@@ -151,6 +151,10 @@ local function survDamage(attacker, victim, damage, dmgtype)
 			end
 		end)
 	end
+end
+
+getPlayerMT().survDamage = function(player, attacker, dmg, dmgtype)
+	survDamage(attacker, player, dmg, dmgtype)
 end
 
 local function survBreakBlock(player, x, y, z)
