@@ -259,6 +259,10 @@ if jit.os == 'Windows'then
 			end
 		end
 
+		local function isFile()
+			return bit.band(fdata.dwFileAttributes, 16) == 0
+		end
+
 		if not ext then
 			ext = '*'
 		end
@@ -266,16 +270,14 @@ if jit.os == 'Windows'then
 		return function()
 			if not file then
 				file = C.FindFirstFileA(path .. '\\*.' .. ext, fdata)
-				local isFile
 				if file == ffi.cast('void*', -1)then
 					return
-				else
-					isFile = bit.band(fdata.dwFileAttributes, 16) == 0
 				end
-				return getName(), isFile
+				return getName(), isFile()
 			end
+			
 			if C.FindNextFileA(file, fdata)then
-				return getName(), bit.band(fdata.dwFileAttributes, 16) == 0
+				return getName(), isFile()
 			else
 				C.FindClose(file)
 			end

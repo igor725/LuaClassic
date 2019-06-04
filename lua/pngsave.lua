@@ -18,17 +18,17 @@ if not status then
 end
 
 local HCOLORS = {
-	[-1] = newColor(000, 000, 000),
-	[01] = newColor(116, 116, 116),
-	[02] = newColor(118, 177, 079),
-	[03] = newColor(121, 085, 058),
-	[04] = newColor(082, 082, 082),
-	[05] = newColor(188, 152, 098),
-	[08] = newColor(035, 062, 140),
-	[10] = newColor(224, 142, 046),
-	[12] = newColor(220, 213, 159),
-	[18] = newColor(090, 250, 058),
-	[45] = newColor(177, 052, 017)
+	[-1] = newColor(0x00, 0x00, 0x00),
+	[01] = newColor(0x74, 0x74, 0x74),
+	[02] = newColor(0x76, 0xB1, 0x4F),
+	[03] = newColor(0x79, 0x55, 0x3A),
+	[04] = newColor(0x52, 0x52, 0x52),
+	[05] = newColor(0xBC, 0x98, 0x62),
+	[08] = newColor(0x23, 0x3E, 0x8C),
+	[10] = newColor(0xE0, 0x8E, 0x2E),
+	[12] = newColor(0xDC, 0xD5, 0x9F),
+	[18] = newColor(0x5A, 0xFA, 0x3A),
+	[45] = newColor(0xB1, 0x34, 0x11)
 }
 HCOLORS[9]  = HCOLORS[8]
 HCOLORS[11] = HCOLORS[10]
@@ -53,19 +53,18 @@ local function eHandler(png, err)
 	error('libpng error')
 end
 
-function setlibpngVer(str)
-	PNG_VER = str or PNG_VER
+local function wHandler(png, warn)
+	log.warn(ffi.string(warn))
 end
 
 function pngSave(world, filename, flipx, flipz)
-	if not world.isWorld then return false, 'Invalid argument #1 (World expected)' end
-	local f, err = io.open(filename or'hmap.png', 'wb')
-	if not f then return false, err end
-	local succ, err = pcall(function()
-		local png = LIB.png_create_write_struct(PNG_VER, nil, eHandler, nil)
-		if png == 0 then return false, 'PNG struct not created'end
+	if not world.isWorld then return false, 'Invalid argument #1 (World expected)'end
+	local pngfile
+	local succ, status, err = pcall(function()
+		local png = LIB.png_create_write_struct(PNG_VER, nil, eHandler, wHandler)
+		if png == nil then return false, 'PNG struct not created'end
 		local info = LIB.png_create_info_struct(png)
-		if info == 0 then return false, 'INFO struct not created'end
+		if info == nil then return false, 'INFO struct not created'end
 		local iw, wy, ih = world:getDimensions()
 
 		local function getBlockColor(x,z)
@@ -80,7 +79,10 @@ function pngSave(world, filename, flipx, flipz)
 			return HCOLORS[-1]
 		end
 
-		LIB.png_init_io(png, f)
+		pngfile, err = io.open(filename or'hmap.png', 'wb')
+		if not pngfile then return false, err end
+		
+		LIB.png_init_io(png, pngfile)
 		LIB.png_set_IHDR(png, info, iw, ih, 8, 2, 0, 0, 0)
 		LIB.png_write_info(png, info)
 
@@ -102,6 +104,9 @@ function pngSave(world, filename, flipx, flipz)
 		end
 		LIB.png_write_end(png, nil)
 	end)
-	f:close()
-	return succ, PNG_ERR or err
+
+	if pngfile then
+		pngfile:close()
+	end
+	return succ and status, PNG_ERR or err
 end
