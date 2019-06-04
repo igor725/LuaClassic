@@ -1,6 +1,9 @@
 local SURVIVAL_ENABLED = true
 if not SURVIVAL_ENABLED then return end
 
+local SURV_MAX_HEALTH = 10
+local SURV_MAX_OXYGEN = 10
+
 local SURV_ACT_NONE  = -1
 local SURV_ACT_BREAK = 1
 
@@ -55,8 +58,12 @@ local function distance(x1, y1, z1, x2, y2, z2)
 end
 
 local function survUpdateHealth(player)
-	local hstr = ('\3'):rep(math.ceil(player.health))
-	player:sendMessage('&c' .. hstr, MT_STATUS2)
+	local int, fr = math.modf(player.health)
+	local dmg = SURV_MAX_HEALTH - int - ceil(fr)
+	local str = ('\3'):rep(dmg)
+	if fr ~= 0 then str = str .. '&4\3' end
+	str = str .. '&c' ..('\3'):rep(SURV_MAX_HEALTH - dmg - ceil(fr))
+	player:sendMessage(str, MT_STATUS2)
 end
 
 local function survUpdateBlockInfo(player)
@@ -74,7 +81,7 @@ local function survUpdateBlockInfo(player)
 end
 
 local function survUpdateOxygen(player)
-	if player.oxygen == 10 then
+	if player.oxygen == SURV_MAX_OXYGEN then
 		player:sendMessage('', MT_BRIGHT1)
 		player.oxyshow = false
 	else
@@ -97,8 +104,8 @@ end
 
 local function survRespawn(player)
 	player:moveToSpawn()
-	player.health = 10
-	player.oxygen = 10
+	player.health = SURV_MAX_HEALTH
+	player.oxygen = SURV_MAX_OXYGEN
 	ffi.fill(player.inventory, 65)
 	survUpdateHealth(player)
 	survStopBreaking(player)
@@ -187,10 +194,10 @@ function onInitDone()
 		player.lastClickedBlock = newVector(0, 0, 0)
 		player.currClickedBlock = newVector(0, 0, 0)
 		player.inventory = ffi.new('uchar[65]')
+		player.health = SURV_MAX_HEALTH
+		player.oxygen = SURV_MAX_OXYGEN
 		player.action = SURV_ACT_NONE
 		player.oxyshow = false
-		player.oxygen = 10
-		player.health = 10
 	end)
 
 	hooks:add('onPlayerHandshakeDone', 'survival', function(player)
@@ -207,18 +214,20 @@ function onInitDone()
 
 		local name = player:getName()
 		timer.Create(name .. '_hp_regen', -1, 5, function()
-			local ahp = math.min(10, player.health + .5)
-			if ahp ~= player.health then
-				survUpdateHealth(player)
-			end
+			local int, fr = math.modf(player.health)
+			if fr ~= 0 and fr ~= .5 then fr = .5 end
+			local ahp = math.min(SURV_MAX_HEALTH, int + fr + .5)
 			player.health = ahp
+			survUpdateHealth(player)
 		end)
 
 		timer.Create(name .. '_firecheck', -1, .6, function()
 			local x, y, z = player:getPos()
 			x, y, z = floor(x), floor(y - 1), floor(z)
+			local world = getWorld(player)
 
-			if getWorld(player):getBlock(x, y, z) == 54 then
+			if world:getBlock(x, y, z) == 54
+			or world:getBlock(x, y + 1, z) == 54 then
 				survDamage(nil, player)
 			end
 		end)
@@ -238,7 +247,7 @@ function onInitDone()
 				player.oxyshow = true
 			else
 				if player.oxyshow then
-					player.oxygen = math.min(player.oxygen + .05, 10)
+					player.oxygen = math.min(player.oxygen + .05, SURV_MAX_OXYGEN)
 					survUpdateOxygen(player)
 				end
 			end
@@ -353,7 +362,7 @@ function onInitDone()
 	end)
 
 	addChatCommand('heal', function(player)
-		player.health = 10
+		player.health = SURV_MAX_HEALTH
 		survUpdateHealth(player)
 		return 'You healed.'
 	end)
