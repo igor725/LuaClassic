@@ -7,6 +7,12 @@ local SURV_MAX_OXYGEN = 10
 local SURV_ACT_NONE  = -1
 local SURV_ACT_BREAK = 1
 
+local SURV_DMG_PLAYER = 1
+local SURV_DMG_FALL = 2
+local SURV_DMG_WATER = 3
+local SURV_DMG_LAVA = 4
+local SURV_DMG_FIRE = 5
+
 local survBlocknames = {
 	'Stone', 'Grass', 'Dirt', 'Cobblestone',
 	'Planks', 'Sapling', 'Bedrock', 'Water',
@@ -85,13 +91,14 @@ local function survUpdateOxygen(player)
 		player:sendMessage('', MT_BRIGHT1)
 		player.oxyshow = false
 	else
-		player:sendMessage(('Oxygen: %.1f'):format(player.oxygen), MT_BRIGHT1)
+		local clr = '&a'
+		if player.oxygen <= 3 then
+			clr = '&c'
+		elseif player.oxygen <= 6 then
+			clr = '&e'
+		end
+		player:sendMessage((clr .. 'Oxygen: %.1f'):format(player.oxygen), MT_BRIGHT1)
 	end
-end
-
-local function survAddHealth(player, add)
-	player.health = player.health + add
-	survUpdateHealth(player)
 end
 
 local function survStopBreaking(player)
@@ -112,8 +119,24 @@ local function survRespawn(player)
 	survUpdateBlockInfo(player)
 end
 
-local function survDamage(player, victim, damage)
-	survAddHealth(victim, (damage and -damage) or-0.5)
+local function getKiller(attacker, dmgtype)
+	if dmgtype == SURV_DMG_PLAYER then
+		return 'player ' .. attacker:getName()
+	elseif dmgtype == SURV_DMG_FALL then
+		return 'gravitation'
+	elseif dmgtype == SURV_DMG_WATER then
+		return 'water'
+	elseif dmgtype == SURV_DMG_LAVA then
+		return 'lava'
+	elseif dmgtype == SURV_DMG_FIRE then
+		return 'fire'
+	end
+	return 'mysterious killer' -- Why not?
+end
+
+local function survDamage(attacker, victim, damage, dmgtype)
+	victim.health = victim.health - damage
+	survUpdateHealth(victim)
 	victim:setEnvProp(MEP_MAXFOGDIST, 1)
 	victim:setEnvColor(EC_FOG, 255, 40, 40)
 	timer.Create(victim:getName() .. '_hurt', 1, .07, function()
@@ -122,7 +145,11 @@ local function survDamage(player, victim, damage)
 	end)
 	if victim.health <= 0 then
 		survRespawn(victim)
-		victim:sendMessage('You are killed by ' .. ((player and player:getName()) or'world'))
+		playersForEach(function(ply)
+			if ply:isInWorld(victim)then
+				ply:sendMessage(('Player %s killed by %s.'):format(victim, getKiller(attacker, dmgtype)))
+			end
+		end)
 	end
 end
 
@@ -228,20 +255,20 @@ function onInitDone()
 
 			if world:getBlock(x, y, z) == 54
 			or world:getBlock(x, y + 1, z) == 54 then
-				survDamage(nil, player)
+				survDamage(nil, player, 1, SURV_DMG_FIRE)
 			end
 		end)
 
 		timer.Create(name .. '_oxygen', -1, .4, function()
 			local level, isLava = player:getFluidLevel()
 			if isLava then
-				survDamage(nil, player, 1)
+				survDamage(nil, player, 1, SURV_DMG_LAVA)
 				return
 			end
 			if level > 1 then
 				player.oxygen = math.max(player.oxygen - .2, 0)
 				if player.oxygen == 0 then
-					survDamage(nil, player, 1)
+					survDamage(nil, player, 1, SURV_DMG_WATER)
 				end
 				survUpdateOxygen(player)
 				player.oxyshow = true
@@ -271,7 +298,7 @@ function onInitDone()
 		local blk = world:getBlock(x, y - ceil(dy), z)
 
 		if blk ~= 0 and(blk < 8 or blk > 11)and dy > 1.21 then
-			survDamage(nil, player, 1.3 * dy)
+			survDamage(nil, player, 1.3 * dy, SURV_DMG_FALL)
 		end
 	end)
 
@@ -326,7 +353,7 @@ function onInitDone()
 		elseif dist_player < dist_block then
 			if button == 0 and action == 0 then
 				if tgplayer then
-					survDamage(player, tgplayer)
+					survDamage(player, tgplayer, .5, SURV_DMG_PLAYER)
 				end
 			end
 		end
