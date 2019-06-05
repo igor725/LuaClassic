@@ -294,7 +294,7 @@ local player_mt = {
 			ap = floor(ap / 360 * 255)
 		end
 		local lp = self.lpos
-		lp.x, lp.y, lp.z = x, y, z
+		lp.x, lp.y, lp.z = x / 32, y / 32, z / 32
 		self:sendPacket(self:isSupported('ExtEntityPositions'), 0x08, -1, x, y, z, ay, ap)
 	end,
 	moveToSpawn = function(self)
