@@ -600,7 +600,7 @@ local player_mt = {
 		world.emptyfrom = nil
 		self.isSpawned = true
 		local lp = self.lpos
-		lp.x, lp.y, lp.z = x, y, z
+		lp.x, lp.y, lp.z = x / 32, y / 32, z /32
 		if postPlayerSpawn then
 			postPlayerSpawn(self)
 		end
