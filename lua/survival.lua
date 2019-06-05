@@ -295,10 +295,12 @@ function onInitDone()
 		local x, y, z = player:getPos()
 		x, y, z = floor(x), floor(y - .5), floor(z)
 
-		local blk = world:getBlock(x, y - ceil(dy), z)
+		local blk = world:getBlock(x, y - 2, z)
 
 		if blk ~= 0 and(blk < 8 or blk > 11)and dy > 1.21 then
-			survDamage(nil, player, 1.3 * dy, SURV_DMG_FALL)
+			if player:getFluidLevel() < 1 then
+				survDamage(nil, player, 0.9 * dy, SURV_DMG_FALL)
+			end
 		end
 	end)
 
