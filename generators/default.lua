@@ -286,7 +286,7 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 				for y = heightStone1, math.min(height1, heightGrass - 2) do
 					map[offset + y * step] = 3
 				end
-				
+
 				-- Sand
 				for y = math.max(heightStone1, heightGrass - 2), height1 do
 					map[offset + y * step] = 12
@@ -609,7 +609,7 @@ local function lavalavalava(world, dimx, dimy, dimz)
 	local SetBlock = function(x, y, z, id)
 		map[(y * dimz + z) * dimx + x + 4] = id
 	end]]--
-	
+
 	minHeight = heightGrass
 	minHeightIndex = 0
 	for i=1, #biomes do
@@ -618,11 +618,11 @@ local function lavalavalava(world, dimx, dimy, dimz)
 			minHeightIndex = i
 		end
 	end
-	
+
 	if minHeight < heightGrass then
 		local x = (minHeightIndex % bsx) * GEN_BIOME_STEP
 		local z = math.floor(minHeightIndex / bsx) * GEN_BIOME_STEP
-		
+
 		local setRecursLava = nil
 		setRecursLava = function (x, y, z)
 			if world:getBlock(x, y, z) == 8 then
@@ -642,7 +642,7 @@ local function lavalavalava(world, dimx, dimy, dimz)
 				setRecursLava(x, y-1, z)
 			end
 		end
-		
+
 		for y = minHeight, heightGrass do
 			setRecursLava(x, y, z)
 		end
@@ -735,8 +735,8 @@ return function(world, seed)
 			break
 		end
 	end
-	
-	lavalavalava(world, dimx, dimy, dimz)
+
+	-- lavalavalava(world, dimx, dimy, dimz)
 
 	world:setSpawn(x, y + 2, z)
 	world:setEnvProp(MEP_SIDESBLOCK, 0)
