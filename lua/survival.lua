@@ -110,13 +110,13 @@ local function survStopBreaking(player)
 end
 
 local function survRespawn(player)
-	player:moveToSpawn()
 	player.health = SURV_MAX_HEALTH
 	player.oxygen = SURV_MAX_OXYGEN
 	ffi.fill(player.inventory, 65)
+	survUpdateBlockInfo(player)
 	survUpdateHealth(player)
 	survStopBreaking(player)
-	survUpdateBlockInfo(player)
+	player:moveToSpawn()
 end
 
 local function getKiller(attacker, dmgtype)
@@ -131,7 +131,7 @@ local function getKiller(attacker, dmgtype)
 	elseif dmgtype == SURV_DMG_FIRE then
 		return 'fire'
 	end
-	return 'mysterious killer' -- Why not?
+	return '&dmysterious killer' -- Why not?
 end
 
 local function survDamage(attacker, victim, damage, dmgtype)
@@ -151,10 +151,6 @@ local function survDamage(attacker, victim, damage, dmgtype)
 			end
 		end)
 	end
-end
-
-getPlayerMT().survDamage = function(player, attacker, dmg, dmgtype)
-	survDamage(attacker, player, dmg, dmgtype)
 end
 
 local function survBreakBlock(player, x, y, z)
@@ -439,3 +435,11 @@ function onInitDone()
 		f:write('\255\255')
 	end)
 end
+
+local p_mt = getPlayerMT()
+
+p_mt.survDamage = function(player, attacker, dmg, dmgtype)
+	survDamage(attacker, player, dmg, dmgtype)
+end
+
+p_mt.survRespawn = survRespawn
