@@ -62,43 +62,67 @@ local function checkForPortal(player, x, y, z)
 	end
 end
 
+local strdata = {format = 'string'}
+
 local savers = {
-	['pos'] = function(f, v)
-		packTo(f, '>fff', v.x, v.y, v.z)
-	end,
-	['eye'] = function(f, v)
-		packTo(f, '>ff', v.yaw, v.pitch)
-	end,
-	['worldName'] = writeString,
-	['lastOnlineTime'] = function(f, v)
-		packTo(f, '>f', v)
-	end,
-	['name'] = writeString,
-	['ip'] = writeString
+	['pos'] = {
+		format = '>fff',
+		func = function(v)
+			return v.x, v.y, v.z
+		end
+	},
+	['eye'] = {
+		format = '>ff',
+		func = function(v)
+			return v.yaw, v.pitch
+		end,
+	},
+	['worldName'] = strdata,
+	['lastOnlineTime'] = {
+		format = '>f'
+	},
+	['name'] = strdata,
+	['ip'] = strdata
 }
 
 local readers = {
-	['pos'] = function(f, player)
-		player:setPos(unpackFrom(f, '>fff'))
-	end,
-	['eye'] = function(f, player)
-		player:setEyePos(unpackFrom(f, '>ff'))
-	end,
-	['worldName'] = function(f, player)
-		player.worldName = readString(f)
-		if getWorld(player) == nil then
-			player.worldName = 'default'
+	['pos'] = {
+		format = '>fff',
+		func = function(player, x, y, z)
+			player:setPos(x, y, z)
 		end
-	end,
-	['lastOnlineTime'] = function(f, player)
-		player.lastOnlineTime = unpackFrom(f, '>f')
-	end,
-	['ip'] = function(f, player)
-		player.lastip = readString(f)
-	end,
-	['name'] = function(f, player)
-		player.lastname = readString(f)
-	end
+	},
+	['eye'] = {
+		format = '>ff',
+		func = function(player, yaw, pitch)
+			player:setEyePos(yaw, pitch)
+		end
+	},
+	['worldName'] = {
+		format = 'string',
+		func = function(player, wname)
+			if getWorld(wname) == nil then
+				player.worldName = 'default'
+			else
+				player.worldName = wname
+			end
+		end
+	},
+	['lastOnlineTime'] = {
+		format = '>f'
+	},
+	['ip'] = {
+		format = 'string',
+		func = function(player, ip)
+			player.lastip = ip
+		end
+	},
+	['name'] = {
+		format = 'string',
+		func = function(player, name)
+			player.lastname = name
+		end
+	},
 }
 
 local player_mt = {
@@ -693,29 +717,76 @@ local player_mt = {
 	end,
 	saveRead = function(self)
 		if self.isSpawned then return true end
-		local f = io.open(self:savePath(), 'rb')
-		if not f then return true end
+		local path = self:savePath()
+		local f, err = io.open(path, 'rb')
+		if not f then
+			log.error((SD_RDIOERR):format(path, err))
+			return false
+		end
 		local fend = f:seek('end')
 		f:seek('set', 0)
-		assert(f:read(6) == 'pdata\0', 'Invalid header')
+
+		if f:read(6) ~= 'pdata\1'then
+			log.warn((SD_HDRERR):format(self))
+			return false
+		end
+
 		while f:seek('cur') ~= fend do
 			local key = readString(f)
-			local reader = assert(readers[key], 'No reader for ' .. key)
-			reader(f, self)
+			local len = unpackFrom(f, '>H')
+			local reader = readers[key]
+
+			if reader then
+				if reader.format == 'string'then
+					if reader.func then
+						reader.func(self, readString(f))
+					else
+						self[key] = readString(f)
+					end
+				else
+					if reader.func then
+						reader.func(self, unpackFrom(f, reader.format))
+					else
+						self[key] = unpackFrom(f, reader.format)
+					end
+				end
+			else
+				log.warn('No reader for', key)
+				f:seek('cur', len)
+			end
 		end
+
 		f:close()
+		return true
 	end,
 	saveWrite = function(self)
-		local f = assert(io.open(self:savePath(), 'wb'))
-		f:write('pdata\0')
+		local path = self:savePath()
+		local f, err = io.open(path, 'wb')
+		if not f then
+			log.error((SD_WRIOERR):format(path, err))
+			return false
+		end
 
+		f:write('pdata\1')
 		for k, v in pairs(self)do
 			local saver = savers[k]
 			if saver then
+				local format = saver.format
 				writeString(f, k)
-				saver(f, v)
+				if format == 'string'then
+					packTo(f, '>H', #v + 1)
+					writeString(f, v)
+				else
+					packTo(f, '>H', struct.size(format))
+					if saver.func then
+						packTo(f, format, saver.func(v))
+					else
+						packTo(f, format, v)
+					end
+				end
 			end
 		end
+
 		f:close()
 		return true
 	end,
@@ -736,12 +807,17 @@ function getPlayerMT()
 	return player_mt
 end
 
-function saveAdd(key, reader, saver)
+function saveAdd(key, fmt, rd, sv)
 	if type(key) ~= 'string'then return false end
-	if type(saver) ~= 'function'then return false end
-	if type(reader) ~= 'function'then return false end
-	readers[key] = reader
-	savers[key] = saver
+	if type(fmt) ~= 'string'then return false end
+	readers[key] = {
+		format = fmt,
+		func = rd
+	}
+	savers[key] = {
+		format = fmt,
+		func = sv
+	}
 	return true
 end
 
