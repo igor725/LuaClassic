@@ -79,12 +79,10 @@ local savers = {
 
 local readers = {
 	['pos'] = function(f, player)
-		local p = player.pos
-		p.x, p.y, p.z = unpackFrom(f, '>fff')
+		player:setPos(unpackFrom(f, '>fff'))
 	end,
 	['eye'] = function(f, player)
-		local e = player.eye
-		e.yaw, e.pitch = unpackFrom(f, '>ff')
+		player:setEyePos(unpackFrom(f, '>ff'))
 	end,
 	['worldName'] = function(f, player)
 		player.worldName = readString(f)
@@ -198,28 +196,41 @@ local player_mt = {
 	end,
 	setPos = function(self, x, y, z)
 		local pos = self.pos
+		local lp = self.lpos
+		if not self.isSpawned then
+			pos.x, pos.y, pos.z = x, y, z
+			lp.x, lp.y, lp.z = x, y, z
+			return
+		end
 		local lx, ly, lz = pos.x, pos.y, pos.z
+
 		if lx ~= x or ly ~= y or z ~= z then
-			pos.x = x
-			pos.y = y
-			pos.z = z
+			pos.x, pos.y, pos.z = x, y, z
 			if self.isSpawned then
-				local dx, dy, dz = lx - x, ly - y, lz - z
+				local dx, dy, dz = lp.x - x, lp.y - y, lp.z - z
 				hooks:call('onPlayerMove', self, dx, dy, dz)
 				if onPlayerMove then
 					onPlayerMove(self, dx, dy, dz)
+				end
+				self.lposc = self.lposc + 1
+				if self.lposc > 2 then
+					lp.x, lp.y, lp.z = x, y, z
+					self.lposc = 1
 				end
 				checkForPortal(self, x, y, z)
 			end
 			return true
 		end
 	end,
-	setEyePos = function(self,y,p)
+	setEyePos = function(self, y, p)
 		local eye = self.eye
+		if not self.isSpawned then
+			eye.yaw, eye.pitch = y, p
+			return
+		end
 		local ly, lp = eye.yaw, eye.pitch
 		if ly ~= y or lp ~= p then
-			eye.yaw = y
-			eye.pitch = p
+			eye.yaw, eye.pitch = y, p
 			if self.isSpawned then
 				hooks:call('onPlayerRotate', self, y, p)
 				if onPlayerRotate then
@@ -282,6 +293,8 @@ local player_mt = {
 			ay = floor(ay / 360 * 255)
 			ap = floor(ap / 360 * 255)
 		end
+		local lp = self.lpos
+		lp.x, lp.y, lp.z = x / 32, y / 32, z / 32
 		self:sendPacket(self:isSupported('ExtEntityPositions'), 0x08, -1, x, y, z, ay, ap)
 	end,
 	moveToSpawn = function(self)
@@ -298,11 +311,8 @@ local player_mt = {
 			self:despawn()
 			self.worldName = wname
 			self.handshakeStage2 = true
-			self.eye.yaw = ay or sap
-			self.eye.pitch = ap or say
-			self.pos.x = x or sx
-			self.pos.y = y or sy
-			self.pos.z = z or sz
+			self:setEyePos(ay or say, ap or sap)
+			self:setPos(x or sx, y or sy, z or sz)
 			return true
 		end
 		return false, 0
@@ -540,6 +550,11 @@ local player_mt = {
 		hooks:call('prePlayerSpawn', self)then
 			return
 		end
+		if self.firstSpawn then
+			if hooks:call('prePlayerFirstSpawn', self)then
+				return
+			end
+		end
 
 		local pId = self:getID()
 		local name = self:getName()
@@ -573,12 +588,19 @@ local player_mt = {
 				end
 			end
 		end)
+
 		cpe:extCallHook('postPlayerSpawn', self)
 		hooks:call('postPlayerSpawn', self)
+		if self.firstSpawn then
+			hooks:call('postPlayerFirstSpawn', self)
+			self.firstSpawn = false
+		end
 		local world = getWorld(self)
 		world.players = world.players + 1
 		world.emptyfrom = nil
 		self.isSpawned = true
+		local lp = self.lpos
+		lp.x, lp.y, lp.z = x / 32, y / 32, z /32
 		if postPlayerSpawn then
 			postPlayerSpawn(self)
 		end
@@ -787,13 +809,17 @@ function newPlayer(cl)
 	local sx, sy, sz, syaw, spitch = dworld:getSpawnPoint()
 	local pos = newVector(sx, sy, sz)
 	local eye = newAngle(syaw, spitch)
+	local lpos = newVector(sx, sy, sz)
 
 	return setmetatable({
 		kickTimeout = CTIME + getKickTimeout(),
 		connectTime = CTIME,
 		worldName = 'default',
+		lpos = lpos,
+		lposc = 1,
 		pos = pos,
 		isSpawned = false,
+		firstSpawn = true,
 		waitingExts = -1,
 		eye = eye,
 		extensions = {},

@@ -282,9 +282,14 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 					SetBlock(x, y, z, 8)
 				end
 			elseif biome == BIOME_WATER then
-				-- Rock
-				for y = heightStone1, height1 do
+				-- Dirt
+				for y = heightStone1, math.min(height1, heightGrass - 2) do
 					map[offset + y * step] = 3
+				end
+				
+				-- Sand
+				for y = math.max(heightStone1, heightGrass - 2), height1 do
+					map[offset + y * step] = 12
 				end
 
 				-- Water
@@ -598,14 +603,14 @@ local function fillStone(world, dimx, dimz)
 end
 
 local function lavalavalava(world, dimx, dimy, dimz)
-	local GetBlock = function(x, y, z)
+	--[[local GetBlock = function(x, y, z)
 		return map[(y * dimz + z) * dimx + x + 4]
 	end
 	local SetBlock = function(x, y, z, id)
 		map[(y * dimz + z) * dimx + x + 4] = id
-	end
+	end]]--
 	
-	minHeight = 0
+	minHeight = heightGrass
 	minHeightIndex = 0
 	for i=1, #biomes do
 		if biomes[i] == BIOME_NORMAL and heightMap[i] < minHeight then
@@ -614,18 +619,32 @@ local function lavalavalava(world, dimx, dimy, dimz)
 		end
 	end
 	
-	if minHeight < 0 then
-		local x = (biomesWithTrees[i] % bsx) * GEN_BIOME_STEP
-		local z = math.floor(biomesWithTrees[i] / bsx) * GEN_BIOME_STEP
+	if minHeight < heightGrass then
+		local x = (minHeightIndex % bsx) * GEN_BIOME_STEP
+		local z = math.floor(minHeightIndex / bsx) * GEN_BIOME_STEP
 		
-		for y = minHeight, heightGrass + 10 do
-			SetBlock(x, y, z, 1)
+		local setRecursLava = nil
+		setRecursLava = function (x, y, z)
+			if world:getBlock(x, y, z) == 8 then
+				world:setBlock(x, y, z, 10)
+				if x+1 < dimx then
+					setRecursLava(x+1, y, z)
+				end
+				if 0 < x then
+					setRecursLava(x-1, y, z)
+				end
+				if z+1 < dimz then
+					setRecursLava(x, y, z+1)
+				end
+				if 0 < z then
+					setRecursLava(x, y, z-1)
+				end
+				setRecursLava(x, y-1, z)
+			end
 		end
 		
 		for y = minHeight, heightGrass do
-			if GetBlock(x, y, z) == 8 then
-				SetBlock(x, y, z, 10)
-			end
+			setRecursLava(x, y, z)
 		end
 	end
 end
@@ -717,7 +736,7 @@ return function(world, seed)
 		end
 	end
 	
-	--lavalavalava(world, dimx, dimy, dimz)
+	lavalavalava(world, dimx, dimy, dimz)
 
 	world:setSpawn(x, y + 2, z)
 	world:setEnvProp(MEP_SIDESBLOCK, 0)

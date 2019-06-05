@@ -10,6 +10,8 @@ hooks = {
 		['onPlayerDestroy'] = {},
 		['postPlayerSpawn'] = {},
 		['onPlayerPlaceBlock'] = {},
+		['prePlayerFirstSpawn'] = {},
+		['postPlayerFirstSpawn'] = {},
 		['postPlayerPlaceBlock'] = {},
 		['onPlayerHandshakeDone'] = {}
 	}
