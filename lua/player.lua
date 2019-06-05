@@ -79,12 +79,10 @@ local savers = {
 
 local readers = {
 	['pos'] = function(f, player)
-		local p = player.pos
-		p.x, p.y, p.z = unpackFrom(f, '>fff')
+		player:setPos(unpackFrom(f, '>fff'))
 	end,
 	['eye'] = function(f, player)
-		local e = player.eye
-		e.yaw, e.pitch = unpackFrom(f, '>ff')
+		player:setEyePos(unpackFrom(f, '>ff'))
 	end,
 	['worldName'] = function(f, player)
 		player.worldName = readString(f)
