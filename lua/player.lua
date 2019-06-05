@@ -778,7 +778,11 @@ local player_mt = {
 					writeString(f, v)
 				else
 					packTo(f, '>H', struct.size(format))
-					packTo(f, format, saver.func(v))
+					if saver.func then
+						packTo(f, format, saver.func(v))
+					else
+						packTo(f, format, v)
+					end
 				end
 			end
 		end
