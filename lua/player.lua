@@ -199,12 +199,15 @@ local player_mt = {
 	setPos = function(self, x, y, z)
 		local pos = self.pos
 		local lp = self.lpos
+		if not self.isSpawned then
+			pos.x, pos.y, pos.z = x, y, z
+			lp.x, lp.y, lp.z = x, y, z
+			return
+		end
 		local lx, ly, lz = pos.x, pos.y, pos.z
 
 		if lx ~= x or ly ~= y or z ~= z then
-			pos.x = x
-			pos.y = y
-			pos.z = z
+			pos.x, pos.y, pos.z = x, y, z
 			if self.isSpawned then
 				local dx, dy, dz = lp.x - x, lp.y - y, lp.z - z
 				hooks:call('onPlayerMove', self, dx, dy, dz)
@@ -221,12 +224,15 @@ local player_mt = {
 			return true
 		end
 	end,
-	setEyePos = function(self,y,p)
+	setEyePos = function(self, y, p)
 		local eye = self.eye
+		if not self.isSpawned then
+			eye.yaw, eye.pitch = y, p
+			return
+		end
 		local ly, lp = eye.yaw, eye.pitch
 		if ly ~= y or lp ~= p then
-			eye.yaw = y
-			eye.pitch = p
+			eye.yaw, eye.pitch = y, p
 			if self.isSpawned then
 				hooks:call('onPlayerRotate', self, y, p)
 				if onPlayerRotate then
@@ -307,11 +313,8 @@ local player_mt = {
 			self:despawn()
 			self.worldName = wname
 			self.handshakeStage2 = true
-			self.eye.yaw = ay or sap
-			self.eye.pitch = ap or say
-			self.pos.x = x or sx
-			self.pos.y = y or sy
-			self.pos.z = z or sz
+			self:setEyePos(ay or say, ap or sap)
+			self:setPos(x or sx, y or sy, z or sz)
 			return true
 		end
 		return false, 0
@@ -587,7 +590,7 @@ local player_mt = {
 				end
 			end
 		end)
-		
+
 		cpe:extCallHook('postPlayerSpawn', self)
 		hooks:call('postPlayerSpawn', self)
 		if self.firstSpawn then
