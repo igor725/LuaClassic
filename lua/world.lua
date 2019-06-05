@@ -2,28 +2,6 @@ local function gBufSize(vec)
 	return vec.x * vec.y * vec.z + 4
 end
 
-local function distance(x1, z1, x2, z2)
-	return math.sqrt((x2 - x1) ^ 2 + (z2 - z1) ^ 2)
-end
-
-local function delayedWaterCreate(world, sx, sy, sz, x, y, z)
-	--local dst = distance(sx, sz, x, z)
-	--if dst < 25 then
-		timer.Simple(.2, function()
-			if world:getBlock(x, y, z) == 0 then
-				world:setBlock(x, y, z, 8)
-				world:updateWaterBlock(sx, sy, sz, x, y, z)
-			end
-		end)
-		timer.Simple(2, function()
-			if world:getBlock(x, y, z) == 8 then
-				world:setBlock(x, y, z, 0)
-				world:updateWaterBlock(sx, sy, sz, x, y, z)
-			end
-		end)
-	--end
-end
-
 local function getWorldPath(wname)
 	return 'worlds/' .. wname .. '.map'
 end
@@ -264,19 +242,88 @@ local world_mt = {
 		end
 		local id = self:getBlock(x, y, z)
 		if id == 8 or id == 9 then
-			local under = self:getBlock(x, y - 1, z)
-			if under == 0 then
-				delayedWaterCreate(self, sx, sy, sz, x, y - 1, z)
-			elseif under ~= 8 and under ~= 9 then
-				if self:getBlock(x + 1, y, z) == 0 then
-					delayedWaterCreate(self, sx, sy, sz, x + 1, y, z)
-				elseif self:getBlock(x - 1, y, z) == 0 then
-					delayedWaterCreate(self, sx, sy, sz, x - 1, y, z)
-				elseif self:getBlock(x, y, z + 1) == 0 then
-					delayedWaterCreate(self, sx, sy, sz, x, y, z + 1)
-				elseif self:getBlock(x, y, z - 1) == 0 then
-					delayedWaterCreate(self, sx, sy, sz, x, y, z - 1)
+			if self:getBlock(x, y - 1, z) == 0 then
+				self:setBlock(x, y - 1, z, 8)
+
+				timer.Simple(.2, function()
+					self:updateWaterBlock(sx, sy, sz, x, y - 1, z)
+				end)
+			elseif self:getBlock(x, y - 1, z) == 10 then
+				-- delete water like infinity consumer
+
+				timer.Simple(.2, function()
+					self:updateWaterBlock(sx, sy, sz, x, y, z)
+				end)
+			elseif self:getBlock(x+1, y - 1, z) == 0 then
+				self:setBlock(x+1, y - 1, z, 8)
+
+				timer.Simple(.2, function()
+					self:updateWaterBlock(sx, sy, sz, x+1, y - 1, z)
+				end)
+			elseif self:getBlock(x-1, y - 1, z) == 0 then
+				self:setBlock(x-1, y - 1, z, 8)
+
+				timer.Simple(.2, function()
+					self:updateWaterBlock(sx, sy, sz, x-1, y - 1, z)
+				end)
+			elseif self:getBlock(x, y - 1, z+1) == 0 then
+				self:setBlock(x, y - 1, z+1, 8)
+
+				timer.Simple(.2, function()
+					self:updateWaterBlock(sx, sy, sz, x, y - 1, z+1)
+				end)
+			elseif self:getBlock(x, y - 1, z-1) == 0 then
+				self:setBlock(x, y - 1, z-1, 8)
+
+				timer.Simple(.2, function()
+					self:updateWaterBlock(sx, sy, sz, x, y - 1, z-1)
+				end)
+			else
+				return
+			end
+
+			local x, y, z = x, y, z
+			while y < self.data.dimensions.y do
+				if self:getBlock(x, y, z) ~= 8 then
+					break
 				end
+				y = y + 1
+			end
+
+			if self:getBlock(x + 1, y, z) == 8 then
+				while x < self.data.dimensions.x - 1 do
+					x = x + 1
+					if self:getBlock(x, y, z) ~= 8 then
+						break
+					end
+				end
+				self:setBlock(x - 1, y, z, 0)
+			elseif self:getBlock(x - 1, y, z) == 8 then
+				while x > 0 do
+					x = x - 1
+					if self:getBlock(x, y, z) ~= 8 then
+						break
+					end
+				end
+				self:setBlock(x + 1, y, z, 0)
+			elseif self:getBlock(x, y, z + 1) == 8 then
+				while z < self.data.dimensions.z - 1 do
+					z = z + 1
+					if self:getBlock(x, y, z) ~= 8 then
+						break
+					end
+				end
+				self:setBlock(x, y, z - 1, 0)
+			elseif self:getBlock(x, y, z - 1) == 8 then
+				while z > 0 do
+					z = z - 1
+					if self:getBlock(x, y, z) ~= 8 then
+						break
+					end
+				end
+				self:setBlock(x, y, z + 1, 0)
+			else
+				self:setBlock(x, y - 1, z, 0)
 			end
 		end
 	end,
