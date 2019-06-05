@@ -43,6 +43,10 @@ IE_UE              = 'Unexpected error'
 ST_OFF             = '&cdisabled&f'
 ST_ON              = '&aenabled&f'
 
+SD_HDRERR          = '%s\'s data file has invalid header, file will be ignored.'
+SD_WRIOERR         = 'Can\'t open playerdata %q for writing! (%s)'
+SD_RDIOERR         = 'Can\'t open playerdata %q for reading! (%s)'
+
 KICK_CONNREJ       = 'Server rejected your connection attempt'
 KICK_CPESEQERR     = 'Packet 0x10 not received before 0x11'
 KICK_CPEEXTCOUNT   = 'Invalid CPE extensions count received'

@@ -42,9 +42,7 @@ function cm:load()
 		return self.allowed_models[mdl]or (tonumber(mdl)and 1)or 2
 	end
 
-	saveAdd('model', function(f, player)
-		player.model = readString(f)
-	end, writeString)
+	saveAdd('model', 'string')
 end
 
 function cm:postPlayerSpawn(player)
