@@ -33,8 +33,7 @@ require('commands')
 function onPlayerAuth(player, name, key)
 	player:setUID(key)
 	if not player:setName(name)then
-		player:kick(KICK_NAMETAKEN)
-		return
+		return KICK_NAMETAKEN
 	end
 	player:saveRead()
 	return true
