@@ -379,7 +379,14 @@ function receiveLine(fd)
 				ln.linepos = ln.linepos + 1
 			end
 		end
+		if checkSock(fd) == 'closed'then
+			break
+		end
 	end
+	local ln = ffi.string(ln.linebuf, ln.linepos)
+	ffi.fill(ln.linebuf, 8192)
+	ln.linepos = 0
+	return ln
 end
 
 function checkSock(fd)
