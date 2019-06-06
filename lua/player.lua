@@ -718,9 +718,11 @@ local player_mt = {
 	saveRead = function(self)
 		if self.isSpawned then return true end
 		local path = self:savePath()
-		local f, err = io.open(path, 'rb')
+		local f, err, ec = io.open(path, 'rb')
 		if not f then
-			log.error((SD_RDIOERR):format(path, err))
+			if ec ~= 2 then
+				log.error((SD_RDIOERR):format(path, err))
+			end
 			return false
 		end
 		local fend = f:seek('end')
@@ -752,7 +754,9 @@ local player_mt = {
 				end
 			else
 				log.warn('No reader for', key)
-				f:seek('cur', len)
+				local sd = self.skippedData or{}
+				sd[key] = f:read(len)
+				self.skippedData = sd
 			end
 		end
 
@@ -784,6 +788,14 @@ local player_mt = {
 						packTo(f, format, v)
 					end
 				end
+			end
+		end
+
+		if self.skippedData then
+			for key, data in pairs(self.skippedData)do
+				writeString(f, key)
+				packTo(f, '>H', #data)
+				f:write(data)
 			end
 		end
 
