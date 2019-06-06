@@ -68,7 +68,7 @@ end
 local function survUpdateHealth(player)
 	local int, fr = math.modf(player.health)
 	local dmg = SURV_MAX_HEALTH - int - ceil(fr)
-	local str = ('\3'):rep(dmg)
+	local str = '&8' .. ('\3'):rep(dmg)
 	if fr ~= 0 then str = str .. '&4\3' end
 	str = str .. '&c' ..('\3'):rep(SURV_MAX_HEALTH - dmg - ceil(fr))
 	player:sendMessage(str, MT_STATUS2)
@@ -250,18 +250,16 @@ function onInitDone()
 			survUpdateHealth(player)
 		end)
 
-		timer.Create(name .. '_firecheck', -1, .6, function()
+		timer.Create(name .. '_blocksdamage', -1, .4, function()
 			local x, y, z = player:getPos()
 			x, y, z = floor(x), floor(y - 1), floor(z)
 			local world = getWorld(player)
 
 			if world:getBlock(x, y, z) == 54
 			or world:getBlock(x, y + 1, z) == 54 then
-				survDamage(nil, player, 1, SURV_DMG_FIRE)
+				survDamage(nil, player, .5, SURV_DMG_FIRE)
 			end
-		end)
 
-		timer.Create(name .. '_oxygen', -1, .4, function()
 			local level, isLava = player:getFluidLevel()
 			if isLava then
 				survDamage(nil, player, 1, SURV_DMG_LAVA)
@@ -286,10 +284,9 @@ function onInitDone()
 	hooks:add('onPlayerDestroy', 'survival', function(player)
 		survStopBreaking(player)
 		local name = player:getName()
-		timer.Remove(name .. '_oxygen')
+		timer.Remove(name .. '_blocksdamage')
 		timer.Remove(name .. '_hp_regen')
 		timer.Remove(name .. '_surv_brk')
-		timer.Remove(name .. '_firecheck')
 	end)
 
 	hooks:add('onPlayerMove', 'survival', function(player, dx, dy, dz)
@@ -316,16 +313,15 @@ function onInitDone()
 		local name = player:getName()
 		local noclip = player:checkPermission('player.noclip')
 		player:hackControl(0, (noclip and 1)or 0, 0, 0, 1, -1)
-		timer.Resume(name .. '_oxygen')
+		timer.Resume(name .. '_blocksdamage')
 		timer.Resume(name .. '_hp_regen')
 	end)
 
 	hooks:add('onPlayerDespawn', 'survival', function(player)
 		survStopBreaking(player)
 		local name = player:getName()
-		timer.Pause(name .. '_oxygen')
+		timer.Pause(name .. '_blocksdamage')
 		timer.Pause(name .. '_hp_regen')
-		timer.Pause(name .. '_firecheck')
 	end)
 
 	hooks:add('onPlayerClick', 'survival', function(player, ...)
