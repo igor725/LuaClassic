@@ -501,6 +501,7 @@ succ, err = xpcall(function()
 				if onInitDone then
 					onInitDone()
 				end
+				hooks:call('onInitDone')
 				INITED = true
 			end
 		end

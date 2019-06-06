@@ -20,6 +20,7 @@ return function(player, pver, name, vkey, magic)
 				onPlayerHandshakeDone(player)
 			end
 			hooks:call('onPlayerHandshakeDone', player)
+			SERVER_ONLINE = (SERVER_ONLINE or 0) + 1
 		end
 	else
 		player:kick(KICK_PROTOVER)

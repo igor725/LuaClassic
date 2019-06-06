@@ -646,6 +646,7 @@ local player_mt = {
 			if onPlayerDestroy then
 				onPlayerDestroy(self)
 			end
+			SERVER_ONLINE = SERVER_ONLINE - 1
 		end
 		-- Causes incorrect kick-packet sending
 		-- closeSock(self:getClient())
