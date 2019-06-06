@@ -723,7 +723,7 @@ local player_mt = {
 		local f, err, ec = io.open(path, 'rb')
 		if not f then
 			if ec ~= 2 then
-				log.error((SD_RDIOERR):format(path, err))
+				log.warn((SD_IOERR):format(path, 'reading', err))
 			end
 			return false
 		end
@@ -769,7 +769,7 @@ local player_mt = {
 		local path = self:savePath()
 		local f, err = io.open(path, 'wb')
 		if not f then
-			log.error((SD_WRIOERR):format(path, err))
+			log.error((SD_IOERR):format(path, 'writing', err))
 			return false
 		end
 
