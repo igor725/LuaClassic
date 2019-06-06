@@ -13,6 +13,8 @@ SURV_DMG_WATER = 3
 SURV_DMG_LAVA = 4
 SURV_DMG_FIRE = 5
 
+CMD_GIVE = '%d %s block(-s) given to &a%s'
+
 local survBlocknames = {
 	'Stone', 'Grass', 'Dirt', 'Cobblestone',
 	'Planks', 'Sapling', 'Bedrock', 'Water',
@@ -300,6 +302,7 @@ function onInitDone()
 		if blk ~= 0 and(blk < 8 or blk > 11)and dy > 1.21 then
 			if player:getFluidLevel() < 1 then
 				survDamage(nil, player, 0.9 * dy, SURV_DMG_FALL)
+				player.lposc = 3
 			end
 		end
 	end)
@@ -375,36 +378,65 @@ function onInitDone()
 		survUpdateBlockInfo(player)
 	end)
 
-	addChatCommand('give', function(player, id, count)
+	addCommand('give', function(isConsole, player, args)
+		local id, count
+		if isConsole then
+			if #args < 2 then return false end
+			player = getPlayerByName(args[1])
+			id = args[2]
+			count = args[3]
+		else
+			if #args == 2 then
+				id = args[1]
+				count = args[2]
+			elseif args > 2 then
+				player = getPlayerByName(args[1])
+				id = args[2]
+				count = args[3]
+			end
+		end
+		if not player then return MESG_PLAYERNF end
+
 		id = tonumber(id)
 		count = tonumber(count)or 64
 		count = math.min(math.max(count, 1), 64)
 
-		if id and id > 0 and id < 66 then
+		if id and id > 0 and id < 65 then
 			player:holdThis(id)
 			player.inventory[id] = math.min(64, player.inventory[id] + count)
 			survUpdateBlockInfo(player)
-			return ('%d %s block(-s) given'):format(count, survBlocknames[id])
+			return (CMD_GIVE):format(count, survBlocknames[id], player)
 		else
 			return 'Invalid block id'
 		end
 	end)
 
-	addChatCommand('heal', function(player)
+	addCommand('heal', function(isConsole, player, args)
+		if isConsole and #args < 1 then return false end
+		player = player or getPlayerByName(args[1])
+		if not player then return MESG_PLAYERNF end
+
 		player.health = SURV_MAX_HEALTH
 		survUpdateHealth(player)
-		return 'You healed.'
+		return ('Player &a%s&f healed.'):format(player)
 	end)
 
-	addChatCommand('full', function(player)
-		local id = player:getHeldBlock()
+	addCommand('full', function(isConsole, player, args)
+		local bid
+		if isConsole then
+			if #args < 1 then return false end
+			player = getPlayerByName(args[1])
+			bid = args[2]
+		end
+		if not player then return MESG_PLAYERNF end
+		bid = bid or player:getHeldBlock()
 
-		if id ~= 0 then
-			player.inventory[id] = 64
+		if bid > 0 and bid < 66 then
+			player.inventory[bid] = 64
 			survUpdateBlockInfo(player)
-			return ('64 %s block(-s) given'):format(survBlocknames[id])
+			return (CMD_GIVE):format(64, survBlocknames[bid], player)
 		else
-			return 'Block not selected'
+			return 'Invalid block ID'
 		end
 	end)
 
