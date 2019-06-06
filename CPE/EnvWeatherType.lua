@@ -5,8 +5,8 @@ WT_RAIN  = 1
 WT_SNOW  = 2
 WT = {[0]='sunny', 'rain', 'snow'}
 WTN = {}
-for k, v in pairs(WT)do
-	WTN[v] = k
+for i = 0, #WT do
+	WTN[WT[i]] = i
 end
 
 local function weatherFor(player, w)
