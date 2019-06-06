@@ -754,7 +754,9 @@ local player_mt = {
 				end
 			else
 				log.warn('No reader for', key)
-				f:seek('cur', len)
+				local sd = self.skippedData or{}
+				sd[key] = f:read(len)
+				self.skippedData = sd
 			end
 		end
 
@@ -786,6 +788,14 @@ local player_mt = {
 						packTo(f, format, v)
 					end
 				end
+			end
+		end
+
+		if self.skippedData then
+			for key, data in pairs(self.skippedData)do
+				writeString(f, key)
+				packTo(f, '>H', #data)
+				f:write(data)
 			end
 		end
 
