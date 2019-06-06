@@ -408,33 +408,13 @@ function onInitDone()
 		end
 	end)
 
-	saveAdd('health', function(f, player)
-		player.health = unpackFrom(f, '>f')
-	end, function(f, val)
-		packTo(f, '>f', val)
-	end)
+	saveAdd('health', '>f')
+	saveAdd('oxygen', '>f')
 
-	saveAdd('oxygen', function(f, player)
-		player.oxygen = unpackFrom(f, '>f')
-	end, function(f, val)
-		packTo(f, '>f', val)
-	end)
-
-	saveAdd('inventory', function(f, player)
-		while true do
-			local id, quantity = unpackFrom(f, 'BB')
-			if id == 255 and quantity == 255 then
-				break
-			end
-			player.inventory[id] = math.min(quantity, 64)
-		end
-	end, function(f, val)
-		for i = 1, 65 do
-			if val[i] > 0 then
-				packTo(f, 'bb', i, val[i])
-			end
-		end
-		f:write('\255\255')
+	saveAdd('inventory', 'c65', function(player, data)
+		ffi.copy(player.inventory, data, 65)
+	end, function(inventory)
+		return ffi.string(inventory, 65)
 	end)
 end
 
