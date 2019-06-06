@@ -1,110 +1,68 @@
 commands = {}
-concommands = {}
 
-function addChatCommand(name, func)
+function addCommand(name, func)
 	commands[name] = func
 end
 
-function addConsoleCommand(name, func)
-	concommands[name] = func
+function addAlias(name, alias)
+	commands[alias] = commands[name]
 end
 
-function addAlias(isChatCommand, name, alias)
-	if isChatCommand then
-		commands[alias] = commands[name]
+addCommand('rc', function(isConsole, player, args)
+	if isConsole and #args < 1 then return false end
+
+	local world = getWorld(args[1]or player)
+	local rdState = ((world:toggleReadOnly()and ST_ON)or ST_OFF)
+	return (CMD_WMODE):format(rdState, world)
+end)
+
+addCommand('info', function(isConsole, player)
+	local str1 = (CMD_SVINFO1):format(jit.os, jit.arch, jit.version)
+	local str2 = (CMD_SVINFO2):format(gcinfo() / 1024)
+	if isConsole then
+		print(str1)
+		print(str2)
 	else
-		concommands[alias] = concommands[name]
+		player:sendMessage(str1)
+		player:sendMessage(str2)
 	end
-end
-
---[[
-	Ingame commands
-]]
-
-addChatCommand('rc', function(player)
-	local world = getWorld(player)
-	return (CMD_WMODE):format(((world:toggleReadOnly()and ST_ON)or ST_OFF))
 end)
 
-addChatCommand('info', function(player)
-	player:sendMessage((CMD_SVINFO1):format(jit.os, jit.arch, jit.version))
-	player:sendMessage((CMD_SVINFO2):format(gcinfo() / 1024))
-end)
+addCommand('clear', function(isConsole, player)
+	if isConsole then return CON_INGAMECMD end
 
-addChatCommand('clear', function(player)
 	for i = 1, 25 do
 		player:sendMessage('')
 	end
 end)
 
-addChatCommand('stop', function()
+addCommand('stop', function()
 	_STOP = true
 end)
 
-addChatCommand('restart', function()
+addCommand('restart', function()
 	_STOP = 'restart'
 end)
 
-addChatCommand('weather', function(player, wname, wtt)
-	local world
-	if wname == nil then
-		world = getWorld(player)
-		local cw = world:getData('weather')
-		cw = WT[cw]or WT[0]
-		return (CMD_WTCURR):format(cw)
-	end
-	local wnum = tonumber(wname)or WTN[wname]
-	if wnum == nil then
-		world = getWorld(wname)
-		if not world then
-			return WORLD_NE
-		end
-		wtt = tonumber(wtt)or WTN[wtt]
-	else
-		world = getWorld(player)
-		wtt = wnum
-	end
+addCommand('seed', function(isConsole, player, args)
+	if isConsole and #args < 1 then return false end
 
-	if wtt then
-		wtt = math.min(math.max(wtt, 0), 2)
-		if world:setWeather(wtt)then
-			return (CMD_WTCHANGE):format(world, WT[wtt])
-		end
-	else
-		return CMD_WTINVALID
+	local world = getWorld(args[1]or player)
+	local seed = world:getData('seed')
+
+	if seed then
+		return (CMD_SEED):format(seed)
 	end
 end)
 
-addChatCommand('time', function(player, wname, name)
-	if not wname then return end
-	local world, colors
-	if time_presets[wname]then
-		world = getWorld(player)
-		colors = time_presets[wname]
-	else
-		if not name then
-			return CMD_TIMEPRESETNF
-		end
-		world = getWorld(wname)
-		colors = time_presets[name]
-		if not world then
-			return WORLD_NE
-		end
-		if not colors then
-			return CMD_TIMEPRESETNF
-		end
-	end
+addCommand('setspawn', function(isConsole, player)
+	if isConsole then return CON_INGAMECMD end
 
-	if world:getData('isNether')then
-		return CMD_TIMEDISALLOW
-	end
-
-	for i = 0, 4 do
-		local c = colors[i]
-		world:setEnvColor(i, c.r, c.g, c.b)
-	end
-
-	return (CMD_TIMECHANGE):format(world, wname)
+	local world = getWorld(player)
+	local x, y, z = player:getPos()
+	local ay, ap = player:getEyePos()
+	world:setSpawn(x, y, z, ay, ap)
+	return CMD_SPAWNSET
 end)
 
 local function unsel(player)
@@ -115,9 +73,9 @@ local function unsel(player)
 	end
 end
 
-addChatCommand('unsel', unsel)
+addCommand('sel', function(isConsole, player)
+	if isConsole then return CON_INGAMECMD end
 
-addChatCommand('sel', function(player)
 	if not player.onPlaceBlock then
 		player.onPlaceBlock = function(x, y, z, id)
 			if player.cuboidP1 then
@@ -137,15 +95,24 @@ addChatCommand('sel', function(player)
 	return (CMD_SELMODE):format(ST_ON)
 end)
 
-addChatCommand('mkportal', function(player, pname, wname)
+addCommand('unsel', function(isConsole, player)
+	if isConsole then return CON_INGAMECMD end
+
+	unsel(player)
+end)
+
+addCommand('mkportal', function(isConsole, player, args)
+	if isConsole then return CON_INGAMECMD end
+	if #args < 2 then return false end
+
 	local p1, p2 = player.cuboidP1, player.cuboidP2
 	if p1 and p2 then
 		local cworld = getWorld(player)
-		if getWorld(wname)then
+		if getWorld(args[2])then
 			cworld.data.portals = cworld.data.portals or{}
 			local x1, y1, z1, x2, y2, z2 = makeNormalCube(p1[1], p1[2], p1[3], unpack(p2))
-			cworld.data.portals[pname] = {
-				tpTo = wname,
+			cworld.data.portals[args[1]] = {
+				tpTo = args[2],
 				pt1 = newVector(x1, y1, z1),
 				pt2 = newVector(x2, y2, z2)
 			}
@@ -158,40 +125,10 @@ addChatCommand('mkportal', function(player, pname, wname)
 	end
 end)
 
-addChatCommand('setspawn', function(player)
-	local world = getWorld(player)
-	local x, y, z = player:getPos()
-	local ay, ap = player:getEyePos()
-	world:setSpawn(x, y, z, ay, ap)
-	return CMD_SPAWNSET
-end)
+addCommand('delportal', function(isConsole, player, args)
+	if #args < 1 then return false end
 
-addChatCommand('set', function(player, id)
-	local world = getWorld(player)
-	if world:isReadOnly()then
-		return WORLD_RO
-	end
-	id = tonumber(id)
-	if id then
-		id = math.max(0, math.min(255, id))
-		local p1, p2 = player.cuboidP1, player.cuboidP2
-		if p1 and p2 then
-			world:fillBlocks(
-				p1[1], p1[2], p1[3],
-				p2[1], p2[2], p2[3],
-				tonumber(id)
-			)
-			return MESG_DONE
-		else
-			return CMD_SELCUBOID
-		end
-	else
-		return CMD_BLOCKID
-	end
-end)
-
-addChatCommand('delportal', function(player, pname)
-	if not pname then return 'Invalid portal name'end
+	local pname = args[1]
 	local world = getWorld(player).data
 	if world.portals then
 		if world.portals[pname]then
@@ -202,62 +139,68 @@ addChatCommand('delportal', function(player, pname)
 	return CMD_NEPORTAL
 end)
 
-addChatCommand('tp', function(player, name, to)
-	if name then
-		ply = getPlayerByName(name)
-		if not ply then
-			return (MESG_PLAYERNFA):format(name)
-		end
-		if to then
-			to = getPlayerByName(to)
-			if to then
-				if not ply:isInWorld(to)then
-					ply:changeWorld(to.worldName, true, to:getPos())
-				else
-					ply:teleportTo(to:getPos())
-				end
-			else
-				return (MESG_PLAYERNFA):format(to)
-			end
-		else
-			if not player:isInWorld(ply)then
-				player:changeWorld(ply.worldName, true, ply:getPos())
-			end
-			player:teleportTo(ply:getPos())
-		end
-		return CMD_TPDONE
+addCommand('say', function(isConsole, player, args)
+	if #args > 0 then
+		newChatMessage(table.concat(args, ' '))
 	else
-		return MESG_NAMENS
+		return false
 	end
 end)
 
-addChatCommand('spawn', function(player)
+addCommand('set', function(isConsole, player, args)
+	if isConsole then return CON_INGAMECMD end
+	if #args < 1 then return false end
+
+	local world = getWorld(player)
+	if world:isReadOnly()then
+		return WORLD_RO
+	end
+	id = tonumber(args[1])
+	if id then
+		id = math.max(0, math.min(255, id))
+		local p1, p2 = player.cuboidP1, player.cuboidP2
+		if p1 and p2 then
+			world:fillBlocks(
+				p1[1], p1[2], p1[3],
+				p2[1], p2[2], p2[3],
+				tonumber(id)
+			)
+		else
+			return CMD_SELCUBOID
+		end
+	else
+		return CMD_BLOCKID
+	end
+end)
+
+addCommand('spawn', function(isConsole, player)
+	if isConsole then return CON_INGAMECMD end
+
 	player:moveToSpawn()
 end)
 
-addChatCommand('list', function(player)
-	player:sendMessage(CMD_WORLDLST)
-	for wn, world in pairs(worlds)do
-		if wn ~= 'default'then
-			local dfld = (getWorld('default') == world and' (default)')or''
-			player:sendMessage('   - ' .. wn .. dfld)
+addCommand('regen', function(isConsole, player, args)
+	local world, gen, seed
+	if isConsole then
+		if #args < 3 then return false end
+		world = getWorld(args[1])
+		gen = args[2]
+		seed = tonumber(args[3])
+	else
+		if #args >= 1 then
+			world = getWorld(player)
+			gen = args[1]
+			seed = tonumber(args[2])
+		elseif #args > 2 then
+			world = getWorld(args[1])
+			gen = args[2]
+			seed = tonumber(args[3])
+		else
+			return false
 		end
 	end
-end)
 
-addChatCommand('regen', function(player, gen, seed)
-	local world = getWorld(player.worldName)
 	if not world then return WORLD_NE end
-	gen = tonumber(gen)or gen
-
-	if type(gen) ~= 'number'then
-		gen = gen or'default'
-		seed = tonumber(seed)or os.time()
-	else
-		seed = gen
-		gen = 'default'
-	end
-
 	player:sendMessage(CMD_GENSTART)
 	local ret, tm = regenerateWorld(world, gen, seed)
 	if not ret then
@@ -267,94 +210,114 @@ addChatCommand('regen', function(player, gen, seed)
 	end
 end)
 
-addChatCommand('seed', function(player)
-	local world = getWorld(player)
-	local seed = world:getData('seed')
-
-	if seed then
-		return (CMD_SEED):format(seed)
+addCommand('addperm', function(isConsole, player, args)
+	if #args == 2 then
+		permissions:addFor(args[1], args[2])
+	else
+		return false
 	end
 end)
 
---[[
-	Console commands
-]]
-
-addConsoleCommand('stop', function()
-	_STOP = true
-	return true
-end)
-
-addConsoleCommand('restart', function()
-	_STOP = 'restart'
-	return true
-end)
-
-addConsoleCommand('loadworld', function(args)
-	if #args == 1 then
-		local succ, err = loadWorld(args[1])
-		if not succ then
-			return true, err
-		end
-		return true
+addCommand('delperm', function(isConsole, player, args)
+	if #args == 2 then
+		permissions:addFor(args[1], args[2])
+	else
+		return false
 	end
 end)
 
-addConsoleCommand('unloadworld', function(args)
-	if #args == 1 then
-		local succ, err = unloadWorld(args[1])
-		if not succ then
-			return true, err
-		end
-		return true
+addCommand('list', function(isConsole, player)
+	if isConsole then
+		print(CMD_WORLDLST)
+	else
+		player:sendMessage(CMD_WORLDLST)
 	end
-end)
-
-addConsoleCommand('list', function()
-	log.info(CMD_WORLDLST)
 	for wn, world in pairs(worlds)do
 		if wn ~= 'default'then
 			local dfld = (getWorld('default') == world and' (default)')or''
-			print('   - ' .. wn .. dfld)
+			local wstr = '   - ' .. wn .. dfld
+			if isConsole then
+				print(wstr)
+			else
+				player:sendMessage(wstr)
+			end
 		end
 	end
-	return true
 end)
 
-addConsoleCommand('say', function(args, argstr)
-	if #args > 0 then
-		newChatMessage(argstr)
-		return true
-	end
-end)
-
-addConsoleCommand('addperm', function(args)
-	if #args == 2 then
-		permissions:addFor(args[1], args[2])
-		return true
-	end
-end)
-
-addConsoleCommand('delperm', function(args)
-	if #args == 2 then
-		permissions:addFor(args[1], args[2])
-		return true
-	end
-end)
-
-addConsoleCommand('put', function(args)
+addCommand('put', function(isConsole, player, args)
 	if #args == 2 then
 		local player = getPlayerByName(args[1])
 		if player then
 			player:changeWorld(args[2])
-			return true
 		else
 			return MESG_PLAYERNF
 		end
 	end
 end)
 
-addConsoleCommand('kick', function(args)
+addCommand('weather', function(isConsole, player, args)
+	local world, wtSet
+
+	if isConsole then
+		if #args < 1 then return false end
+		world = getWorld(args[1])
+		wtSet = args[2]
+	else
+		local aworld = getWorld(args[1])
+		world = aworld or getWorld(player)
+		wtSet = args[2]or (not aworld and args[1])
+	end
+
+	if not wtSet then
+		local cw = world:getData('weather')
+		return (CMD_WTCURR):format(WT[cw]or WT[0], world)
+	end
+
+	wtSet = tonumber(wtSet)or WTN[wtSet]
+	if wtSet then
+		wtSet = math.min(math.max(wtSet, 0), 2)
+		if world:setWeather(wtSet)then
+			return (CMD_WTCHANGE):format(world, WT[wtSet])
+		end
+	else
+		return CMD_WTINVALID
+	end
+end)
+
+addCommand('time', function(isConsole, player, args)
+	local world, tName, preset
+
+	if isConsole then
+		if #args < 2 then return false end
+		world = getWorld(args[1])
+		tName = args[2]
+	else
+		if #args == 1 then
+			world = getWorld(player)
+			tName = args[1]
+		elseif #args > 1 then
+			world = getWorld(args[1])
+			tName = args[2]
+		else
+			return false
+		end
+	end
+
+	preset = time_presets[tName]
+	if not world then return WORLD_NE end
+	if not preset then return CMD_TIMEPRESETNF end
+	if world:getData('isNether')then return CMD_TIMEDISALLOW end
+
+	for i = 0, 4 do
+		local c = preset[i]
+		world:setEnvColor(i, c.r, c.g, c.b)
+	end
+
+	return (CMD_TIMECHANGE):format(world, tName)
+end)
+
+addCommand('kick', function(isConsole, player, args)
 	if #args > 0 then
 		local p = getPlayerByName(args[1])
 		local reason = KICK_NOREASON
@@ -368,66 +331,57 @@ addConsoleCommand('kick', function(args)
 			return MESG_PLAYERNF
 		end
 	end
+	return false
 end)
 
-addConsoleCommand('regen', function(args)
-	if #args >= 1 then
-		local world = getWorld(args[1])
-		if world then
-			local gen = args[2]or'default'
-			local seed = tonumber(args[3]or os.time())
-			local ret, tm = regenerateWorld(world, gen, seed)
-			if not ret then
-				return true, (CMD_GENERR):format(tm)
-			else
-				return true, (MESG_DONEIN):format(tm * 1000)
-			end
+addCommand('tp', function(isConsole, player, args)
+	local ply1, ply2
+
+	if isConsole then
+		if #args < 2 then return false end
+		ply1 = getPlayerByName(args[1])
+		ply2 = getPlayerByName(args[2])
+	else
+		if #args == 1 then
+			ply1 = player
+			ply2 = getPlayerByName(args[1])
+		elseif #args >= 2 then
+			ply1 = getPlayerByName(args[1])
+			ply2 = getPlayerByName(args[2])
 		else
-			return true, WORLD_NE
+			return false
 		end
 	end
-end)
-
-addConsoleCommand('seed', function(args)
-	if #args >= 1 then
-		local world = getWorld(args[1])
-
-		if world then
-			return true, (CMD_SEED):format(world:getData('seed'))
-		else
-			return true, WORLD_NE
-		end
+	if not ply1 then
+		return (MESG_PLAYERNFA):format(ply1)
 	end
-end)
-
-addConsoleCommand('tp', function(args)
-	if #args == 2 then
-		local pn1 = args[1]
-		local pn2 = args[2]
-		local p1 = getPlayerByName(pn1)
-		local p2 = getPlayerByName(pn2)
-		if not p1 then
-			return true, (MESG_PLAYERNFA):format(pn1)
-		end
-		if not p2 then
-			return true, (MESG_PLAYERNFA):format(pn2)
-		end
-		local wp2 = getWorld(p2)
-		if getWorld(p1) ~= wp2 then
-			p1:changeWorld(wp2, false, p2:getPos())
-		else
-			p1:teleportTo(p2:getPos())
-		end
+	if not ply2 then
+		return (MESG_PLAYERNFA):format(ply2)
 	end
+
+	if not ply1:isInWorld(ply2)then
+		ply1:changeWorld(ply2.worldName, true, ply2:getPos())
+	else
+		ply1:teleportTo(ply2:getPos())
+	end
+	return CMD_TPDONE
 end)
 
-addConsoleCommand('help', function()
+addCommand('help', function(isConsole)
+	if not isConsole then
+		return 'Not implemented'
+	end
+	local str = ''
 	for k, v in pairs(_G)do
 		if k:startsWith('CU_')then
-			print(v)
+			str = str .. v .. '\n'
 		end
 	end
-	return true
+	if isConsole then
+		print(str)
+	else
+		-- TODO: Player commands help
+	end
 end)
 
-addAlias(false, 'help', '?')
+addAlias('help', '?')

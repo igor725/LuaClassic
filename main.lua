@@ -99,9 +99,15 @@ function onPlayerChatMessage(player, message)
 			local cmf = commands[cmd]
 			if cmf then
 				if player:checkPermission('commands.' .. cmd)then
-					local out = cmf(player, unpack(args))
-					if out ~= nil then
-						player:sendMessage(out)
+					local rtval = cmf(false, player, args)
+					if rtval == false then
+						local str = _G['CU_' .. cmd:upper()]
+						if str then
+							player:sendMessage((CON_USE):format(str))
+						end
+					else
+						if rtval == nil then return end
+						player:sendMessage(rtval)
 					end
 				end
 			else
@@ -352,15 +358,17 @@ function handleConsoleCommand(cmd)
 		local argstr = table.concat(args,' ')
 		cmd = cmd:lower()
 
-		local cmdf = concommands[cmd]
+		local cmdf = commands[cmd]
 		if cmdf then
-			local rtval, str = cmdf(args, argstr)
-			if not rtval then
+			local rtval = cmdf(true, nil, args)
+			if rtval == false then
 				local str = _G['CU_' .. cmd:upper()]
-				if str then log.info((CON_USE):format(str))end
-			elseif rtval == true then
-				if str == nil then return end
-				log.info(str)
+				if str then
+					log.info((CON_USE):format(str))
+				end
+			else
+				if rtval == nil then return end
+				log.info(rtval)
 			end
 		else
 			log.error(MESG_UNKNOWNCMD)
