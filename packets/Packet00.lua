@@ -3,12 +3,9 @@ return function(player, pver, name, vkey, magic)
 		name = trimStr(name)
 		vkey = trimStr(vkey)
 
-		if not onPlayerAuth or not onPlayerAuth(player, name, vkey)then
-			player:kick(KICK_AUTH)
-			return
-		end
-		if hooks:call('onPlayerAuth', name, vkey) == false then
-			player:kick(KICK_AUTH)
+		local authSucc, authErr = onPlayerAuth(player, name, vkey)
+		if not onPlayerAuth or not authSucc then
+			player:kick(authErr or KICK_AUTH)
 			return
 		end
 
