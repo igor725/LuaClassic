@@ -718,9 +718,11 @@ local player_mt = {
 	saveRead = function(self)
 		if self.isSpawned then return true end
 		local path = self:savePath()
-		local f, err = io.open(path, 'rb')
+		local f, err, ec = io.open(path, 'rb')
 		if not f then
-			log.error((SD_RDIOERR):format(path, err))
+			if ec ~= 2 then
+				log.error((SD_RDIOERR):format(path, err))
+			end
 			return false
 		end
 		local fend = f:seek('end')
