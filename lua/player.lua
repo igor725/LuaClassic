@@ -226,12 +226,12 @@ local player_mt = {
 			lp.x, lp.y, lp.z = x, y, z
 			return
 		end
-		local lx, ly, lz = pos.x, pos.y, pos.z
 
-		if lx ~= x or ly ~= y or z ~= z then
+		local lx, ly, lz = lp.x, lp.y, lp.z
+		if lx ~= x or ly ~= y or lz ~= z then
 			pos.x, pos.y, pos.z = x, y, z
 			if self.isSpawned then
-				local dx, dy, dz = lp.x - x, lp.y - y, lp.z - z
+				local dx, dy, dz = lx - x, ly - y, lz - z
 				hooks:call('onPlayerMove', self, dx, dy, dz)
 				if onPlayerMove then
 					onPlayerMove(self, dx, dy, dz)
@@ -628,6 +628,7 @@ local player_mt = {
 		if postPlayerSpawn then
 			postPlayerSpawn(self)
 		end
+
 		return true
 	end,
 	destroy = function(self)
@@ -638,6 +639,7 @@ local player_mt = {
 		players[self] = nil
 		IDS[id] = nil
 		self.leavereason = self.leavereason or'Disconnected'
+
 		if self.handshaked then
 			cpe:extCallHook('onPlayerDestroy', self)
 			hooks:call('onPlayerDestroy', self)
@@ -822,14 +824,17 @@ end
 function saveAdd(key, fmt, rd, sv)
 	if type(key) ~= 'string'then return false end
 	if type(fmt) ~= 'string'then return false end
+
 	readers[key] = {
 		format = fmt,
 		func = rd
 	}
+
 	savers[key] = {
 		format = fmt,
 		func = sv
 	}
+
 	return true
 end
 
