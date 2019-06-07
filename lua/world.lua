@@ -1,3 +1,5 @@
+WATER_LEAK_SIZE = 6
+
 local function gBufSize(vec)
 	return vec.x * vec.y * vec.z + 4
 end
@@ -292,117 +294,163 @@ local world_mt = {
 	end,
 	
 	findWaterBlockToCreate = function(self, x, y, z)
-		WATER_LEAK_SIZE = 6
-		
-		-- TODO Make break if wall found
-		
 		-- Under
 		if self:getBlock(x, y-1, z) == 0 then
 			return x, y-1, z
 		end
-		if self:getBlock(x, y-1, z) == 8 then
+		
+		local dirX, dirZ = 0, 0
+		
+		-- nearest x
+		for dx = -1, 1, 2 do
+			if self:getBlock(x+dx, y, z) == 0 then
+				dirX = dirX + dx
+				if dirX == 0 then
+					dirX = math.random(0, 1) * 2 - 1
+				end
+				
+				if self:getBlock(x+dx, y-1, z) == 0 then
+					return x+dx, y-1, z
+				end
+			end
+		end
+		
+		-- nearest y
+		for dz = -1, 1, 2 do
+			if self:getBlock(x, y, z+dz) == 0 then
+				dirZ = dirZ + dz
+				if dirZ == 0 then
+					dirZ = math.random(0, 1) * 2 - 1
+				end
+				
+				if self:getBlock(x, y-1, z+dz) == 0 then
+					return x, y-1, z+dz
+				end
+			end
+		end
+		
+		-- Check if block don't have way to escape
+		if dirX == 0 and dirZ == 0 then
 			return nil
 		end
 		
-		-- nearest places
-		for dx = -1, 1, 2 do
-			if self:getBlock(x+dx, y, z) == 0 and self:getBlock(x+dx, y-1, z) == 0 then
-				return x+dx, y-1, z
-			end
-		end
-		
-		for dz = -1, 1, 2 do
-			if self:getBlock(x, y, z+dz) == 0 and self:getBlock(x, y-1, z+dz) == 0 then
-				return x, y-1, z+dz
-			end
-		end
-		
-		-- nearest edges
-		for dx = -1, 1, 2 do
-			for dz = -1, 1, 2 do
-				if self:getBlock(x+dx, y, z+dz) == 0 and self:getBlock(x+dx, y-1, z+dz) == 0 then
-					return x+dx, y-1, z+dz
-				end
-			end
-		end
+		local limiterX, limiterZ = 0, 0
 		
 		-- 5 blocks forward
-		for dx = 2, WATER_LEAK_SIZE do
-			if self:getBlock(x+dx, y, z) ~= 0 then
-				break
-			end
-			if self:getBlock(x+dx, y-1, z) == 0 then
-				return x+1, y, z
+		if dirX > 0 then
+			for dx = 2, WATER_LEAK_SIZE do
+				if self:getBlock(x+dx, y, z) ~= 0 then
+					limiterX = dx - 1
+					break
+				elseif self:getBlock(x+dx, y-1, z) == 0 then
+					return x+1, y, z
+				end
 			end
 		end
 		-- 5 blocks back
-		for dx = 2, WATER_LEAK_SIZE do
-			if self:getBlock(x-dx, y, z) ~= 0 then
-				break
-			end
-			if self:getBlock(x-dx, y-1, z) == 0 then
-				return x-1, y, z
+		if dirX < 0 then
+			for dx = 2, WATER_LEAK_SIZE do
+				if self:getBlock(x-dx, y, z) ~= 0 then
+					limiterX = dx - 1
+					break
+				elseif self:getBlock(x-dx, y-1, z) == 0 then
+					return x-1, y, z
+				end
 			end
 		end
 		-- 5 blocks left
-		for dz = 2, WATER_LEAK_SIZE do
-			if self:getBlock(x, y, z+dz) ~= 0 then
-				break
-			end
-			if self:getBlock(x, y-1, z+dz) == 0 then
-				return x, y, z+1
+		if dirZ > 0 then
+			for dz = 2, WATER_LEAK_SIZE do
+				if self:getBlock(x, y, z+dz) ~= 0 then
+					limiterZ = dz - 1
+					break
+				elseif self:getBlock(x, y-1, z+dz) == 0 then
+					return x, y, z+1
+				end
 			end
 		end
 		-- 5 blocks right
-		for dz = 2, WATER_LEAK_SIZE do
-			if self:getBlock(x, y, z-dz) ~= 0 then
-				break
-			end
-			if self:getBlock(x, y-1, z-dz) == 0 then
-				return x, y, z-1
+		if dirZ < 0 then
+			for dz = 2, WATER_LEAK_SIZE do
+				if self:getBlock(x, y, z-dz) ~= 0 then
+					limiterZ = dz - 1
+					break
+				elseif self:getBlock(x, y-1, z-dz) == 0 then
+					return x, y, z-1
+				end
 			end
 		end
 		
-		-- nearest squares
-		for dx = 2, WATER_LEAK_SIZE do
-			-- forward left square
-			for dz = 2, WATER_LEAK_SIZE do
-				if self:getBlock(x+dx, y, z+dz) ~= 0 then
-					break
-				end
-				if self:getBlock(x+dx, y-1, z+dz) == 0 then
-					return x+1, y, z+1
-				end
-			end
-			
-			-- forward right square
-			for dz = 2, WATER_LEAK_SIZE do
-				if self:getBlock(x+dx, y, z-dz) ~= 0 then
-					break
-				end
-				if self:getBlock(x+dx, y-1, z-dz) == 0 then
-					return x+1, y, z-1
-				end
-			end
+		-- Check if block don't have way to escape by diagonal
+		if dirX == 0 or dirZ == 0 then
+			return nil
 		end
-		for dx = 2, WATER_LEAK_SIZE do
-			-- back left square
-			for dz = 2, WATER_LEAK_SIZE do
-				if self:getBlock(x-dx, y, z+dz) ~= 0 then
-					break
-				end
-				if self:getBlock(x-dx, y-1, z+dz) then
-					return x-1, y, z+1
+		
+		-- nearest squares
+		if dirX > 0 then
+			for dx = 1, limiterX do
+				-- forward left square
+				if dirZ > 0 then
+					for dz = 1, limiterZ do
+						if self:getBlock(x+dx, y, z+dz) ~= 0 then
+							break
+						end
+						if self:getBlock(x+dx, y-1, z+dz) == 0 then
+							if self:getBlock(x+1, y-1, z) then
+								return x+1, y, z
+							else
+								return x, y, z+1
+							end
+						end
+					end
+			
+				-- forward right square
+				else
+					for dz = 1, limiterZ do
+						if self:getBlock(x+dx, y, z-dz) ~= 0 then
+							break
+						end
+						if self:getBlock(x+dx, y-1, z-dz) == 0 then
+							if self:getBlock(x+1, y-1, z) then
+								return x+1, y, z
+							else
+								return x, y, z-1
+							end
+						end
+					end
 				end
 			end
+		else
+			for dx = 1, limiterX do
+				-- back left square
+				if dirZ > 0 then
+					for dz = 1, limiterZ do
+						if self:getBlock(x-dx, y, z+dz) ~= 0 then
+							break
+						end
+						if self:getBlock(x-dx, y-1, z+dz) then
+							if self:getBlock(x-1, y-1, z) then
+								return x-1, y, z
+							else
+								return x, y, z+1
+							end
+						end
+					end
 			
-			-- back right square
-			for dz = 2, WATER_LEAK_SIZE do
-				if self:getBlock(x-dx, y, z-dz) ~= 0 then
-					break
-				end
-				if self:getBlock(x-dx, y-1, z-dz) == 0 then
-					return x-1, y, z-1
+				-- back right square
+				else
+					for dz = 1, limiterZ do
+						if self:getBlock(x-dx, y, z-dz) ~= 0 then
+							break
+						end
+						if self:getBlock(x-dx, y-1, z-dz) == 0 then
+							if self:getBlock(x-1, y-1, z) then
+								return x-1, y, z
+							else
+								return x, y, z-1
+							end
+						end
+					end
 				end
 			end
 		end
@@ -420,13 +468,28 @@ local world_mt = {
 			
 			if newX then
 				local remX, remY, remZ = self:findWaterBlockToRemove(x, y, z)
-				self:setBlock(remX, remY, remZ, 0)
+				if self:getBlock(remX, remY, remZ) ~= 8 then
+					print("[ERROR] Trying to remove non-water block " .. remX .. ", " .. remY .. ", " .. remZ)
+				elseif self:getBlock(newX, newY, newZ) ~= 0 then
+					print("[ERROR] Trying place water instead " .. (self:getBlock(newX, newY, newZ) == 8 and "water" or "usual") .. " block " .. newX .. ", " .. newY .. ", " .. newZ)
+					print("\tDiff: " .. (newX - x) .. ", " .. (newY - y) .. ", " .. (newZ - z))
+				else
+					self:setBlock(remX, remY, remZ, 0)
 				
-				self:setBlock(newX, newY, newZ, 8)
-				timer.Simple(.2, function()
-					self:updateWaterBlock(sx, sy, sz, newX, newY, newZ)
-				end)
+					self:setBlock(newX, newY, newZ, 8)
+					timer.Simple(.2, function()
+						self:updateWaterBlock(sx, sy, sz, newX, newY, newZ)
+					end)
+				end
 			end
+		-- lava eating water
+		--[[elseif id == 10 or id == 11 then
+			if self:getBlock(x, y+1, z) == 8 then
+				self:setBlock(x, y+1, z, 0)
+				timer.Simple(.2, function()
+					self:updateWaterBlock(sx, sy, sz, x, y+2, z)
+				end)
+			end]]--
 		end
 	end,
 
