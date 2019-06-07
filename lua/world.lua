@@ -560,7 +560,7 @@ local world_mt = {
 			local TNT_RADIUS = 5
 			local TNT_RADIUS2 = TNT_RADIUS * TNT_RADIUS
 			
-			timer.Simple(.5, function()
+			--[[timer.Simple(.5, function()
 				self:setBlock(x, y, z, 0)
 			end)
 			
@@ -578,9 +578,9 @@ local world_mt = {
 			
 			timer.Simple(2.5, function()
 				self:setBlock(x, y, z, 0)
-			end)
+			end)]]--
 			
-			timer.Simple(3, function()
+			timer.Simple(1, function()
 				for dx = -TNT_RADIUS, TNT_RADIUS do
 					for dz = -TNT_RADIUS, TNT_RADIUS do
 						for dy = -TNT_RADIUS, TNT_RADIUS do
