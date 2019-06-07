@@ -481,6 +481,72 @@ local world_mt = {
 						self:updateWaterBlock(sx, sy, sz, newX, newY, newZ)
 					end)
 				end
+			-- leak water by surface
+			elseif self:getBlock(x, y, z) ~= 0 then
+				local counter = 0
+				
+				-- nearest x
+				for dx = -1, 1, 2 do
+					if self:getBlock(x+dx, y, z) == 0 then
+						local remX, remY, remZ = self:findWaterBlockToRemove(x+dx, y, z)
+						if remX and remY > y then
+							self:setBlock(remX, remY, remZ, 0)
+							self:setBlock(x+dx, y, z, 8)
+							timer.Simple(.2, function()
+								self:updateWaterBlock(sx, sy, sz, x+dx, y, z)
+							end)
+							
+							counter = counter + 1
+						end
+					end
+				end
+
+				-- nearest y
+				for dz = -1, 1, 2 do
+					if self:getBlock(x, y, z+dz) == 0 then
+						local remX, remY, remZ = self:findWaterBlockToRemove(x, y, z+dz)
+						if remX and remY > y then
+							self:setBlock(remX, remY, remZ, 0)
+							self:setBlock(x, y, z+dz, 8)
+							timer.Simple(.2, function()
+								self:updateWaterBlock(sx, sy, sz, x, y, z+dz)
+							end)
+							
+							counter = counter + 1
+						end
+					end
+				end
+				
+				--[[if counter == 0 then
+					-- Check up forward
+					if self:getBlock(x+1, y, z) == 8 then
+						x = x + 1
+						timer.Simple(.2, function()
+							self:updateWaterBlock(sx, sy, sz, x, y, z)
+						end)
+					
+					-- Check up back
+					elseif self:getBlock(x-1, y, z) == 8 then
+						x = x - 1
+						timer.Simple(.2, function()
+							self:updateWaterBlock(sx, sy, sz, x, y, z)
+						end)
+					
+					-- Check up left
+					elseif self:getBlock(x, y, z+1) == 8 then
+						z = z + 1
+						timer.Simple(.2, function()
+							self:updateWaterBlock(sx, sy, sz, x, y, z)
+						end)
+					
+					-- Check up right
+					elseif self:getBlock(x, y, z-1) == 8 then
+						z = z - 1
+						timer.Simple(.2, function()
+							self:updateWaterBlock(sx, sy, sz, x, y, z)
+						end)
+					end
+				end]]--
 			end
 		-- lava eating water
 		--[[elseif id == 10 or id == 11 then
@@ -490,6 +556,68 @@ local world_mt = {
 					self:updateWaterBlock(sx, sy, sz, x, y+2, z)
 				end)
 			end]]--
+		elseif id == 46 then
+			local TNT_RADIUS = 5
+			local TNT_RADIUS2 = TNT_RADIUS * TNT_RADIUS
+			
+			timer.Simple(.5, function()
+				self:setBlock(x, y, z, 0)
+			end)
+			
+			timer.Simple(1, function()
+				self:setBlock(x, y, z, 46)
+			end)
+			
+			timer.Simple(1.5, function()
+				self:setBlock(x, y, z, 0)
+			end)
+			
+			timer.Simple(2, function()
+				self:setBlock(x, y, z, 46)
+			end)
+			
+			timer.Simple(2.5, function()
+				self:setBlock(x, y, z, 0)
+			end)
+			
+			timer.Simple(3, function()
+				for dx = -TNT_RADIUS, TNT_RADIUS do
+					for dz = -TNT_RADIUS, TNT_RADIUS do
+						for dy = -TNT_RADIUS, TNT_RADIUS do
+							local bx, by, bz = x + dx, y + dy, z + dz
+							if
+								dx * dx + dz * dz + dy * dy < TNT_RADIUS2
+								and 0 < by and by < self.data.dimensions.y - 1
+								and 0 < bx and bx < self.data.dimensions.x - 1
+								and 0 < bz and bz < self.data.dimensions.z - 1
+								--and self:getBlock(bx, by, bz) ~= 46
+							then
+								if self:getBlock(bx, by, bz) ~= 8 then
+									self:setBlock(bx, by, bz, 0)
+								else
+									self:updateWaterBlock(sx, sy, sz, bx, by, bz)
+								end
+							end
+						end
+					end
+				end
+				for dx = -TNT_RADIUS-1, TNT_RADIUS+1 do
+					for dz = -TNT_RADIUS-1, TNT_RADIUS+1 do
+						for dy = -TNT_RADIUS-1, TNT_RADIUS+1 do
+							local bx, by, bz = x + dx, y + dy, z + dz
+							if
+								dx * dx + dz * dz + dy * dy >= TNT_RADIUS2
+								and 0 < by and by < self.data.dimensions.y - 1
+								and 0 < bx and bx < self.data.dimensions.x - 1
+								and 0 < bz and bz < self.data.dimensions.z - 1
+								and self:getBlock(bx, by, bz) ~= 0
+							then
+								self:updateWaterBlock(sx, sy, sz, bx, by, bz)
+							end
+						end
+					end
+				end
+			end)
 		end
 	end,
 
