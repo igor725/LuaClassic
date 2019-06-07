@@ -586,7 +586,7 @@ local function generateCaves(mapaddr, dimx, dimy, dimz, seed)
 					then
 						local cblock = GetBlock(bx, by, bz)
 						if cblock < 8 or cblock > 9 then
-							SetBlock(bx, by, bz, (by > heightLava and 0)or 11)
+							SetBlock(bx, by, bz, (by > heightLava and 0)or 10)
 						else
 							SetBlock(bx, by - 1, bz, 8)
 						end
