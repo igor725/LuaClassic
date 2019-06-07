@@ -135,6 +135,10 @@ function printf(...)
 	return str
 end
 
+function getCurrentOnline()
+	return SERVER_ONLINE or 0
+end
+
 local function woSpaces(...) -- It works faster than string.match
 	local idx = 1
 	local stStart, stEnd
@@ -165,6 +169,18 @@ end
 
 function trimStr(str)
 	return str:sub(woSpaces(str:byte(1, -1)))
+end
+
+function randomStr(len)
+	local str = ffi.new('char[?]', len + 1)
+	for i = 0, len - 1 do
+		if math.random(0, 100) > 30 then
+			str[i] = math.random(48, 57)
+		else
+			str[i] = math.random(97, 122)
+		end
+	end
+	return ffi.string(str)
 end
 
 function getAddr(void)
@@ -275,7 +291,7 @@ if jit.os == 'Windows'then
 				end
 				return getName(), isFile()
 			end
-			
+
 			if C.FindNextFileA(file, fdata)then
 				return getName(), isFile()
 			else
@@ -385,6 +401,7 @@ function watchThreads(threads)
 	end
 end
 
+require('hooks')
 dirForEach('lua', 'lua', function(file)
 	require(file:sub(1, -5))
 end)

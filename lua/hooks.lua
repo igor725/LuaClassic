@@ -1,6 +1,7 @@
 hooks = {
 	list = {
 		['onUpdate'] = {},
+		['onInitDone'] = {},
 		['onPlayerMove'] = {},
 		['onPlayerChat'] = {},
 		['onPlayerRotate'] = {},

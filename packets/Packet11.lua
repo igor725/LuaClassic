@@ -13,5 +13,6 @@ return function(player, extName, extVer)
 			onPlayerHandshakeDone(player)
 		end
 		hooks:call('onPlayerHandshakeDone', player)
+		SERVER_ONLINE = (SERVER_ONLINE or 0) + 1
 	end
 end

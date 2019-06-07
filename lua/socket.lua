@@ -39,11 +39,14 @@ ffi.cdef[[
 	int         inet_aton(const char* cp, struct in_addr* inp);
 	const char* inet_ntop(int af, const void* src, char* dst, size_t cnt);
 
+	struct hostent* gethostbyname(const char* hostname);
+
 	int bind(int sockfd, const struct sockaddr* addr, uint32_t addrlen);
 	int listen(int sockfd, int backlog);
 	int accept(int sockfd, struct sockaddr* addr, uint32_t* addrlen);
 
 	int socket(int domain, int type, int protocol);
+	int connect(int sockfd, const struct sockaddr* addr, int addrlen);
 	int setsockopt(int fd, int level, int optname, const void* optval, uint32_t optlen);
 
 	int recv(int fd, void* buf, size_t count, int flags);
@@ -78,6 +81,14 @@ MSG_WAITALL	= 0x40
 
 if jit.os == 'Windows'then
 	ffi.cdef[[
+		struct hostent {
+			char  *h_name;
+			char  **h_aliases;
+			short h_addrtype;
+			short h_length;
+			char  **h_addr_list;
+		};
+
 		uint32_t FormatMessageA(
 			uint32_t dwFlags,
 			const void* lpSource,
@@ -154,6 +165,13 @@ if jit.os == 'Windows'then
 	end
 else -- POSIX
 	ffi.cdef[[
+		struct hostent {
+			char    *h_name;
+			char    **h_aliases;
+			int     h_addrtype;
+			int     h_length;
+			char    **h_addr_list;
+		};
 		char* strerror(int errnum);
 		int fcntl(int, int, ...);
 		int close(int fd);
@@ -169,6 +187,13 @@ else -- POSIX
 			error_cache[errno] = ffi.string(ffi.C.strerror(errno)) .. ' (' .. errno .. ')'
 		end
 		return error_cache[errno]
+	end
+end
+
+function gethostbyname(hostname)
+	local he = sck.gethostbyname(hostname)
+	if he ~= nil then
+		return parseIPv4(he.h_addr_list[0])
 	end
 end
 
@@ -214,6 +239,28 @@ function setSockOpt(fd, level, opt, val)
 	local valsz = ffi.sizeof(val)
 	val = ffi.cast('void*', val)
 	return sck.setsockopt(fd, level, opt, val, valsz) == 0
+end
+
+function connectSock(ip, port)
+	local fd = sck.socket(AF_INET, SOCK_STREAM, 0)
+	local ssa = ffi.new('struct sockaddr_in[1]', {{
+		sin_family = AF_INET,
+		sin_addr = {
+			s_addr = sck.inet_addr(ip)
+		},
+		sin_port = sck.htons(port)
+	}})
+
+	local cssa = ffi.cast('const struct sockaddr*', ssa)
+	local ssasz = ffi.sizeof(ssa[0])
+
+	assert(setSockOpt(fd, SOL_TCP, TCP_NODELAY, 1))
+
+	if sck.connect(fd, cssa, ssasz) < 0 then
+		return false, geterror()
+	end
+
+	return fd
 end
 
 function bindSock(ip, port, backlog)
@@ -307,8 +354,8 @@ local lines = {}
 function receiveLine(fd)
 	if not lines[fd]then
 		lines[fd] = {
-			recvbuf = ffi.new'char[100]',
 			linebuf = ffi.new'char[8192]',
+			rchar = ffi.new'char[1]',
 			waitdata = false,
 			recvbufpos = 0,
 			recvbuflen = 0,
@@ -316,42 +363,30 @@ function receiveLine(fd)
 		}
 	end
 	local ln = lines[fd]
-	if ln.recvbufpos == 0 then
-		local len = receiveMesg(fd, ln.recvbuf, 100)
-		if len then
-			ln.recvbuflen = len
-		else
-			return
-		end
-	end
 	if ln.linepos == 0 then
 		ffi.fill(ln.linebuf, 8192)
 	end
-	while ln.recvbufpos <= ln.recvbuflen do
-		if not ln.waitdata then
-			local sym = ln.recvbuf[ln.recvbufpos]
+	while true do
+		local len = receiveMesg(fd, ln.rchar, 1)
+		if len > 0 then
+			local sym = ln.rchar[0]
 			if sym == 10 then
 				local str = ffi.string(ln.linebuf, ln.linepos)
 				ln.linepos = 0
-				ln.recvbufpos = ln.recvbufpos + 1
 				return str
 			elseif sym ~= 13 then
 				ln.linebuf[ln.linepos] = sym
 				ln.linepos = ln.linepos + 1
 			end
-			ln.recvbufpos = ln.recvbufpos + 1
 		end
-		if ln.recvbufpos == ln.recvbuflen then
-			local len = receiveMesg(fd, ln.recvbuf, 100)
-			if len then
-				ln.recvbuflen = len
-				ln.recvbufpos = 0
-			else
-				ln.waitdata = true
-			end
+		if checkSock(fd) == 'closed'then
+			break
 		end
 	end
-	lns.recvbufpos = 0
+	local ln = ffi.string(ln.linebuf, ln.linepos)
+	ffi.fill(ln.linebuf, 8192)
+	ln.linepos = 0
+	return ln
 end
 
 function checkSock(fd)
