@@ -236,94 +236,196 @@ local world_mt = {
 			end
 		end)
 	end,
+	
+	findWaterBlockToRemove = function(self, x, y, z)
+		local dirx, dirz = 0, 0
+		while true do
+			-- Check up
+			if self:getBlock(x, y+1, z) == 8 then
+				y = y + 1
+			
+			-- Check up forward
+			elseif self:getBlock(x+1, y+1, z) == 8 then
+				x = x + 1
+				y = y + 1
+			
+			-- Check up back
+			elseif self:getBlock(x-1, y+1, z) == 8 then
+				x = x - 1
+				y = y + 1
+			
+			-- Check up left
+			elseif self:getBlock(x, y+1, z+1) == 8 then
+				z = z + 1
+				y = y + 1
+			
+			-- Check up right
+			elseif self:getBlock(x, y+1, z-1) == 8 then
+				z = z - 1
+				y = y + 1
+			
+			-- Check forward
+			elseif dirx >= 0 and self:getBlock(x+1, y, z) == 8 then
+				dirx = 1
+				x = x + 1
+			
+			-- Check back
+			elseif dirx <= 0 and self:getBlock(x-1, y, z) == 8 then
+				dirx = -1
+				x = x - 1
+			
+			-- Check left
+			elseif dirz >= 0 and self:getBlock(x, y, z+1) == 8 then
+				dirz = 1
+				z = z + 1
+			
+			-- Check right
+			elseif dirz <= 0 and self:getBlock(x, y, z-1) == 8 then
+				dirz = -1
+				z = z - 1
+			
+			-- Block found
+			else
+				return x, y, z
+			end
+		end
+	end,
+	
+	findWaterBlockToCreate = function(self, x, y, z)
+		WATER_LEAK_SIZE = 6
+		
+		-- TODO Make break if wall found
+		
+		-- Under
+		if self:getBlock(x, y-1, z) == 0 then
+			return x, y-1, z
+		end
+		if self:getBlock(x, y-1, z) == 8 then
+			return nil
+		end
+		
+		-- nearest places
+		for dx = -1, 1, 2 do
+			if self:getBlock(x+dx, y, z) == 0 and self:getBlock(x+dx, y-1, z) == 0 then
+				return x+dx, y-1, z
+			end
+		end
+		
+		for dz = -1, 1, 2 do
+			if self:getBlock(x, y, z+dz) == 0 and self:getBlock(x, y-1, z+dz) == 0 then
+				return x, y-1, z+dz
+			end
+		end
+		
+		-- nearest edges
+		for dx = -1, 1, 2 do
+			for dz = -1, 1, 2 do
+				if self:getBlock(x+dx, y, z+dz) == 0 and self:getBlock(x+dx, y-1, z+dz) == 0 then
+					return x+dx, y-1, z+dz
+				end
+			end
+		end
+		
+		-- 5 blocks forward
+		for dx = 2, WATER_LEAK_SIZE do
+			if self:getBlock(x+dx, y, z) ~= 0 then
+				break
+			end
+			if self:getBlock(x+dx, y-1, z) == 0 then
+				return x+1, y, z
+			end
+		end
+		-- 5 blocks back
+		for dx = 2, WATER_LEAK_SIZE do
+			if self:getBlock(x-dx, y, z) ~= 0 then
+				break
+			end
+			if self:getBlock(x-dx, y-1, z) == 0 then
+				return x-1, y, z
+			end
+		end
+		-- 5 blocks left
+		for dz = 2, WATER_LEAK_SIZE do
+			if self:getBlock(x, y, z+dz) ~= 0 then
+				break
+			end
+			if self:getBlock(x, y-1, z+dz) == 0 then
+				return x, y, z+1
+			end
+		end
+		-- 5 blocks right
+		for dz = 2, WATER_LEAK_SIZE do
+			if self:getBlock(x, y, z-dz) ~= 0 then
+				break
+			end
+			if self:getBlock(x, y-1, z-dz) == 0 then
+				return x, y, z-1
+			end
+		end
+		
+		-- nearest squares
+		for dx = 2, WATER_LEAK_SIZE do
+			-- forward left square
+			for dz = 2, WATER_LEAK_SIZE do
+				if self:getBlock(x+dx, y, z+dz) ~= 0 then
+					break
+				end
+				if self:getBlock(x+dx, y-1, z+dz) == 0 then
+					return x+1, y, z+1
+				end
+			end
+			
+			-- forward right square
+			for dz = 2, WATER_LEAK_SIZE do
+				if self:getBlock(x+dx, y, z-dz) ~= 0 then
+					break
+				end
+				if self:getBlock(x+dx, y-1, z-dz) == 0 then
+					return x+1, y, z-1
+				end
+			end
+		end
+		for dx = 2, WATER_LEAK_SIZE do
+			-- back left square
+			for dz = 2, WATER_LEAK_SIZE do
+				if self:getBlock(x-dx, y, z+dz) ~= 0 then
+					break
+				end
+				if self:getBlock(x-dx, y-1, z+dz) then
+					return x-1, y, z+1
+				end
+			end
+			
+			-- back right square
+			for dz = 2, WATER_LEAK_SIZE do
+				if self:getBlock(x-dx, y, z-dz) ~= 0 then
+					break
+				end
+				if self:getBlock(x-dx, y-1, z-dz) == 0 then
+					return x-1, y, z-1
+				end
+			end
+		end
+		
+		return nil
+	end,
+	
 	updateWaterBlock = function(self, sx, sy, sz, x, y, z)
 		if not x then
 			x, y, z = sx, sy, sz
 		end
 		local id = self:getBlock(x, y, z)
 		if id == 8 or id == 9 then
-			if self:getBlock(x, y - 1, z) == 0 then
-				self:setBlock(x, y - 1, z, 8)
-
+			local newX, newY, newZ = self:findWaterBlockToCreate(x, y, z)
+			
+			if newX then
+				local remX, remY, remZ = self:findWaterBlockToRemove(x, y, z)
+				self:setBlock(remX, remY, remZ, 0)
+				
+				self:setBlock(newX, newY, newZ, 8)
 				timer.Simple(.2, function()
-					self:updateWaterBlock(sx, sy, sz, x, y - 1, z)
+					self:updateWaterBlock(sx, sy, sz, newX, newY, newZ)
 				end)
-			elseif self:getBlock(x, y - 1, z) == 10 then
-				-- delete water like infinity consumer
-
-				timer.Simple(.2, function()
-					self:updateWaterBlock(sx, sy, sz, x, y, z)
-				end)
-			elseif self:getBlock(x+1, y - 1, z) == 0 then
-				self:setBlock(x+1, y - 1, z, 8)
-
-				timer.Simple(.2, function()
-					self:updateWaterBlock(sx, sy, sz, x+1, y - 1, z)
-				end)
-			elseif self:getBlock(x-1, y - 1, z) == 0 then
-				self:setBlock(x-1, y - 1, z, 8)
-
-				timer.Simple(.2, function()
-					self:updateWaterBlock(sx, sy, sz, x-1, y - 1, z)
-				end)
-			elseif self:getBlock(x, y - 1, z+1) == 0 then
-				self:setBlock(x, y - 1, z+1, 8)
-
-				timer.Simple(.2, function()
-					self:updateWaterBlock(sx, sy, sz, x, y - 1, z+1)
-				end)
-			elseif self:getBlock(x, y - 1, z-1) == 0 then
-				self:setBlock(x, y - 1, z-1, 8)
-
-				timer.Simple(.2, function()
-					self:updateWaterBlock(sx, sy, sz, x, y - 1, z-1)
-				end)
-			else
-				return
-			end
-
-			local x, y, z = x, y, z
-			while y < self.data.dimensions.y do
-				if self:getBlock(x, y, z) ~= 8 then
-					break
-				end
-				y = y + 1
-			end
-
-			if self:getBlock(x + 1, y, z) == 8 then
-				while x < self.data.dimensions.x - 1 do
-					x = x + 1
-					if self:getBlock(x, y, z) ~= 8 then
-						break
-					end
-				end
-				self:setBlock(x - 1, y, z, 0)
-			elseif self:getBlock(x - 1, y, z) == 8 then
-				while x > 0 do
-					x = x - 1
-					if self:getBlock(x, y, z) ~= 8 then
-						break
-					end
-				end
-				self:setBlock(x + 1, y, z, 0)
-			elseif self:getBlock(x, y, z + 1) == 8 then
-				while z < self.data.dimensions.z - 1 do
-					z = z + 1
-					if self:getBlock(x, y, z) ~= 8 then
-						break
-					end
-				end
-				self:setBlock(x, y, z - 1, 0)
-			elseif self:getBlock(x, y, z - 1) == 8 then
-				while z > 0 do
-					z = z - 1
-					if self:getBlock(x, y, z) ~= 8 then
-						break
-					end
-				end
-				self:setBlock(x, y, z + 1, 0)
-			else
-				self:setBlock(x, y - 1, z, 0)
 			end
 		end
 	end,
