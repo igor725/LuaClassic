@@ -387,15 +387,9 @@ local player_mt = {
 		if not self:isWebClient()then return end
 		local data, opcode = self:readWsFrame()
 		if data then
-			if opcode == 0x02 or opcode == 0x01 then
-				self.wsBuf = self.wsBuf or''
-				self.wsBuf = self.wsBuf .. data
-			end
-		end
-		if self.wsBuf and #self.wsBuf > 0 then
-			local id = self.wsBuf:byte()
+			local id = data:byte()
 			local psz = psizes[id]
-			if not psz or #self.wsBuf < psz then return end
+			if not psz then return end
 			local cpesz = cpe.psizes[id]
 			if cpesz then
 				if self:isSupported(cpe.pexts[id])then
@@ -412,8 +406,7 @@ local player_mt = {
 			end
 			self.cpeRewrite = false
 			self.kickTimeout = CTIME + getKickTimeout()
-			pHandlers[id](self, struct.unpack(fmt, self.wsBuf:sub(2, psz + 1)))
-			self.wsBuf = self.wsBuf:sub(psz + 2)
+			pHandlers[id](self, struct.unpack(fmt, data:sub(2)))
 		end
 	end,
 	readRawData = function(self)
@@ -422,6 +415,15 @@ local player_mt = {
 		local id = self.waitPacket
 		if not id then
 			local pId = receiveString(cl, 1)
+			if not self.handshaked and pId == 'G'then -- Probably websocket client
+				wsHandshake[cl] = {
+					state = 'initial',
+					headers = {},
+					ip = self.ip
+				}
+				self:destroy()
+				return
+			end
 			if pId then
 				id = pId:byte()
 				local psz = psizes[id]
@@ -646,6 +648,7 @@ local player_mt = {
 			if onPlayerDestroy then
 				onPlayerDestroy(self)
 			end
+			SERVER_ONLINE = SERVER_ONLINE - 1
 		end
 		-- Causes incorrect kick-packet sending
 		-- closeSock(self:getClient())
