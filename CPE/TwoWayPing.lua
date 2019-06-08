@@ -12,10 +12,14 @@ function twp:load()
 		end
 	end)
 	getPlayerMT().testPing = function(player)
+		if not player:isSupported('TwoWayPing')then
+			return false
+		end
 		local rand = math.random(0, 32767)
 		player:sendPacket(false, 0x2b, 1, rand)
 		player.pData = rand
 		player.pTime = CTIME
+		return true
 	end
 end
 

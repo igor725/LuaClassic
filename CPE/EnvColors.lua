@@ -66,8 +66,8 @@ function ec:load()
 		end)
 		return true
 	end
-	getWorldMT().getEnvColor = function(self, typ)
-		local c = self.data.colors[typ]
+	getWorldMT().getEnvColor = function(world, typ)
+		local c = world.data.colors[typ]
 		return c.r, c.g, c.b
 	end
 end

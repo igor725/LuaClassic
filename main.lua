@@ -131,7 +131,7 @@ function onPlayerChatMessage(player, message)
 	end
 end
 
-local httpPattern = 'et%s+(.+)%s+http/'
+local httpPattern = '^et%s+(.+)%s+http/%d%.%d$'
 
 function wsDoHandshake()
 	for cl, data in pairs(wsHandshake)do

@@ -12,8 +12,10 @@ HC_JUMP     = 6
 
 local function hackControlFor(player, ...)
 	if player:isSupported('HackControl')then
-		return player:sendPacket(false, 0x20, ...)
+		return false
 	end
+	player:sendPacket(false, 0x20, ...)
+	return true
 end
 
 function hc:load()
