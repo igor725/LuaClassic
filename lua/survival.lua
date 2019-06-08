@@ -121,6 +121,26 @@ local function survRespawn(player)
 	player:moveToSpawn()
 end
 
+local timers = {'_blocksdamage', '_hp_regen'}
+
+local function survPauseTimers(player)
+	for i = 1, #timers do
+		timer.Pause(timers[i])
+	end
+end
+
+local function survResumeTimers(player)
+	for i = 1, #timers do
+		timer.Resume(timers[i])
+	end
+end
+
+local function survRemoveTimers(player)
+	for i = 1, #timers do
+		timer.Remove(timers[i])
+	end
+end
+
 local function getKiller(attacker, dmgtype)
 	if dmgtype == SURV_DMG_PLAYER then
 		return 'player ' .. attacker:getName()
@@ -233,6 +253,8 @@ function onInitDone()
 		if not player:isSupported('PlayerClick')or
 		not player:isSupported('FullCP437')or
 		not player:isSupported('HackControl')or
+		not player:isSupported('EnvColors')or
+		not player:isSupported('EnvMapAspect')or
 		not player:isSupported('HeldBlock')then
 			player:kick('Your client does not support required CPE exts.')
 			return
@@ -283,10 +305,7 @@ function onInitDone()
 
 	hooks:add('onPlayerDestroy', 'survival', function(player)
 		survStopBreaking(player)
-		local name = player:getName()
-		timer.Remove(name .. '_blocksdamage')
-		timer.Remove(name .. '_hp_regen')
-		timer.Remove(name .. '_surv_brk')
+		survRemoveTimers(player)
 	end)
 
 	hooks:add('onPlayerMove', 'survival', function(player, dx, dy, dz)
@@ -310,18 +329,14 @@ function onInitDone()
 
 	hooks:add('postPlayerSpawn', 'survival', function(player)
 		survUpdateHealth(player)
-		local name = player:getName()
 		local noclip = player:checkPermission('player.noclip')
 		player:hackControl(0, (noclip and 1)or 0, 0, 0, 1, -1)
-		timer.Resume(name .. '_blocksdamage')
-		timer.Resume(name .. '_hp_regen')
+		survResumeTimers(player)
 	end)
 
 	hooks:add('onPlayerDespawn', 'survival', function(player)
 		survStopBreaking(player)
-		local name = player:getName()
-		timer.Pause(name .. '_blocksdamage')
-		timer.Pause(name .. '_hp_regen')
+		survPauseTimers(player)
 	end)
 
 	hooks:add('onPlayerClick', 'survival', function(player, ...)
