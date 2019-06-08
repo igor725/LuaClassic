@@ -315,9 +315,10 @@ function init()
 	server = assert(bindSock(ip, port))
 
 	if config:get('allow-websocket')then
-		WSGUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 		wsHandshake = {}
-		require('helper')
+		wsLoad()
+	else
+		wsLoad = nil
 	end
 
 	log.info(CON_WLOAD)
