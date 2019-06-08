@@ -215,8 +215,8 @@ local player_mt = {
 		return self.ip
 	end,
 
-	setID = function(self,id)
-		if id > 0 then
+	setID = function(self, id)
+		if id >= 0 then
 			self.id = id
 			IDS[id] = self
 			players[self] = id
@@ -826,7 +826,7 @@ function getPlayerByID(id)
 end
 
 function findFreeID(player)
-	local s = 1
+	local s = 0
 	while IDS[s]do
 		s = s + 1
 		if s > 127 then

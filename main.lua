@@ -211,7 +211,7 @@ function createPlayer(cl, ip, isWS)
 		player.ip = ip
 
 		local nid = findFreeID(player)
-		if nid > 0 then
+		if nid >= 0 then
 			player:init(nid)
 		else
 			player:kick(KICK_SFULL)
