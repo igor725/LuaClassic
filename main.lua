@@ -33,7 +33,7 @@ require('commands')
 function onPlayerAuth(player, name, key)
 	player:setUID(key)
 	if not player:setName(name)then
-		return KICK_NAMETAKEN
+		return false, KICK_NAMETAKEN
 	end
 	player:saveRead()
 	return true
@@ -50,6 +50,17 @@ function onPlayerDestroy(player)
 
 	if player:isHandshaked()then
 		player:saveWrite()
+	end
+end
+
+function postPlayerPlaceBlock(player, x, y, z, id)
+	local world = getWorld(player)
+	for dx = -1, 1, 1 do -- Update neighboring blocks
+		for dy = -1, 1, 1 do
+			for dz = -1, 1, 1 do
+				world:updateWaterBlock(x - dx, y - dy, z - dz)
+			end
+		end
 	end
 end
 
