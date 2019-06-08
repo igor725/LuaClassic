@@ -39,7 +39,6 @@ local Z_DEFLATED         =  8
 local Z_MEMLEVEL         =  8
 local GZ_WINDOWBITS      = 31
 local CHUNK_SIZE         = 1024
-local GZ_ERR             = 'gzip %s error: %s'
 
 local zLoaded, _zlib = pcall(ffi.load, 'z')
 if not zLoaded then
@@ -53,7 +52,7 @@ local outbuff = ffi.new('char[?]', CHUNK_SIZE)
 local inbuff = ffi.new('char[?]', CHUNK_SIZE)
 
 local function gzerr(i,e)
-	print((GZ_ERR):format(i, e))
+	print(('gzip %s error: %s'):format(i, e))
 end
 
 local function gzerrstr(code)

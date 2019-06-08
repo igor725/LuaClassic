@@ -6,8 +6,6 @@ CONF_INVALIDSYNTAX = 'Invalid syntax in %s file on line %d'
 
 TMR_ERR            = 'timer %q error: %s'
 
-CON_LUAEXECWARN    = 'LUAEXEC: This feature is experimental and may contain bugs, including security threats,\
-if you understand the risks type "I agree"'
 CON_INGAMECMD      = 'This command can\'t be called from console'
 CON_PROPINVALID    = 'Invalid server.properties configuration'
 CON_LJVER          = 'Server requires LuaJIT >= 2.0.0-beta11'
@@ -16,7 +14,6 @@ CON_HELP           = 'For help, type "help" or "?"'
 CON_START          = 'Starting LuaClassic server...'
 CON_SAVEERR        = 'Configuration save failed!'
 CON_BINDSUCC       = 'Server started on %s:%d'
-CON_WSBINDSUCC     = '(websocket port: %d)'
 CON_WLOADERR       = 'No worlds loaded'
 CON_WSAVE          = 'Saving worlds'
 CON_SVSTOP         = 'Server stopped'

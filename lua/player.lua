@@ -171,6 +171,15 @@ local player_mt = {
 	getLeaveReason = function(self)
 		return self.leavereason
 	end,
+	getForward = function(self)
+		local eye = self.eye
+		local ry = math.rad(eye.yaw)
+		local rp = math.rad(eye.pitch)
+		local x = math.sin(ry) * math.cos(rp)
+		local y = math.sin(-rp)
+		local z = math.cos(ry + math.pi) * math.cos(rp)
+		return x, y, z
+	end,
 	getFluidLevel = function(self)
 		local world = getWorld(self)
 		local x, y, z = self:getPos()
