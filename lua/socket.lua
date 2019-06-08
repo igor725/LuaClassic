@@ -414,6 +414,14 @@ function shutdownSock()
 	return true
 end
 
+function htons(short)
+	return sck.htons(short)
+end
+
+function ntohs(short)
+	return sck.ntohs(short)
+end
+
 if not ... then
 	server = assert(bindSock('0.0.0.0', 25565))
 

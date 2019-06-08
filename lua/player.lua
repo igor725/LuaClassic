@@ -215,7 +215,7 @@ local player_mt = {
 		end
 	end,
 	setUID = function(self, uid)
-		self.uidhex = toHex(sha1(uid))
+		self.uidhex = sha1hex(uid)
 		self.uid = uid
 	end,
 	setPos = function(self, x, y, z)
@@ -342,80 +342,52 @@ local player_mt = {
 		return false, 0
 	end,
 
-	readWsFrame = function(self)
-		if not self:isWebClient()then return false end
-		local cl = self:getClient()
-		if not self.wsHint then
-			local hdr = receiveString(cl, 2)
-			if not hdr then return end
-			local fin, masked, opcode, hint = readWsHeader(hdr:byte(1, 2))
-			if not fin or not masked then
-				closeSock(cl)
-				return
-			end
-			self.wsHint = hint
-			self.wsOpcode = opcode
-		elseif not self.wsPacketLen then
-			local hint = self.wsHint
-			local plen
-			if hint > 125 then
-				if hint == 126 then
-					local data = receiveString(cl, 2)
-					if data then
-						plen = struct.unpack('>H', data)
-					end
-				else
-					closeSock(cl)
-					return
-				end
-			else
-				plen = hint
-			end
-			self.wsPacketLen = plen
-		elseif not self.wsMask then
-			self.wsMask = receiveString(cl, 4)
-		else
-			local data = receiveString(cl, self.wsPacketLen)
-			if data then
-				data = unmaskData(data, self.wsMask, #data)
-				self.wsHint, self.wsMask, self.wsPacketLen = nil
-				return data, self.wsOpcode
+	handlePacket = function(self, id, data)
+		local psz = psizes[id]
+		local fmt = packets[id]
+
+		local cpesz = cpe.psizes[id]
+		if cpesz then
+			if self:isSupported(cpe.pexts[id])then
+				psz = cpesz
+				fmt = cpe.packets.cl[id]
 			end
 		end
+
+		if not psz then
+			self:kick(KICK_INVALIDPACKET)
+			return
+		end
+		self.kickTimeout = CTIME + getKickTimeout()
+		pHandlers[id](self, struct.unpack(fmt, ffi.string(data, psz)))
 	end,
+
 	readWsData = function(self)
-		if not self:isWebClient()then return end
-		local data, opcode = self:readWsFrame()
-		if data then
-			local id = data:byte()
-			local psz = psizes[id]
-			if not psz then return end
-			local cpesz = cpe.psizes[id]
-			if cpesz then
-				if self:isSupported(cpe.pexts[id])then
-					psz = cpesz
-					self.cpeRewrite = true
-				end
+		local cl = self:getClient()
+		local sframe = self._sframe
+		if not self._sframe then
+			sframe = ffi.new('struct ws_frame')
+			setupWFrameStruct(sframe, cl)
+			self._sframe = sframe
+		end
+		if receiveFrame(sframe)then
+			if sframe.opcode == 0x02 then
+				local id = sframe.payload[0]
+				self:handlePacket(id, sframe.payload + 1)
 			end
-			local fmt
-			if self.cpeRewrite then
-				fmt = cpe.packets.cl[id]
-				psz = cpe.psizes[id]
-			else
-				fmt = packets[id]
-			end
-			self.cpeRewrite = false
-			self.kickTimeout = CTIME + getKickTimeout()
-			pHandlers[id](self, struct.unpack(fmt, data:sub(2)))
 		end
 	end,
 	readRawData = function(self)
-		if self:isWebClient()then return end
+		if not self._buf then
+			self._buf = ffi.new('uint8_t[256]')
+		end
 		local cl = self:getClient()
 		local id = self.waitPacket
 		if not id then
-			local pId = receiveString(cl, 1)
-			if not self.handshaked and pId == 'G'then -- Probably websocket client
+			id = receiveString(cl, 1)
+			if not id then return end
+			id = id:byte()
+			if not self.handshaked and id == 71 then -- Probably websocket client
 				wsHandshake[cl] = {
 					state = 'initial',
 					headers = {},
@@ -424,45 +396,22 @@ local player_mt = {
 				self:destroy()
 				return
 			end
-			if pId then
-				id = pId:byte()
-				local psz = psizes[id]
-				if cpe.inited then
-					local cpesz = cpe.psizes[id]
-					if cpesz then
-						if self:isSupported(cpe.pexts[id])then
-							psz = cpesz
-							self.cpeRewrite = true
-						end
-					end
-				end
-				if psz then
-					self.waitPacket = id
-				else
-					self:kick(KICK_INVALIDPACKET)
-				end
-			end
+			self.waitPacket = id
 		end
 
 		if id then
-			local fmt, sz
-			if self.cpeRewrite then
-				fmt = cpe.packets.cl[id]
-				sz = cpe.psizes[id]
-			else
-				fmt = packets[id]
-				sz = psizes[id]
+			local psz = psizes[id]
+			local cpesz = cpe.psizes[id]
+			if cpesz then
+				if self:isSupported(cpe.pexts[id])then
+					psz = cpesz
+					fmt = cpe.packets.cl[id]
+				end
 			end
-			if not sz then
-				self:kick(KICK_INVALIDPACKET)
-				return
-			end
-			local data = receiveString(cl, sz)
-			if data then
+			local dlen = receiveMesg(cl, self._buf, psz)
+			if dlen == psz then
 				self.waitPacket = nil
-				self.cpeRewrite = false
-				self.kickTimeout = CTIME + getKickTimeout()
-				pHandlers[id](self, struct.unpack(fmt, data))
+				self:handlePacket(id, self._buf)
 			end
 		end
 	end,
@@ -648,7 +597,7 @@ local player_mt = {
 			if onPlayerDestroy then
 				onPlayerDestroy(self)
 			end
-			SERVER_ONLINE = SERVER_ONLINE - 1
+			SERVER_ONLINE = (SERVER_ONLINE or 1) - 1
 		end
 		-- Causes incorrect kick-packet sending
 		-- closeSock(self:getClient())

@@ -114,13 +114,6 @@ else
 	end
 end
 
-function toHex(str)
-	str = str:gsub('.', function(sym)
-		return string.format('%02x', sym:byte())
-	end)
-	return str
-end
-
 function mc2ansi(str)
 	local pattern = '(&%x)'
 	if str:find(pattern)then
