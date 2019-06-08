@@ -10,7 +10,9 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 	require('gzip')
 
 	if isWS then
-		require('helper')
+		struct = require('struct')
+		require('websocket')
+		wsLoad()
 	end
 
 	local map = ffi.cast('char*', mapaddr)
