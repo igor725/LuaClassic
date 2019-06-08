@@ -11,7 +11,7 @@ HC_TPV      = 5
 HC_JUMP     = 6
 
 local function hackControlFor(player, ...)
-	if player:isSupported('HackControl')then
+	if not player:isSupported('HackControl')then
 		return false
 	end
 	player:sendPacket(false, 0x20, ...)
