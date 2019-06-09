@@ -51,7 +51,7 @@ config = {
 		[mplys] = 'number',
 		[gmd] = 'string',
 		[hbt] = 'string',
-		[hbp] = 'boolean'
+		[hbp] = 'boolean',
 
 		[lseeds] = 'string',
 		[lnames] = 'string',
