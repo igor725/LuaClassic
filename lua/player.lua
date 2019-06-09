@@ -327,6 +327,7 @@ local player_mt = {
 			ay = floor(ay / 360 * 255)
 			ap = floor(ap / 360 * 255)
 		end
+		self.lposc = 0
 		local lp = self.lpos
 		lp.x, lp.y, lp.z = x / 32, y / 32, z / 32
 		self:sendPacket(self:isSupported('ExtEntityPositions'), 0x08, -1, x, y, z, ay, ap)
@@ -579,6 +580,7 @@ local player_mt = {
 		world.players = world.players + 1
 		world.emptyfrom = nil
 		self.isSpawned = true
+		self.lposc = 0
 		local lp = self.lpos
 		lp.x, lp.y, lp.z = x / 32, y / 32, z /32
 		if postPlayerSpawn then
