@@ -398,15 +398,6 @@ local player_mt = {
 			id = receiveString(cl, 1)
 			if not id then return end
 			id = id:byte()
-			if not self.handshaked and id == 71 then -- Probably websocket client
-				wsHandshake[cl] = {
-					state = 'initial',
-					headers = {},
-					ip = self.ip
-				}
-				self:destroy()
-				return
-			end
 			self.waitPacket = id
 		end
 
