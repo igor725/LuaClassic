@@ -310,6 +310,17 @@ function init()
 		wsLoad = nil
 	end
 
+	local mode = config:get('server-gamemode')
+	if mode and mode ~= 'none'and mode ~= ''then
+		log.info('Loading gamemode', mode)
+		local chunk, err = loadfile('gamemodes/' .. mode .. '.lua')
+		if chunk then
+			initGamemode = chunk()
+		else
+			log.fatal('Gamemode loading error:', err)
+		end
+	end
+
 	log.info(CON_WLOAD)
 	local sdlist = config:get('level-seeds')
 	sdlist = sdlist:split(',')
@@ -374,8 +385,8 @@ succ, err = xpcall(function()
 
 		if not INITED then
 			if init()then
-				if onInitDone then
-					onInitDone()
+				if initGamemode then
+					initGamemode()
 				end
 				hooks:call('onInitDone')
 				INITED = true
