@@ -431,7 +431,7 @@ function regenerateWorld(world, gentype, seed)
 					player:despawn()
 				end
 			end)
-			ffi.fill(world.ldata + 4, world.size)
+			ffi.fill(world.ldata + 4, world:getSize())
 			local t = gettime()
 			local succ, err = pcall(gen, world, seed)
 			if not succ then

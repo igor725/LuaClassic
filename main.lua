@@ -45,8 +45,10 @@ function onPlayerHandshakeDone(player)
 end
 
 function onPlayerDestroy(player)
-	local msg = printf(MESG_DISCONN, player, player:getLeaveReason())
-	newChatMessage('&e' .. msg)
+	if not player.silentKick then
+		local msg = printf(MESG_DISCONN, player, player:getLeaveReason())
+		newChatMessage('&e' .. msg)
+	end
 
 	if player:isHandshaked()then
 		player:saveWrite()
@@ -58,7 +60,12 @@ function onPlayerChatMessage(player, message)
 	if not message:startsWith('#', '>', '/')then
 		message = message:gsub('%%(%x)', '&%1')
 	end
-	log.chat(('%s: %s'):format(player, message))
+	local prefix = ''
+	if #player.prefix > 0 then
+		prefix = ('[%s&f] '):format(player.prefix)
+	end
+	local formattedMessage = ('%s%s: %s'):format(prefix, player, message)
+	log.chat(formattedMessage)
 
 	if starts == '#'then
 		if player:checkPermission('server.luaexec')then
@@ -122,10 +129,9 @@ function onPlayerChatMessage(player, message)
 			end
 		end
 	elseif starts == '!'then -- Message to global chat
-		newChatMessage(player:getName() .. ': ' .. message:sub(2))
+		newChatMessage(formattedMessage)
 	else -- Message to local chat
-		local cmsg = player:getName() .. ': ' .. message
-		newLocalChatMessage(player, cmsg)
+		newLocalChatMessage(player, formattedMessage)
 	end
 end
 

@@ -83,6 +83,7 @@ local pWriters = {
 	['lastOnlineTime'] = {
 		format = '>f'
 	},
+	['prefix'] = strdata,
 	['name'] = strdata,
 	['ip'] = strdata
 }
@@ -112,6 +113,7 @@ local pReaders = {
 	['lastOnlineTime'] = {
 		format = '>f'
 	},
+	['prefix'] = strdata,
 	['ip'] = {
 		format = 'string',
 		func = function(player, ip)
@@ -274,7 +276,10 @@ local player_mt = {
 			return true
 		end
 	end,
-	setName = function(self,name)
+	setChatPrefix = function(self, prefix)
+		self.prefix = prefix or''
+	end,
+	setName = function(self, name)
 		local canUse = true
 		playersForEach(function(p)
 			if p:getName():lower() == name:lower()then
@@ -289,13 +294,15 @@ local player_mt = {
 		end
 	end,
 
-	checkPermission = function(self, nm)
+	checkPermission = function(self, nm, silent)
 		local sect = nm:match('(.*)%.')
 		local perms = permissions:getFor(self:getUID())
 		if table.hasValue(perms, '*.*', sect .. '.*', nm)then
 			return true
 		else
-			self:sendMessage((MESG_PERMERROR):format(nm))
+			if not silent then
+				self:sendMessage((MESG_PERMERROR):format(nm))
+			end
 			return false
 		end
 	end,
@@ -611,10 +618,11 @@ local player_mt = {
 		-- closeSock(self:getClient())
 		self.handshaked = false
 	end,
-	kick = function(self, reason)
+	kick = function(self, reason, silent)
 		reason = reason or KICK_NOREASON
 		self:sendPacket(false, 0x0e, reason)
 		self.leavereason = reason
+		self.silentKick = silent
 		self.kicked = true
 		self:destroy()
 	end,
@@ -816,6 +824,7 @@ function newPlayer(cl)
 		kickTimeout = CTIME + getKickTimeout(),
 		connectTime = CTIME,
 		worldName = 'default',
+		prefix = '',
 		lpos = lpos,
 		lposc = 1,
 		pos = pos,

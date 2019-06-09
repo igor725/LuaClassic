@@ -154,6 +154,7 @@ local function getKiller(attacker, dmgtype)
 end
 
 local function survDamage(attacker, victim, damage, dmgtype)
+	if victim.isInGodmode then return false end
 	victim.health = victim.health - damage
 	survUpdateHealth(victim)
 	victim:setEnvProp(MEP_MAXFOGDIST, 1)
@@ -170,6 +171,7 @@ local function survDamage(attacker, victim, damage, dmgtype)
 			end
 		end)
 	end
+	return true
 end
 
 local function survBreakBlock(player, x, y, z)
@@ -261,7 +263,7 @@ return function()
 		not player:isSupported('EnvColors')or
 		not player:isSupported('EnvMapAspect')or
 		not player:isSupported('HeldBlock')then
-			player:kick('Your client does not support required CPE exts.')
+			player:kick('Your client does not support required CPE exts.', true)
 			return
 		end
 		for i = 1, 65 do
@@ -334,8 +336,8 @@ return function()
 
 	hooks:add('postPlayerSpawn', 'survival', function(player)
 		survUpdateHealth(player)
-		local noclip = player:checkPermission('player.noclip')
-		player:hackControl(0, (noclip and 1)or 0, 0, 0, 1, -1)
+		local h = (player:checkPermission('player.hacks')and 1)or 0
+		player:hackControl(h, h, h, h, h, -1)
 		survResumeTimers(player)
 	end)
 
@@ -405,7 +407,7 @@ return function()
 			if #args == 2 then
 				id = args[1]
 				count = args[2]
-			elseif args > 2 then
+			elseif #args > 2 then
 				player = getPlayerByName(args[1])
 				id = args[2]
 				count = args[3]
@@ -435,6 +437,16 @@ return function()
 		player.health = SURV_MAX_HEALTH
 		survUpdateHealth(player)
 		return ('Player &a%s&f healed.'):format(player)
+	end)
+
+	addCommand('god', function(isConsole, player, args)
+		if isConsole and #args < 1 then return false end
+		player = player or getPlayerByName(args[1])
+		if not player then return MESG_PLAYERNF end
+
+		player.isInGodmode = not player.isInGodmode
+		local state = (player.isInGodmode and ST_ON)or ST_OFF
+		return ('Player &a%s&f godmode %s.'):format(player, state)
 	end)
 
 	addCommand('full', function(isConsole, player, args)

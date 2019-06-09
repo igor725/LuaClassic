@@ -96,7 +96,7 @@ hooks:add('onInitDone', 'heartbeat', function()
 
 		function onPlayerAuth(player, name, key)
 			if key ~= md5func(_HEARTBEAT_SALT .. name)then
-				return false, 'Invalid session key'
+				return false, 'Invalid session, restart your client and try to connect again.'
 			end
 			player:setUID(name)
 			if not player:setName(name)then
