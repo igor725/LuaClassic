@@ -277,6 +277,9 @@ function bindSock(ip, port, backlog)
 	local ssasz = ffi.sizeof(ssa[0])
 
 	assert(setSockOpt(fd, SOL_TCP, TCP_NODELAY, 1))
+	if jit.os == 'Linux'then
+		assert(setSockOpt(fd, SOL_SOCKET, SO_REUSEADDR, 1))
+	end
 
 	if sck.bind(fd, cssa, ssasz) < 0 then
 		return false, geterror()
@@ -299,7 +302,6 @@ function bindSock(ip, port, backlog)
 		if ffi.C.fcntl(fd, 4, ffi.new('int', flags)) < 0 then
 			return false, geterror()
 		end
-		assert(setSockOpt(fd, SOL_SOCKET, SO_REUSEADDR, 1))
 	end
 
 	return fd
