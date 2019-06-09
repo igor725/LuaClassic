@@ -133,31 +133,24 @@ end
 
 local httpPattern = '^get%s+(.+)%s+http/%d%.%d$'
 
-function wsTestClient()
-	for cl, ip in pairs(testForWs)do
-		local hdr = receiveString(cl, 3, MSG_PEEK)
-		if hdr then
-			if hdr:lower() == 'get'then
-				wsHandshake[cl] = {
-					state = 'initial',
-					headers = {},
-					ip = ip
-				}
-			end
-			testForWs[cl] = nil
-			if not wsHandshake[cl]then
-				createPlayer(cl, ip, false)
-			end
-		end
-	end
-end
-
 function wsDoHandshake()
 	for cl, data in pairs(wsHandshake)do
 		local status = checkSock(cl)
 
 		if status == 'closed'then
 			wsHandshake[cl] = nil
+		end
+
+		if data.state == 'testws'then
+			local hdr = receiveString(cl, 3, MSG_PEEK)
+			if hdr then
+				if hdr:lower() == 'get'then
+					data.state = 'initial'
+				else
+					wsHandshake[cl] = nil
+					createPlayer(cl, ip, false)
+				end
+			end
 		end
 
 		if data.state == 'initial'then
@@ -172,7 +165,9 @@ function wsDoHandshake()
 				data.state = 'badrequest'
 				data.emsg = 'Not a GET request'
 			end
-		elseif data.state == 'headers'then
+		end
+
+		if data.state == 'headers'then
 			local ln = receiveLine(cl)
 			if ln == ''then
 				data.state = 'genresp'
@@ -186,7 +181,9 @@ function wsDoHandshake()
 					data.emsg = 'Invalid header'
 				end
 			end
-		elseif data.state == 'genresp'then
+		end
+
+		if data.state == 'genresp'then
 			local hdr = data.headers
 			local wskey = hdr['sec-websocket-key']
 			local wsver = hdr['sec-websocket-version']
@@ -209,7 +206,9 @@ function wsDoHandshake()
 			else
 				data.state = 'badrequest'
 			end
-		elseif data.state == 'badrequest'then
+		end
+
+		if data.state == 'badrequest'then
 			local msg = data.emsg or MESG_NOTWSCONN
 			local response =
 			('HTTP/1.1 400 Bad request\r\n' ..
@@ -295,8 +294,12 @@ end
 function acceptClients()
 	local cl, ip = acceptClient(server)
 	if not cl then return end
-	if testForWs then
-		testForWs[cl] = ip
+	if wsHandshake then
+		wsHandshake[cl] = {
+			state = 'testws',
+			headers = {},
+			ip = ip
+		}
 		return
 	end
 	createPlayer(cl, ip, false)
@@ -328,7 +331,6 @@ function init()
 
 	if config:get('allow-websocket')then
 		wsHandshake = {}
-		testForWs = {}
 		wsLoad()
 	else
 		wsLoad = nil
@@ -441,7 +443,6 @@ succ, err = xpcall(function()
 		serviceMessages()
 
 		if wsHandshake then
-			wsTestClient()
 			wsDoHandshake()
 		end
 
