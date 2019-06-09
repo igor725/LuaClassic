@@ -197,6 +197,7 @@ function wsDoHandshake()
 				local response =
 				('HTTP/1.1 101 Switching Protocols\r\n' ..
 				'Upgrade: websocket\r\nConnection: Upgrade\r\n' ..
+				'Sec-WebSocket-Protocol: ClassiCube\r\n' ..
 				'Sec-WebSocket-Accept: %s\r\n\r\n'):format(wskey)
 				sendMesg(cl, response)
 				wsHandshake[cl] = nil
