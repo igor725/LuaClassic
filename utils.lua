@@ -1,12 +1,10 @@
 ffi = require('ffi')
 C = ffi.C
 ffi.cdef[[
-	typedef unsigned char uchar;
-
 	typedef struct {
-		uchar r;
-		uchar g;
-		uchar b;
+		uint8_t r;
+		uint8_t g;
+		uint8_t b;
 	} color;
 	typedef struct {
 		float x;
@@ -23,7 +21,7 @@ ffi.cdef[[
 	int    ferror(void* stream);
 ]]
 
-local ext = (jit.os=='Windows'and'dll')or'so'
+local ext = (jit.os == 'Windows'and'dll')or'so'
 package.cpath = ('./bin/%s/?.%s;'):format(jit.arch, ext)
 package.path = './lua/?.lua;./?.lua'
 
@@ -37,7 +35,7 @@ function checkEnv(ev, val)
 end
 
 ENABLE_ANSI = checkEnv('ConEmuANSI', 'on')or checkEnv('TERM', 'xterm')or
-checkEnv('TERM', 'screen')
+checkEnv('TERM', 'screen')or checkEnv('TERM', 'linux')
 
 lanes = require('lanes').configure{
 	with_timers = false
@@ -56,9 +54,7 @@ function unpackFrom(file, fmt)
 end
 
 function writeString(f, v)
-	if #v > 255 then
-		error('String too long')
-	end
+	assert(#v < 255, 'String too long')
 	f:write(string.char(#v), v)
 end
 

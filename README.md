@@ -1,7 +1,7 @@
 # LuaClassic
 A small Minecraft Classic server written in Lua.
 
-Server supports ~~web clients over websockets and~~ (need to rewrite the network code) some CPE extensions.
+Server supports web clients over websockets and some CPE extensions.
 
 All of necessary libraries already compiled for Linux (arm, x86_64) and Windows mingw-w64 (x86, x86_64).
 

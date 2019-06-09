@@ -91,7 +91,7 @@ function wsLoad()
 		if sframe.state == WS_ST_RCVPL then
 			local plen = sframe.payload_len[0]
 			if sframe.payload == nil then
-				sframe.payload = ffi.new('uchar[?]', plen + 1)
+				sframe.payload = ffi.new('uint8_t[?]', plen + 1)
 			end
 			local sz = receiveMesg(sframe.fd, sframe.payload, plen)
 			if sz == plen then

@@ -9,11 +9,11 @@ local function getWorldPath(wname)
 end
 
 local function logWorldWarn(world, str)
-	log.warn(world:getName() .. ': ' .. str)
+	log.warn(world:getName(), ':', str)
 end
 
 local function logWorldError(world, str)
-	log.error(world:getName() .. ': ' .. str)
+	log.error(world:getName(), ':', str)
 end
 
 local world_mt = {
@@ -31,7 +31,7 @@ local world_mt = {
 		data.spawnpoint = data.spawnpoint or newVector(0, 0, 0)
 		data.spawnpointeye = data.spawnpointeye or newAngle(0, 0)
 		self.size = sz
-		self.ldata = ffi.new('uchar[?]', sz)
+		self.ldata = ffi.new('uint8_t[?]', sz)
 		local szint = ffi.new('int[1]', bswap(sz - 4))
 		ffi.copy(self.ldata, szint, 4)
 		self.data = data
