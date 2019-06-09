@@ -32,6 +32,7 @@ hooks:add('onInitDone', 'heartbeat', function()
 		_HEARTBEAT_PORT = 80
 		_HEARTBEAT_VALID = '^http://www%.classicube%.net/server/play/'
 		_HEARTBEAT_URL = '/server/heartbeat?name=%s&port=%d&users=%d&max=%d&salt=%s&public=%s&software=LuaClassic&web=true'
+		_HEARTBEAT_PUBLIC = config:get('heartbeat-public')
 		_HEARTBEAT_CLK = function()
 			local ip = gethostbyname(_HEARTBEAT_HOST)
 			local fd, err = connectSock(ip, _HEARTBEAT_PORT)
@@ -45,7 +46,7 @@ hooks:add('onInitDone', 'heartbeat', function()
 			local sMax = config:get('max-players')
 			local sSalt = randomStr(6)
 
-			local request = (_HEARTBEAT_URL):format(sName, sPort, sOnline, sMax, sSalt, false)
+			local request = (_HEARTBEAT_URL):format(sName, sPort, sOnline, sMax, sSalt, _HEARTBEAT_PUBLIC)
 			sendMesg(fd, ('GET %s HTTP/1.1\n'):format(request))
 			sendMesg(fd, ('Connection: close\n'):format(_HEARTBEAT_HOST))
 			sendMesg(fd, ('Accept: */*\n'):format(_HEARTBEAT_HOST))
