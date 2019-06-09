@@ -299,6 +299,7 @@ function bindSock(ip, port, backlog)
 		if ffi.C.fcntl(fd, 4, ffi.new('int', flags)) < 0 then
 			return false, geterror()
 		end
+		assert(setSockOpt(fd, SOL_SOCKET, SO_REUSEADDR, 1))
 	end
 
 	return fd
