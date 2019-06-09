@@ -187,14 +187,14 @@ addCommand('regen', function(isConsole, player, args)
 		gen = args[2]
 		seed = tonumber(args[3])
 	else
-		if #args >= 1 then
-			world = getWorld(player)
-			gen = args[1]
-			seed = tonumber(args[2])
-		elseif #args > 2 then
+		if #args > 2 then
 			world = getWorld(args[1])
 			gen = args[2]
 			seed = tonumber(args[3])
+		elseif #args >= 1 then
+			world = getWorld(player)
+			gen = args[1]
+			seed = tonumber(args[2])
 		else
 			return false
 		end

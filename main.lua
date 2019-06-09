@@ -312,7 +312,7 @@ function serviceMessages()
 end
 
 function init()
-	local loglvl  = tonumber(os.getenv('LOGLEVEL'))
+	local loglvl = tonumber(os.getenv('LOGLEVEL'))
 	if loglvl then
 		log.setLevel(loglvl)
 	end
@@ -413,6 +413,7 @@ succ, err = xpcall(function()
 			if init()then
 				if initGamemode then
 					initGamemode()
+					initGamemode = nil
 				end
 				hooks:call('onInitDone')
 				INITED = true
