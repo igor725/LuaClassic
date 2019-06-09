@@ -317,6 +317,11 @@ local player_mt = {
 	end,
 
 	teleportTo = function(self, x, y, z, ay, ap)
+		self.lposc = 0
+		local lp = self.lpos
+		local pos = self.pos
+		lp.x, lp.y, lp.z = x, y, z
+		pos.x, pos.y, pos.z = x, y, z
 		x = floor(x * 32)
 		y = floor(y * 32)
 		z = floor(z * 32)
@@ -327,9 +332,6 @@ local player_mt = {
 			ay = floor(ay / 360 * 255)
 			ap = floor(ap / 360 * 255)
 		end
-		self.lposc = 0
-		local lp = self.lpos
-		lp.x, lp.y, lp.z = x / 32, y / 32, z / 32
 		self:sendPacket(self:isSupported('ExtEntityPositions'), 0x08, -1, x, y, z, ay, ap)
 	end,
 	moveToSpawn = function(self)
