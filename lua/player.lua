@@ -398,15 +398,6 @@ local player_mt = {
 			id = receiveString(cl, 1)
 			if not id then return end
 			id = id:byte()
-			if not self.handshaked and id == 71 then -- Probably websocket client
-				wsHandshake[cl] = {
-					state = 'initial',
-					headers = {},
-					ip = self.ip
-				}
-				self:destroy()
-				return
-			end
 			self.waitPacket = id
 		end
 
@@ -419,10 +410,14 @@ local player_mt = {
 					fmt = cpe.packets.cl[id]
 				end
 			end
-			local dlen = receiveMesg(cl, self._buf, psz)
-			if dlen == psz then
-				self.waitPacket = nil
-				self:handlePacket(id, self._buf)
+			if psz then
+				local dlen = receiveMesg(cl, self._buf, psz)
+				if dlen == psz then
+					self.waitPacket = nil
+					self:handlePacket(id, self._buf)
+				end
+			else
+				self:kick(KICK_INVALIDPACKET)
 			end
 		end
 	end,

@@ -142,7 +142,26 @@ function onPlayerChatMessage(player, message)
 	end
 end
 
-local httpPattern = '^et%s+(.+)%s+http/%d%.%d$'
+local httpPattern = '^get%s+(.+)%s+http/%d%.%d$'
+
+function wsTestClient()
+	for cl, ip in pairs(testForWs)do
+		local hdr = receiveString(cl, 3, MSG_PEEK)
+		if hdr then
+			if hdr:lower() == 'get'then
+				wsHandshake[cl] = {
+					state = 'initial',
+					headers = {},
+					ip = ip
+				}
+			end
+			testForWs[cl] = nil
+			if not wsHandshake[cl]then
+				createPlayer(cl, ip, false)
+			end
+		end
+	end
+end
 
 function wsDoHandshake()
 	for cl, data in pairs(wsHandshake)do
@@ -287,6 +306,10 @@ end
 function acceptClients()
 	local cl, ip = acceptClient(server)
 	if not cl then return end
+	if testForWs then
+		testForWs[cl] = ip
+		return
+	end
 	createPlayer(cl, ip, false)
 end
 
@@ -316,6 +339,7 @@ function init()
 
 	if config:get('allow-websocket')then
 		wsHandshake = {}
+		testForWs = {}
 		wsLoad()
 	else
 		wsLoad = nil
@@ -428,6 +452,7 @@ succ, err = xpcall(function()
 		serviceMessages()
 
 		if wsHandshake then
+			wsTestClient()
 			wsDoHandshake()
 		end
 
