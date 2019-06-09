@@ -27,6 +27,7 @@ hooks:add('onInitDone', 'heartbeat', function()
 	local hbtype = config:get('heartbeat-type')
 	if hbtype == 'classicube'then
 		check4md5()
+		local sSalt = randomStr(6)
 		_HEARTBEAT_HOST = 'classicube.net'
 		_HEARTBEAT_DELAY = 50
 		_HEARTBEAT_PORT = 80
@@ -44,7 +45,6 @@ hooks:add('onInitDone', 'heartbeat', function()
 			local sOnline = getCurrentOnline()
 			local sPublic = config:get('heartbeat-public')
 			local sMax = config:get('max-players')
-			local sSalt = randomStr(6)
 
 			local request = (_HEARTBEAT_URL):format(sName, sPort, sOnline, sMax, sSalt, sPublic)
 			sendMesg(fd, ('GET %s HTTP/1.1\n'):format(request))
