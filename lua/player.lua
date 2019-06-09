@@ -410,10 +410,14 @@ local player_mt = {
 					fmt = cpe.packets.cl[id]
 				end
 			end
-			local dlen = receiveMesg(cl, self._buf, psz)
-			if dlen == psz then
-				self.waitPacket = nil
-				self:handlePacket(id, self._buf)
+			if psz then
+				local dlen = receiveMesg(cl, self._buf, psz)
+				if dlen == psz then
+					self.waitPacket = nil
+					self:handlePacket(id, self._buf)
+				end
+			else
+				self:kick(KICK_INVALIDPACKET)
 			end
 		end
 	end,
