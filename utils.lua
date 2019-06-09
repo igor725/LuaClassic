@@ -124,6 +124,12 @@ function printf(...)
 	return str
 end
 
+function getn(t)
+	local c = 0
+	for _ in pairs(t)do c = c + 1 end
+	return c
+end
+
 function getCurrentOnline()
 	return SERVER_ONLINE or 0
 end

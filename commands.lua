@@ -201,11 +201,6 @@ addCommand('regen', function(isConsole, player, args)
 	end
 
 	if not world then return WORLD_NE end
-	if isConsole then
-		log.info(CMD_GENSTART)
-	else
-		player:sendMessage(CMD_GENSTART)
-	end
 	local ret, tm = regenerateWorld(world, gen, seed)
 	if not ret then
 		return (CMD_GENERR):format(tm)

@@ -63,9 +63,7 @@ function onPlayerChatMessage(player, message)
 	if starts == '#'then
 		if player:checkPermission('server.luaexec')then
 			local code = message:sub(2)
-			if code:sub(1, 1) == '='then
-				code = 'return ' .. code:sub(2)
-			end
+			code = code:gsub('^=', 'return ')
 			local chunk, err = loadstring(code)
 			if chunk then
 				world = getWorld(player)
@@ -248,9 +246,7 @@ end
 function handleConsoleCommand(cmd)
 	if cmd:sub(1,1) == '#'then
 		local code = cmd:sub(2)
-		if code:sub(1,1) == '='then
-			code = 'return ' .. code:sub(2)
-		end
+		code = code:gsub('^=', 'return ')
 
 		local chunk, err = loadstring(code)
 		if chunk then
@@ -337,7 +333,7 @@ function init()
 	end
 
 	local mode = config:get('server-gamemode')
-	if mode and mode ~= 'none'and mode ~= ''then
+	if mode and #mode > 0 and mode ~= 'none'and mode ~= 'default'then
 		log.info('Loading gamemode', mode)
 		local chunk, err = loadfile('gamemodes/' .. mode .. '.lua')
 		if chunk then

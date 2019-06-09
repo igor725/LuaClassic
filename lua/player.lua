@@ -66,7 +66,7 @@ end
 
 local strdata = {format = 'string'}
 
-local savers = {
+local pWriters = {
 	['pos'] = {
 		format = '>fff',
 		func = function(v)
@@ -87,7 +87,7 @@ local savers = {
 	['ip'] = strdata
 }
 
-local readers = {
+local pReaders = {
 	['pos'] = {
 		format = '>fff',
 		func = function(player, x, y, z)
@@ -103,11 +103,10 @@ local readers = {
 	['worldName'] = {
 		format = 'string',
 		func = function(player, wname)
-			if getWorld(wname) == nil then
-				player.worldName = 'default'
-			else
-				player.worldName = wname
+			if getWorld(wname) ~= nil then
+				return wname
 			end
+			return 'default'
 		end
 	},
 	['lastOnlineTime'] = {
@@ -677,89 +676,37 @@ local player_mt = {
 	saveRead = function(self)
 		if self.isSpawned then return true end
 		local path = self:savePath()
-		local f, err, ec = io.open(path, 'rb')
-		if not f then
+		local file, err, ec = io.open(path, 'rb')
+		if not file then
 			if ec ~= 2 then
 				log.warn((SD_IOERR):format(path, 'reading', err))
 			end
 			return false
 		end
-		local fend = f:seek('end')
-		f:seek('set', 0)
-
-		if f:read(6) ~= 'pdata\1'then
-			log.warn((SD_HDRERR):format(self))
-			return false
-		end
-
-		while f:seek('cur') ~= fend do
-			local key = readString(f)
-			local len = unpackFrom(f, '>H')
-			local reader = readers[key]
-
-			if reader then
-				if reader.format == 'string'then
-					if reader.func then
-						reader.func(self, readString(f))
-					else
-						self[key] = readString(f)
-					end
-				else
-					if reader.func then
-						reader.func(self, unpackFrom(f, reader.format))
-					else
-						self[key] = unpackFrom(f, reader.format)
-					end
-				end
-			else
-				log.warn('No reader for', key)
-				local sd = self.skippedData or{}
-				sd[key] = f:read(len)
-				self.skippedData = sd
+		local sd = {}
+		local succ, err = parseData(file, pReaders, 'pdata\2', self, sd)
+		if not succ then
+			if err == PCK_INVALID_HEADER then
+				log.warn((SD_HDRERR):format(self))
+				return false
 			end
 		end
-
-		f:close()
+		self.skippedData = sd
+		file:close()
 		return true
 	end,
 	saveWrite = function(self)
 		local path = self:savePath()
-		local f, err = io.open(path, 'wb')
-		if not f then
+		local file, err = io.open(path, 'wb')
+		if not file then
 			log.error((SD_IOERR):format(path, 'writing', err))
 			return false
 		end
 
-		f:write('pdata\1')
-		for k, v in pairs(self)do
-			local saver = savers[k]
-			if saver then
-				local format = saver.format
-				writeString(f, k)
-				if format == 'string'then
-					packTo(f, '>H', #v + 1)
-					writeString(f, v)
-				else
-					packTo(f, '>H', struct.size(format))
-					if saver.func then
-						packTo(f, format, saver.func(v))
-					else
-						packTo(f, format, v)
-					end
-				end
-			end
-		end
+		local succ = writeData(file, pWriters, 'pdata\2', self, self.skippedData)
 
-		if self.skippedData then
-			for key, data in pairs(self.skippedData)do
-				writeString(f, key)
-				packTo(f, '>H', #data)
-				f:write(data)
-			end
-		end
-
-		f:close()
-		return true
+		file:close()
+		return succ
 	end,
 	isPlayer = true
 }
@@ -778,18 +725,18 @@ function getPlayerMT()
 	return player_mt
 end
 
-function saveAdd(key, fmt, rd, sv)
+function saveAdd(key, fmt, rd, wr)
 	if type(key) ~= 'string'then return false end
 	if type(fmt) ~= 'string'then return false end
 
-	readers[key] = {
+	pReaders[key] = {
 		format = fmt,
 		func = rd
 	}
 
-	savers[key] = {
+	pWriters[key] = {
 		format = fmt,
-		func = sv
+		func = wr
 	}
 
 	return true
