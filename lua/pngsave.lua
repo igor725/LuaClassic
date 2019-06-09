@@ -81,7 +81,7 @@ function pngSave(world, filename, flipx, flipz)
 
 		pngfile, err = io.open(filename or'hmap.png', 'wb')
 		if not pngfile then return false, err end
-		
+
 		LIB.png_init_io(png, pngfile)
 		LIB.png_set_IHDR(png, info, iw, ih, 8, 2, 0, 0, 0)
 		LIB.png_write_info(png, info)
@@ -91,7 +91,7 @@ function pngSave(world, filename, flipx, flipz)
 			zStart, zEnd, zStep = ih - 1, 0, -1
 		end
 
-		local irow = ffi.new('uchar[?]', 3 * iw)
+		local irow = ffi.new('uint8_t[?]', 3 * iw)
 		for z = zStart, zEnd, zStep do
 			for x = 0, iw - 1 do
 				local col = getBlockColor(x, z)

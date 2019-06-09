@@ -1,12 +1,10 @@
 local smotd = 'server-motd'
 local sname = 'server-name'
 local allowws = 'allow-websocket'
-local wsport = 'websocket-port'
 local sip = 'server-ip'
 local sport = 'server-port'
 local mplys = 'max-players'
-local lexec = 'lua-exec'
-local lwarn = 'luaexec-warn'
+local gmd = 'server-gamemode'
 
 local lseeds = 'level-seeds'
 local lnames = 'level-names'
@@ -24,12 +22,10 @@ config = {
 		[smotd] = DEF_SERVERMOTD,
 		[sname] = DEF_SERVERNAME,
 		[allowws] = true,
-		[wsport] = 25566,
 		[sip] = '0.0.0.0',
 		[sport] = 25565,
 		[mplys] = 20,
-		[lexec] = false,
-		[lwarn] = false,
+		[gmd] = 'none',
 
 		[lseeds] = '',
 		[lnames] = 'world',
@@ -46,12 +42,10 @@ config = {
 		[smotd] = 'string',
 		[sname] = 'string',
 		[allowws] = 'boolean',
-		[wsport] = 'number',
 		[sip] = 'string',
 		[sport] = 'number',
 		[mplys] = 'number',
-		[lexec] = 'boolean',
-		[lwarn] = 'boolean',
+		[gmd] = 'string',
 
 		[lseeds] = 'string',
 		[lnames] = 'string',

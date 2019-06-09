@@ -215,8 +215,8 @@ local player_mt = {
 		return self.ip
 	end,
 
-	setID = function(self,id)
-		if id > 0 then
+	setID = function(self, id)
+		if id >= 0 then
 			self.id = id
 			IDS[id] = self
 			players[self] = id
@@ -597,9 +597,8 @@ local player_mt = {
 		if self.isSpawned then
 			self:despawn()
 		end
-		local id = self:getID()
 		players[self] = nil
-		IDS[id] = nil
+		IDS[self:getID()] = nil
 		self.leavereason = self.leavereason or'Disconnected'
 
 		if self.handshaked then
@@ -637,6 +636,7 @@ local player_mt = {
 		end
 
 		if self.thread then
+			local pworld = getWorld(self)
 			if self.thread.status == 'error'then
 				log.error(self.thread[-1])
 				self.thread = nil
@@ -646,7 +646,7 @@ local player_mt = {
 				local mesg = self.thread[1]
 				if mesg then
 					if mesg == 0 then
-						local dim = getWorld(self):getData('dimensions')
+						local dim = pworld:getData('dimensions')
 						self:sendPacket(false, 0x04, dim.x, dim.y, dim.z)
 						self:spawn()
 					else
@@ -655,14 +655,13 @@ local player_mt = {
 					end
 					self.thread = nil
 					self.kickTimeout = CTIME + getKickTimeout()
-					getWorld(self).unloadLocked = false
+					pworld.unloadLocked = false
 				end
 			elseif self.thread.status == 'running' then --TODO: Improve this
-				getWorld(self).unloadLocked = true
+				pworld.unloadLocked = true
 			end
 			return
 		end
-
 
 		if self.handshakeStage2 then
 			self:sendMOTD()self:sendMap()
@@ -826,7 +825,7 @@ function getPlayerByID(id)
 end
 
 function findFreeID(player)
-	local s = 1
+	local s = 0
 	while IDS[s]do
 		s = s + 1
 		if s > 127 then
