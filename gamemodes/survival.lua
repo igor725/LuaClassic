@@ -1,6 +1,3 @@
-SURV_ENABLED = true
-if not SURV_ENABLED then return end
-
 SURV_MAX_HEALTH = 10
 SURV_MAX_OXYGEN = 10
 
@@ -237,12 +234,20 @@ local function survBlockAction(player, button, action, x, y, z)
 	end
 end
 
-function onInitDone()
-	log.info('Survival Test Gamemode Loaded!')
+local p_mt = getPlayerMT()
+
+p_mt.survDamage = function(player, attacker, dmg, dmgtype)
+	survDamage(attacker, player, dmg, dmgtype)
+end
+
+p_mt.survRespawn = survRespawn
+
+return function()
+	log.info('Survival Test gamemode Loaded!')
 	hooks:add('onPlayerCreate', 'survival', function(player)
 		player.lastClickedBlock = newVector(0, 0, 0)
 		player.currClickedBlock = newVector(0, 0, 0)
-		player.inventory = ffi.new('uchar[65]')
+		player.inventory = ffi.new('uint8_t[65]')
 		player.health = SURV_MAX_HEALTH
 		player.oxygen = SURV_MAX_OXYGEN
 		player.action = SURV_ACT_NONE
@@ -460,11 +465,3 @@ function onInitDone()
 		return ffi.string(inventory, 65)
 	end)
 end
-
-local p_mt = getPlayerMT()
-
-p_mt.survDamage = function(player, attacker, dmg, dmgtype)
-	survDamage(attacker, player, dmg, dmgtype)
-end
-
-p_mt.survRespawn = survRespawn
