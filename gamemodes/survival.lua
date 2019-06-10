@@ -431,7 +431,7 @@ return function()
 
 	addCommand('heal', function(isConsole, player, args)
 		if isConsole and #args < 1 then return false end
-		player = player or getPlayerByName(args[1])
+		player = getPlayerByName(args[1])or player
 		if not player then return MESG_PLAYERNF end
 
 		player.health = SURV_MAX_HEALTH
@@ -441,7 +441,7 @@ return function()
 
 	addCommand('god', function(isConsole, player, args)
 		if isConsole and #args < 1 then return false end
-		player = player or getPlayerByName(args[1])
+		player = getPlayerByName(args[1])or player
 		if not player then return MESG_PLAYERNF end
 
 		player.isInGodmode = not player.isInGodmode
@@ -470,6 +470,11 @@ return function()
 
 	saveAdd('health', '>f')
 	saveAdd('oxygen', '>f')
+	saveAdd('isInGodmode', 'b', function(player, val)
+		return val == 1
+	end, function(val)
+		return val and 1 or 0
+	end)
 
 	saveAdd('inventory', 'c65', function(player, data)
 		ffi.copy(player.inventory, data, 65)
