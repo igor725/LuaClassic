@@ -401,7 +401,7 @@ addCommand('help', function(isConsole)
 		end
 		print(str)
 	end
-	return 'Online help page: &ahttp://igvx.ru/lc_help'
+	return 'Online help page: &ahttps://github.com/igor725/LuaClassic/wiki'
 end)
 
 addAlias('help', '?')
