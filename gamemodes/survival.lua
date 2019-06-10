@@ -66,6 +66,23 @@ local survMiningSpeed = {
 	[54] = 0
 }
 
+local survMiningSpeedWithTool = {
+	[1]  =  1.15,
+	[4]  =  1.5,
+	[5]  =  3,
+	[14] =  2.25,
+	[15] =  2.25,
+	[16] =  2.25,
+
+	[41] = 2.25,
+	[42] = 3.75,
+	[43] = 3,
+	[44] = 3,
+	[45] = 3,
+	[48] = 3,
+	[50] = 3,
+}
+
 local survCraft = {
 	[1] = {
 		needs = {
@@ -102,15 +119,15 @@ local survCraft = {
 	},
 	[41] = {
 		needs = {
-			[54] = 1,
-			[14] = 1
+			[5] = 1,
+			[14] = 3
 		},
 		count = 1
 	},
 	[42] = {
 		needs = {
-			[54] = 1,
-			[15] = 1
+			[5] = 1,
+			[15] = 3
 		},
 		count = 1
 	},
@@ -280,7 +297,8 @@ local function survBreakBlock(player, x, y, z)
 	local world = getWorld(player)
 	local bid = world:getBlock(x, y, z)
 
-	if player:getHeldBlock() ~= bid then
+	local heldBlock = player:getHeldBlock()
+	if heldBlock ~= bid and heldBlock ~= 41 and heldBlock ~= 42 then
 		player:holdThis(bid)
 	end
 
@@ -314,6 +332,20 @@ local function survBlockAction(player, button, action, x, y, z)
 				end
 				if player:getFluidLevel() > 1 then
 					tmSpeed = tmSpeed * 5
+				end
+				if player:getHeldBlock() == 41 and player.inventory[41] > 0 then
+					if survMiningSpeedWithTool[bid] then
+						tmSpeed = survMiningSpeedWithTool[bid] / 60
+						print(tmSpeed)
+					else
+						tmSpeed = tmSpeed / 12
+					end
+				elseif player:getHeldBlock() == 42 and player.inventory[42] > 0 then
+					if survMiningSpeedWithTool[bid] then
+						tmSpeed = survMiningSpeedWithTool[bid] / 30
+					else
+						tmSpeed = tmSpeed / 6
+					end
 				end
 				timer.Create(player:getName() .. '_surv_brk', 11, tmSpeed, function()
 					local lb = player.lastClickedBlock
