@@ -54,6 +54,73 @@ local survMiningSpeed = {
 	[54] = 0
 }
 
+local survCraft = {
+	[1] = {
+		needs = {
+			[54] = 1,
+			[4] = 1
+		},
+		count = 1
+	},
+	[5] = {
+		needs = {
+			[17] = 1
+		},
+		count = 4
+	},
+	[6] = {
+		needs = {
+			[18] = 1
+		},
+		count = 1
+	},
+	[13] = {
+		needs = {
+			[3] = 1,
+			[12] = 1
+		},
+		count = 1
+	},
+	[20] = {
+		needs = {
+			[54] = 1,
+			[12] = 1
+		},
+		count = 1
+	},
+	[41] = {
+		needs = {
+			[54] = 1,
+			[14] = 1
+		},
+		count = 1
+	},
+	[42] = {
+		needs = {
+			[54] = 1,
+			[15] = 1
+		},
+		count = 1
+	},
+	[43] = {
+		needs = {
+			[44] = 2
+		},
+		count = 1
+	},
+	[47] = {
+		needs = {
+			[5] = 4
+		}
+	},
+	[50] = {
+		needs = {
+			[4] = 1
+		},
+		count = 2
+	}
+}
+
 for i = 37, 40 do
 	survMiningSpeed[i] = 0
 end
@@ -116,6 +183,26 @@ local function survRespawn(player)
 	survUpdateHealth(player)
 	survStopBreaking(player)
 	player:moveToSpawn()
+end
+
+local function survCanCraft(player, bid, quantity)
+	local inv = player.inventory
+	local recipe = survCraft[bid]
+	local lacks
+
+	if recipe then
+		local canCraft = true
+		for nId, ammount in pairs(recipe.needs)do
+			local cnt = quantity * ammount
+			if inv[nId] < cnt then
+				canCraft = false
+				lacks = lacks or''
+				lacks = lacks .. ('%d %s, '):format(cnt - inv[nId], survBlocknames[nId])
+			end
+		end
+		return canCraft, lacks and lacks:sub(1, -3)
+	end
+	return false
 end
 
 local timers = {'_blocksdamage', '_hp_regen'}
@@ -437,6 +524,80 @@ return function()
 		player.health = SURV_MAX_HEALTH
 		survUpdateHealth(player)
 		return ('Player &a%s&f healed.'):format(player)
+	end)
+
+	addCommand('craft', function(isConsole, player, args)
+		if isConsole then return CON_INGAMECMD end
+
+		local quantity = tonumber(args[1])or 1
+		local bId = player:getHeldBlock()
+		local recipe = survCraft[bId]
+		local inv = player.inventory
+
+		if recipe then
+			local oQuantity = recipe.count * quantity
+			local bName = survBlocknames[bId]
+			if(64 - inv[bId]) < (quantity * recipe.count)then
+				return 'You can\'t take more than 64 blocks of ' .. bName
+			end
+			local canBeCrafted, lacks = survCanCraft(player, bId, quantity)
+			if canBeCrafted then
+				for nId, ammount in pairs(recipe.needs)do
+					inv[nId] = inv[nId] - ammount * quantity
+				end
+				inv[bId] = inv[bId] + oQuantity
+				survUpdateBlockInfo(player)
+				return ('%d block(-s) of %s crafted'):format(oQuantity, bName)
+			else
+				return ('You need %s to craft %s'):format(lacks, bName)
+			end
+		else
+			return 'Selected block can\'t be crafted'
+		end
+	end)
+
+	addCommand('drop', function(isConsole, player, args)
+		if isConsole then return CON_INGAMECMD end
+
+		local bId = player:getHeldBlock()
+		if bId < 1 or bId > 65 then
+			return
+		end
+
+		if #args > 1 then
+			local target = getPlayerByName(args[1])
+			local quantity = tonumber(args[2])or 1
+			local x, y, z = player:getPos()
+
+			if not target then
+				return MESG_PLAYERNF
+			end
+			if distance(x, y, z, target:getPos()) > 6 then
+				return 'This player is too far away from you.'
+			end
+
+			local inv1 = player.inventory
+			local inv2 = target.inventory
+			quantity = math.min(quantity, 64 - inv2[bId])
+			if quantity < 1 then
+				return
+			end
+			if inv1[bId] >= quantity then
+				inv1[bId] = inv1[bId] - quantity
+				inv2[bId] = inv2[bId] + quantity
+				survUpdateBlockInfo(player)
+				survUpdateBlockInfo(target)
+				return ('Dropped %d %s blocks to %s'):format(quantity, survBlocknames[bId], target)
+			end
+		else
+			local inv = player.inventory
+			local quantity = tonumber(args[1])or 1
+			if inv[bId] >= quantity then
+				inv[bId] = inv[bId] - quantity
+				survUpdateBlockInfo(player)
+				return ('Dropped %d %s blocks'):format(quantity, survBlocknames[bId])
+			end
+		end
 	end)
 
 	addCommand('god', function(isConsole, player, args)
