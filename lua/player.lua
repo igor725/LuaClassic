@@ -232,27 +232,21 @@ local player_mt = {
 	end,
 	setPos = function(self, x, y, z)
 		local pos = self.pos
-		local lp = self.lpos
 		if not self.isSpawned then
 			pos.x, pos.y, pos.z = x, y, z
-			lp.x, lp.y, lp.z = x, y, z
 			return
 		end
 
-		local lx, ly, lz = lp.x, lp.y, lp.z
-		if lx ~= x or ly ~= y or lz ~= z then
-			pos.x, pos.y, pos.z = x, y, z
+		if pos.x ~= x or pos.y ~= y or pos.z ~= z then
 			if self.isSpawned then
-				local dx, dy, dz = lx - x, ly - y, lz - z
+				local dx, dy, dz = x - pos.x, y - pos.y, z - pos.z
+				pos.x, pos.y, pos.z = x, y, z
+				
 				hooks:call('onPlayerMove', self, dx, dy, dz)
 				if onPlayerMove then
 					onPlayerMove(self, dx, dy, dz)
 				end
-				self.lposc = self.lposc + 1
-				if self.lposc > 2 then
-					lp.x, lp.y, lp.z = x, y, z
-					self.lposc = 1
-				end
+				
 				checkForPortal(self, x, y, z)
 			end
 			return true
@@ -324,10 +318,7 @@ local player_mt = {
 	end,
 
 	teleportTo = function(self, x, y, z, ay, ap)
-		self.lposc = 0
-		local lp = self.lpos
 		local pos = self.pos
-		lp.x, lp.y, lp.z = x, y, z
 		pos.x, pos.y, pos.z = x, y, z
 		x = floor(x * 32)
 		y = floor(y * 32)
@@ -592,9 +583,6 @@ local player_mt = {
 		world.players = world.players + 1
 		world.emptyfrom = nil
 		self.isSpawned = true
-		self.lposc = 0
-		local lp = self.lpos
-		lp.x, lp.y, lp.z = x / 32, y / 32, z /32
 		if postPlayerSpawn then
 			postPlayerSpawn(self)
 		end
@@ -822,7 +810,6 @@ function newPlayer(cl)
 	local sx, sy, sz, syaw, spitch = dworld:getSpawnPoint()
 	local pos = newVector(sx, sy, sz)
 	local eye = newAngle(syaw, spitch)
-	local lpos = newVector(sx, sy, sz)
 
 	return setmetatable({
 		kickTimeout = CTIME + getKickTimeout(),
@@ -830,8 +817,6 @@ function newPlayer(cl)
 		worldName = 'default',
 		messageBuffer = '',
 		prefix = '',
-		lpos = lpos,
-		lposc = 1,
 		pos = pos,
 		lastOnlineTime = 0,
 		isSpawned = false,
