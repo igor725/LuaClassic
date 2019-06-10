@@ -610,6 +610,7 @@ local player_mt = {
 		self.leavereason = self.leavereason or'Disconnected'
 
 		if self.handshaked then
+			self.lastOnlineTime = self:getOnlineTime()
 			cpe:extCallHook('onPlayerDestroy', self)
 			hooks:call('onPlayerDestroy', self)
 			if onPlayerDestroy then
