@@ -1,6 +1,14 @@
 permissions = {
 	list = {
-		default = {}
+		default = {
+			'commands.list',
+			'commands.info',
+			'commands.seed',
+			'commands.spawn',
+			'commands.help',
+			'commands.clear',
+			'commands.craft',
+		}
 	}
 }
 

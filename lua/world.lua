@@ -16,6 +16,141 @@ local function logWorldError(world, str)
 	log.error(world:getName(), ':', str)
 end
 
+local wReaders = {
+	['dimensions'] = {
+		format = '>HHH',
+		func = function(wdata, x, y, z)
+			local dim = newVector(x, y, z)
+			local wsize = gBufSize(dim)
+			wdata.size = wsize
+			return dim
+		end
+	},
+	['spawnpoint'] = {
+		format = '>fff',
+		func = function(wdata, x, y, z)
+			return newVector(x, y, z)
+		end
+	},
+	['spawnpointeye'] = {
+		format = '>ff',
+		func = function(wdata, yaw, pitch)
+			local sp = wdata.spawnpointeye
+			if sp then
+				sp.yaw, sp.pitch = yaw, pitch
+			else
+				return newAngle(yaw, pitch)
+			end
+		end
+	},
+	['isNether'] = {
+		format = 'b',
+		func = function(wdata, val)
+			return val == 1
+		end
+	},
+	['readonly'] = {
+		format = 'b',
+		func = function(wdata, val)
+			return val == 1
+		end
+	},
+	['portals'] = {
+		format = 'tbl:>HHHHHHHc0',
+		func = function(wdata, x1, y1, z1, x2, y2, z2, pName)
+			wdata.portals = wdata.portals or{}
+			table.insert(wdata.portals, {
+				pt1 = newVector(x1, y1, z1),
+				pt2 = newVector(x2, y2, z2),
+				tpTo = pName
+			})
+		end
+	},
+	['colors'] = {
+		format = 'tbl:>BBBB',
+		func = function(wdata, t, r, g, b)
+			wdata.colors = wdata.colors or{}
+			wdata.colors[t] = newColor(r, g, b)
+		end
+	},
+	['map_aspects'] = {
+		format = 'tbl:>BI',
+		func = function(wdata, t, v)
+			wdata.map_aspects = wdata.map_aspects or{}
+			wdata.map_aspects[t] = v
+		end
+	},
+	['weather'] = {
+		format = 'b'
+	},
+	['seed'] = {
+		format = '>I'
+	},
+	['texPack'] = {
+		format = 'string'
+	}
+}
+
+local wWriters = {
+	['dimensions'] = {
+		format = '>HHH',
+		func = function(d)
+			return d.x, d.y, d.z
+		end
+	},
+	['spawnpoint'] = {
+		format = '>fff',
+		func = function(s)
+			return s.x, s.y, s.z
+		end
+	},
+	['spawnpointeye'] = {
+		format = '>ff',
+		func = function(e)
+			return e.yaw, e.pitch
+		end
+	},
+	['isNether'] = {
+		format = 'b',
+		func = function(v)
+			return v and 1 or 0
+		end
+	},
+	['readonly'] = {
+		format = 'b',
+		func = function(v)
+			return v and 1 or 0
+		end
+	},
+	['portals'] = {
+		format = 'tbl:>HHHHHHHc0',
+		func = function(_, p)
+			return
+				p.pt1.x, p.pt1.y, p.pt1.z,
+				p.pt2.x, p.pt2.y, p.pt2.z,
+				#p.tpTo, p.tpTo
+		end
+	},
+	['colors'] = {
+		format = 'tbl:>BBBB',
+		func = function(_, t, c)
+			return t, c.r, c.g, c.b
+		end
+	},
+	['map_aspects'] = {
+		format = 'tbl:>BI'
+	},
+	['weather'] = {
+		format = 'B'
+	},
+	['seed'] = {
+		format = '>I'
+	},
+	['texPack'] = {
+		format = 'string'
+	}
+}
+
 local world_mt = {
 	__tostring = function(self)
 		return self:getName()
@@ -30,7 +165,7 @@ local world_mt = {
 		end
 		data.spawnpoint = data.spawnpoint or newVector(0, 0, 0)
 		data.spawnpointeye = data.spawnpointeye or newAngle(0, 0)
-		self.size = sz
+		data.size = sz
 		self.ldata = ffi.new('uint8_t[?]', sz)
 		local szint = ffi.new('int[1]', bswap(sz - 4))
 		ffi.copy(self.ldata, szint, 4)
@@ -41,63 +176,8 @@ local world_mt = {
 		if not self.ldata then return true end
 		local pt = self:getPath()
 		local wh = assert(io.open(pt, 'wb'))
-		wh:write('LCW\0')
-		for k, v in pairs(self.data)do
-			if k == 'dimensions'then
-				packTo(wh, '>bHHH', 0, v.x, v.y, v.z)
-			elseif k == 'spawnpoint'then
-				packTo(wh, '>bfff', 1, v.x, v.y, v.z)
-			elseif k == 'spawnpointeye'then
-				packTo(wh, '>bff', 2, v.yaw, v.pitch)
-			elseif k == 'isNether'then
-				packTo(wh, '>bb', 3, (v and 1)or 0)
-			elseif k == 'colors'then
-				for id, c in pairs(v)do
-					packTo(wh, 'bbbbb', 4, id, c.r, c.g, c.b)
-				end
-			elseif k == 'map_aspects'then
-				for id, val in pairs(v)do
-					packTo(wh, '>bbI', 5, id, val)
-				end
-			elseif k == 'weather'then
-				packTo(wh, '>bb', 6, v)
-			elseif k == 'readonly'then
-				packTo(wh, '>bb', 7, (v and 1)or 0)
-			elseif k == 'portals'then
-				for id, val in pairs(v)do
-					local p1 = val.pt1
-					local p2 = val.pt2
-					packTo(wh, '>bHHHHHHH', 8, p1.x, p1.y, p1.z,
-					p2.x, p2.y, p2.z, #val.tpTo)
-					wh:write(val.tpTo)
-				end
-			elseif k == 'texPack'then
-				if #v > 0 and #v < 65 then
-					wh:write(string.char(9, #v))
-					wh:write(v)
-				else
-					logWorldWarn(self, WORLD_TPSTRLEN)
-				end
-			elseif k == 'wscripts'then
-				for name, script in pairs(v)do
-					local slen = math.min(#script.body, 65535)
-					local nlen = math.min(#name, 255)
-					if slen > 0 and nlen > 0 then
-						packTo(wh, '>bBH', 10, nlen, slen)
-						wh:write(name)
-						wh:write(script.body)
-					else
-						logWorldWarn(self, WORLD_SCRSVERR)
-					end
-				end
-			elseif k == 'seed'then
-				packTo(wh, '>bd', 11, tonumber(v)or -1)
-			else
-				logWorldWarn(self, (WORLD_MAPOPT):format(k))
-			end
-		end
-		wh:write('\255')
-		local gStatus, gErr = gz.compress(self.ldata, self.size, 4, function(out, stream)
+		writeData(wh, wWriters, 'wdata\0', self.data, self.skipped)
+		local gStatus, gErr = gz.compress(self.ldata, self:getData('size'), 4, function(out, stream)
 			local chunksz = 1024 - stream.avail_out
 			C.fwrite(out, 1, chunksz, wh)
 			if C.ferror(wh) ~= 0 then
@@ -138,7 +218,7 @@ local world_mt = {
 		if x < 0 or y < 0 or z < 0 then return false end
 		local dx, dy, dz = self:getDimensions()
 		local offset = math.floor(z * dx + y * (dx * dz) + x + 4)
-		if offset > 3 and offset < self.size then
+		if offset > 3 and offset < self:getData('size') then
 			return offset
 		end
 		return false
@@ -156,7 +236,7 @@ local world_mt = {
 		return getAddr(self.ldata)
 	end,
 	getSize = function(self)
-		return self.size
+		return self:getData('size')
 	end,
 	getPath = function(self)
 		return getWorldPath(self:getName())
@@ -630,125 +710,13 @@ local world_mt = {
 		end)
 	end,
 	readLevelInfo = function(self, wh)
-		if wh:read(4) == 'LCW\0'then
-			self.data = {}
-			while true do
-				local id = wh:read(1)
-
-				if id == '\0'then
-					local dim = newVector(unpackFrom(wh, '>HHH'))
-					local sz = gBufSize(dim)
-					self.data.dimensions = dim
-					self.ldata = ffi.new('char[?]', sz)
-					self.size = sz
-				elseif id == '\1'then
-					local sp = self.data.spawnpoint
-					if sp then
-						sp.x, sp.y, sp.z = unpackFrom(wh, '>fff')
-					else
-						self:setData('spawnpoint', newVector(unpackFrom(wh, '>fff')))
-					end
-				elseif id == '\2'then
-					local sp = self.data.spawnpointeye
-					if sp then
-						sp.yaw, sp.pitch = unpackFrom(wh, '>ff')
-					else
-						self:setData('spawnpointeye', newAngle(unpackFrom(wh, '>ff')))
-					end
-				elseif id == '\3'then
-					self:setData('isNether', wh:read(1) == '\1')
-				elseif id == '\4'then
-					self:setEnvColor(unpackFrom(wh, 'BBBB'))
-				elseif id == '\5'then
-					self:setEnvProp(unpackFrom(wh, '>bI'))
-				elseif id == '\6'then
-					self:setData('weather', wh:read(1):byte())
-				elseif id == '\7'then
-					self:setData('readonly', wh:read(1) == '\1')
-				elseif id == '\8'then
-					self.data.portals = self.data.portals or{}
-					local p1x, p1y, p1z,
-					p2x, p2y, p2z, strsz = unpackFrom(wh, '>HHHHHHH')
-					table.insert(self.data.portals, {
-						pt1 = newVector(p1x, p1y, p1z),
-						pt2 = newVector(p2x, p2y, p2z),
-						tpTo = wh:read(strsz)
-					})
-				elseif id == '\9'then
-					local len = wh:read(1):byte()
-					self:setTexPack(wh:read(len))
-				elseif id == '\10'then
-					local nl, sl = unpackFrom(wh, '>BH')
-					local name = wh:read(nl)
-					local body = wh:read(sl)
-					self:addScript(name, body)
-					self:executeScript(name)
-				elseif id == '\11'then
-					self:setData('seed', unpackFrom(wh, '>d'))
-				elseif id == '\255'then
-					break
-				else
-					logWorldError(self, WORLD_CORRUPT)
-					return false
-				end
-			end
+		self.data = {}
+		self.skipped = {}
+		if parseData(wh, wReaders, 'wdata\0', self.data, self.skipped)then
+			self.ldata = ffi.new('uint8_t[?]', self:getData('size'))
 			return true
 		end
 		return false
-	end,
-
-	addScript = function(self, name, body)
-		if type(name) ~= 'string'or #name > 255 then return false end
-		if type(body) ~= 'string'or #body > 65535 then return false end
-		self.data.wscripts = self.data.wscripts or{}
-		self.data.wscripts[name] = {
-			body = body
-		}
-		return true
-	end,
-	addScriptFile = function(self, name, filename)
-		if type(name) ~= 'string'or #name > 255 then return false end
-		if type(filename) ~= 'string'then return false end
-		local f = io.open(filename, 'rb')
-		if not f then return false end
-		local body = f:read(65535)
-		f:close()
-		self.data.wscripts = self.data.wscripts or{}
-		self.data.wscripts[name] = {
-			body = body
-		}
-		return true
-	end,
-	removeScript = function(self, name)
-		if not self.data.wscripts then return false end
-		self.data.wscripts[name] = nil
-		return true
-	end,
-	executeScript = function(self, name)
-		if not self.data.wscripts then return false end
-		local sctbl = self.data.wscripts[name]
-		if not sctbl then return false end
-
-		if config:get('world-scripts')then
-			local scret, succ
-			local chunk, err = loadstring(sctbl.body, name)
-			if not chunk then
-				sctbl.succ = false
-				sctbl.ret = err
-			else
-				succ, scret = pcall(chunk, self)
-			end
-			sctbl.ret = scret
-			sctbl.succ = succ
-			return true
-		end
-		return false
-	end,
-	scriptStatus = function(self, name)
-		if not self.data.wscripts then return false end
-		local sc = self.data.wscripts[name]
-		if not sc then return false end
-		return sc.succ, sc.ret
 	end,
 
 	isWorld = true,
@@ -847,7 +815,7 @@ function regenerateWorld(world, gentype, seed)
 					player:despawn()
 				end
 			end)
-			ffi.fill(world.ldata + 4, world.size)
+			ffi.fill(world.ldata + 4, world:getSize())
 			local t = gettime()
 			local succ, err = pcall(gen, world, seed)
 			if not succ then

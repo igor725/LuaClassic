@@ -39,14 +39,16 @@ function onPlayerAuth(player, name, key)
 	return true
 end
 
-function onPlayerHandshakeDone(player)
+function prePlayerFirstSpawn(player)
 	local msg = printf(MESG_CONN, player)
 	newChatMessage('&e' .. msg)
 end
 
 function onPlayerDestroy(player)
-	local msg = printf(MESG_DISCONN, player, player:getLeaveReason())
-	newChatMessage('&e' .. msg)
+	if not player.silentKick then
+		local msg = printf(MESG_DISCONN, player, player:getLeaveReason())
+		newChatMessage('&e' .. msg)
+	end
 
 	if player:isHandshaked()then
 		player:saveWrite()
@@ -69,14 +71,18 @@ function onPlayerChatMessage(player, message)
 	if not message:startsWith('#', '>', '/')then
 		message = message:gsub('%%(%x)', '&%1')
 	end
-	log.chat(('%s: %s'):format(player, message))
+	local prefix = ''
+	if #player.prefix > 0 then
+		prefix = ('[%s&f] '):format(player.prefix)
+	end
+	if starts == '!'then message = message:sub(2)end
+	local formattedMessage = ('%s%s: %s'):format(prefix, player, message)
+	log.chat(formattedMessage)
 
 	if starts == '#'then
 		if player:checkPermission('server.luaexec')then
 			local code = message:sub(2)
-			if code:sub(1, 1) == '='then
-				code = 'return ' .. code:sub(2)
-			end
+			code = code:gsub('^=', 'return ')
 			local chunk, err = loadstring(code)
 			if chunk then
 				world = getWorld(player)
@@ -134,34 +140,28 @@ function onPlayerChatMessage(player, message)
 				player:sendMessage(WORLD_NE)
 			end
 		end
+	elseif starts == '@'then
+		local name, message = message:match('^@(.+)%s(.+)')
+		if name then
+			local target = getPlayerByName(name)
+			if target == player then
+				player:sendMessage(CMD_WHISPERSELF)
+				return
+			end
+			if target then
+				target:sendMessage((CMD_WHISPER):format(player, message))
+			else
+				player:sendMessage(MESG_PLAYERNF)
+			end
+		end
 	elseif starts == '!'then -- Message to global chat
-		newChatMessage(player:getName() .. ': ' .. message:sub(2))
+		newChatMessage('&2G&f ' .. formattedMessage)
 	else -- Message to local chat
-		local cmsg = player:getName() .. ': ' .. message
-		newLocalChatMessage(player, cmsg)
+		newLocalChatMessage(player, formattedMessage)
 	end
 end
 
 local httpPattern = '^get%s+(.+)%s+http/%d%.%d$'
-
-function wsTestClient()
-	for cl, ip in pairs(testForWs)do
-		local hdr = receiveString(cl, 3, MSG_PEEK)
-		if hdr then
-			if hdr:lower() == 'get'then
-				wsHandshake[cl] = {
-					state = 'initial',
-					headers = {},
-					ip = ip
-				}
-			end
-			testForWs[cl] = nil
-			if not wsHandshake[cl]then
-				createPlayer(cl, ip, false)
-			end
-		end
-	end
-end
 
 function wsDoHandshake()
 	for cl, data in pairs(wsHandshake)do
@@ -169,6 +169,18 @@ function wsDoHandshake()
 
 		if status == 'closed'then
 			wsHandshake[cl] = nil
+		end
+
+		if data.state == 'testws'then
+			local hdr = receiveString(cl, 3, MSG_PEEK)
+			if hdr then
+				if hdr:lower() == 'get'then
+					data.state = 'initial'
+				else
+					wsHandshake[cl] = nil
+					createPlayer(cl, data.ip, false)
+				end
+			end
 		end
 
 		if data.state == 'initial'then
@@ -183,7 +195,9 @@ function wsDoHandshake()
 				data.state = 'badrequest'
 				data.emsg = 'Not a GET request'
 			end
-		elseif data.state == 'headers'then
+		end
+
+		if data.state == 'headers'then
 			local ln = receiveLine(cl)
 			if ln == ''then
 				data.state = 'genresp'
@@ -197,7 +211,9 @@ function wsDoHandshake()
 					data.emsg = 'Invalid header'
 				end
 			end
-		elseif data.state == 'genresp'then
+		end
+
+		if data.state == 'genresp'then
 			local hdr = data.headers
 			local wskey = hdr['sec-websocket-key']
 			local wsver = hdr['sec-websocket-version']
@@ -213,6 +229,7 @@ function wsDoHandshake()
 				local response =
 				('HTTP/1.1 101 Switching Protocols\r\n' ..
 				'Upgrade: websocket\r\nConnection: Upgrade\r\n' ..
+				'Sec-WebSocket-Protocol: ClassiCube\r\n' ..
 				'Sec-WebSocket-Accept: %s\r\n\r\n'):format(wskey)
 				sendMesg(cl, response)
 				wsHandshake[cl] = nil
@@ -220,7 +237,9 @@ function wsDoHandshake()
 			else
 				data.state = 'badrequest'
 			end
-		elseif data.state == 'badrequest'then
+		end
+
+		if data.state == 'badrequest'then
 			local msg = data.emsg or MESG_NOTWSCONN
 			local response =
 			('HTTP/1.1 400 Bad request\r\n' ..
@@ -260,9 +279,7 @@ end
 function handleConsoleCommand(cmd)
 	if cmd:sub(1,1) == '#'then
 		local code = cmd:sub(2)
-		if code:sub(1,1) == '='then
-			code = 'return ' .. code:sub(2)
-		end
+		code = code:gsub('^=', 'return ')
 
 		local chunk, err = loadstring(code)
 		if chunk then
@@ -306,8 +323,12 @@ end
 function acceptClients()
 	local cl, ip = acceptClient(server)
 	if not cl then return end
-	if testForWs then
-		testForWs[cl] = ip
+	if wsHandshake then
+		wsHandshake[cl] = {
+			state = 'testws',
+			headers = {},
+			ip = ip
+		}
 		return
 	end
 	createPlayer(cl, ip, false)
@@ -320,7 +341,7 @@ function serviceMessages()
 end
 
 function init()
-	local loglvl  = tonumber(os.getenv('LOGLEVEL'))
+	local loglvl = tonumber(os.getenv('LOGLEVEL'))
 	if loglvl then
 		log.setLevel(loglvl)
 	end
@@ -339,14 +360,13 @@ function init()
 
 	if config:get('allow-websocket')then
 		wsHandshake = {}
-		testForWs = {}
 		wsLoad()
 	else
 		wsLoad = nil
 	end
 
 	local mode = config:get('server-gamemode')
-	if mode and mode ~= 'none'and mode ~= ''then
+	if mode and #mode > 0 and mode ~= 'none'and mode ~= 'default'then
 		log.info('Loading gamemode', mode)
 		local chunk, err = loadfile('gamemodes/' .. mode .. '.lua')
 		if chunk then
@@ -355,6 +375,9 @@ function init()
 			log.fatal('Gamemode loading error:', err)
 		end
 	end
+
+	log.info('Loading banlist')
+	loadBanList()
 
 	log.info(CON_WLOAD)
 	local sdlist = config:get('level-seeds')
@@ -422,6 +445,7 @@ succ, err = xpcall(function()
 			if init()then
 				if initGamemode then
 					initGamemode()
+					initGamemode = nil
 				end
 				hooks:call('onInitDone')
 				INITED = true
@@ -452,7 +476,6 @@ succ, err = xpcall(function()
 		serviceMessages()
 
 		if wsHandshake then
-			wsTestClient()
 			wsDoHandshake()
 		end
 
@@ -494,6 +517,7 @@ end
 
 if server then closeSock(server)end
 shutdownSock()
+saveBanList()
 
 if not succ then
 	err = tostring(err)

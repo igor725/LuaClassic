@@ -5,6 +5,8 @@ local sip = 'server-ip'
 local sport = 'server-port'
 local mplys = 'max-players'
 local gmd = 'server-gamemode'
+local hbt = 'heartbeat-type'
+local hbp = 'heartbeat-public'
 
 local lseeds = 'level-seeds'
 local lnames = 'level-names'
@@ -26,6 +28,8 @@ config = {
 		[sport] = 25565,
 		[mplys] = 20,
 		[gmd] = 'none',
+		[hbt] = 'none',
+		[hbp] = true,
 
 		[lseeds] = '',
 		[lnames] = 'world',
@@ -46,6 +50,8 @@ config = {
 		[sport] = 'number',
 		[mplys] = 'number',
 		[gmd] = 'string',
+		[hbt] = 'string',
+		[hbp] = 'boolean',
 
 		[lseeds] = 'string',
 		[lnames] = 'string',

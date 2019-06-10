@@ -36,24 +36,124 @@ local survBlocknames = {
 }
 
 local survMiningSpeed = {
-	[-1] =  .1,
-	[1]  =  .3,
-	[4]  =  .3,
-	[5]  =  .2,
-	[6]  =  .01,
-	[12] =  .12,
-	[13] =  .12,
-	[14] =  .4,
-	[15] =  .4,
-	[16] =  .4,
-	[18] =  .04,
-	[20] =  .03,
+	[-1] =  1,
+	[1]  =  7.5,
+	[2]  =  0.9,
+	[3]  =  0.75,
+	[4]  =  10,
+	[5]  =  3,
+	[6]  =  0,
+	[12] =  0.75,
+	[13] =  0.9,
+	[14] =  15,
+	[15] =  15,
+	[16] =  15,
+	[17] =  3,
+	[18] =  0.35,
+	[20] =  0.45,
 
+	[41] = 15,
+	[42] = 25,
+	[43] = 10,
+	[44] = 10,
+	[45] = 10,
 	[46] = 0,
+	[47] = 3,
+	[48] = 10,
+	[49] = 250,
+	[50] = 10,
 	[51] = 0,
 	[54] = 0
 }
 
+local survMiningSpeedWithTool = {
+	[1]  =  1.15,
+	[4]  =  1.5,
+	[5]  =  3,
+	[14] =  2.25,
+	[15] =  2.25,
+	[16] =  2.25,
+
+	[41] = 2.25,
+	[42] = 3.75,
+	[43] = 3,
+	[44] = 3,
+	[45] = 3,
+	[48] = 3,
+	[50] = 3,
+}
+
+local survCraft = {
+	[1] = {
+		needs = {
+			[54] = 1,
+			[4] = 1
+		},
+		count = 1
+	},
+	[5] = {
+		needs = {
+			[17] = 1
+		},
+		count = 4
+	},
+	[6] = {
+		needs = {
+			[18] = 1
+		},
+		count = 1
+	},
+	[13] = {
+		needs = {
+			[3] = 1,
+			[12] = 1
+		},
+		count = 1
+	},
+	[20] = {
+		needs = {
+			[54] = 1,
+			[12] = 1
+		},
+		count = 1
+	},
+	[41] = {
+		needs = {
+			[5] = 1,
+			[14] = 3
+		},
+		count = 1
+	},
+	[42] = {
+		needs = {
+			[5] = 1,
+			[15] = 3
+		},
+		count = 1
+	},
+	[43] = {
+		needs = {
+			[5] = 1,
+			[1] = 3
+		},
+		count = 1
+	},
+	[47] = {
+		needs = {
+			[5] = 4
+		}
+	},
+	[50] = {
+		needs = {
+			[4] = 1
+		},
+		count = 2
+	}
+}
+
+for i = 21, 36 do
+	survMiningSpeed[i] = 1.15
+end
 for i = 37, 40 do
 	survMiningSpeed[i] = 0
 end
@@ -118,6 +218,26 @@ local function survRespawn(player)
 	player:moveToSpawn()
 end
 
+local function survCanCraft(player, bid, quantity)
+	local inv = player.inventory
+	local recipe = survCraft[bid]
+	local lacks
+
+	if recipe then
+		local canCraft = true
+		for nId, ammount in pairs(recipe.needs)do
+			local cnt = quantity * ammount
+			if inv[nId] < cnt then
+				canCraft = false
+				lacks = lacks or''
+				lacks = lacks .. ('%d %s, '):format(cnt - inv[nId], survBlocknames[nId])
+			end
+		end
+		return canCraft, lacks and lacks:sub(1, -3)
+	end
+	return false
+end
+
 local timers = {'_blocksdamage', '_hp_regen'}
 
 local function survPauseTimers(player)
@@ -154,6 +274,7 @@ local function getKiller(attacker, dmgtype)
 end
 
 local function survDamage(attacker, victim, damage, dmgtype)
+	if victim.isInGodmode then return false end
 	victim.health = victim.health - damage
 	survUpdateHealth(victim)
 	victim:setEnvProp(MEP_MAXFOGDIST, 1)
@@ -170,13 +291,15 @@ local function survDamage(attacker, victim, damage, dmgtype)
 			end
 		end)
 	end
+	return true
 end
 
 local function survBreakBlock(player, x, y, z)
 	local world = getWorld(player)
 	local bid = world:getBlock(x, y, z)
 
-	if player:getHeldBlock() ~= bid then
+	local heldBlock = player:getHeldBlock()
+	if heldBlock ~= bid and (41 > heldBlock or heldBlock > 43) then
 		player:holdThis(bid)
 	end
 
@@ -203,15 +326,26 @@ local function survBlockAction(player, button, action, x, y, z)
 				player.breakProgress = 0
 				local lb = player.lastClickedBlock
 				lb.x, lb.y, lb.z = x, y, z
-				local tmSpeed = survMiningSpeed[bid]or survMiningSpeed[-1]
+				local tmSpeed = (survMiningSpeed[bid]or survMiningSpeed[-1])
 				if tmSpeed <= 0 then
 					survBreakBlock(player, x, y, z)
 					return
 				end
 				if player:getFluidLevel() > 1 then
-					tmSpeed = tmSpeed * 4
+					tmSpeed = tmSpeed * 5
 				end
-				timer.Create(player:getName() .. '_surv_brk', 11, tmSpeed, function()
+				for i = 1, 3 do
+					if player:getHeldBlock() == 40 + i and player.inventory[40 + i] > 0 then
+						if survMiningSpeedWithTool[bid] then
+							tmSpeed = survMiningSpeedWithTool[bid] / 6 * i
+						else
+							tmSpeed = tmSpeed / 12 * i
+						end
+						break
+					end
+				end
+				
+				timer.Create(player:getName() .. '_surv_brk', 11, tmSpeed / 10, function()
 					local lb = player.lastClickedBlock
 					if lb.x ~= cb.x or lb.y ~= cb.y or lb.z ~= cb.z then
 						survStopBreaking(player)
@@ -261,7 +395,7 @@ return function()
 		not player:isSupported('EnvColors')or
 		not player:isSupported('EnvMapAspect')or
 		not player:isSupported('HeldBlock')then
-			player:kick('Your client does not support required CPE exts.')
+			player:kick('Your client does not support required CPE exts.', true)
 			return
 		end
 		for i = 1, 65 do
@@ -334,8 +468,8 @@ return function()
 
 	hooks:add('postPlayerSpawn', 'survival', function(player)
 		survUpdateHealth(player)
-		local noclip = player:checkPermission('player.noclip')
-		player:hackControl(0, (noclip and 1)or 0, 0, 0, 1, -1)
+		local h = (player:checkPermission('player.hacks', true)and 1)or 0
+		player:hackControl(h, h, h, h, h, -1)
 		survResumeTimers(player)
 	end)
 
@@ -387,6 +521,10 @@ return function()
 		else
 			player.inventory[id] = player.inventory[id] - 1
 			survUpdateBlockInfo(player)
+			
+			if player.inventory[id] == 0 then
+				player:holdThis(0)
+			end
 		end
 	end)
 
@@ -405,7 +543,7 @@ return function()
 			if #args == 2 then
 				id = args[1]
 				count = args[2]
-			elseif args > 2 then
+			elseif #args > 2 then
 				player = getPlayerByName(args[1])
 				id = args[2]
 				count = args[3]
@@ -429,12 +567,96 @@ return function()
 
 	addCommand('heal', function(isConsole, player, args)
 		if isConsole and #args < 1 then return false end
-		player = player or getPlayerByName(args[1])
+		player = getPlayerByName(args[1])or player
 		if not player then return MESG_PLAYERNF end
 
 		player.health = SURV_MAX_HEALTH
 		survUpdateHealth(player)
 		return ('Player &a%s&f healed.'):format(player)
+	end)
+
+	addCommand('craft', function(isConsole, player, args)
+		if isConsole then return CON_INGAMECMD end
+
+		local quantity = tonumber(args[1])or 1
+		local bId = player:getHeldBlock()
+		local recipe = survCraft[bId]
+		local inv = player.inventory
+
+		if recipe then
+			local oQuantity = recipe.count * quantity
+			local bName = survBlocknames[bId]
+			if(64 - inv[bId]) < (quantity * recipe.count)then
+				return 'You can\'t take more than 64 blocks of ' .. bName
+			end
+			local canBeCrafted, lacks = survCanCraft(player, bId, quantity)
+			if canBeCrafted then
+				for nId, ammount in pairs(recipe.needs)do
+					inv[nId] = inv[nId] - ammount * quantity
+				end
+				inv[bId] = inv[bId] + oQuantity
+				survUpdateBlockInfo(player)
+				return ('%d block(-s) of %s crafted'):format(oQuantity, bName)
+			else
+				return ('You need %s to craft %s'):format(lacks, bName)
+			end
+		else
+			return 'Selected block can\'t be crafted'
+		end
+	end)
+
+	addCommand('drop', function(isConsole, player, args)
+		if isConsole then return CON_INGAMECMD end
+
+		local bId = player:getHeldBlock()
+		if bId < 1 or bId > 65 then
+			return
+		end
+
+		if #args > 1 then
+			local target = getPlayerByName(args[1])
+			local quantity = tonumber(args[2])or 1
+			local x, y, z = player:getPos()
+
+			if not target then
+				return MESG_PLAYERNF
+			end
+			if distance(x, y, z, target:getPos()) > 6 then
+				return 'This player is too far away from you.'
+			end
+
+			local inv1 = player.inventory
+			local inv2 = target.inventory
+			quantity = math.min(quantity, 64 - inv2[bId])
+			if quantity < 1 then
+				return
+			end
+			if inv1[bId] >= quantity then
+				inv1[bId] = inv1[bId] - quantity
+				inv2[bId] = inv2[bId] + quantity
+				survUpdateBlockInfo(player)
+				survUpdateBlockInfo(target)
+				return ('Dropped %d %s blocks to %s'):format(quantity, survBlocknames[bId], target)
+			end
+		else
+			local inv = player.inventory
+			local quantity = tonumber(args[1])or 1
+			if inv[bId] >= quantity then
+				inv[bId] = inv[bId] - quantity
+				survUpdateBlockInfo(player)
+				return ('Dropped %d %s blocks'):format(quantity, survBlocknames[bId])
+			end
+		end
+	end)
+
+	addCommand('god', function(isConsole, player, args)
+		if isConsole and #args < 1 then return false end
+		player = getPlayerByName(args[1])or player
+		if not player then return MESG_PLAYERNF end
+
+		player.isInGodmode = not player.isInGodmode
+		local state = (player.isInGodmode and ST_ON)or ST_OFF
+		return ('Player &a%s&f godmode %s.'):format(player, state)
 	end)
 
 	addCommand('full', function(isConsole, player, args)
@@ -458,6 +680,11 @@ return function()
 
 	saveAdd('health', '>f')
 	saveAdd('oxygen', '>f')
+	saveAdd('isInGodmode', 'b', function(player, val)
+		return val == 1
+	end, function(val)
+		return val and 1 or 0
+	end)
 
 	saveAdd('inventory', 'c65', function(player, data)
 		ffi.copy(player.inventory, data, 65)
