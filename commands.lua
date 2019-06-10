@@ -285,7 +285,7 @@ addCommand('weather', function(isConsole, player, args)
 end)
 
 addCommand('time', function(isConsole, player, args)
-	local world, tName, preset
+	local world, tName
 
 	if isConsole then
 		if #args < 2 then return false end
@@ -303,16 +303,11 @@ addCommand('time', function(isConsole, player, args)
 		end
 	end
 
-	preset = time_presets[tName]
 	if not world then return WORLD_NE end
-	if not preset then return CMD_TIMEPRESETNF end
 	if world:getData('isNether')then return CMD_TIMEDISALLOW end
-
-	for i = 0, 4 do
-		local c = preset[i]
-		world:setEnvColor(i, c.r, c.g, c.b)
+	if not world:setTime(tName)then
+		return CMD_TIMEPRESETNF
 	end
-
 	return (CMD_TIMECHANGE):format(world, tName)
 end)
 

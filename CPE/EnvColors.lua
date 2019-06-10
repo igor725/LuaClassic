@@ -66,6 +66,17 @@ function ec:load()
 		end)
 		return true
 	end
+	getWorldMT().setTime = function(self, preset)
+		local preset = time_presets[preset]
+		if preset then
+			for i = 0, 4 do
+				local c = preset[i]
+				self:setEnvColor(i, c.r, c.g, c.b)
+			end
+			return true
+		end
+		return false
+	end
 	getWorldMT().getEnvColor = function(world, typ)
 		local c = world.data.colors[typ]
 		return c.r, c.g, c.b
