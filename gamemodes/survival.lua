@@ -298,7 +298,7 @@ local function survBreakBlock(player, x, y, z)
 	local bid = world:getBlock(x, y, z)
 
 	local heldBlock = player:getHeldBlock()
-	if heldBlock ~= bid and heldBlock ~= 41 and heldBlock ~= 42 then
+	if heldBlock ~= bid and (41 > heldBlock or heldBlock > 43) then
 		player:holdThis(bid)
 	end
 
@@ -325,7 +325,7 @@ local function survBlockAction(player, button, action, x, y, z)
 				player.breakProgress = 0
 				local lb = player.lastClickedBlock
 				lb.x, lb.y, lb.z = x, y, z
-				local tmSpeed = (survMiningSpeed[bid]or survMiningSpeed[-1]) / 10
+				local tmSpeed = (survMiningSpeed[bid]or survMiningSpeed[-1])
 				if tmSpeed <= 0 then
 					survBreakBlock(player, x, y, z)
 					return
@@ -333,21 +333,18 @@ local function survBlockAction(player, button, action, x, y, z)
 				if player:getFluidLevel() > 1 then
 					tmSpeed = tmSpeed * 5
 				end
-				if player:getHeldBlock() == 41 and player.inventory[41] > 0 then
-					if survMiningSpeedWithTool[bid] then
-						tmSpeed = survMiningSpeedWithTool[bid] / 60
-						print(tmSpeed)
-					else
-						tmSpeed = tmSpeed / 12
-					end
-				elseif player:getHeldBlock() == 42 and player.inventory[42] > 0 then
-					if survMiningSpeedWithTool[bid] then
-						tmSpeed = survMiningSpeedWithTool[bid] / 30
-					else
-						tmSpeed = tmSpeed / 6
+				for i = 1, 3 do
+					if player:getHeldBlock() == 40 + i and player.inventory[40 + i] > 0 then
+						if survMiningSpeedWithTool[bid] then
+							tmSpeed = survMiningSpeedWithTool[bid] / 6 * i
+						else
+							tmSpeed = tmSpeed / 12 * i
+						end
+						break
 					end
 				end
-				timer.Create(player:getName() .. '_surv_brk', 11, tmSpeed, function()
+				
+				timer.Create(player:getName() .. '_surv_brk', 11, tmSpeed / 10, function()
 					local lb = player.lastClickedBlock
 					if lb.x ~= cb.x or lb.y ~= cb.y or lb.z ~= cb.z then
 						survStopBreaking(player)
