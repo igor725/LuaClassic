@@ -234,22 +234,38 @@ local player_mt = {
 		local pos = self.pos
 		if not self.isSpawned then
 			pos.x, pos.y, pos.z = x, y, z
+			self.landed = true
 			return
 		
 		elseif self.isTeleported then
 			self.isTeleported = false
+			self.landed = true
 			return
 		elseif pos.x ~= x or pos.y ~= y or pos.z ~= z then
 			local dx, dy, dz = x - pos.x, y - pos.y, z - pos.z
 			pos.x, pos.y, pos.z = x, y, z
-		
+			
 			hooks:call('onPlayerMove', self, dx, dy, dz)
 			if onPlayerMove then
 				onPlayerMove(self, dx, dy, dz)
 			end
+			
+			if self.oldDY then
+				if self.oldSpeedY2 and dy >= 0 and self.oldDY < 0 then
+					hooks:call('onPlayerLanded', self, self.oldSpeedY2)
+				end
+				
+				self.oldSpeedY2 = self.oldDY / dt
+			end
+			
+			self.oldDY = dy
 		
 			checkForPortal(self, x, y, z)
 			return true
+		elseif self.oldDY and self.oldDY < 0 then
+			self.oldDY = 0
+			hooks:call('onPlayerLanded', self, self.oldSpeedY2)
+			return
 		end
 	end,
 	setEyePos = function(self, y, p)

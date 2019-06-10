@@ -471,7 +471,11 @@ succ, err = xpcall(function()
 		if cmdh then
 			cmdh()
 		end
-		sleep(20)
+		
+		NextUpdate = CTIME + 0.02
+		if NextUpdate > gettime() then
+			sleep((NextUpdate - gettime())*1000)
+		end
 	end
 end,debug.traceback)
 

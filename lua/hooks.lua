@@ -3,6 +3,7 @@ hooks = {
 		['onUpdate'] = {},
 		['onInitDone'] = {},
 		['onPlayerMove'] = {},
+		['onPlayerLanded'] = {},
 		['onPlayerChat'] = {},
 		['onPlayerRotate'] = {},
 		['prePlayerSpawn'] = {},

@@ -459,20 +459,10 @@ return function()
 		survStopBreaking(player)
 		survRemoveTimers(player)
 	end)
-
-	hooks:add('onPlayerMove', 'survival', function(player, dx, dy, dz)
-		if dy / dt < -30 then
-			local world = getWorld(player)
-			local x, y, z = player:getPos()
-
-			local blk = world:getBlock(floor(x), floor(y - 2.59375), floor(z))
-
-			if blk ~= 0 and(blk < 8 or blk > 11) then
-				if player:getFluidLevel() < 1 then
-					survDamage(nil, player, (25 + dy / dt)^2 / 100, SURV_DMG_FALL)
-					player.lposc = 3
-				end
-			end
+	hooks:add('onPlayerLanded', 'survival', function(player, speedY)
+		local blocks = speedY ^ 2 / 250
+		if blocks > 3.5 then
+			survDamage(nil, player, blocks / 2 - 0.5, SURV_DMG_FALL)
 		end
 	end)
 
