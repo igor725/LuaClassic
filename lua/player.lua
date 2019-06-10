@@ -235,20 +235,20 @@ local player_mt = {
 		if not self.isSpawned then
 			pos.x, pos.y, pos.z = x, y, z
 			return
-		end
-
-		if pos.x ~= x or pos.y ~= y or pos.z ~= z then
-			if self.isSpawned then
-				local dx, dy, dz = x - pos.x, y - pos.y, z - pos.z
-				pos.x, pos.y, pos.z = x, y, z
-				
-				hooks:call('onPlayerMove', self, dx, dy, dz)
-				if onPlayerMove then
-					onPlayerMove(self, dx, dy, dz)
-				end
-				
-				checkForPortal(self, x, y, z)
+		
+		elseif self.isTeleported then
+			self.isTeleported = false
+			return
+		elseif pos.x ~= x or pos.y ~= y or pos.z ~= z then
+			local dx, dy, dz = x - pos.x, y - pos.y, z - pos.z
+			pos.x, pos.y, pos.z = x, y, z
+		
+			hooks:call('onPlayerMove', self, dx, dy, dz)
+			if onPlayerMove then
+				onPlayerMove(self, dx, dy, dz)
 			end
+		
+			checkForPortal(self, x, y, z)
 			return true
 		end
 	end,
@@ -318,6 +318,7 @@ local player_mt = {
 	end,
 
 	teleportTo = function(self, x, y, z, ay, ap)
+		self.isTeleported = true
 		local pos = self.pos
 		pos.x, pos.y, pos.z = x, y, z
 		x = floor(x * 32)
@@ -824,6 +825,7 @@ function newPlayer(cl)
 		waitingExts = -1,
 		eye = eye,
 		extensions = {},
-		client = cl
+		client = cl,
+		isTeleported = false
 	}, player_mt)
 end
