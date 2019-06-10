@@ -344,7 +344,7 @@ local function survBlockAction(player, button, action, x, y, z)
 						break
 					end
 				end
-				
+
 				timer.Create(player:getName() .. '_surv_brk', 11, tmSpeed / 10, function()
 					local lb = player.lastClickedBlock
 					if lb.x ~= cb.x or lb.y ~= cb.y or lb.z ~= cb.z then
@@ -497,7 +497,10 @@ return function()
 
 		if x ~= -1 and y ~= -1 and z ~= -1 then
 			dist_block = distance(x + .5, y + .5, z + .5, player:getPos())
+		else
+			survStopBreaking(player)
 		end
+		
 		if tgent > 0 then
 			tgplayer = getPlayerByID(tgent)
 			if tgplayer then
@@ -511,6 +514,7 @@ return function()
 			if button == 0 and action == 0 then
 				if tgplayer then
 					survDamage(player, tgplayer, .5, SURV_DMG_PLAYER)
+					survStopBreaking(player)
 				end
 			end
 		end
@@ -523,7 +527,7 @@ return function()
 		else
 			player.inventory[id] = player.inventory[id] - 1
 			survUpdateBlockInfo(player)
-			
+
 			if player.inventory[id] == 0 then
 				player:holdThis(0)
 			end
