@@ -133,7 +133,8 @@ local survCraft = {
 	},
 	[43] = {
 		needs = {
-			[44] = 2
+			[5] = 1,
+			[1] = 3
 		},
 		count = 1
 	},
