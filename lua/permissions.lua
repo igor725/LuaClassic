@@ -7,6 +7,7 @@ permissions = {
 			'commands.spawn',
 			'commands.help',
 			'commands.clear',
+			'commands.craft',
 		}
 	}
 }
