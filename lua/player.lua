@@ -832,6 +832,7 @@ function newPlayer(cl)
 		lpos = lpos,
 		lposc = 1,
 		pos = pos,
+		lastOnlineTime = 0,
 		isSpawned = false,
 		firstSpawn = true,
 		waitingExts = -1,
