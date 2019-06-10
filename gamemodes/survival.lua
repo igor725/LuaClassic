@@ -476,6 +476,10 @@ return function()
 		else
 			player.inventory[id] = player.inventory[id] - 1
 			survUpdateBlockInfo(player)
+			
+			if player.inventory[id] == 0 then
+				player:holdThis(0)
+			end
 		end
 	end)
 
