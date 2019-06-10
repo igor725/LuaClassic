@@ -130,7 +130,7 @@ function onPlayerChatMessage(player, message)
 			end
 		end
 	elseif starts == '!'then -- Message to global chat
-		newChatMessage(formattedMessage)
+		newChatMessage('&2G&f ' .. formattedMessage)
 	else -- Message to local chat
 		newLocalChatMessage(player, formattedMessage)
 	end

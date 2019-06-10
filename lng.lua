@@ -96,7 +96,7 @@ CMD_WTCURR         = 'At this moment weather is &e%s&f in &a%s'
 CMD_SEED           = 'Seed: %d'
 
 WORLD_RO           = '&cThis world in readonly mode'
-WORLD_NE           = 'This world not exists'
+WORLD_NE           = 'This world does not exists'
 WORLD_TOOBIGDIM    = 'World dimensions is too big'
 WORLD_WRITEFAIL    = 'Level data write operation failed!'
 WORLD_CORRUPT      = 'Unsupported map version or file corrupted.'

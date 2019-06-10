@@ -187,17 +187,17 @@ local player_mt = {
 		x, y, z = floor(x), floor(y), floor(z)
 		if self:getModelHeight() > 1 then
 			local upblock = world:getBlock(x, y, z)
-			if upblock >= 8 and upblock <= 11 then
+			if upblock and upblock >= 8 and upblock <= 11 then
 				return 2, upblock == 10 or upblock == 11
 			else
 				local downblock = world:getBlock(x, y - 1, z)
-				if downblock >= 8 and downblock <= 11 then
+				if downblock and downblock >= 8 and downblock <= 11 then
 					return 1, downblock == 10 or downblock == 11
 				end
 			end
 		else
 			local downblock = world:getBlock(x, y - 1, z)
-			if downblock >= 8 and downblock <= 11 then
+			if downblock and downblock >= 8 and downblock <= 11 then
 				return 2, downblock == 10 or downblock == 11
 			end
 		end
