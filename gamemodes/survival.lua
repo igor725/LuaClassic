@@ -36,20 +36,32 @@ local survBlocknames = {
 }
 
 local survMiningSpeed = {
-	[-1] =  .1,
-	[1]  =  .3,
-	[4]  =  .3,
-	[5]  =  .2,
-	[6]  =  .01,
-	[12] =  .12,
-	[13] =  .12,
-	[14] =  .4,
-	[15] =  .4,
-	[16] =  .4,
-	[18] =  .04,
-	[20] =  .03,
+	[-1] =  1,
+	[1]  =  7.5,
+	[2]  =  0.9,
+	[3]  =  0.75,
+	[4]  =  10,
+	[5]  =  3,
+	[6]  =  0,
+	[12] =  0.75,
+	[13] =  0.9,
+	[14] =  15,
+	[15] =  15,
+	[16] =  15,
+	[17] =  3,
+	[18] =  0.35,
+	[20] =  0.45,
 
+	[41] = 15,
+	[42] = 25,
+	[43] = 10,
+	[44] = 10,
+	[45] = 10,
 	[46] = 0,
+	[47] = 3,
+	[48] = 10,
+	[49] = 250,
+	[50] = 10,
 	[51] = 0,
 	[54] = 0
 }
@@ -121,6 +133,9 @@ local survCraft = {
 	}
 }
 
+for i = 21, 36 do
+	survMiningSpeed[i] = 1.15
+end
 for i = 37, 40 do
 	survMiningSpeed[i] = 0
 end
@@ -292,13 +307,13 @@ local function survBlockAction(player, button, action, x, y, z)
 				player.breakProgress = 0
 				local lb = player.lastClickedBlock
 				lb.x, lb.y, lb.z = x, y, z
-				local tmSpeed = survMiningSpeed[bid]or survMiningSpeed[-1]
+				local tmSpeed = (survMiningSpeed[bid]or survMiningSpeed[-1]) / 10
 				if tmSpeed <= 0 then
 					survBreakBlock(player, x, y, z)
 					return
 				end
 				if player:getFluidLevel() > 1 then
-					tmSpeed = tmSpeed * 4
+					tmSpeed = tmSpeed * 5
 				end
 				timer.Create(player:getName() .. '_surv_brk', 11, tmSpeed, function()
 					local lb = player.lastClickedBlock
