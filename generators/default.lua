@@ -738,7 +738,7 @@ return function(world, seed)
 
 	-- lavalavalava(world, dimx, dimy, dimz)
 
-	world:setSpawn(x, y + 2, z)
+	world:setSpawn(x, y + 2.5, z)
 	world:setEnvProp(MEP_SIDESBLOCK, 0)
 	world:setEnvProp(MEP_EDGEBLOCK, 8)
 	world:setEnvProp(MEP_EDGELEVEL, heightWater + 1)

@@ -234,13 +234,13 @@ local player_mt = {
 		local pos = self.pos
 		if not self.isSpawned then
 			pos.x, pos.y, pos.z = x, y, z
-			self.oldDY, self.oldSpeedY2 = 0, 0
+			--self.oldDY, self.oldSpeedY2 = 0, 0
 			return
 		
 		elseif self.isTeleported then
 			self.isTeleported = false
 			pos.x, pos.y, pos.z = x, y, z
-			self.oldDY, self.oldSpeedY2 = 0, 0
+			--self.oldDY, self.oldSpeedY2 = 0, 0
 			return
 		elseif pos.x ~= x or pos.y ~= y or pos.z ~= z then
 			local dx, dy, dz = x - pos.x, y - pos.y, z - pos.z
