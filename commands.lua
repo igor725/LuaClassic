@@ -316,6 +316,37 @@ addCommand('time', function(isConsole, player, args)
 	return (CMD_TIMECHANGE):format(world, tName)
 end)
 
+addCommand('unban', function(isConsole, player, args)
+	if #args < 1 then return false end
+	if removeBan(args[1], args[2])then
+		return 'Player unbanned'
+	end
+end)
+
+addCommand('ban', function(isConsole, player, args)
+	if #args < 1 then return false end
+	local target = args[1]
+	local isIp = false
+	local reason = table.concat(args, ' ', 2)
+	if not target:match('(%d+%.%d+%.%d+%.%d+)')then
+		target = getPlayerByName(target)
+	else
+		isIp = true
+	end
+
+	if target then
+		local tgname, tgip
+		if isIp then
+			tgname, tgip = '_', target
+		else
+			tgname, tgip = target:getName(), target:getIP()
+		end
+		if addBan(tgname, tgip, reason)and not isIp then
+			target:kick(reason)
+		end
+	end
+end)
+
 addCommand('kick', function(isConsole, player, args)
 	if #args > 0 then
 		local p = getPlayerByName(args[1])
@@ -325,7 +356,6 @@ addCommand('kick', function(isConsole, player, args)
 				reason = table.concat(args, ' ', 2)
 			end
 			p:kick(reason)
-			return true
 		else
 			return MESG_PLAYERNF
 		end

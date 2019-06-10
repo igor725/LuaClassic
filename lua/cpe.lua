@@ -27,7 +27,7 @@ function cpe:init()
 	registerClPacket(0x11, '>c64i')
 
 	local f = true
-	log.info('Loading Classic Protocol Extensions...')
+	log.info('Loading Classic Protocol Extensions')
 	dirForEach('CPE', 'lua', function(filename, fullpath)
 		local chunk = assert(loadfile(fullpath))
 		local ext = setmetatable(chunk(), ext_mt)

@@ -27,6 +27,7 @@ hooks:add('onInitDone', 'heartbeat', function()
 	local hbtype = config:get('heartbeat-type')
 	if hbtype == 'classicube'then
 		check4md5()
+		math.randomseed(os.time())
 		local sSalt = randomStr(6)
 		_HEARTBEAT_HOST = 'classicube.net'
 		_HEARTBEAT_DELAY = 50

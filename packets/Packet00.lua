@@ -3,6 +3,12 @@ return function(player, pver, name, vkey, magic)
 		name = trimStr(name)
 		vkey = trimStr(vkey)
 
+		local isBanned, reason = checkBan(name, player:getIP())
+		if isBanned then
+			player:kick(reason, true)
+			return
+		end
+
 		local authSucc, authErr = onPlayerAuth(player, name, vkey)
 		if not onPlayerAuth or not authSucc then
 			player:kick(authErr or KICK_AUTH)

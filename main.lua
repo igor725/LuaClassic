@@ -167,7 +167,7 @@ function wsDoHandshake()
 					data.state = 'initial'
 				else
 					wsHandshake[cl] = nil
-					createPlayer(cl, ip, false)
+					createPlayer(cl, data.ip, false)
 				end
 			end
 		end
@@ -365,6 +365,9 @@ function init()
 		end
 	end
 
+	log.info('Loading banlist')
+	loadBanList()
+
 	log.info(CON_WLOAD)
 	local sdlist = config:get('level-seeds')
 	sdlist = sdlist:split(',')
@@ -503,6 +506,7 @@ end
 
 if server then closeSock(server)end
 shutdownSock()
+saveBanList()
 
 if not succ then
 	err = tostring(err)
