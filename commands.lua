@@ -367,20 +367,16 @@ addCommand('tp', function(isConsole, player, args)
 end)
 
 addCommand('help', function(isConsole)
-	if not isConsole then
-		return 'Not implemented'
-	end
-	local str = ''
-	for k, v in pairs(_G)do
-		if k:startsWith('CU_')then
-			str = str .. v .. '\n'
-		end
-	end
 	if isConsole then
+		local str = 'List of server commands:'
+		for k, v in pairs(_G)do
+			if k:startsWith('CU_')then
+				str = str .. '\n' .. v
+			end
+		end
 		print(str)
-	else
-		-- TODO: Player commands help
 	end
+	return 'Online help page: &ahttp://igvx.ru/lc_help'
 end)
 
 addAlias('help', '?')

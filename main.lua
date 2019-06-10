@@ -39,7 +39,7 @@ function onPlayerAuth(player, name, key)
 	return true
 end
 
-function onPlayerHandshakeDone(player)
+function prePlayerFirstSpawn(player)
 	local msg = printf(MESG_CONN, player)
 	newChatMessage('&e' .. msg)
 end
@@ -64,6 +64,7 @@ function onPlayerChatMessage(player, message)
 	if #player.prefix > 0 then
 		prefix = ('[%s&f] '):format(player.prefix)
 	end
+	if starts == '!'then message = message:sub(2)end
 	local formattedMessage = ('%s%s: %s'):format(prefix, player, message)
 	log.chat(formattedMessage)
 

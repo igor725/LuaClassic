@@ -544,6 +544,9 @@ local player_mt = {
 			if hooks:call('prePlayerFirstSpawn', self)then
 				return
 			end
+			if prePlayerFirstSpawn and prePlayerFirstSpawn(self)then
+				return
+			end
 		end
 
 		local pId = self:getID()
@@ -824,6 +827,7 @@ function newPlayer(cl)
 		kickTimeout = CTIME + getKickTimeout(),
 		connectTime = CTIME,
 		worldName = 'default',
+		messageBuffer = '',
 		prefix = '',
 		lpos = lpos,
 		lposc = 1,

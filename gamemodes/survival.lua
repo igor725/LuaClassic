@@ -336,7 +336,7 @@ return function()
 
 	hooks:add('postPlayerSpawn', 'survival', function(player)
 		survUpdateHealth(player)
-		local h = (player:checkPermission('player.hacks')and 1)or 0
+		local h = (player:checkPermission('player.hacks', true)and 1)or 0
 		player:hackControl(h, h, h, h, h, -1)
 		survResumeTimers(player)
 	end)
