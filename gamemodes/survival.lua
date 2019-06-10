@@ -35,6 +35,13 @@ local survBlocknames = {
 	'Crate', 'Stone brick'
 }
 
+local survBlockDrop = {
+	[1] = 4,
+	[18] = function()
+		return (math.random(0, 100) < 20 and 6)or 18
+	end
+}
+
 local survMiningSpeed = {
 	[-1] =  1,
 	[1]  =  7.5,
@@ -297,14 +304,20 @@ end
 local function survBreakBlock(player, x, y, z)
 	local world = getWorld(player)
 	local bid = world:getBlock(x, y, z)
-
-	local heldBlock = player:getHeldBlock()
-	if heldBlock ~= bid and (41 > heldBlock or heldBlock > 43) then
-		player:holdThis(bid)
+	bid = survBlockDrop[bid]or bid
+	if type(bid) == 'function'then
+		bid = bid()
 	end
 
-	player.inventory[bid] = math.min(player.inventory[bid] + 1, 64)
-	survUpdateBlockInfo(player)
+	if bid ~= 0 then
+		local heldBlock = player:getHeldBlock()
+		if heldBlock ~= bid and (41 > heldBlock or heldBlock > 43) then
+			player:holdThis(bid)
+		end
+
+		player.inventory[bid] = math.min(player.inventory[bid] + 1, 64)
+		survUpdateBlockInfo(player)
+	end
 	survStopBreaking(player)
 	hooks:call('onPlayerPlaceBlock', player, x, y, z, 0)
 	world:setBlock(x, y, z, 0)
@@ -499,7 +512,7 @@ return function()
 		else
 			survStopBreaking(player)
 		end
-		
+
 		if tgent > 0 then
 			tgplayer = getPlayerByID(tgent)
 			if tgplayer then
