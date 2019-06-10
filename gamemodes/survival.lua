@@ -448,7 +448,7 @@ return function()
 	end)
 
 	hooks:add('onPlayerMove', 'survival', function(player, dx, dy, dz)
-		if dy / dt < -25 then
+		if dy / dt < -30 then
 			local world = getWorld(player)
 			local x, y, z = player:getPos()
 
@@ -456,8 +456,7 @@ return function()
 
 			if blk ~= 0 and(blk < 8 or blk > 11) then
 				if player:getFluidLevel() < 1 then
-					survDamage(nil, player, (dy / dt + 25)^2 / 400, SURV_DMG_FALL)
-					print((dy / dt)^2 / 600)
+					survDamage(nil, player, (25 + dy / dt)^2 / 100, SURV_DMG_FALL)
 					player.lposc = 3
 				end
 			end
