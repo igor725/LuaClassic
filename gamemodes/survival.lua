@@ -657,6 +657,18 @@ return function()
 		end
 	end)
 
+	addCommand('kill', function(isConsole, player, args)
+		if #args < 1 then return false end
+		player = getPlayerByName(args[1])
+		if player then
+			if not player:survDamage(nil, SURV_MAX_HEALTH, 0)then
+				return 'This player cannot be damaged'
+			end
+		else
+			return MESG_PLAYERNF
+		end
+	end)
+
 	addCommand('god', function(isConsole, player, args)
 		if isConsole and #args < 1 then return false end
 		player = getPlayerByName(args[1])or player
