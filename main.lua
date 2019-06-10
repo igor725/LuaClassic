@@ -129,6 +129,20 @@ function onPlayerChatMessage(player, message)
 				player:sendMessage(WORLD_NE)
 			end
 		end
+	elseif starts == '@'then
+		local name, message = message:match('^@(.+)%s(.+)')
+		if name then
+			local target = getPlayerByName(name)
+			if target == player then
+				player:sendMessage(CMD_WHISPERSELF)
+				return
+			end
+			if target then
+				target:sendMessage((CMD_WHISPER):format(player, message))
+			else
+				player:sendMessage(MESG_PLAYERNF)
+			end
+		end
 	elseif starts == '!'then -- Message to global chat
 		newChatMessage('&2G&f ' .. formattedMessage)
 	else -- Message to local chat
