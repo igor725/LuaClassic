@@ -351,6 +351,7 @@ addCommand('kick', function(isConsole, player, args)
 				reason = table.concat(args, ' ', 2)
 			end
 			p:kick(reason)
+			return
 		else
 			return MESG_PLAYERNF
 		end
