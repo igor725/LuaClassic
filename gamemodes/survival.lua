@@ -601,7 +601,9 @@ return function()
 	end)
 
 	addCommand('give', function(isConsole, player, args)
-		local id, count
+		if #args < 1 then return false end
+		
+		local id, countqw
 		if isConsole then
 			if #args < 2 then return false end
 			player = getPlayerByName(args[1])
@@ -784,3 +786,5 @@ return function()
 		return ffi.string(inventory, 65)
 	end)
 end
+
+CU_GIVE = '/give [player] <blocks> <count>'
