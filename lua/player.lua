@@ -250,7 +250,7 @@ local player_mt = {
 			end
 			
 			if self.speedY then
-				if self.oldSpeedY2 and dy >= 0 and self.speedY < 0 then
+				if self.speedY and dy >= 0 and self.speedY < 0 then
 					hooks:call('onPlayerLanded', self, self.speedY2)
 				end
 				
