@@ -282,7 +282,7 @@ end
 
 local function survDamage(attacker, victim, damage, dmgtype)
 	if victim.isInGodmode then return false end
-	
+
 	if dmgtype == SURV_DMG_PLAYER then
 		-- knockback
 		local x, y, z = attacker:getPos()
@@ -515,7 +515,7 @@ return function()
 			survStopBreaking(player)
 		end
 
-		if tgent > 0 then
+		if tgent >= 0 then
 			tgplayer = getPlayerByID(tgent)
 			if tgplayer then
 				dist_player = distance(x, y, z, tgplayer:getPos())
@@ -532,7 +532,7 @@ return function()
 				if tgplayer and CTIME > player.nextHit then
 					-- critical damage
 					local blocks = player.speedY2 and player.speedY2 ^ 2 / 250 or 0
-					
+
 					survDamage(player, tgplayer, 1 + blocks, SURV_DMG_PLAYER)
 					survStopBreaking(player)
 
@@ -697,11 +697,11 @@ return function()
 
 		player.isInGodmode = not player.isInGodmode
 		local state = (player.isInGodmode and ST_ON)or ST_OFF
-		
+
 		if player.isInGodmode then
 		else
 		end
-		
+
 		return ('Player &a%s&f godmode %s.'):format(player, state)
 	end)
 
