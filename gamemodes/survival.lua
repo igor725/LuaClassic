@@ -474,6 +474,10 @@ return function()
 				end
 			end
 		end)
+
+		if player.isInGodmode then
+			survPauseTimers(player)
+		end
 	end)
 
 	hooks:add('onPlayerDestroy', 'survival', function(player)
