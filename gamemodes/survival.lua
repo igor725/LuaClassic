@@ -484,8 +484,10 @@ return function()
 
 	hooks:add('postPlayerSpawn', 'survival', function(player)
 		survUpdateHealth(player)
-		local h = (player:checkPermission('player.hacks', true)and 1)or 0
-		player:hackControl(h, h, h, h, h, -1)
+		--local h = (player:checkPermission('player.hacks', true)and 1)or 0
+		--player:hackControl(h, h, h, h, h, -1)
+		local h = player.isInGodmode and 1 or 0
+		player:hackControl(h, h, h, 1, 1, -1)
 		survResumeTimers(player)
 	end)
 
@@ -698,9 +700,8 @@ return function()
 		player.isInGodmode = not player.isInGodmode
 		local state = (player.isInGodmode and ST_ON)or ST_OFF
 
-		if player.isInGodmode then
-		else
-		end
+		local h = player.isInGodmode and 1 or 0
+		player:hackControl(h, h, h, 1, 1, -1)
 
 		return ('Player &a%s&f godmode %s.'):format(player, state)
 	end)
