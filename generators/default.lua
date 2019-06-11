@@ -8,6 +8,7 @@ local GEN_ENABLE_CAVES     = true
 local GEN_ENABLE_TREES     = true
 local GEN_ENABLE_ORES      = true
 local GEN_ENABLE_HOUSES    = true
+local GEN_ENABLE_SNOW      = true
 
 local GEN_CAVE_RADIUS      = 3
 local GEN_CAVE_MIN_LENGTH  = 100
@@ -34,6 +35,7 @@ local BIOME_HIGH   = 2
 local BIOME_TREES  = 3
 local BIOME_SAND   = 4
 local BIOME_WATER  = 5
+local BIOME_SNOW   = 6
 
 local lanelibs = 'math,ffi'
 local heightStone
@@ -60,10 +62,11 @@ local function biomesGenerate(dimx, dimz)
 	local BIOME_COUNT = dimx * dimz / GEN_BIOME_STEP / GEN_BIOME_RADIUS / 64 + 1
 	local radius2 = GEN_BIOME_RADIUS ^ 2
 
+	local biomesAllow = GEN_ENABLE_SNOW and 6 or 5
 	for i = 1, BIOME_COUNT do
 		local x = math.random(biomesSizeX)
 		local z = math.random(biomesSizeZ)
-		local biome = math.random(1, 5)
+		local biome = math.random(1, biomesAllow)
 
 		for dx = -GEN_BIOME_RADIUS, GEN_BIOME_RADIUS do
 			for dz = -GEN_BIOME_RADIUS, GEN_BIOME_RADIUS do
@@ -117,7 +120,7 @@ local function heightMapGenerate(dimx, dimy, dimz)
 				else
 					heightMap[offset] = heightGrass + math.random(-2, 20)
 				end
-			elseif biome == BIOME_TREES then
+			elseif biome == BIOME_TREES or biome == BIOME_SNOW then
 				heightMap[offset] = heightGrass + math.random(1, 5)
 			elseif biome == BIOME_SAND then
 				heightMap[offset] = heightGrass + math.random(1, 4)
@@ -130,7 +133,7 @@ local function heightMapGenerate(dimx, dimy, dimz)
 			else
 				heightMap[offset] = heightGrass
 			end
-
+			
 			if heightMap[offset] >= dimy then
 				heightMap[offset] = dimy - 1
 			elseif heightMap[offset] < 0 then
@@ -262,7 +265,7 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 					SetBlock(x, height1 - 1, z, 3)
 					SetBlock(x, height1, z, 2)
 				else
-					-- Sand
+					-- Sand under water
 					SetBlock(x, height1 - 1, z, 12)
 					SetBlock(x, height1, z, 12)
 
@@ -305,6 +308,35 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 				for y = height1 + 1, heightWater do
 					SetBlock(x, y, z, 8)
 				end
+			elseif biome == BIOME_SNOW then
+				-- Dirt
+				for y = heightStone1, height1 - 2 do
+					map[offset + y * step] = 3
+				end
+
+				if height1 > heightWater then
+					-- Grass
+					SetBlock(x, height1 - 1, z, 3)
+					SetBlock(x, height1, z, 2)
+					
+					-- Snow
+					SetBlock(x, height1 + 1, z, 53)
+				else
+					-- Sand under water
+					SetBlock(x, height1 - 1, z, 12)
+					SetBlock(x, height1, z, 12)
+
+					for y = height1 + 1, heightWater - 1 do
+						SetBlock(x, y, z, 8)
+					end
+					
+					if height1 == heightWater then
+						-- Snow
+						SetBlock(x, height1 + 1, z, 53)
+					elseif height1 < heightWater then
+						SetBlock(x, heightWater, z, 60)
+					end
+				end
 			else
 				SetBlock(x, height1 - 1, z, 4)
 				SetBlock(x, height1, z, 4)
@@ -323,11 +355,14 @@ local function generateTrees(mapaddr, dimx, dimy, dimz, seed)
 	local SetBlock = function(x, y, z, id)
 		map[(y * dimz + z) * dimx + x + 4] = id
 	end
+	local GetBlock = function(x, y, z, id)
+		return map[(y * dimz + z) * dimx + x + 4]
+	end
 
 	local biomesWithTrees = {}
 
 	for i=1, #biomes do
-		if biomes[i] == BIOME_TREES or biomes[i] == BIOME_SAND then
+		if biomes[i] == BIOME_TREES or biomes[i] == BIOME_SAND or biomes[i] == BIOME_SNOW then
 			biomesWithTrees[#biomesWithTrees + 1] = i
 		end
 	end
@@ -384,6 +419,30 @@ local function generateTrees(mapaddr, dimx, dimy, dimz, seed)
 					end
 				end
 				SetBlock(x, baseHeight2 + 1, z, 18)
+			elseif getBiome(x, z) == BIOME_SNOW then
+				i = i + 1
+
+				baseHeight2 = baseHeight + math.random(4, 6)
+
+				for y = baseHeight + 3, baseHeight2 + 2 do
+					local radius = (y % 2) + math.random() * 2
+					local radiusCeil = math.ceil(radius)
+					radius = radius*radius
+					for dx = -radiusCeil, radiusCeil do
+						for dz = -radiusCeil, radiusCeil do
+							if dx*dx + dz*dz < radius then
+								SetBlock(x+dx, y, z+dz, 18)
+								if y >= baseHeight2 + 1 and GetBlock(x+dx, y+1, z+dz) == 0 then
+									SetBlock(x+dx, y+1, z+dz, 53)
+								end
+							end
+						end
+					end
+				end
+
+				for y = baseHeight + 1, baseHeight2 do
+					SetBlock(x, y, z, 17)
+				end
 			elseif getBiome(x, z) == BIOME_SAND then
 				i = i + 1
 
@@ -511,7 +570,7 @@ local function generateOres(mapaddr, dimx, dimy, dimz, seed)
 		z = math.random(0, dimz - GEN_ORE_VEIN_SIZE - 1)
 		--y = math.random(1, heightGrass + 15)
 		y = math.floor(1 + math.random() ^ 3 * math.min(dimy - GEN_ORE_VEIN_SIZE - 1, heightGrass + 15))
-
+		
 		ore = math.random(14, 16)
 		for dx = 0, GEN_ORE_VEIN_SIZE do
 			for dz = 0, GEN_ORE_VEIN_SIZE do
@@ -523,7 +582,7 @@ local function generateOres(mapaddr, dimx, dimy, dimz, seed)
 			end
 		end
 	end
-
+	
 	local GRAVEL_COUNT = dimx * dimy * dimz * GEN_GRAVEL_COUNT_MULT
 	for i = 1, GRAVEL_COUNT do
 		x = math.random(0, dimx - GEN_ORE_VEIN_SIZE - 1)
