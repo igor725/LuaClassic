@@ -609,7 +609,7 @@ return function()
 				return ('You need %s to craft %s'):format(lacks, bName)
 			end
 		else
-			return 'Selected block can\'t be crafted'
+			return 'Selected block can\'t be crafted. Choose block from inventory and write /craft to craft it.'
 		end
 	end)
 
