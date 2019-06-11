@@ -386,6 +386,11 @@ function receiveLine(fd)
 			elseif sym ~= 13 then
 				ln.linebuf[ln.linepos] = sym
 				ln.linepos = ln.linepos + 1
+				if ln.linepos > 8192 then
+					local str = ffi.string(ln.linebuf, ln.linepos)
+					ln.linepos = 0
+					return str, true
+				end
 			end
 		end
 		if checkSock(fd) == 'closed'then
