@@ -79,7 +79,11 @@ function ec:load()
 	end
 	getWorldMT().getEnvColor = function(world, typ)
 		local c = world.data.colors[typ]
-		return c.r, c.g, c.b
+		if c then
+			return c.r, c.g, c.b
+		else
+			return -1, -1, -1
+		end
 	end
 end
 
