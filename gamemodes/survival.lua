@@ -1,5 +1,6 @@
 SURV_MAX_HEALTH = 10
 SURV_MAX_OXYGEN = 10
+SURV_MAX_BLOCKS = 64
 
 SURV_ACT_NONE  = -1
 SURV_ACT_BREAK = 1
@@ -318,22 +319,46 @@ local function survDamage(attacker, victim, damage, dmgtype)
 	return true
 end
 
+local function survInvAddBlock(player, id, quantity)
+	if id < 1 or id > 65 then return 0 end
+
+	quantity = quantity or 1
+	quantity = math.max(math.min(quantity, SURV_MAX_BLOCKS), 0)
+
+	local inv = player.inventory
+	if inv[id] == 64 then
+		return 0
+	end
+
+	local dc = inv[id] + quantity
+
+	if dc > SURV_MAX_BLOCKS then
+		quantity = quantity - (dc - SURV_MAX_BLOCKS)
+		dc = SURV_MAX_BLOCKS
+	end
+
+	inv[id] = dc
+	survUpdateBlockInfo(player)
+
+	return quantity
+end
+
 local function survBreakBlock(player, x, y, z)
 	local world = getWorld(player)
 	local bid = world:getBlock(x, y, z)
+	local dcount
 	bid = survBlockDrop[bid]or bid
 	if type(bid) == 'function'then
-		bid = bid()
+		bid, dcount = bid()
 	end
 
 	if bid ~= 0 then
-		local heldBlock = player:getHeldBlock()
-		if heldBlock ~= bid and (41 > heldBlock or heldBlock > 43) then
-			player:holdThis(bid)
+		if survInvAddBlock(player, bid, dcount or 1) > 0 then
+			local heldBlock = player:getHeldBlock()
+			if heldBlock ~= bid and (heldBlock < 41 or heldBlock > 43) then
+				player:holdThis(bid)
+			end
 		end
-
-		player.inventory[bid] = math.min(player.inventory[bid] + 1, 64)
-		survUpdateBlockInfo(player)
 	end
 	survStopBreaking(player)
 	hooks:call('onPlayerPlaceBlock', player, x, y, z, 0)
@@ -495,8 +520,6 @@ return function()
 
 	hooks:add('postPlayerSpawn', 'survival', function(player)
 		survUpdateHealth(player)
-		--local h = (player:checkPermission('player.hacks', true)and 1)or 0
-		--player:hackControl(h, h, h, h, h, -1)
 		local h = player.isInGodmode and 1 or 0
 		player:hackControl(h, h, h, 1, 1, -1)
 		survResumeTimers(player)
@@ -600,13 +623,10 @@ return function()
 		count = tonumber(count)or 64
 		count = math.min(math.max(count, 1), 64)
 
-		if id and id > 0 and id < 65 then
+		local given = survInvAddBlock(player, id, count)
+		if given > 0 then
 			player:holdThis(id)
-			player.inventory[id] = math.min(64, player.inventory[id] + count)
-			survUpdateBlockInfo(player)
-			return (CMD_GIVE):format(count, survBlocknames[id], player)
-		else
-			return 'Invalid block id'
+			return (CMD_GIVE):format(given, survBlocknames[id], player)
 		end
 	end)
 
@@ -672,7 +692,7 @@ return function()
 
 			local inv1 = player.inventory
 			local inv2 = target.inventory
-			quantity = math.min(quantity, 64 - inv2[bId])
+			quantity = math.min(quantity, SURV_MAX_BLOCKS - inv2[bId])
 			if quantity < 1 then
 				return
 			end
@@ -730,7 +750,7 @@ return function()
 		survUpdateHealth(player)
 		survUpdateBlockInfo(player)
 
-		return ('Player &a%s&f godmode %s.'):format(player, state)
+		return ('Godmode &a%s&f for %s.'):format(player, state)
 	end)
 
 	addCommand('full', function(isConsole, player, args)
@@ -738,17 +758,15 @@ return function()
 		if isConsole then
 			if #args < 1 then return false end
 			player = getPlayerByName(args[1])
-			bid = args[2]
+			bid = tonumber(args[2])
 		end
 		if not player then return MESG_PLAYERNF end
 		bid = bid or player:getHeldBlock()
 
-		if bid > 0 and bid < 66 then
-			player.inventory[bid] = 64
-			survUpdateBlockInfo(player)
-			return (CMD_GIVE):format(64, survBlocknames[bid], player)
-		else
-			return 'Invalid block ID'
+		local given = survInvAddBlock(player, bid, SURV_MAX_BLOCKS)
+		if given > 0 then
+			player:holdThis(bid)
+			return (CMD_GIVE):format(given, survBlocknames[bid], player)
 		end
 	end)
 
