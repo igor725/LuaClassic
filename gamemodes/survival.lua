@@ -39,7 +39,8 @@ local survBlockDrop = {
 	[1] = 4,
 	[18] = function()
 		return (math.random(0, 100) < 20 and 6)or 18
-	end
+	end,
+	[20] = 0
 }
 
 local survMiningSpeed = {
