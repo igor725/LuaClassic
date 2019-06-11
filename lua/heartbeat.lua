@@ -24,7 +24,7 @@ local function encodeURI(str)
 end
 
 hooks:add('onInitDone', 'heartbeat', function()
-	local hbtype = config:get('heartbeat-type')
+	local hbtype = config:get('heartbeatType')
 	if hbtype == 'classicube'then
 		check4md5()
 		math.randomseed(os.time())
@@ -41,12 +41,12 @@ hooks:add('onInitDone', 'heartbeat', function()
 				log.error('Heartbeat error: ' .. err)
 				return
 			end
-			local sName = encodeURI(config:get('server-name'))
-			local sPort = config:get('server-port')
+			local sName = encodeURI(config:get('serverName'))
+			local sPort = config:get('serverPort')
 			local sOnline = getCurrentOnline()
-			local sPublic = config:get('heartbeat-public')
-			local sMax = config:get('max-players')
-			local sWeb = config:get('allow-websocket')
+			local sPublic = config:get('heartbeatPublic')
+			local sMax = config:get('maxPlayers')
+			local sWeb = config:get('acceptWebsocket')
 
 			local request = (_HEARTBEAT_URL):format(sName, sPort, sOnline, sMax, sSalt, sPublic, sWeb)
 			sendMesg(fd, ('GET %s HTTP/1.1\n'):format(request))

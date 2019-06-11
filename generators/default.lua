@@ -130,7 +130,7 @@ local function heightMapGenerate(dimx, dimy, dimz)
 			else
 				heightMap[offset] = heightGrass
 			end
-			
+
 			if heightMap[offset] >= dimy then
 				heightMap[offset] = dimy - 1
 			elseif heightMap[offset] < 0 then
@@ -511,7 +511,7 @@ local function generateOres(mapaddr, dimx, dimy, dimz, seed)
 		z = math.random(0, dimz - GEN_ORE_VEIN_SIZE - 1)
 		--y = math.random(1, heightGrass + 15)
 		y = math.floor(1 + math.random() ^ 3 * math.min(dimy - GEN_ORE_VEIN_SIZE - 1, heightGrass + 15))
-		
+
 		ore = math.random(14, 16)
 		for dx = 0, GEN_ORE_VEIN_SIZE do
 			for dz = 0, GEN_ORE_VEIN_SIZE do
@@ -523,7 +523,7 @@ local function generateOres(mapaddr, dimx, dimy, dimz, seed)
 			end
 		end
 	end
-	
+
 	local GRAVEL_COUNT = dimx * dimy * dimz * GEN_GRAVEL_COUNT_MULT
 	for i = 1, GRAVEL_COUNT do
 		x = math.random(0, dimx - GEN_ORE_VEIN_SIZE - 1)
@@ -675,7 +675,7 @@ return function(world, seed)
 
 	local threads = {}
 
-	local thlimit = config:get('generator-threads-count')
+	local thlimit = config:get('generatorThreadsCount')
 
 	local terrain_gen = lanes.gen(lanelibs, threadTerrain)
 	for i = 0, thlimit - 1 do

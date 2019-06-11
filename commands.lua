@@ -20,8 +20,7 @@ addCommand('info', function(isConsole, player)
 	local str1 = (CMD_SVINFO1):format(jit.os, jit.arch, jit.version)
 	local str2 = (CMD_SVINFO2):format(gcinfo() / 1024)
 	if isConsole then
-		print(str1)
-		print(str2)
+		io.write(str1, '\n', str2, '\n')
 	else
 		player:sendMessage(str1)
 		player:sendMessage(str2)
@@ -343,20 +342,18 @@ addCommand('ban', function(isConsole, player, args)
 end)
 
 addCommand('kick', function(isConsole, player, args)
-	if #args > 0 then
-		local p = getPlayerByName(args[1])
-		local reason = KICK_NOREASON
-		if p then
-			if #args > 1 then
-				reason = table.concat(args, ' ', 2)
-			end
-			p:kick(reason)
-			return
-		else
-			return MESG_PLAYERNF
+	if #args < 1 then return false end
+
+	local p = getPlayerByName(args[1])
+	local reason = KICK_NOREASON
+	if p then
+		if #args > 1 then
+			reason = table.concat(args, ' ', 2)
 		end
+		p:kick(reason)
+	else
+		return MESG_PLAYERNF
 	end
-	return false
 end)
 
 addCommand('tp', function(isConsole, player, args)

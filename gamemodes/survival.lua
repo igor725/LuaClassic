@@ -321,13 +321,13 @@ local function survDamage(attacker, victim, damage, dmgtype)
 end
 
 local function survInvAddBlock(player, id, quantity)
-	if id < 1 or id > 65 then return 0 end
+	if not id or id < 1 or id > 65 then return 0 end
 
 	quantity = quantity or 1
 	quantity = math.max(math.min(quantity, SURV_MAX_BLOCKS), 0)
 
 	local inv = player.inventory
-	if inv[id] == 64 then
+	if inv[id] >= SURV_MAX_BLOCKS then
 		return 0
 	end
 
@@ -603,8 +603,8 @@ return function()
 
 	addCommand('give', function(isConsole, player, args)
 		if #args < 1 then return false end
-		
-		local id, countqw
+
+		local id, count
 		if isConsole then
 			if #args < 2 then return false end
 			player = getPlayerByName(args[1])
@@ -622,7 +622,7 @@ return function()
 		end
 		if not player then return MESG_PLAYERNF end
 
-		id = tonumber(id)
+		id = tonumber(id)or 0
 		count = tonumber(count)or 64
 		count = math.min(math.max(count, 1), 64)
 

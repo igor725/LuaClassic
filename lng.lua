@@ -76,7 +76,7 @@ MESG_UNKNOWNCMD    = 'Unknown command'
 MESG_NOTWSCONN     = 'This port accepts only websocket connections.'
 
 CMD_WMODE          = 'Readonly mode %s for &a%s'
-CMD_SVINFO1        = 'Server runned on &a%s &e%s &fwith &b%s'
+CMD_SVINFO1        = 'Server runned on %s %s with %s'
 CMD_SVINFO2        = 'Ram used: %.3fMB'
 CMD_TIMEPRESETNF   = 'Time preset not found'
 CMD_TIMEDISALLOW   = 'Time changing not allowed in the nether.'

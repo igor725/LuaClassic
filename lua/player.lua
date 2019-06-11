@@ -1,5 +1,5 @@
 local function getKickTimeout()
-	return config:get('player-timeout')
+	return config:get('playerTimeout')
 end
 
 local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
@@ -235,7 +235,7 @@ local player_mt = {
 		if not self.isSpawned then
 			pos.x, pos.y, pos.z = x, y, z
 			return
-		
+
 		elseif self.isTeleported then
 			self.isTeleported = false
 			pos.x, pos.y, pos.z = x, y, z
@@ -243,19 +243,19 @@ local player_mt = {
 		elseif pos.x ~= x or pos.y ~= y or pos.z ~= z then
 			local dx, dy, dz = x - pos.x, y - pos.y, z - pos.z
 			pos.x, pos.y, pos.z = x, y, z
-			
+
 			hooks:call('onPlayerMove', self, dx, dy, dz)
 			if onPlayerMove then
 				onPlayerMove(self, dx, dy, dz)
 			end
-			
+
 			if dy >= 0 and self.speedY < 0 then
 				hooks:call('onPlayerLanded', self, self.speedY2)
 			end
-			
+
 			self.speedY2 = self.speedY
 			self.speedY = dy / dt
-		
+
 			checkForPortal(self, x, y, z)
 			return true
 		elseif self.speedY < 0 then
@@ -462,12 +462,12 @@ local player_mt = {
 		local addr = world:getAddr()
 		local size = world:getSize()
 		local sendMap_gen = lanes.gen('*', sendMap)
-		local cmplvl = config:get('gzip-compression-level')
+		local cmplvl = config:get('gzipCompressionLevel')
 		self.thread = sendMap_gen(self:getClient(), addr, size, cmplvl, self:isWebClient())
 	end,
 	sendMOTD = function(self, sname, smotd)
-		sname = sname or config:get('server-name')
-		smotd = smotd or config:get('server-motd')
+		sname = sname or config:get('serverName')
+		smotd = smotd or config:get('serverMotd')
 		self:sendPacket(
 			false,
 			0x00,
@@ -791,8 +791,7 @@ function findFreeID(player)
 			return -1
 		end
 	end
-	local mp = config:get('max-players')
-	if s > mp then s = -1 end
+	if s > config:get('maxPlayers')then s = -1 end
 	return s
 end
 

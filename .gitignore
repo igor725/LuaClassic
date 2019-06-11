@@ -3,6 +3,7 @@ worlds/*
 playerdata/*
 !playerdata/.keep
 /test*.lua
+cfg.lua
 *.properties
 *.log
 *.txt

@@ -342,19 +342,19 @@ function init()
 	config:parse()
 	cpe:init()
 
-	uwa = config:get('unload-world-after')
-	local ip = config:get('server-ip')
-	local port = config:get('server-port')
+	uwa = config:get('unloadWorldAfter')
+	local ip = config:get('serverIp')
+	local port = config:get('serverPort')
 	server = assert(bindSock(ip, port))
 
-	if config:get('allow-websocket')then
+	if config:get('acceptWebsocket')then
 		wsHandshake = {}
 		wsLoad()
 	else
 		wsLoad = nil
 	end
 
-	local mode = config:get('server-gamemode')
+	local mode = config:get('serverGamemode')
 	if mode and #mode > 0 and mode ~= 'none'and mode ~= 'default'then
 		log.info('Loading gamemode', mode)
 		local chunk, err = loadfile('gamemodes/' .. mode .. '.lua')
@@ -369,17 +369,10 @@ function init()
 	loadBanList()
 
 	log.info(CON_WLOAD)
-	local sdlist = config:get('level-seeds')
-	sdlist = sdlist:split(',')
-
-	local wlist = config:get('level-names')
-	wlist = wlist:split(',')
-
-	local tlist = config:get('level-types')
-	tlist = tlist:split(',')
-
-	local slist = config:get('level-sizes')
-	slist = slist:split(',')
+	local sdlist = config:get('levelSeeds')
+	local wlist = config:get('levelNames')
+	local tlist = config:get('levelTypes')
+	local slist = config:get('levelSizes')
 
 	for num, wn in pairs(wlist)do
 		wn = wn:lower()
