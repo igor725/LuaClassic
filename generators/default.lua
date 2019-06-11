@@ -14,8 +14,9 @@ local GEN_CAVE_MIN_LENGTH  = 100
 local GEN_CAVE_MAX_LENGTH  = 500
 
 local GEN_TREES_COUNT_MULT = 0.007
-
+local GEN_CAVES_COUNT_MULT = 2 / 700000
 local GEN_HOUSES_COUNT_MULT = 1 / 70000
+local GEN_GRAVEL_COUNT_MULT = 1 / 500000
 
 local GEN_ORE_VEIN_SIZE    = 3
 local GEN_ORE_COUNT_MULT   = 1 / 2000
@@ -38,6 +39,7 @@ local lanelibs = 'math,ffi'
 local heightStone
 local heightGrass
 local heightWater
+local genGravelVeinSize
 local heightLava
 local heightMap
 local bsx, bsz
@@ -89,6 +91,7 @@ end
 
 local function heightSet(dimy)
 	heightGrass = math.floor(dimy / 2)
+	genGravelVeinSize = math.min(GEN_GRAVEL_VEIN_SIZE, heightGrass / 3)
 	heightStone = heightGrass - 3
 	heightWater = heightGrass
 	heightLava = 7
@@ -126,6 +129,12 @@ local function heightMapGenerate(dimx, dimy, dimz)
 				end
 			else
 				heightMap[offset] = heightGrass
+			end
+			
+			if heightMap[offset] >= dimy then
+				heightMap[offset] = dimy - 1
+			elseif heightMap[offset] < 0 then
+				heightMap[offset] = 0
 			end
 		end
 	end
@@ -481,7 +490,7 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 	end
 end
 
-local function generateOre(mapaddr, dimx, dimy, dimz, seed)
+local function generateOres(mapaddr, dimx, dimy, dimz, seed)
 	set_debug_threadname('OreGenerator')
 	math.randomseed(seed)
 
@@ -498,15 +507,15 @@ local function generateOre(mapaddr, dimx, dimy, dimz, seed)
 
 	local x, y, z, ore
 	for i = 1, ORE_COUNT do
-		x = math.random(GEN_ORE_VEIN_SIZE, dimx - GEN_ORE_VEIN_SIZE)
-		z = math.random(GEN_ORE_VEIN_SIZE, dimz - GEN_ORE_VEIN_SIZE)
+		x = math.random(0, dimx - GEN_ORE_VEIN_SIZE - 1)
+		z = math.random(0, dimz - GEN_ORE_VEIN_SIZE - 1)
 		--y = math.random(1, heightGrass + 15)
-		y = math.floor(1 + math.random() ^ 3 * (heightGrass + 15))
-
+		y = math.floor(1 + math.random() ^ 3 * math.min(dimy - GEN_ORE_VEIN_SIZE - 1, heightGrass + 15))
+		
 		ore = math.random(14, 16)
-		for dx = 1, GEN_ORE_VEIN_SIZE do
-			for dz = 1, GEN_ORE_VEIN_SIZE do
-				for dy = 1, GEN_ORE_VEIN_SIZE do
+		for dx = 0, GEN_ORE_VEIN_SIZE do
+			for dz = 0, GEN_ORE_VEIN_SIZE do
+				for dy = 0, GEN_ORE_VEIN_SIZE do
 					if math.random(0, 1) == 1 and GetBlock(x + dx, y + dy, z + dz) == 1 then
 						SetBlock(x + dx, y + dy, z + dz, ore)
 					end
@@ -514,16 +523,16 @@ local function generateOre(mapaddr, dimx, dimy, dimz, seed)
 			end
 		end
 	end
-
-	local GRAVEL_COUNT = dimx * dimy * dimz / 500000
+	
+	local GRAVEL_COUNT = dimx * dimy * dimz * GEN_GRAVEL_COUNT_MULT
 	for i = 1, GRAVEL_COUNT do
-		x = math.random(1, dimx - GEN_ORE_VEIN_SIZE + 1)
-		z = math.random(1, dimz - GEN_ORE_VEIN_SIZE + 1)
-		y = math.random(1, heightGrass - 20 - GEN_GRAVEL_VEIN_SIZE + 1)
+		x = math.random(0, dimx - GEN_ORE_VEIN_SIZE - 1)
+		z = math.random(0, dimz - GEN_ORE_VEIN_SIZE - 1)
+		y = math.random(0, heightGrass - 20 - genGravelVeinSize + 1)
 
-		for dz = 1, GEN_GRAVEL_VEIN_SIZE do
-			for dy = 1, GEN_GRAVEL_VEIN_SIZE do
-				ffi.fill(map + ((y + dy) * dimz + z + dz) * dimx + x + 4, GEN_GRAVEL_VEIN_SIZE, 13)
+		for dz = 0, genGravelVeinSize do
+			for dy = 0, genGravelVeinSize do
+				ffi.fill(map + ((y + dy) * dimz + z + dz) * dimx + x + 4, genGravelVeinSize, 13)
 			end
 		end
 	end
@@ -679,7 +688,7 @@ return function(world, seed)
 	watchThreads(threads)
 
 	if GEN_ENABLE_ORES then
-		local ores_gen = lanes.gen(lanelibs, generateOre)
+		local ores_gen = lanes.gen(lanelibs, generateOres)
 		table.insert(threads, ores_gen(mapaddr, dimx, dimy, dimz, seed))
 		log.debug('OresGenerator: started')
 	end
@@ -688,7 +697,7 @@ return function(world, seed)
 		watchThreads(threads)
 	end
 
-	if GEN_ENABLE_TREES then
+	if GEN_ENABLE_TREES and dimy - heightGrass >= 10 then
 		local trees_gen = lanes.gen(lanelibs, generateTrees)
 		table.insert(threads, trees_gen(mapaddr, dimx, dimy, dimz, seed))
 		log.debug('TreesGenerator: started')
@@ -698,7 +707,7 @@ return function(world, seed)
 		watchThreads(threads)
 	end
 
-	if GEN_ENABLE_HOUSES then
+	if GEN_ENABLE_HOUSES and dimy - heightGrass >= 12 then
 		local houses_gen = lanes.gen(lanelibs, generateHouse)
 		table.insert(threads, houses_gen(mapaddr, dimx, dimy, dimz, seed))
 		log.debug('HousesGenerator: started')
@@ -706,11 +715,11 @@ return function(world, seed)
 
 	watchThreads(threads)
 
-	if GEN_ENABLE_CAVES then
+	if GEN_ENABLE_CAVES and dimy >= 48 then
 		log.debug('CavesGenerator: started')
 
 		local caves_gen = lanes.gen(lanelibs, generateCaves)
-		local CAVES_COUNT = dimx * dimy * dimz / 700000
+		local CAVES_COUNT = dimx * heightGrass * dimz * GEN_CAVES_COUNT_MULT
 
 		for i = 1, CAVES_COUNT do
 			if i % thlimit == 0 then
