@@ -249,19 +249,16 @@ local player_mt = {
 				onPlayerMove(self, dx, dy, dz)
 			end
 			
-			if self.speedY then
-				if self.speedY and dy >= 0 and self.speedY < 0 then
-					hooks:call('onPlayerLanded', self, self.speedY2)
-				end
-				
-				self.speedY2 = self.speedY
+			if dy >= 0 and self.speedY < 0 then
+				hooks:call('onPlayerLanded', self, self.speedY2)
 			end
 			
+			self.speedY2 = self.speedY
 			self.speedY = dy / dt
 		
 			checkForPortal(self, x, y, z)
 			return true
-		elseif self.speedY and self.speedY < 0 then
+		elseif self.speedY < 0 then
 			self.speedY = 0
 			hooks:call('onPlayerLanded', self, self.speedY2)
 			return
@@ -836,6 +833,8 @@ function newPlayer(cl)
 		pos = pos,
 		lastOnlineTime = 0,
 		isSpawned = false,
+		speedY = 0,
+		speedY2 = 0,
 		firstSpawn = true,
 		waitingExts = -1,
 		eye = eye,
