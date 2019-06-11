@@ -12,7 +12,7 @@ SURV_DMG_LAVA = 4
 SURV_DMG_FIRE = 5
 
 CMD_GIVE = '%d %s block(-s) given to &a%s'
-CU_GIVE = '/give [player] <blocks> <count>'
+CU_GIVE = '/give [player] <block id> <count>'
 
 local survBlocknames = {
 	'Stone', 'Grass', 'Dirt', 'Cobblestone',
