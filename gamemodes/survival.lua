@@ -514,9 +514,27 @@ return function()
 			survBlockAction(player, button, action, x, y, z)
 		elseif dist_player < dist_block then
 			if button == 0 and action == 0 then
-				if tgplayer then
-					survDamage(player, tgplayer, .5, SURV_DMG_PLAYER)
+				if not player.nextHit then
+					player.nextHit = 0
+				end
+				if tgplayer and CTIME > player.nextHit then
+					-- critical damage
+					local blocks = player.speedY2 and player.speedY2 ^ 2 / 250 or 0
+					
+					survDamage(player, tgplayer, 1 + blocks, SURV_DMG_PLAYER)
 					survStopBreaking(player)
+					
+					-- knockback
+					local x, y, z = player:getPos()
+					local tx, ty, tz = tgplayer:getPos()
+					local dx, dy, dz = tx - x, ty - y, tz - z
+					local length = math.sqrt(dx^2 + dy^2 + dz^2)
+					dx, dy, dz = dx / length, dy / length, dz / length
+					
+					tgplayer:teleportTo(tx + dx, ty + 0.5, tz + dz)
+					
+					-- timeout
+					player.nextHit = CTIME + 0.5
 				end
 			end
 		end

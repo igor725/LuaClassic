@@ -234,13 +234,11 @@ local player_mt = {
 		local pos = self.pos
 		if not self.isSpawned then
 			pos.x, pos.y, pos.z = x, y, z
-			--self.oldDY, self.oldSpeedY2 = 0, 0
 			return
 		
 		elseif self.isTeleported then
 			self.isTeleported = false
 			pos.x, pos.y, pos.z = x, y, z
-			--self.oldDY, self.oldSpeedY2 = 0, 0
 			return
 		elseif pos.x ~= x or pos.y ~= y or pos.z ~= z then
 			local dx, dy, dz = x - pos.x, y - pos.y, z - pos.z
@@ -251,21 +249,21 @@ local player_mt = {
 				onPlayerMove(self, dx, dy, dz)
 			end
 			
-			if self.oldDY then
-				if self.oldSpeedY2 and dy >= 0 and self.oldDY < 0 then
-					hooks:call('onPlayerLanded', self, self.oldSpeedY2)
+			if self.speedY then
+				if self.oldSpeedY2 and dy >= 0 and self.speedY < 0 then
+					hooks:call('onPlayerLanded', self, self.speedY2)
 				end
 				
-				self.oldSpeedY2 = self.oldDY / dt
+				self.speedY2 = self.speedY
 			end
 			
-			self.oldDY = dy
+			self.speedY = dy / dt
 		
 			checkForPortal(self, x, y, z)
 			return true
-		elseif self.oldDY and self.oldDY < 0 then
-			self.oldDY = 0
-			hooks:call('onPlayerLanded', self, self.oldSpeedY2)
+		elseif self.speedY and self.speedY < 0 then
+			self.speedY = 0
+			hooks:call('onPlayerLanded', self, self.speedY2)
 			return
 		end
 	end,
