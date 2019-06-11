@@ -313,6 +313,8 @@ if jit.os ~= 'Windows'then
 end
 
 function sendMesg(fd, msg, len, flags)
+	if not msg then return false end
+
 	flags = flags or dflags
 	len = len or ffi.C.strlen(msg)
 	msg = ffi.cast('char*', msg)
@@ -335,6 +337,8 @@ function sendMesg(fd, msg, len, flags)
 end
 
 function receiveMesg(fd, buffer, len, flags)
+	if not buffer then return end
+
 	flags = flags or 0
 	local ret = sck.recv(fd, buffer, len, flags)
 	if ret < 0 then
@@ -346,6 +350,8 @@ function receiveMesg(fd, buffer, len, flags)
 end
 
 function receiveString(fd, len, flags)
+	if len < 1 then return end
+
 	local buffer = ffi.new('char[?]', len)
 	if receiveMesg(fd, buffer, len, flags)then
 		return ffi.string(buffer, len)
