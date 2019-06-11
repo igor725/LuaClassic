@@ -141,8 +141,8 @@ function onPlayerChatMessage(player, message)
 			end
 		end
 	elseif starts == '@'then
-		local name, message = message:match('^@(.+)%s(.+)')
-		if name then
+		local name, message = message:match('^@(.-)%s(.+)')
+		if name and #name > 0 then
 			local target = getPlayerByName(name)
 			if target == player then
 				player:sendMessage(CMD_WHISPERSELF)
@@ -482,7 +482,11 @@ succ, err = xpcall(function()
 		if cmdh then
 			cmdh()
 		end
-		sleep(20)
+
+		NextUpdate = CTIME + 0.02
+		if NextUpdate > gettime() then
+			sleep((NextUpdate - gettime())*1000)
+		end
 	end
 end,debug.traceback)
 

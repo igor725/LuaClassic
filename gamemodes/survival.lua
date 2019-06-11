@@ -35,6 +35,13 @@ local survBlocknames = {
 	'Crate', 'Stone brick'
 }
 
+local survBlockDrop = {
+	[1] = 4,
+	[18] = function()
+		return (math.random(0, 100) < 20 and 6)or 18
+	end
+}
+
 local survMiningSpeed = {
 	[-1] =  1,
 	[1]  =  7.5,
@@ -164,10 +171,13 @@ end
 
 local function survUpdateHealth(player)
 	local int, fr = math.modf(player.health)
-	local dmg = SURV_MAX_HEALTH - int - ceil(fr)
-	local str = '&8' .. ('\3'):rep(dmg)
-	if fr ~= 0 then str = str .. '&4\3' end
-	str = str .. '&c' ..('\3'):rep(SURV_MAX_HEALTH - dmg - ceil(fr))
+	local str = ''
+	if not player.isInGodmode then
+		local dmg = SURV_MAX_HEALTH - int - ceil(fr)
+		str = '&8' .. ('\3'):rep(dmg)
+		if fr ~= 0 then str = str .. '&4\3' end
+		str = str .. '&c' ..('\3'):rep(SURV_MAX_HEALTH - dmg - ceil(fr))
+	end
 	player:sendMessage(str, MT_STATUS2)
 end
 
@@ -175,10 +185,13 @@ local function survUpdateBlockInfo(player)
 	local id = player:getHeldBlock()
 	if id > 0 then
 		local quantity = player.inventory[id]
+		if player.isInGodmode then
+			quantity = 1
+		end
 		local name = survBlocknames[id]or'UNKNOWN_BLOCK'
 		player:sendMessage('Block: ' .. name, MT_BRIGHT3)
 		player:sendMessage('Quantity: ' .. quantity, MT_BRIGHT2)
-		player:setBlockPermissions(id, quantity > 0 and (id < 7 or id > 11), false)
+		player:setBlockPermissions(id, quantity > 0 and (id < 7 or id > 11), player.isInGodmode)
 	else
 		player:sendMessage('', MT_BRIGHT3)
 		player:sendMessage('', MT_BRIGHT2)
@@ -275,13 +288,26 @@ end
 
 local function survDamage(attacker, victim, damage, dmgtype)
 	if victim.isInGodmode then return false end
+
+	if dmgtype == SURV_DMG_PLAYER then
+		-- knockback
+		local x, y, z = attacker:getPos()
+		local tx, ty, tz = victim:getPos()
+		local dx, dy, dz = tx - x, ty - y, tz - z
+		local length = math.sqrt(dx^2 + dy^2 + dz^2)
+		dx, dy, dz = dx / length, dy / length, dz / length
+
+		victim:teleportTo(tx + dx, ty + 0.5, tz + dz)
+	end
+
 	victim.health = victim.health - damage
 	survUpdateHealth(victim)
 	victim:setEnvProp(MEP_MAXFOGDIST, 1)
 	victim:setEnvColor(EC_FOG, 255, 40, 40)
 	timer.Create(victim:getName() .. '_hurt', 1, .07, function()
+		local r, g, b = getWorld(victim):getEnvColor(EC_FOG)
 		victim:setEnvProp(MEP_MAXFOGDIST, 0)
-		victim:setEnvColor(EC_FOG, -1, -1, -1)
+		victim:setEnvColor(EC_FOG, r, g, b)
 	end)
 	if victim.health <= 0 then
 		survRespawn(victim)
@@ -297,20 +323,28 @@ end
 local function survBreakBlock(player, x, y, z)
 	local world = getWorld(player)
 	local bid = world:getBlock(x, y, z)
-
-	local heldBlock = player:getHeldBlock()
-	if heldBlock ~= bid and (41 > heldBlock or heldBlock > 43) then
-		player:holdThis(bid)
+	bid = survBlockDrop[bid]or bid
+	if type(bid) == 'function'then
+		bid = bid()
 	end
 
-	player.inventory[bid] = math.min(player.inventory[bid] + 1, 64)
-	survUpdateBlockInfo(player)
+	if bid ~= 0 then
+		local heldBlock = player:getHeldBlock()
+		if heldBlock ~= bid and (41 > heldBlock or heldBlock > 43) then
+			player:holdThis(bid)
+		end
+
+		player.inventory[bid] = math.min(player.inventory[bid] + 1, 64)
+		survUpdateBlockInfo(player)
+	end
 	survStopBreaking(player)
 	hooks:call('onPlayerPlaceBlock', player, x, y, z, 0)
 	world:setBlock(x, y, z, 0)
 end
 
 local function survBlockAction(player, button, action, x, y, z)
+	if player.isInGodmode then return end
+
 	local world = getWorld(player)
 	local bid = world:getBlock(x, y, z)
 	if bid > 6 and bid < 12 then
@@ -344,7 +378,7 @@ local function survBlockAction(player, button, action, x, y, z)
 						break
 					end
 				end
-				
+
 				timer.Create(player:getName() .. '_surv_brk', 11, tmSpeed / 10, function()
 					local lb = player.lastClickedBlock
 					if lb.x ~= cb.x or lb.y ~= cb.y or lb.z ~= cb.z then
@@ -399,7 +433,7 @@ return function()
 			return
 		end
 		for i = 1, 65 do
-			player:setBlockPermissions(i, false, false)
+			player:setBlockPermissions(i, false, player.isInGodmode)
 		end
 
 		local name = player:getName()
@@ -446,19 +480,10 @@ return function()
 		survStopBreaking(player)
 		survRemoveTimers(player)
 	end)
-
-	hooks:add('onPlayerMove', 'survival', function(player, dx, dy, dz)
-		local world = getWorld(player)
-		local x, y, z = player:getPos()
-		x, y, z = floor(x), floor(y - .5), floor(z)
-
-		local blk = world:getBlock(x, y - 2, z)
-
-		if blk ~= 0 and(blk < 8 or blk > 11)and dy > 1.21 then
-			if player:getFluidLevel() < 1 then
-				survDamage(nil, player, 0.9 * dy, SURV_DMG_FALL)
-				player.lposc = 3
-			end
+	hooks:add('onPlayerLanded', 'survival', function(player, speedY)
+		local blocks = speedY ^ 2 / 250
+		if blocks > 3 then
+			survDamage(nil, player, blocks / 2 - 0.5, SURV_DMG_FALL)
 		end
 	end)
 
@@ -468,8 +493,10 @@ return function()
 
 	hooks:add('postPlayerSpawn', 'survival', function(player)
 		survUpdateHealth(player)
-		local h = (player:checkPermission('player.hacks', true)and 1)or 0
-		player:hackControl(h, h, h, h, h, -1)
+		--local h = (player:checkPermission('player.hacks', true)and 1)or 0
+		--player:hackControl(h, h, h, h, h, -1)
+		local h = player.isInGodmode and 1 or 0
+		player:hackControl(h, h, h, 1, 1, -1)
 		survResumeTimers(player)
 	end)
 
@@ -495,8 +522,11 @@ return function()
 
 		if x ~= -1 and y ~= -1 and z ~= -1 then
 			dist_block = distance(x + .5, y + .5, z + .5, player:getPos())
+		else
+			survStopBreaking(player)
 		end
-		if tgent > 0 then
+
+		if tgent >= 0 then
 			tgplayer = getPlayerByID(tgent)
 			if tgplayer then
 				dist_player = distance(x, y, z, tgplayer:getPos())
@@ -507,21 +537,33 @@ return function()
 			survBlockAction(player, button, action, x, y, z)
 		elseif dist_player < dist_block then
 			if button == 0 and action == 0 then
-				if tgplayer then
-					survDamage(player, tgplayer, .5, SURV_DMG_PLAYER)
+				if not player.nextHit then
+					player.nextHit = 0
+				end
+				if tgplayer and CTIME > player.nextHit then
+					-- critical damage
+					local blocks = player.speedY2 and player.speedY2 ^ 2 / 250 or 0
+
+					survDamage(player, tgplayer, 1 + blocks, SURV_DMG_PLAYER)
+					survStopBreaking(player)
+
+					-- timeout
+					player.nextHit = CTIME + 0.5
 				end
 			end
 		end
 	end)
 
 	hooks:add('onPlayerPlaceBlock', 'survival', function(player, x, y, z, id)
-		if id > 0 and player.inventory[id] < 1 then
-			player:sendMessage('&cNot enough blocks')
-			return true
+		if id > 0 and id < 65 and player.inventory[id] < 1 then
+			if not player.isInGodmode then
+				player:sendMessage('&cNot enough blocks')
+				return true
+			end
 		else
 			player.inventory[id] = player.inventory[id] - 1
 			survUpdateBlockInfo(player)
-			
+
 			if player.inventory[id] == 0 then
 				player:holdThis(0)
 			end
@@ -601,7 +643,7 @@ return function()
 				return ('You need %s to craft %s'):format(lacks, bName)
 			end
 		else
-			return 'Selected block can\'t be crafted'
+			return 'Selected block can\'t be crafted. Choose block from inventory and write /craft to craft it.'
 		end
 	end)
 
@@ -649,6 +691,18 @@ return function()
 		end
 	end)
 
+	addCommand('kill', function(isConsole, player, args)
+		if #args < 1 then return false end
+		player = getPlayerByName(args[1])
+		if player then
+			if not player:survDamage(nil, SURV_MAX_HEALTH, 0)then
+				return 'This player cannot be damaged'
+			end
+		else
+			return MESG_PLAYERNF
+		end
+	end)
+
 	addCommand('god', function(isConsole, player, args)
 		if isConsole and #args < 1 then return false end
 		player = getPlayerByName(args[1])or player
@@ -656,6 +710,23 @@ return function()
 
 		player.isInGodmode = not player.isInGodmode
 		local state = (player.isInGodmode and ST_ON)or ST_OFF
+
+		local h = player.isInGodmode and 1 or 0
+		player:hackControl(h, h, h, 1, 1, -1)
+
+		for i = 1, 65 do
+			player:setBlockPermissions(i, false, player.isInGodmode)
+		end
+
+		if player.isInGodmode then
+			survPauseTimers(player)
+		else
+			player.health = SURV_MAX_HEALTH
+			survResumeTimers(player)
+		end
+		survUpdateHealth(player)
+		survUpdateBlockInfo(player)
+
 		return ('Player &a%s&f godmode %s.'):format(player, state)
 	end)
 

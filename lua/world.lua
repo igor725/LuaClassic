@@ -733,7 +733,7 @@ function getWorld(w)
 	if t == 'table'then
 		if w.isWorld then
 			return w
-		elseif w.isPlayer then
+		elseif w.isPlayer or w.isMob then
 			return worlds[w.worldName]
 		end
 	elseif t == 'string'then
