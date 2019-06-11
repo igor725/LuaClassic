@@ -171,10 +171,13 @@ end
 
 local function survUpdateHealth(player)
 	local int, fr = math.modf(player.health)
-	local dmg = SURV_MAX_HEALTH - int - ceil(fr)
-	local str = '&8' .. ('\3'):rep(dmg)
-	if fr ~= 0 then str = str .. '&4\3' end
-	str = str .. '&c' ..('\3'):rep(SURV_MAX_HEALTH - dmg - ceil(fr))
+	local str = ''
+	if not player.isInGodmode then
+		local dmg = SURV_MAX_HEALTH - int - ceil(fr)
+		str = '&8' .. ('\3'):rep(dmg)
+		if fr ~= 0 then str = str .. '&4\3' end
+		str = str .. '&c' ..('\3'):rep(SURV_MAX_HEALTH - dmg - ceil(fr))
+	end
 	player:sendMessage(str, MT_STATUS2)
 end
 
@@ -182,10 +185,13 @@ local function survUpdateBlockInfo(player)
 	local id = player:getHeldBlock()
 	if id > 0 then
 		local quantity = player.inventory[id]
+		if player.isInGodmode then
+			quantity = 1
+		end
 		local name = survBlocknames[id]or'UNKNOWN_BLOCK'
 		player:sendMessage('Block: ' .. name, MT_BRIGHT3)
 		player:sendMessage('Quantity: ' .. quantity, MT_BRIGHT2)
-		player:setBlockPermissions(id, quantity > 0 and (id < 7 or id > 11), false)
+		player:setBlockPermissions(id, quantity > 0 and (id < 7 or id > 11), player.isInGodmode)
 	else
 		player:sendMessage('', MT_BRIGHT3)
 		player:sendMessage('', MT_BRIGHT2)
@@ -337,6 +343,8 @@ local function survBreakBlock(player, x, y, z)
 end
 
 local function survBlockAction(player, button, action, x, y, z)
+	if player.isInGodmode then return end
+
 	local world = getWorld(player)
 	local bid = world:getBlock(x, y, z)
 	if bid > 6 and bid < 12 then
@@ -425,7 +433,7 @@ return function()
 			return
 		end
 		for i = 1, 65 do
-			player:setBlockPermissions(i, false, false)
+			player:setBlockPermissions(i, false, player.isInGodmode)
 		end
 
 		local name = player:getName()
@@ -547,9 +555,11 @@ return function()
 	end)
 
 	hooks:add('onPlayerPlaceBlock', 'survival', function(player, x, y, z, id)
-		if id > 0 and player.inventory[id] < 1 then
-			player:sendMessage('&cNot enough blocks')
-			return true
+		if id > 0 and id < 65 and player.inventory[id] < 1 then
+			if not player.isInGodmode then
+				player:sendMessage('&cNot enough blocks')
+				return true
+			end
 		else
 			player.inventory[id] = player.inventory[id] - 1
 			survUpdateBlockInfo(player)
@@ -703,6 +713,19 @@ return function()
 
 		local h = player.isInGodmode and 1 or 0
 		player:hackControl(h, h, h, 1, 1, -1)
+
+		for i = 1, 65 do
+			player:setBlockPermissions(i, false, player.isInGodmode)
+		end
+
+		if player.isInGodmode then
+			survPauseTimers(player)
+		else
+			player.health = SURV_MAX_HEALTH
+			survResumeTimers(player)
+		end
+		survUpdateHealth(player)
+		survUpdateBlockInfo(player)
 
 		return ('Player &a%s&f godmode %s.'):format(player, state)
 	end)
