@@ -282,6 +282,18 @@ end
 
 local function survDamage(attacker, victim, damage, dmgtype)
 	if victim.isInGodmode then return false end
+	
+	if dmgtype == SURV_DMG_PLAYER then
+		-- knockback
+		local x, y, z = attacker:getPos()
+		local tx, ty, tz = victim:getPos()
+		local dx, dy, dz = tx - x, ty - y, tz - z
+		local length = math.sqrt(dx^2 + dy^2 + dz^2)
+		dx, dy, dz = dx / length, dy / length, dz / length
+
+		victim:teleportTo(tx + dx, ty + 0.5, tz + dz)
+	end
+
 	victim.health = victim.health - damage
 	survUpdateHealth(victim)
 	victim:setEnvProp(MEP_MAXFOGDIST, 1)
@@ -461,7 +473,7 @@ return function()
 	end)
 	hooks:add('onPlayerLanded', 'survival', function(player, speedY)
 		local blocks = speedY ^ 2 / 250
-		if blocks > 3.5 then
+		if blocks > 3 then
 			survDamage(nil, player, blocks / 2 - 0.5, SURV_DMG_FALL)
 		end
 	end)
@@ -523,16 +535,7 @@ return function()
 					
 					survDamage(player, tgplayer, 1 + blocks, SURV_DMG_PLAYER)
 					survStopBreaking(player)
-					
-					-- knockback
-					local x, y, z = player:getPos()
-					local tx, ty, tz = tgplayer:getPos()
-					local dx, dy, dz = tx - x, ty - y, tz - z
-					local length = math.sqrt(dx^2 + dy^2 + dz^2)
-					dx, dy, dz = dx / length, dy / length, dz / length
-					
-					tgplayer:teleportTo(tx + dx, ty + 0.5, tz + dz)
-					
+
 					-- timeout
 					player.nextHit = CTIME + 0.5
 				end
@@ -694,6 +697,11 @@ return function()
 
 		player.isInGodmode = not player.isInGodmode
 		local state = (player.isInGodmode and ST_ON)or ST_OFF
+		
+		if player.isInGodmode then
+		else
+		end
+		
 		return ('Player &a%s&f godmode %s.'):format(player, state)
 	end)
 
