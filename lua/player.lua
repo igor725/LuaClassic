@@ -452,6 +452,7 @@ local player_mt = {
 		return self:sendNetMesg(rawPacket)
 	end,
 	sendMap = function(self)
+		if self.thread then return end
 		if not self.handshaked then return end
 		local world = getWorld(self)
 		if not world.ldata then
