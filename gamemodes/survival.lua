@@ -530,13 +530,14 @@ return function()
 		if tgent >= 0 then
 			tgplayer = getPlayerByID(tgent)
 			if tgplayer then
+				x, y, z = player:getPos()
 				dist_player = distance(x, y, z, tgplayer:getPos())
 			end
 		end
 
 		if dist_block < dist_player then
 			survBlockAction(player, button, action, x, y, z)
-		elseif dist_player < dist_block then
+		elseif dist_player < dist_block and dist_player < 3.5 then
 			if button == 0 and action == 0 then
 				if not player.nextHit then
 					player.nextHit = 0
