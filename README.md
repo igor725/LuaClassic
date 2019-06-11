@@ -7,6 +7,8 @@ All of necessary libraries already compiled for Linux (arm, x86_64) and Windows 
 
 Server tested on Debian Stretch/Buster, Arch Linux, Raspbian and Windows 10. On other systems stable work is not guaranteed.
 
+Demo server runned [here](http://www.classicube.net/server/play/9ae57bbe1ab6ac3bfaa8b9d2143c80b6/)
+
 ## Survival mode
 Survival mode can be enabled by `server.properties` modification:
 1. Change value of `server-gamemode` to `survival`
