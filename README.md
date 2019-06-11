@@ -9,10 +9,7 @@ Server tested on Debian Stretch/Buster, Arch Linux, Raspbian and Windows 10. On 
 
 Demo server runned [here](http://www.classicube.net/server/play/9ae57bbe1ab6ac3bfaa8b9d2143c80b6/)
 
-## Survival mode
-Survival mode can be enabled by `server.properties` modification:
-1. Change value of `server-gamemode` to `survival`
-2. Start or restart the server
+Check the [wiki page](https://github.com/igor725/LuaClassic/wiki) for more details.
 
 # Using
 1. Run `./start.sh` (on Windows `start.bat`) and let the server to generate config files
