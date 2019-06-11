@@ -382,13 +382,10 @@ function init()
 			world = newWorld(lvlh, wn)
 		else
 			local gtype = tlist[num]or'default'
-			local dims = slist[num]or'256x256x256'
+			local dims = slist[num]or{256, 256, 256}
 			local generator = generators[gtype]or assert(openGenerator(gtype))
 			generators[gtype] = generator
-			local x, y, z = dims:match('(%d+)x(%d+)x(%d+)')
-			x = tonumber(x)
-			y = tonumber(y)
-			z = tonumber(z)
+			local x, y, z = unpack(dims)
 			if not(x and y and z and generator)then
 				error(CON_PROPINVALID)
 			end
