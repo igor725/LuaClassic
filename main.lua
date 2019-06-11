@@ -486,7 +486,7 @@ if INITED then
 		if _STOP == 'restart'then
 			ply:kick(KICK_SVRST)
 		else
-			ply:kick(KICK_SVSTOP)
+			ply:kick((not succ and KICK_SVERR)or KICK_SVSTOP)
 		end
 	end)
 

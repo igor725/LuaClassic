@@ -377,10 +377,10 @@ addCommand('tp', function(isConsole, player, args)
 		end
 	end
 	if not ply1 then
-		return (MESG_PLAYERNFA):format(ply1)
+		return (MESG_PLAYERNFA):format(args[1])
 	end
 	if not ply2 then
-		return (MESG_PLAYERNFA):format(ply2)
+		return (MESG_PLAYERNFA):format(args[2]or args[1])
 	end
 
 	if not ply1:isInWorld(ply2)then
