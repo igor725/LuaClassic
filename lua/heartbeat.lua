@@ -37,6 +37,7 @@ hooks:add('onInitDone', 'heartbeat', function()
 		_HEARTBEAT_CLK = function()
 			local ip = gethostbyname(_HEARTBEAT_HOST)
 			local fd, err = connectSock(ip, _HEARTBEAT_PORT)
+			
 			if not fd then
 				log.error('Heartbeat error: ' .. err)
 				return

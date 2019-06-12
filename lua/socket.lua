@@ -76,6 +76,7 @@ TCP_NODELAY = 1
 SO_REUSEADDR = 2
 SO_SNDBUF = 7
 SO_RCVBUF = 8
+SO_RCVTIMEO = 20
 
 MSG_OOB		= 0x1
 MSG_PEEK	= 0x2
@@ -124,6 +125,7 @@ if jit.os == 'Windows'then
 	SO_REUSEADDR = 4
 	SO_RCVBUF = 4098
 	SO_SNDBUF = 4097
+	SO_RCVTIMEO = 4102
 
 	if jit.arch == 'x64'then
 		wsa_data = ffi.typeof([[struct {
@@ -262,6 +264,13 @@ function connectSock(ip, port)
 
 	assert(setSockOpt(fd, SOL_TCP, TCP_NODELAY, 1))
 
+	if jit.os == 'Linux'then
+		local tv = ffi.new('struct timeval', 0, 1000000)
+		assert(setSockOpt(fd, SOL_SOCKET, SO_RCVTIMEO, tv))
+	else
+		assert(setSockOpt(fd, SOL_SOCKET, SO_RCVTIMEO, 1000))
+	end
+
 	if sck.connect(fd, cssa, ssasz) < 0 then
 		return false, geterror()
 	end
@@ -375,8 +384,8 @@ function receiveLine(fd)
 		ffi.fill(ln.line, 8192)
 	end
 	while true do
-		local len = receiveMesg(fd, ln.rcv, 1)
-		if len > 0 then
+		local len, err = receiveMesg(fd, ln.rcv, 1)
+		if len and len > 0 then
 			local sym = ln.rcv[0]
 			if sym == 10 then
 				local str = ffi.string(ln.line, ln.linecur)
@@ -388,11 +397,11 @@ function receiveLine(fd)
 				if ln.linecur > 8192 then
 					local str = ffi.string(ln.line, ln.linecur)
 					ln.linecur = 0
-					return str, true
+					return str, 'buffer_overflow'
 				end
 			end
 		else
-			break
+			return nil, 'timeout'
 		end
 	end
 end

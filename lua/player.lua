@@ -494,22 +494,21 @@ local player_mt = {
 
 		local parts
 		if id == 0 then
-			parts = ceil(#mesg / 62)
+			parts = ceil(#mesg / 61)
 		else
 			parts = 1
 		end
 		if parts > 1 then
 			for i = 1, parts do
-				local mpart = mesg:sub(i * 62 - 61, i * 62)
+				local mpart = mesg:sub(i * 61 - 61, i * 61)
 				if i == parts then
 					mpart = lastcolor .. mpart
 				end
-				self:sendPacket(false, 0x0d, id, lastcolor .. mpart)
+				self:sendPacket(false, 0x0D, id, ((i > 1 and '> ')or'') .. lastcolor .. mpart)
 				lastcolor = mpart:match('.*(&%x)')or lastcolor or''
 			end
 		else
-			mesg = mesg
-			self:sendPacket(false, 0x0d, id, mesg)
+			self:sendPacket(false, 0x0D, id, mesg)
 		end
 	end,
 
