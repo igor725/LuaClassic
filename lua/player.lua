@@ -303,6 +303,14 @@ local player_mt = {
 	checkPermission = function(self, nm, silent)
 		local sect = nm:match('(.*)%.')
 		local perms = permissions:getFor(self:getUID())
+
+		if table.hasValue(perms, '-*.*', '-' .. sect .. '.*', '-' .. nm)then
+			if not silent then
+				self:sendMessage((MESG_PERMERROR):format(nm))
+			end
+			return false
+		end
+
 		if table.hasValue(perms, '*.*', sect .. '.*', nm)then
 			return true
 		else
@@ -657,7 +665,7 @@ local player_mt = {
 			elseif self.thread.status == 'done'then
 				local mesg = self.thread[1]
 				self.thread = nil
-				
+
 				if mesg then
 					if mesg == 0 then
 						local dim = pworld:getData('dimensions')

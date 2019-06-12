@@ -226,7 +226,7 @@ end)
 
 addCommand('delperm', function(isConsole, player, args)
 	if #args == 2 then
-		permissions:addFor(args[1], args[2])
+		permissions:delFor(args[1], args[2])
 	else
 		return false
 	end
