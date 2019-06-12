@@ -8,6 +8,7 @@ local gmd = 'serverGamemode'
 local hbt = 'heartbeatType'
 local hbp = 'heartbeatPublic'
 local wmsg = 'welcomeMessage'
+local dperms = 'defaultPerms'
 
 local lseeds = 'levelSeeds'
 local lnames = 'levelNames'
@@ -31,6 +32,16 @@ config = {
 		[hbt] = 'none',
 		[hbp] = false,
 		[wmsg] = '',
+		[dperms] = {
+			'commands.list',
+			'commands.info',
+			'commands.seed',
+			'commands.spawn',
+			'commands.help',
+			'commands.clear',
+			'commands.craft',
+			'commands.uptime'
+		},
 
 		[lseeds] = {},
 		[lnames] = {
@@ -59,6 +70,7 @@ config = {
 		[hbt] = 'string',
 		[hbp] = 'boolean',
 		[wmsg] = 'string',
+		[dperms] = 'table',
 
 		[lseeds] = 'table',
 		[lnames] = 'table',

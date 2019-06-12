@@ -29,6 +29,7 @@ end
 
 require('utils')
 require('commands')
+START_TIME = gettime()
 
 function onPlayerAuth(player, name, key)
 	player:setUID(key)
@@ -42,7 +43,11 @@ end
 function prePlayerFirstSpawn(player)
 	local wMsg = config:get('welcomeMessage')
 	if wMsg and #wMsg > 0 then
-		player:sendMessage(wMsg)
+		for line in wMsg:gmatch("[^\r\n]+") do
+			if #line > 0 then
+	    	player:sendMessage(line)
+			end
+		end
 	end
 	local msg = printf(MESG_CONN, player)
 	newChatMessage('&e' .. msg)

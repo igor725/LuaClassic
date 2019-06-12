@@ -43,6 +43,14 @@ addCommand('restart', function()
 	_STOP = 'restart'
 end)
 
+addCommand('uptime', function()
+	local tm = gettime() - START_TIME
+	local h = tm / 3600
+	local m = (tm/60) % 60
+	local s = tm % 60
+	return (CMD_UPTIME):format(h, m, s)
+end)
+
 addCommand('seed', function(isConsole, player, args)
 	if isConsole and #args < 1 then return false end
 

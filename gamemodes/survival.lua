@@ -429,7 +429,7 @@ end
 local p_mt = getPlayerMT()
 
 p_mt.survDamage = function(player, attacker, dmg, dmgtype)
-	survDamage(attacker, player, dmg, dmgtype)
+	return survDamage(attacker, player, dmg, dmgtype)
 end
 
 p_mt.survRespawn = survRespawn
@@ -724,7 +724,7 @@ return function()
 		if #args < 1 then return false end
 		player = getPlayerByName(args[1])
 		if player then
-			if not player:survDamage(nil, SURV_MAX_HEALTH, 0)then
+			if not survDamage(nil, player, SURV_MAX_HEALTH, 0)then
 				return 'This player cannot be damaged'
 			end
 		else

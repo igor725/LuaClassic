@@ -97,6 +97,7 @@ CMD_WHISPERSELF    = 'You can not send a private message to yourself'
 CMD_WTINVALID      = 'Invalid weather type'
 CMD_WTCURR         = 'At this moment weather is &e%s&f in &a%s'
 CMD_SEED           = 'Seed: %d'
+CMD_UPTIME         = 'Uptime: %dh %dm %ds'
 
 WORLD_RO           = '&cThis world in readonly mode'
 WORLD_NE           = 'This world does not exists'
