@@ -291,7 +291,7 @@ return function(world, seed)
 		end
 	end
 
-	world:setSpawn(x, y + 2, z)
+	world:setSpawn(x + 0.5, y + 2.5, z + 0.5)
 	world:setEnvProp(MEP_SIDESBLOCK, 0)
 	world:setEnvProp(MEP_EDGEBLOCK, 11)
 	world:setEnvProp(MEP_EDGELEVEL, heightLava + 1)
