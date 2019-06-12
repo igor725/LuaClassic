@@ -383,7 +383,7 @@ function unloadWorld(wname)
 			end
 		end)
 		world:save()
-		world.buf = nil
+		world.ldata = nil
 		worlds[wname] = nil
 		collectgarbage()
 		return true
