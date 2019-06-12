@@ -618,13 +618,16 @@ return function()
 				player = getPlayerByName(args[1])
 				id = args[2]
 				count = args[3]
+			elseif #args == 1 then
+				id = args[1]
+				count = 64
 			end
 		end
 		if not player then return MESG_PLAYERNF end
 
 		id = tonumber(id)or 0
-		count = tonumber(count)or 64
-		count = math.min(math.max(count, 1), 64)
+		count = tonumber(count)or SURV_MAX_BLOCKS
+		count = math.min(math.max(count, 1), SURV_MAX_BLOCKS)
 
 		local given = survInvAddBlock(player, id, count)
 		if given > 0 then
@@ -772,7 +775,7 @@ return function()
 			return (CMD_GIVE):format(given, survBlocknames[bid], player)
 		end
 	end)
-	
+
 	function toAngle(x, y)
 		if y == 0 then
 			if x < 0 then
@@ -784,7 +787,7 @@ return function()
 			end
 		else
 			angle = math.atan(y / x) / math.pi * 180
-		
+
 			if x < 0 then
 				x = -x
 				if y < 0 then
@@ -793,7 +796,7 @@ return function()
 					angle = angle + 180
 				end
 			end
-		
+
 			return angle
 		end
 	end
@@ -801,38 +804,38 @@ return function()
 	-- Mobs only for testing! It's not ready!!!
 	addCommand('mob', function(isConsole, player, args)
 		if isConsole then return CON_INGAMECMD end
-		
+
 		local world = getWorld(player)
 		local mobType = 'pig'
 		if #args > 0 then
 			mobType = args[1]
 		end
-			
+
 		local Mob = newMob(mobType, world:getName(), player:getPos())
-		
+
 		Mob:spawn()
-		
+
 		timer.Create('Mobs timer' .. (os.time()*math.random()), -1, 1, function()
 			local MOB_STEP = 2
-			
+
 			--local lpX, lpY, lpZ = Mob.pos.x, Mob.pos.y, Mob.pos.z
 			local dx, dz = MOB_STEP * (math.random() * 2 - 1), MOB_STEP * (math.random() * 2 - 1)
-			
+
 			Mob.pos.x = Mob.pos.x + dx
 			Mob.pos.z = Mob.pos.z + dz
-			
+
 			if world:getBlock(math.floor(Mob.pos.x), math.floor(Mob.pos.y - 2), math.floor(Mob.pos.z)) == 0 then
 				Mob.pos.y = Mob.pos.y - 1
 			elseif world:getBlock(math.floor(Mob.pos.x), math.floor(Mob.pos.y - 1), math.floor(Mob.pos.z)) ~= 0 then
 				Mob.pos.y = Mob.pos.y + 1
 			end
-			
+
 			Mob.eye.yaw = (toAngle(dx, dz) + 90) % 360
-			
+
 			Mob:updatePos()
 		end)
 	end)
-	
+
 	-- Mobs only for testing! It's not ready!!!
 	addCommand('mobs', function(isConsole, player, args)
 		local world = nil
@@ -845,7 +848,7 @@ return function()
 		else
 			world = getWorld(player)
 		end
-		
+
 		local SURV_MOBS_COUNT = 20
 		local SURV_MOBS_PEACEFUL = {
 			'pig', 'sheep', 'chicken'
@@ -853,47 +856,47 @@ return function()
 		local SURV_MOBS_ANGRY = {
 			'zombie', 'skeleton', 'spider', 'creeper'
 		}
-		
+
 		local mobsEngineMobs = {}
-		
+
 		for i = 1, SURV_MOBS_COUNT do
 			local x, z = math.random(world.data.dimensions.x) - 1, math.random(world.data.dimensions.z) - 1
-			
+
 			local mobType = SURV_MOBS_PEACEFUL[math.random(#SURV_MOBS_PEACEFUL)]
-			
+
 			local startScanHeight = math.min(world.data.dimensions.y - 1, math.floor(world.data.dimensions.y / 2 + 10))
 			for y = startScanHeight, world.data.dimensions.y / 2, -1 do
 				if world:getBlock(x, y, z) ~= 0 then
 					local mob = newMob(mobType, world:getName(), x, y, z)
 					mob:spawn()
 					mobsEngineMobs[#mobsEngineMobs+1] = mob
-					
+
 					log.debug("Mob spawned in "..x..", "..y..", "..z)
 					break
 				end
 			end
 		end
-		
-		
-		
+
+
+
 		timer.Create('Mobs engine' .. (os.time()*math.random()), -1, 1, function()
 			local MOB_STEP = 2
-			
+
 			for i = 1, #mobsEngineMobs do
 				local Mob = mobsEngineMobs[i]
 				local dx, dz = MOB_STEP * (math.random() * 2 - 1), MOB_STEP * (math.random() * 2 - 1)
-			
+
 				Mob.pos.x = Mob.pos.x + dx
 				Mob.pos.z = Mob.pos.z + dz
-			
+
 				if world:getBlock(math.floor(Mob.pos.x), math.floor(Mob.pos.y - 2), math.floor(Mob.pos.z)) == 0 then
 					Mob.pos.y = Mob.pos.y - 1
 				elseif world:getBlock(math.floor(Mob.pos.x), math.floor(Mob.pos.y - 1), math.floor(Mob.pos.z)) ~= 0 then
 					Mob.pos.y = Mob.pos.y + 1
 				end
-			
+
 				Mob.eye.yaw = (toAngle(dx, dz) + 90) % 360
-			
+
 				Mob:updatePos()
 			end
 		end)
