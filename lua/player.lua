@@ -436,6 +436,7 @@ local player_mt = {
 	end,
 
 	sendNetMesg = function(self, msg, opcode)
+		if self.thread then return end
 		local cl = self:getClient()
 		if self:isWebClient()then
 			msg = encodeWsFrame(msg, opcode or 0x02)
