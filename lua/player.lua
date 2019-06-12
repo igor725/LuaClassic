@@ -501,7 +501,7 @@ local player_mt = {
 		end
 		if parts > 1 then
 			for i = 1, parts do
-				local mpart = mesg:sub(i * 61 - 61, i * 61)
+				local mpart = mesg:sub(i * 61 - 60, i * 61)
 				if i == parts then
 					mpart = lastcolor .. mpart
 				end
