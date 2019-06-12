@@ -154,6 +154,7 @@ local function woSpaces(...) -- It works faster than string.match
 			end
 			idx = idx - 1
 			if idx == 1 then
+				stEnd = 1
 				break
 			end
 		end
