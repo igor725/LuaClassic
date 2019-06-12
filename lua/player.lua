@@ -656,6 +656,8 @@ local player_mt = {
 				return
 			elseif self.thread.status == 'done'then
 				local mesg = self.thread[1]
+				self.thread = nil
+				
 				if mesg then
 					if mesg == 0 then
 						local dim = pworld:getData('dimensions')
@@ -665,7 +667,6 @@ local player_mt = {
 						log.error('MAPSEND ERROR', mesg)
 						self:kick((KICK_INTERR):format(IE_GZ))
 					end
-					self.thread = nil
 					self.kickTimeout = CTIME + getKickTimeout()
 					pworld.unloadLocked = false
 				end
