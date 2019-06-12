@@ -100,6 +100,9 @@ function findMobFreeID()
 end
 
 function newMob(type, world, x, y, z, yaw, pitch)
+	world = getWorld(world)
+	if not world then return false end
+	world = world:getName()
 	local id = findMobFreeID()
 	if not id then return false end
 	IDS[id] = true
