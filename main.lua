@@ -336,7 +336,7 @@ function init()
 	end
 	log.info(CON_START)
 	players, IDS = {}, {}
-	worlds, generators = {}, {}
+	worlds = {}
 
 	permissions:parse()
 	config:parse()
@@ -383,16 +383,10 @@ function init()
 		else
 			local gtype = tlist[num]or'default'
 			local dims = slist[num]or{256, 256, 256}
-			local generator = generators[gtype]or assert(openGenerator(gtype))
-			generators[gtype] = generator
-			local x, y, z = unpack(dims)
-			if not(x and y and z and generator)then
-				error(CON_PROPINVALID)
-			end
 			world = newWorld()
 			world:setName(wn)
-			if world:createWorld({dimensions = newVector(x, y, z)})then
-				generator(world, sdlist[num]or CTIME)
+			if world:createWorld({dimensions = newVector(unpack(dims))})then
+				regenerateWorld(world, gtype, sdlist[num]or os.time())
 			end
 		end
 		if world and world.isWorld then
@@ -403,7 +397,6 @@ function init()
 			end
 		end
 	end
-	generators = nil
 	if not getWorld('default')then
 		log.fatal(CON_WLOADERR)
 	end
