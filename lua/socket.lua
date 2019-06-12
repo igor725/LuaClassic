@@ -365,9 +365,6 @@ function receiveLine(fd)
 		lines[fd] = {
 			linebuf = ffi.new'char[8192]',
 			rchar = ffi.new'char[1]',
-			waitdata = false,
-			recvbufpos = 0,
-			recvbuflen = 0,
 			linepos = 0
 		}
 	end
@@ -392,15 +389,10 @@ function receiveLine(fd)
 					return str, true
 				end
 			end
-		end
-		if checkSock(fd) == 'closed'then
+		else
 			break
 		end
 	end
-	local ln = ffi.string(ln.linebuf, ln.linepos)
-	ffi.fill(ln.linebuf, 8192)
-	ln.linepos = 0
-	return ln
 end
 
 function checkSock(fd)

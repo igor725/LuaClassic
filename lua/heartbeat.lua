@@ -94,6 +94,7 @@ hooks:add('onInitDone', 'heartbeat', function()
 					end
 				end
 			end
+			closeSock(fd)
 		end
 
 		function onPlayerAuth(player, name, key)
