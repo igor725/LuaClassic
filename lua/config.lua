@@ -7,6 +7,7 @@ local mplys = 'maxPlayers'
 local gmd = 'serverGamemode'
 local hbt = 'heartbeatType'
 local hbp = 'heartbeatPublic'
+local wmsg = 'welcomeMessage'
 
 local lseeds = 'levelSeeds'
 local lnames = 'levelNames'
@@ -29,6 +30,7 @@ config = {
 		[gmd] = 'none',
 		[hbt] = 'none',
 		[hbp] = false,
+		[wmsg] = '',
 
 		[lseeds] = {},
 		[lnames] = {
@@ -56,6 +58,7 @@ config = {
 		[gmd] = 'string',
 		[hbt] = 'string',
 		[hbp] = 'boolean',
+		[wmsg] = 'string',
 
 		[lseeds] = 'table',
 		[lnames] = 'table',

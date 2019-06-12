@@ -40,6 +40,10 @@ function onPlayerAuth(player, name, key)
 end
 
 function prePlayerFirstSpawn(player)
+	local wMsg = config:get('welcomeMessage')
+	if wMsg and #wMsg > 0 then
+		player:sendMessage(wMsg)
+	end
 	local msg = printf(MESG_CONN, player)
 	newChatMessage('&e' .. msg)
 end
@@ -65,7 +69,7 @@ function onPlayerChatMessage(player, message)
 		prefix = ('[%s&f] '):format(player.prefix)
 	end
 	if starts == '!'then message = message:sub(2)end
-	local formattedMessage = ('%s%s: %s'):format(prefix, player, message)
+	local formattedMessage = ('%s&3%s&f: %s'):format(prefix, player, message)
 	log.chat(formattedMessage)
 
 	if starts == '#'then
