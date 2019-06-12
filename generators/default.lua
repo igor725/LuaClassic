@@ -66,7 +66,7 @@ local function biomesGenerate(dimx, dimz)
 	for i = 1, BIOME_COUNT do
 		local x = math.random(biomesSizeX)
 		local z = math.random(biomesSizeZ)
-		local biome = math.random(1, biomesAllow)
+		local biome = math.random(biomesAllow)
 
 		for dx = -GEN_BIOME_RADIUS, GEN_BIOME_RADIUS do
 			for dz = -GEN_BIOME_RADIUS, GEN_BIOME_RADIUS do
@@ -371,7 +371,7 @@ local function generateTrees(mapaddr, dimx, dimy, dimz, seed)
 
 	local x, z, baseHeight, baseHeight2, randBiome
 	for i = 1, TREES_COUNT do
-		randBiome = math.random(1, #biomesWithTrees)
+		randBiome = math.random(#biomesWithTrees)
 		x = (biomesWithTrees[randBiome] % bsx) * GEN_BIOME_STEP + math.random(GEN_BIOME_STEP) - GEN_BIOME_STEP / 2
 		z = math.floor(biomesWithTrees[randBiome] / bsx) * GEN_BIOME_STEP + math.random(GEN_BIOME_STEP) - GEN_BIOME_STEP / 2
 
@@ -425,14 +425,17 @@ local function generateTrees(mapaddr, dimx, dimy, dimz, seed)
 				baseHeight2 = baseHeight + math.random(4, 6)
 
 				for y = baseHeight + 3, baseHeight2 + 2 do
-					local radius = (y % 2) + math.random() * 2
+					local radius = y > baseHeight2 
+						and ((y-baseHeight2) % 2) + 1
+						or (((y-baseHeight2) % 2) + math.random() * 2)
+					
 					local radiusCeil = math.ceil(radius)
 					radius = radius*radius
 					for dx = -radiusCeil, radiusCeil do
 						for dz = -radiusCeil, radiusCeil do
 							if dx*dx + dz*dz < radius then
 								SetBlock(x+dx, y, z+dz, 18)
-								if y >= baseHeight2 + 1 and GetBlock(x+dx, y+1, z+dz) == 0 then
+								if y > baseHeight2 and GetBlock(x+dx, y+1, z+dz) == 0 then
 									SetBlock(x+dx, y+1, z+dz, 53)
 								end
 							end
@@ -566,8 +569,8 @@ local function generateOres(mapaddr, dimx, dimy, dimz, seed)
 
 	local x, y, z, ore
 	for i = 1, ORE_COUNT do
-		x = math.random(0, dimx - GEN_ORE_VEIN_SIZE - 1)
-		z = math.random(0, dimz - GEN_ORE_VEIN_SIZE - 1)
+		x = math.random(dimx - GEN_ORE_VEIN_SIZE) - 1
+		z = math.random(dimz - GEN_ORE_VEIN_SIZE) - 1
 		--y = math.random(1, heightGrass + 15)
 		y = math.floor(1 + math.random() ^ 3 * math.min(dimy - GEN_ORE_VEIN_SIZE - 1, heightGrass + 15))
 		
@@ -585,9 +588,9 @@ local function generateOres(mapaddr, dimx, dimy, dimz, seed)
 	
 	local GRAVEL_COUNT = dimx * dimy * dimz * GEN_GRAVEL_COUNT_MULT
 	for i = 1, GRAVEL_COUNT do
-		x = math.random(0, dimx - GEN_ORE_VEIN_SIZE - 1)
-		z = math.random(0, dimz - GEN_ORE_VEIN_SIZE - 1)
-		y = math.random(0, heightGrass - 20 - genGravelVeinSize + 1)
+		x = math.random(dimx - GEN_ORE_VEIN_SIZE) - 1
+		z = math.random(dimz - GEN_ORE_VEIN_SIZE) - 1
+		y = math.random(heightGrass - 20 - genGravelVeinSize)
 
 		for dz = 0, genGravelVeinSize do
 			for dy = 0, genGravelVeinSize do
@@ -718,10 +721,15 @@ local function lavalavalava(world, dimx, dimy, dimz)
 end
 
 return function(world, seed)
-	log.debug('DefaultGenerator: START')
 	seed = (seed and math.floor(seed)) or os.time()
 	local dimx, dimy, dimz = world:getDimensions()
 	math.randomseed(seed)
+	log.debug('DefaultGenerator: START with seed ' .. seed)
+
+	--[[if math.min(dimx, dimz) < 512 then
+		GEN_BIOME_STEP       = 15
+		GEN_BIOME_RADIUS     = 4
+	end]]--
 
 	biomesGenerate(dimx, dimz)
 
@@ -793,12 +801,12 @@ return function(world, seed)
 
 	watchThreads(threads)
 
-	local x, z = math.random(1, dimx), math.random(1, dimz)
+	local x, z = math.random(dimx) - 1, math.random(dimz) - 1
 	local y = getHeight(x, z)
 
 	for i = 1, 20 do
-		if y < 0 then
-			x, z = math.random(1, dimx), math.random(1, dimz)
+		if y < heightWater then
+			x, z = math.random(dimx) - 1, math.random(dimz) - 1
 			y = getHeight(x, z)
 			break
 		end
@@ -815,6 +823,7 @@ return function(world, seed)
 	world:setData('seed', seed)
 	collectgarbage()
 	log.debug('DefaultGenerator: DONE')
+	
 
 	return true
 end
