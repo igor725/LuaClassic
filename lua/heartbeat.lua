@@ -49,7 +49,7 @@ hooks:add('onInitDone', 'heartbeat', function()
 			local sSoftware = cpe.softwareName
 			local sWeb = config:get('acceptWebsocket')
 
-			local request = (_HEARTBEAT_URL):format(sName, sPort, sOnline, sMax, sSalt, sPublic, sSoftware sWeb)
+			local request = (_HEARTBEAT_URL):format(sName, sPort, sOnline, sMax, sSalt, sPublic, sSoftware, sWeb)
 			sendMesg(fd, ('GET %s HTTP/1.1\n'):format(request))
 			sendMesg(fd, ('Connection: close\n'):format(_HEARTBEAT_HOST))
 			sendMesg(fd, ('Accept: */*\n'):format(_HEARTBEAT_HOST))
