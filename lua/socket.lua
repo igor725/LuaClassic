@@ -265,7 +265,7 @@ function connectSock(ip, port)
 	assert(setSockOpt(fd, SOL_TCP, TCP_NODELAY, 1))
 
 	if jit.os == 'Linux'then
-		local tv = ffi.new('struct timeval', 0, 1000000)
+		local tv = ffi.new('struct timeval', 1, 0)
 		assert(setSockOpt(fd, SOL_SOCKET, SO_RCVTIMEO, tv))
 	else
 		assert(setSockOpt(fd, SOL_SOCKET, SO_RCVTIMEO, 1000))
