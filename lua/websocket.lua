@@ -6,7 +6,6 @@ function wsLoad()
 	WS_ST_RCVPL  = 3
 	WS_ST_DONE   = 4
 
-
 	ffi.cdef[[
 		struct ws_frame {
 			uint32_t fd;
@@ -27,7 +26,7 @@ function wsLoad()
 		sframe.ready = true
 		sframe.fd = fd
 	end
-
+	
 	function encodeWsFrame(data, opcode)
 		local plen = #data
 		local shortenc = false

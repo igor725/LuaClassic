@@ -30,6 +30,12 @@ ffi.cdef[[
 		char sa_data[14];
 	};
 
+	struct line {
+		uint8_t rcv[1];
+		uint8_t line[8192];
+		uint16_t linecur;
+	};
+
 	uint16_t htons(uint16_t hostshort);
 	unsigned long htonl(unsigned long hostlong);
 	uint16_t ntohs(uint16_t netshort);
@@ -362,30 +368,26 @@ local lines = {}
 
 function receiveLine(fd)
 	if not lines[fd]then
-		lines[fd] = {
-			linebuf = ffi.new'char[8192]',
-			rchar = ffi.new'char[1]',
-			linepos = 0
-		}
+		lines[fd] = ffi.new('struct line')
 	end
 	local ln = lines[fd]
-	if ln.linepos == 0 then
-		ffi.fill(ln.linebuf, 8192)
+	if ln.linecur == 0 then
+		ffi.fill(ln.line, 8192)
 	end
 	while true do
-		local len = receiveMesg(fd, ln.rchar, 1)
+		local len = receiveMesg(fd, ln.rcv, 1)
 		if len > 0 then
-			local sym = ln.rchar[0]
+			local sym = ln.rcv[0]
 			if sym == 10 then
-				local str = ffi.string(ln.linebuf, ln.linepos)
-				ln.linepos = 0
+				local str = ffi.string(ln.line, ln.linecur)
+				ln.linecur = 0
 				return str
 			elseif sym ~= 13 then
-				ln.linebuf[ln.linepos] = sym
-				ln.linepos = ln.linepos + 1
-				if ln.linepos > 8192 then
-					local str = ffi.string(ln.linebuf, ln.linepos)
-					ln.linepos = 0
+				ln.line[ln.linecur] = sym
+				ln.linecur = ln.linecur + 1
+				if ln.linecur > 8192 then
+					local str = ffi.string(ln.line, ln.linecur)
+					ln.linecur = 0
 					return str, true
 				end
 			end
