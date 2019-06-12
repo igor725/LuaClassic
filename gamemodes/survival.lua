@@ -772,6 +772,63 @@ return function()
 			return (CMD_GIVE):format(given, survBlocknames[bid], player)
 		end
 	end)
+	
+	function toAngle(x, y)
+		if y == 0 then
+			if x < 0 then
+				return 180
+			elseif x > 0 then
+				return 0
+			else
+				return 0
+			end
+		else
+			angle = math.atan(y / x) / math.pi * 180
+		
+			if x < 0 then
+				x = -x
+				if y < 0 then
+					angle = angle - 180
+				else
+					angle = angle + 180
+				end
+			end
+		
+			return angle
+		end
+	end
+
+	addCommand('mob', function(isConsole, player, args)
+		local world = getWorld(player)
+		local mobType = 'pig'
+		if #args > 0 then
+			mobType = args[1]
+		end
+			
+		local Mob = newMob(mobType, world:getName(), player:getPos())
+		
+		Mob:spawn()
+		
+		timer.Create('Mobs timer' .. (os.time()*math.random()), -1, 1, function()
+			local MOB_STEP = 2
+			
+			--local lpX, lpY, lpZ = Mob.pos.x, Mob.pos.y, Mob.pos.z
+			local dx, dz = MOB_STEP * (math.random() * 2 - 1), MOB_STEP * (math.random() * 2 - 1)
+			
+			Mob.pos.x = Mob.pos.x + dx
+			Mob.pos.z = Mob.pos.z + dz
+			
+			if world:getBlock(math.floor(Mob.pos.x), math.floor(Mob.pos.y - 2), math.floor(Mob.pos.z)) == 0 then
+				Mob.pos.y = Mob.pos.y - 1
+			elseif world:getBlock(math.floor(Mob.pos.x), math.floor(Mob.pos.y - 1), math.floor(Mob.pos.z)) ~= 0 then
+				Mob.pos.y = Mob.pos.y + 1
+			end
+			
+			Mob.eye.yaw = (toAngle(dx, dz) + 90) % 360
+			
+			Mob:updatePos()
+		end)
+	end)
 
 	saveAdd('health', '>f')
 	saveAdd('oxygen', '>f')
