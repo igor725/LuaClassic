@@ -458,7 +458,7 @@ local player_mt = {
 	end,
 
 	sendNetMesg = function(self, msg, opcode)
-		if not self.isMapLoaded then return end
+		if not self.canSend then return end
 		local cl = self:getClient()
 		if self:isWebClient()then
 			msg = encodeWsFrame(msg, opcode or 0x02)
@@ -478,7 +478,7 @@ local player_mt = {
 		if self.thread then return end
 		if not self.handshaked then return end
 		local world = getWorld(self)
-		self.isMapLoaded = false
+		self.canSend = false
 		if not world.ldata then
 			self:sendMessage(MESG_LEVELLOAD, MT_STATUS1)
 			world:triggerLoad()
@@ -676,6 +676,7 @@ local player_mt = {
 
 				if mesg then
 					if mesg == 0 then
+						self.canSend = true
 						local dim = pworld:getData('dimensions')
 						self:sendPacket(false, 0x04, dim.x, dim.y, dim.z)
 						self:spawn()
@@ -684,7 +685,6 @@ local player_mt = {
 						self:kick((IE_MSG):format(IE_GZ), true)
 					end
 					self.kickTimeout = CTIME + 60
-					self.isMapLoaded = true
 					pworld.unloadLocked = false
 				end
 			elseif self.thread.status == 'running' then --TODO: Improve this
@@ -862,6 +862,7 @@ function newPlayer(cl)
 		oldDY2 = 0,
 		fallingStartY = 0,
 		firstSpawn = true,
+		canSend = true,
 		waitingExts = -1,
 		eye = eye,
 		extensions = {},
