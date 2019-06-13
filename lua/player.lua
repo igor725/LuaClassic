@@ -262,6 +262,7 @@ local player_mt = {
 				end
 			end
 
+			self.oldDY2 = self.oldDY
 			self.oldDY = dy
 
 			checkForPortal(self, x, y, z)
@@ -856,6 +857,7 @@ function newPlayer(cl)
 		lastOnlineTime = 0,
 		isSpawned = false,
 		oldDY = 0,
+		oldDY2 = 0,
 		fallingStartY = 0,
 		firstSpawn = true,
 		waitingExts = -1,

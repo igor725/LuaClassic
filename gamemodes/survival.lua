@@ -574,10 +574,10 @@ return function()
 	end)
 
 	hooks:add('onPlayerLanded', 'survival', function(player, blocks)
-		if blocks > 3 and player.oldDY < -0.08 then
+		if blocks > 3 and player.oldDY2 < -0.3 then
 			local pos = player.pos
 			local blockInsidePlayer = getWorld(player):getBlock(math.floor(pos.x+.5), math.floor(pos.y-1.5), math.floor(pos.z+.5))
-
+			
 			if not (8 <= blockInsidePlayer and blockInsidePlayer <= 11) then
 				survDamage(nil, player, blocks / 2 - 0.5, SURV_DMG_FALL)
 			end
@@ -639,7 +639,7 @@ return function()
 				end
 				if tgplayer and CTIME > player.nextHit then
 					-- critical damage
-					local blocks = player.speedY2 and player.speedY2 ^ 2 / 250 or 0
+					local blocks = self.fallingStartY - pos.y
 
 					survDamage(player, tgplayer, 1 + blocks, SURV_DMG_PLAYER)
 					survStopBreaking(player)
