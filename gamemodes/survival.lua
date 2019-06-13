@@ -668,6 +668,7 @@ return function()
 
 	addCommand('craft', function(isConsole, player, args)
 		if isConsole then return CON_INGAMECMD end
+		if player.isInGodmode then return 'You can\'t craft things in god mode' end
 		
 		if #args > 0 and args[1] == "info" then
 			local bId = player:getHeldBlock()
@@ -834,9 +835,21 @@ return function()
 
 		if target.isInGodmode then
 			survPauseTimers(target)
+			
+			player.inCraftMenu = false
+			for i = 1, 65 do
+				if player.inventory[i] == 0 then
+					player:setInventoryOrder(i, i)
+				end
+			end
 		else
 			target.health = SURV_MAX_HEALTH
 			survResumeTimers(target)
+			for i = 1, 65 do
+				if player.inventory[i] == 0 then
+					player:setInventoryOrder(i, 0)
+				end
+			end
 		end
 		survUpdateHealth(target)
 		survUpdateBlockInfo(target)
