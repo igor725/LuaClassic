@@ -36,8 +36,10 @@ CU_PUT             = 'put <playername> <worldname> - Teleport player to specifie
 CU_WEATHER         = 'weather <world/weather type> [weather type] - Sets weather in specified world'
 CU_TIME            = 'time <world/preset name> [preset name] - Sets time in specified world'
 
+IE_MSG             = 'Internal server error: %s'
 IE_GZ              = 'Map compression failed'
 IE_UE              = 'Unexpected error'
+IE_LE              = 'Lua error'
 
 ST_OFF             = '&cdisabled&f'
 ST_ON              = '&aenabled&f'
@@ -48,7 +50,6 @@ SD_IOERR           = 'Can\'t open playerdata %q for %s! (%s)'
 KICK_CONNREJ       = 'Server rejected your connection attempt'
 KICK_CPESEQERR     = 'Packet 0x10 not received before 0x11'
 KICK_CPEEXTCOUNT   = 'Invalid CPE extensions count received'
-KICK_INTERR        = 'Internal server error: %s'
 KICK_PROTOVER      = 'Invalid protocol version'
 KICK_INVALIDPACKET = 'Invalid packet received'
 KICK_MAPTHREADERR  = 'Error in mapsend thread'

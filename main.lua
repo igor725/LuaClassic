@@ -114,7 +114,12 @@ function onPlayerChatMessage(player, message)
 			local cmf = commands[cmd]
 			if cmf then
 				if player:checkPermission('commands.' .. cmd)then
-					local rtval = cmf(false, player, args)
+					local succ, rtval = pcall(cmf, false, player, args)
+					if not succ then
+						player:sendMessage((IE_MSG):format(IE_LE))
+						log.error('Command', cmd, 'got error:', rtval)
+						return
+					end
 					if rtval == false then
 						local str = _G['CU_' .. cmd:upper()]
 						if str then
@@ -300,9 +305,13 @@ function handleConsoleCommand(cmd)
 		local argstr = table.concat(args,' ')
 		cmd = cmd:lower()
 
-		local cmdf = commands[cmd]
-		if cmdf then
-			local rtval = cmdf(true, nil, args)
+		local cmf = commands[cmd]
+		if cmf then
+			local succ, rtval = pcall(cmf, true, nil, args)
+			if not succ then
+				log.error('Command', cmd, 'got error:', rtval)
+				return
+			end
 			if rtval == false then
 				local str = _G['CU_' .. cmd:upper()]
 				if str then
