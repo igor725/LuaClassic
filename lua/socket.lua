@@ -10,7 +10,8 @@ local statuses = {
 	[10035] = 'ok',
 	-- POSIX
 	[3406] = 'ok',
-	[3425] = 'closed',
+	[104] = 'closed',
+	[3425] = 'closed'
 }
 
 ffi.cdef[[
@@ -408,7 +409,7 @@ end
 
 function checkSock(fd)
 	local ret = sck.recv(fd, nil, 0, 0)
-	if ret < 0 then
+	if ret <= 0 then
 		local err = currerr()
 		return statuses[err]or 'unknown', err
 	end
