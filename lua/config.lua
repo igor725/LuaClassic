@@ -104,7 +104,11 @@ function config:parse()
 end
 
 local function writeLuaString(file, val)
-	file:write('\'' .. val .. '\'')
+	if val:find('\n')then
+		file:write('[[' .. val .. ']]')
+	else
+		file:write('\'' .. val .. '\'')
+	end
 end
 
 function config:save()
