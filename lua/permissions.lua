@@ -61,7 +61,11 @@ function permissions:delFor(k, perm)
 end
 
 function permissions:getFor(key)
-	return self.list[key]or self.list.default
+	return self.list[key]
+end
+
+function permissions:getDefault()
+	return self.list.default
 end
 
 function permissions:save()

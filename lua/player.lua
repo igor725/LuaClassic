@@ -304,14 +304,16 @@ local player_mt = {
 		local sect = nm:match('(.*)%.')
 		local perms = permissions:getFor(self:getUID())
 
-		if table.hasValue(perms, '-*.*', '-' .. sect .. '.*', '-' .. nm)then
+		if (perms and table.hasValue(perms, '-*.*', '-' .. sect .. '.*', '-' .. nm))then
 			if not silent then
 				self:sendMessage((MESG_PERMERROR):format(nm))
 			end
 			return false
 		end
 
-		if table.hasValue(perms, '*.*', sect .. '.*', nm)then
+		local a, b, c = '*.*', sect .. '.*', nm
+		if (perms and table.hasValue(perms, a, b, c))or
+		table.hasValue(permissions.list.default, a, b, c)then
 			return true
 		else
 			if not silent then
