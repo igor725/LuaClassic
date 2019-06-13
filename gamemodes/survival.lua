@@ -170,6 +170,20 @@ local function distance(x1, y1, z1, x2, y2, z2)
 	return math.sqrt( (x2 - x1) ^ 2 + (y2 - y1) ^ 2 + (z2 - z1) ^ 2 )
 end
 
+local function survUpdateInventory(player)
+	if player.isInGodmode or player.inCraftMenu then
+		for i = 1, 65 do
+			player:setInventoryOrder(i, i)
+		end
+		return
+	end
+	for i = 1, 65 do
+		if player.inventory[i] == 0 then
+			player:setInventoryOrder(i, 0)
+		end
+	end
+end
+
 local function survUpdateHealth(player)
 	local int, fr = math.modf(player.health)
 	local str = ''
@@ -225,14 +239,9 @@ end
 local function survRespawn(player)
 	player.health = SURV_MAX_HEALTH
 	player.oxygen = SURV_MAX_OXYGEN
-	
-	for i = 1, 65 do
-		if player.inventory[i] > 0 then
-			player:setInventoryOrder(i, 0)
-		end
-	end
-	
 	ffi.fill(player.inventory, 66)
+
+	survUpdateInventory(player)
 	survUpdateBlockInfo(player)
 	survUpdateHealth(player)
 	survStopBreaking(player)
@@ -349,10 +358,9 @@ local function survInvAddBlock(player, id, quantity)
 	if inv[id] == 0 then
 		player:setInventoryOrder(id, id)
 	end
-	
+
 	inv[id] = dc
 	survUpdateBlockInfo(player)
-	
 
 	return quantity
 end
@@ -521,6 +529,7 @@ return function()
 		survStopBreaking(player)
 		survRemoveTimers(player)
 	end)
+
 	hooks:add('onPlayerLanded', 'survival', function(player, speedY)
 		local blocks = speedY ^ 2 / 250
 		if blocks > 3 then
@@ -536,13 +545,8 @@ return function()
 		survUpdateHealth(player)
 		local h = player.isInGodmode and 1 or 0
 		player:hackControl(h, h, h, 1, 1, -1)
+		survUpdateInventory(player)
 		survResumeTimers(player)
-		
-		for i = 1, 65 do
-			if player.inventory[i] == 0 then
-				player:setInventoryOrder(i, 0)
-			end
-		end
 	end)
 
 	hooks:add('onPlayerDespawn', 'survival', function(player)
@@ -601,6 +605,9 @@ return function()
 	end)
 
 	hooks:add('onPlayerPlaceBlock', 'survival', function(player, x, y, z, id)
+		if player.inCraftMenu then
+			return true
+		end
 		if id > 0 and id < 65 and player.inventory[id] < 1 then
 			if not player.isInGodmode then
 				player:sendMessage('&cNot enough blocks')
@@ -669,39 +676,35 @@ return function()
 	addCommand('craft', function(isConsole, player, args)
 		if isConsole then return CON_INGAMECMD end
 		if player.isInGodmode then return 'You can\'t craft things in god mode' end
-		
-		if #args > 0 and args[1] == "info" then
+
+		if args[1] == 'info'then
 			local bId = player:getHeldBlock()
-			
-			if survCraft[bId] then
+
+			if survCraft[bId]then
 				local lacks = ''
 				local needs = survCraft[bId].needs
-				
+				local bName = survBlocknames[bId]
+
 				for i = 1, #needs do
 					local nId = needs[i]
 					lacks = lacks .. ('%d %s, '):format(needs[nId], survBlocknames[nId])
 				end
-				
+
 				return ('You need %s to craft %s'):format(lacks, bName)
 			else
 				return 'Selected block can\'t be crafted.'
 			end
 		end
-		
+
 		if not player.inCraftMenu then
 			player.inCraftMenu = true
-			
-			for i = 1, 65 do
-				if player.inventory[i] == 0 then
-					player:setInventoryOrder(i, i)
-				end
-			end
-			
+			survUpdateInventory(player)
+
 			return 'Open inventory and choose block to craft. Use command /craft <count> to craft choosed block or /craft info to get recipe.'
 		else
 			if #args > 0 then
 				local bId = player:getHeldBlock()
-	
+
 				if bId ~= 0 then
 					local quantity = tonumber(args[1]) or 1
 					if quantity < 0 then
@@ -723,16 +726,11 @@ return function()
 							end
 							inv[bId] = inv[bId] + oQuantity
 							survUpdateBlockInfo(player)
-							
+
 							-- Close craft menu if craft was successful
-							for i = 1, 65 do
-								if player.inventory[i] == 0 then
-									player:setInventoryOrder(i, 0)
-								end
-							end
-							
 							player.inCraftMenu = false
-							
+							survUpdateInventory(player)
+
 							return ('%d block(-s) of %s crafted'):format(oQuantity, bName)
 						else
 							return ('You need %s to craft %s'):format(lacks, bName)
@@ -743,14 +741,9 @@ return function()
 				end
 			else
 				-- quit without crafting
-				for i = 1, 65 do
-					if player.inventory[i] == 0 then
-						player:setInventoryOrder(i, 0)
-					end
-				end
-				
 				player.inCraftMenu = false
-				
+				survUpdateInventory(player)
+
 				return 'Quit without crafting.'
 			end
 		end
@@ -802,10 +795,10 @@ return function()
 	end)
 
 	addCommand('kill', function(isConsole, player, args)
-		if #args > 0 then 
+		if #args > 0 then
 			player = getPlayerByName(args[1])
 		end
-		
+
 		if player then
 			if not survDamage(nil, player, SURV_MAX_HEALTH, 0)then
 				return 'This player cannot be damaged'
@@ -835,23 +828,13 @@ return function()
 
 		if target.isInGodmode then
 			survPauseTimers(target)
-			
 			player.inCraftMenu = false
-			for i = 1, 65 do
-				if player.inventory[i] == 0 then
-					player:setInventoryOrder(i, i)
-				end
-			end
 		else
 			target.health = SURV_MAX_HEALTH
 			survResumeTimers(target)
-			for i = 1, 65 do
-				if player.inventory[i] == 0 then
-					player:setInventoryOrder(i, 0)
-				end
-			end
 		end
 		survUpdateHealth(target)
+		survUpdateInventory(player)
 		survUpdateBlockInfo(target)
 
 		return ('Godmode &a%s&f for %s.'):format(target, state)
