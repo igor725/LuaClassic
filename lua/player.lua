@@ -597,18 +597,18 @@ local player_mt = {
 			end
 		end)
 
-		cpe:extCallHook('postPlayerSpawn', self)
-		hooks:call('postPlayerSpawn', self)
-		if self.firstSpawn then
-			hooks:call('postPlayerFirstSpawn', self)
-			self.firstSpawn = false
-		end
 		local world = getWorld(self)
 		world.players = world.players + 1
 		world.emptyfrom = nil
 		self.isSpawned = true
+		cpe:extCallHook('postPlayerSpawn', self)
+		hooks:call('postPlayerSpawn', self)
 		if postPlayerSpawn then
 			postPlayerSpawn(self)
+		end
+		if self.firstSpawn then
+			hooks:call('postPlayerFirstSpawn', self)
+			self.firstSpawn = false
 		end
 
 		return true
@@ -650,13 +650,6 @@ local player_mt = {
 			return
 		end
 
-		if CTIME > self.kickTimeout then
-			if self.isSpawned then
-				self:kick(KICK_TIMEOUT)
-				return
-			end
-		end
-
 		if self.thread then
 			local pworld = getWorld(self)
 			if self.thread.status == 'error'then
@@ -677,13 +670,20 @@ local player_mt = {
 						log.error('MAPSEND ERROR', mesg)
 						self:kick((IE_MSG):format(IE_GZ))
 					end
-					self.kickTimeout = CTIME + getKickTimeout()
+					self.kickTimeout = CTIME + 60
 					pworld.unloadLocked = false
 				end
 			elseif self.thread.status == 'running' then --TODO: Improve this
 				pworld.unloadLocked = true
 			end
 			return
+		end
+
+		if CTIME > self.kickTimeout then
+			if self.isSpawned then
+				self:kick(KICK_TIMEOUT)
+				return
+			end
 		end
 
 		if self.handshakeStage2 then
