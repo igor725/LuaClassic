@@ -11,9 +11,6 @@ SURV_DMG_WATER = 3
 SURV_DMG_LAVA = 4
 SURV_DMG_FIRE = 5
 
-CMD_GIVE = '%d %s block(-s) given to &a%s'
-CU_GIVE = '/give [player] <block id> <count>'
-
 local survBlocknames = {
 	'Stone', 'Grass', 'Dirt', 'Cobblestone',
 	'Planks', 'Sapling', 'Bedrock', 'Water',
@@ -168,6 +165,7 @@ local survCraft = {
 for i = 21, 36 do
 	survMiningSpeed[i] = 1.15
 end
+
 for i = 37, 40 do
 	survMiningSpeed[i] = 0
 end
@@ -230,7 +228,7 @@ local function survUpdateOxygen(player)
 		elseif player.oxygen <= 6 then
 			clr = '&e'
 		end
-		player:sendMessage((clr .. 'Oxygen: %.1f'):format(player.oxygen), MT_BRIGHT1)
+		player:sendMessage((clr .. SURV_OXYGEN):format(player.oxygen), MT_BRIGHT1)
 	end
 end
 
@@ -337,7 +335,7 @@ local function survDamage(attacker, victim, damage, dmgtype)
 		survRespawn(victim)
 		playersForEach(function(ply)
 			if ply:isInWorld(victim)then
-				ply:sendMessage(('Player %s killed by %s.'):format(victim, getKiller(attacker, dmgtype)))
+				ply:sendMessage((SURV_KILL):format(victim, getKiller(attacker, dmgtype)))
 			end
 		end)
 	end
@@ -442,7 +440,7 @@ local function survBlockAction(player, button, action, x, y, z)
 						survBreakBlock(player, x, y, z)
 					else
 						player.breakProgress = math.min(player.breakProgress + 10, 100)
-						player:sendMessage(('Mining block: %d%%...'):format(player.breakProgress), MT_STATUS3)
+						player:sendMessage((SURV_MINING):format(player.breakProgress), MT_STATUS3)
 					end
 				end)
 			end
@@ -463,7 +461,6 @@ end
 p_mt.survRespawn = survRespawn
 
 return function()
-	log.info('Survival Test gamemode Loaded!')
 	hooks:add('onPlayerCreate', 'survival', function(player)
 		player.lastClickedBlock = newVector(0, 0, 0)
 		player.currClickedBlock = newVector(0, 0, 0)
@@ -482,7 +479,7 @@ return function()
 		not player:isSupported('EnvColors')or
 		not player:isSupported('EnvMapAspect')or
 		not player:isSupported('HeldBlock')then
-			player:kick('Your client does not support required CPE exts.', true)
+			player:kick(KICK_SURVCPE, true)
 			return
 		end
 		for i = 1, 65 do

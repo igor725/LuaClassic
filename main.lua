@@ -372,8 +372,8 @@ function init()
 		wsLoad = nil
 	end
 
-	local mode = config:get('serverGamemode')
-	if mode and #mode > 0 and mode ~= 'none'and mode ~= 'default'then
+	_GAMEMODE = config:get('serverGamemode')
+	if _GAMEMODE and #_GAMEMODE > 0 and _GAMEMODE ~= 'none'then
 		log.info('Loading gamemode', mode)
 		local chunk, err = loadfile('gamemodes/' .. mode .. '.lua')
 		if chunk then
@@ -435,6 +435,7 @@ succ, err = xpcall(function()
 			if init()then
 				if initGamemode then
 					initGamemode()
+					log.info('Gamemode:', _GAMEMODE)
 					initGamemode = nil
 				end
 				hooks:call('onInitDone')
