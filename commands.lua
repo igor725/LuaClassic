@@ -234,6 +234,9 @@ end)
 
 addCommand('addperm', function(isConsole, player, args)
 	if #args == 2 then
+		if args[1] == 'default'then
+			config.changed = true
+		end
 		permissions:addFor(args[1], args[2])
 	else
 		return false
@@ -242,6 +245,9 @@ end)
 
 addCommand('delperm', function(isConsole, player, args)
 	if #args == 2 then
+		if args[1] == 'default'then
+			config.changed = true
+		end
 		permissions:delFor(args[1], args[2])
 	else
 		return false

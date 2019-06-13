@@ -346,6 +346,9 @@ local function survDamage(attacker, victim, damage, dmgtype)
 	if victim.isInGodmode then return false end
 
 	if dmgtype == SURV_DMG_PLAYER then
+		if not attacker:checkPermission('god.hurt')then
+			return
+		end
 		-- knockback
 		local x, y, z = attacker:getPos()
 		local tx, ty, tz = victim:getPos()
@@ -574,7 +577,7 @@ return function()
 		if blocks > 3 and player.oldDY < -0.08 then
 			local pos = player.pos
 			local blockInsidePlayer = getWorld(player):getBlock(math.floor(pos.x+.5), math.floor(pos.y-1.5), math.floor(pos.z+.5))
-			
+
 			if not (8 <= blockInsidePlayer and blockInsidePlayer <= 11) then
 				survDamage(nil, player, blocks / 2 - 0.5, SURV_DMG_FALL)
 			end
