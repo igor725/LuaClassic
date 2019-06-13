@@ -251,7 +251,7 @@ local player_mt = {
 
 			if self.oldDY < 0 then
 				if dy >= 0 then
-					if self.fallingStartY > pos.y then
+					if self.fallingStartY and self.fallingStartY > pos.y then
 						hooks:call('onPlayerLanded', self, self.fallingStartY - pos.y)
 					end
 					self.fallingStartY = nil
@@ -268,7 +268,7 @@ local player_mt = {
 			return true
 		elseif self.oldDY < 0 then
 			self.oldDY = 0
-			if self.fallingStartY > pos.y then
+			if self.fallingStartY and self.fallingStartY > pos.y then
 				hooks:call('onPlayerLanded', self, self.fallingStartY - pos.y)
 			end
 			self.fallingStartY = nil
