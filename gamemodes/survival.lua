@@ -156,6 +156,12 @@ local survCraft = {
 			[4] = 1
 		},
 		count = 2
+	},
+	[54] = {
+		needs = {
+			[16] = 1
+		},
+		count = 4
 	}
 }
 
@@ -327,6 +333,7 @@ local function survDamage(attacker, victim, damage, dmgtype)
 		victim:setEnvColor(EC_FOG, r, g, b)
 	end)
 	if victim.health <= 0 then
+		victim.deaths = victim.deaths + 1
 		survRespawn(victim)
 		playersForEach(function(ply)
 			if ply:isInWorld(victim)then
@@ -465,6 +472,7 @@ return function()
 		player.oxygen = SURV_MAX_OXYGEN
 		player.action = SURV_ACT_NONE
 		player.oxyshow = false
+		player.deaths = 0
 	end)
 
 	hooks:add('onPlayerHandshakeDone', 'survival', function(player)
@@ -965,6 +973,7 @@ return function()
 		end)
 	end)
 
+	saveAdd('deaths', '>I')
 	saveAdd('health', '>f')
 	saveAdd('oxygen', '>f')
 	saveAdd('isInGodmode', 'b', function(player, val)
