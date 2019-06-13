@@ -299,7 +299,7 @@ local function survCanCraft(player, bid, quantity)
 			if inv[nId] < cnt then
 				canCraft = false
 				lacks = lacks or''
-				lacks = lacks .. ('%d %s, '):format(amount, survBlocknames[nId])
+				lacks = lacks .. ('%d %s, '):format(cnt - inv[nId], survBlocknames[nId])
 			end
 		end
 		return canCraft, lacks and lacks:sub(1, -3)
@@ -726,15 +726,15 @@ return function()
 
 		if args[1] == 'info'then
 			local bId = player:getHeldBlock()
-
-			if survCraft[bId] then
+			local recipe = survCraft[bId]
+			if recipe then
 				local lacks = ''
 
-				for nId, amount in pairs(survCraft[bId].needs) do
+				for nId, amount in pairs(recipe.needs) do
 					lacks = lacks .. ('%d %s, '):format(amount, survBlocknames[nId])
 				end
 
-				return ('You need %s to craft %s'):format(lacks:sub(1, -3), survBlocknames[bId])
+				return ('You need %s to craft %d %s'):format(lacks:sub(1, -3), recipe.count, survBlocknames[bId])
 			else
 				return 'Selected block can\'t be crafted.'
 			end
@@ -777,7 +777,7 @@ return function()
 
 							return ('%d block(-s) of %s crafted'):format(oQuantity, bName)
 						else
-							return ('You need %s to craft %s'):format(lacks, bName)
+							return ('You need %s to craft %d %s'):format(lacks, oQuantity, bName)
 						end
 					else
 						return 'Selected block can\'t be crafted.'
