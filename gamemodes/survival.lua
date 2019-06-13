@@ -39,6 +39,7 @@ local survBlocknames = {
 
 local survBlockDrop = {
 	[1] = 4,
+	[2] = 3,
 	[18] = function()
 		return (math.random(0, 100) < 20 and 6)or 18
 	end,
@@ -734,29 +735,32 @@ return function()
 
 	addCommand('god', function(isConsole, player, args)
 		if isConsole and #args < 1 then return false end
-		player = getPlayerByName(args[1])or player
-		if not player then return MESG_PLAYERNF end
+		local target = getPlayerByName(args[1])or player
+		if not target then return MESG_PLAYERNF end
+		if target ~= player and not player:checkPermission('commands.god-others')then
+			return
+		end
 
-		player.isInGodmode = not player.isInGodmode
-		local state = (player.isInGodmode and ST_ON)or ST_OFF
+		target.isInGodmode = not target.isInGodmode
+		local state = (target.isInGodmode and ST_ON)or ST_OFF
 
-		local h = player.isInGodmode and 1 or 0
-		player:hackControl(h, h, h, 1, 1, -1)
+		local h = target.isInGodmode and 1 or 0
+		target:hackControl(h, h, h, 1, 1, -1)
 
 		for i = 1, 65 do
-			player:setBlockPermissions(i, false, player.isInGodmode)
+			target:setBlockPermissions(i, false, target.isInGodmode)
 		end
 
-		if player.isInGodmode then
-			survPauseTimers(player)
+		if target.isInGodmode then
+			survPauseTimers(target)
 		else
-			player.health = SURV_MAX_HEALTH
-			survResumeTimers(player)
+			target.health = SURV_MAX_HEALTH
+			survResumeTimers(target)
 		end
-		survUpdateHealth(player)
-		survUpdateBlockInfo(player)
+		survUpdateHealth(target)
+		survUpdateBlockInfo(target)
 
-		return ('Godmode &a%s&f for %s.'):format(player, state)
+		return ('Godmode &a%s&f for %s.'):format(target, state)
 	end)
 
 	addCommand('full', function(isConsole, player, args)
