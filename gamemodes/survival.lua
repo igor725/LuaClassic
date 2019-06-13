@@ -836,7 +836,7 @@ return function()
 		survUpdateInventory(player)
 		survUpdateBlockInfo(target)
 
-		return ('Godmode &a%s&f for %s.'):format(target, state)
+		return ('Godmode %s for &a%s&f.'):format(state, target)
 	end)
 
 	function toAngle(x, y)
