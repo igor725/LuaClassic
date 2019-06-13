@@ -50,6 +50,7 @@ ffi.cdef[[
 
 	int bind(int sockfd, const struct sockaddr* addr, uint32_t addrlen);
 	int listen(int sockfd, int backlog);
+	int shutdown(int sockfd, int how);
 	int accept(int sockfd, struct sockaddr* addr, uint32_t* addrlen);
 
 	int socket(int domain, int type, int protocol);
@@ -86,6 +87,10 @@ MSG_EOR		= 0x8
 MSG_TRUNC	= 0x10
 MSG_CTRUNC	= 0x20
 MSG_WAITALL	= 0x40
+
+SHUT_RD = 0
+SHUT_WR = 1
+SHUT_RDWR = 2
 
 if jit.os == 'Windows'then
 	ffi.cdef[[
@@ -353,7 +358,7 @@ function sendMesg(fd, msg, len, flags)
 end
 
 function receiveMesg(fd, buffer, len, flags)
-	if not buffer then return end
+	if not buffer and len > 1 then return end
 
 	flags = flags or 0
 	local ret = sck.recv(fd, buffer, len, flags)
@@ -425,7 +430,14 @@ function closeSock(fd)
 	end
 end
 
-function shutdownSock()
+function shutdownSock(fd, how)
+	if sck.shutdown(fd, how) ~= 0 then
+		return false, geterror()
+	end
+end
+
+function cleanupSock()
+	lines = nil
 	if jit.os == 'Windows'then
 		return sck.WSACleanup() == 0
 	end

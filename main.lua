@@ -510,7 +510,7 @@ if INITED then
 end
 
 if server then closeSock(server)end
-shutdownSock()
+cleanupSock()
 saveBanList()
 
 if not succ then
