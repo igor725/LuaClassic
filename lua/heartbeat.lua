@@ -37,7 +37,7 @@ hooks:add('onInitDone', 'heartbeat', function()
 		_HEARTBEAT_CLK = function()
 			local ip = gethostbyname(_HEARTBEAT_HOST)
 			local fd, err = connectSock(ip, _HEARTBEAT_PORT)
-			
+
 			if not fd then
 				log.error('Heartbeat error: ' .. err)
 				return
@@ -58,6 +58,10 @@ hooks:add('onInitDone', 'heartbeat', function()
 			sendMesg(fd, ('Host: www.%s\n\n'):format(_HEARTBEAT_HOST))
 
 			local resp = receiveLine(fd)
+			if not resp then
+				closeSock(fd)
+				return
+			end
 			if not resp:lower():find('^http/.+200 ok$')then
 				lgo.error('Heartbeat server responded', resp)
 				return
@@ -66,7 +70,7 @@ hooks:add('onInitDone', 'heartbeat', function()
 			local respHdrs = {}
 			while true do
 				local line = receiveLine(fd)
-				if line == ''then break end
+				if not line or line == ''then break end
 				local key, value = line:match('(.-):%s*(.*)$')
 				if key then
 					respHdrs[key:lower()] = tonumber(value)or value
