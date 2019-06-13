@@ -29,6 +29,7 @@ end
 
 require('utils')
 require('commands')
+START_TIME = gettime()
 
 function onPlayerAuth(player, name, key)
 	player:setUID(key)
@@ -40,6 +41,14 @@ function onPlayerAuth(player, name, key)
 end
 
 function prePlayerFirstSpawn(player)
+	local wMsg = config:get('welcomeMessage')
+	if wMsg and #wMsg > 0 then
+		for line in wMsg:gmatch("[^\r\n]+") do
+			if #line > 0 then
+	    	player:sendMessage(line)
+			end
+		end
+	end
 	local msg = printf(MESG_CONN, player)
 	newChatMessage('&e' .. msg)
 end
@@ -76,7 +85,7 @@ function onPlayerChatMessage(player, message)
 		prefix = ('[%s&f] '):format(player.prefix)
 	end
 	if starts == '!'then message = message:sub(2)end
-	local formattedMessage = ('%s%s: %s'):format(prefix, player, message)
+	local formattedMessage = ('%s&3%s&f: %s'):format(prefix, player, message)
 	log.chat(formattedMessage)
 
 	if starts == '#'then
@@ -116,7 +125,12 @@ function onPlayerChatMessage(player, message)
 			local cmf = commands[cmd]
 			if cmf then
 				if player:checkPermission('commands.' .. cmd)then
-					local rtval = cmf(false, player, args)
+					local succ, rtval = pcall(cmf, false, player, args)
+					if not succ then
+						player:sendMessage((IE_MSG):format(IE_LE))
+						log.error('Command', cmd, 'got error:', rtval)
+						return
+					end
 					if rtval == false then
 						local str = _G['CU_' .. cmd:upper()]
 						if str then
@@ -302,9 +316,13 @@ function handleConsoleCommand(cmd)
 		local argstr = table.concat(args,' ')
 		cmd = cmd:lower()
 
-		local cmdf = commands[cmd]
-		if cmdf then
-			local rtval = cmdf(true, nil, args)
+		local cmf = commands[cmd]
+		if cmf then
+			local succ, rtval = pcall(cmf, true, nil, args)
+			if not succ then
+				log.error('Command', cmd, 'got error:', rtval)
+				return
+			end
 			if rtval == false then
 				local str = _G['CU_' .. cmd:upper()]
 				if str then
@@ -347,28 +365,28 @@ function init()
 	end
 	log.info(CON_START)
 	players, IDS = {}, {}
-	worlds, generators = {}, {}
+	worlds = {}
 
 	permissions:parse()
 	config:parse()
 	cpe:init()
 
-	uwa = config:get('unload-world-after')
-	local ip = config:get('server-ip')
-	local port = config:get('server-port')
+	uwa = config:get('unloadWorldAfter')
+	local ip = config:get('serverIp')
+	local port = config:get('serverPort')
 	server = assert(bindSock(ip, port))
 
-	if config:get('allow-websocket')then
+	if config:get('acceptWebsocket')then
 		wsHandshake = {}
 		wsLoad()
 	else
 		wsLoad = nil
 	end
 
-	local mode = config:get('server-gamemode')
-	if mode and #mode > 0 and mode ~= 'none'and mode ~= 'default'then
+	_GAMEMODE = config:get('serverGamemode')
+	if _GAMEMODE and #_GAMEMODE > 0 and _GAMEMODE ~= 'none'then
 		log.info('Loading gamemode', mode)
-		local chunk, err = loadfile('gamemodes/' .. mode .. '.lua')
+		local chunk, err = loadfile('gamemodes/' .. _GAMEMODE .. '.lua')
 		if chunk then
 			initGamemode = chunk()
 		else
@@ -380,17 +398,10 @@ function init()
 	loadBanList()
 
 	log.info(CON_WLOAD)
-	local sdlist = config:get('level-seeds')
-	sdlist = sdlist:split(',')
-
-	local wlist = config:get('level-names')
-	wlist = wlist:split(',')
-
-	local tlist = config:get('level-types')
-	tlist = tlist:split(',')
-
-	local slist = config:get('level-sizes')
-	slist = slist:split(',')
+	local sdlist = config:get('levelSeeds')
+	local wlist = config:get('levelNames')
+	local tlist = config:get('levelTypes')
+	local slist = config:get('levelSizes')
 
 	for num, wn in pairs(wlist)do
 		wn = wn:lower()
@@ -400,20 +411,11 @@ function init()
 			world = newWorld(lvlh, wn)
 		else
 			local gtype = tlist[num]or'default'
-			local dims = slist[num]or'256x256x256'
-			local generator = generators[gtype]or assert(openGenerator(gtype))
-			generators[gtype] = generator
-			local x, y, z = dims:match('(%d+)x(%d+)x(%d+)')
-			x = tonumber(x)
-			y = tonumber(y)
-			z = tonumber(z)
-			if not(x and y and z and generator)then
-				error(CON_PROPINVALID)
-			end
+			local dims = slist[num]or{256, 256, 256}
 			world = newWorld()
 			world:setName(wn)
-			if world:createWorld({dimensions = newVector(x, y, z)})then
-				generator(world, sdlist[num]or CTIME)
+			if world:createWorld({dimensions = newVector(unpack(dims))})then
+				regenerateWorld(world, gtype, sdlist[num]or os.time())
 			end
 		end
 		if world and world.isWorld then
@@ -424,7 +426,6 @@ function init()
 			end
 		end
 	end
-	generators = nil
 	if not getWorld('default')then
 		log.fatal(CON_WLOADERR)
 	end
@@ -445,6 +446,7 @@ succ, err = xpcall(function()
 			if init()then
 				if initGamemode then
 					initGamemode()
+					log.info('Gamemode:', _GAMEMODE)
 					initGamemode = nil
 				end
 				hooks:call('onInitDone')
@@ -454,7 +456,6 @@ succ, err = xpcall(function()
 		if ETIME then
 			dt = CTIME - ETIME
 			dt = math.min(.1, dt)
-			cpe:extCallHook('onUpdate', dt)
 			hooks:call('onUpdate', dt)
 			timer.Update(dt)
 			if uwa > 0 then
@@ -488,7 +489,7 @@ succ, err = xpcall(function()
 			sleep((NextUpdate - gettime())*1000)
 		end
 	end
-end,debug.traceback)
+end, debug.traceback)
 
 ecode = 0
 
@@ -497,7 +498,7 @@ if INITED then
 		if _STOP == 'restart'then
 			ply:kick(KICK_SVRST)
 		else
-			ply:kick(KICK_SVSTOP)
+			ply:kick((not succ and KICK_SVERR)or KICK_SVSTOP)
 		end
 	end)
 
@@ -520,7 +521,7 @@ if INITED then
 end
 
 if server then closeSock(server)end
-shutdownSock()
+cleanupSock()
 saveBanList()
 
 if not succ then

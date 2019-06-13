@@ -10,7 +10,8 @@ local statuses = {
 	[10035] = 'ok',
 	-- POSIX
 	[3406] = 'ok',
-	[3425] = 'closed',
+	[104] = 'closed',
+	[3425] = 'closed'
 }
 
 ffi.cdef[[
@@ -30,6 +31,12 @@ ffi.cdef[[
 		char sa_data[14];
 	};
 
+	struct line {
+		uint8_t rcv[1];
+		uint8_t line[8192];
+		uint16_t linecur;
+	};
+
 	uint16_t htons(uint16_t hostshort);
 	unsigned long htonl(unsigned long hostlong);
 	uint16_t ntohs(uint16_t netshort);
@@ -43,6 +50,7 @@ ffi.cdef[[
 
 	int bind(int sockfd, const struct sockaddr* addr, uint32_t addrlen);
 	int listen(int sockfd, int backlog);
+	int shutdown(int sockfd, int how);
 	int accept(int sockfd, struct sockaddr* addr, uint32_t* addrlen);
 
 	int socket(int domain, int type, int protocol);
@@ -70,6 +78,7 @@ TCP_NODELAY = 1
 SO_REUSEADDR = 2
 SO_SNDBUF = 7
 SO_RCVBUF = 8
+SO_RCVTIMEO = 20
 
 MSG_OOB		= 0x1
 MSG_PEEK	= 0x2
@@ -78,6 +87,10 @@ MSG_EOR		= 0x8
 MSG_TRUNC	= 0x10
 MSG_CTRUNC	= 0x20
 MSG_WAITALL	= 0x40
+
+SHUT_RD = 0
+SHUT_WR = 1
+SHUT_RDWR = 2
 
 if jit.os == 'Windows'then
 	ffi.cdef[[
@@ -118,6 +131,7 @@ if jit.os == 'Windows'then
 	SO_REUSEADDR = 4
 	SO_RCVBUF = 4098
 	SO_SNDBUF = 4097
+	SO_RCVTIMEO = 4102
 
 	if jit.arch == 'x64'then
 		wsa_data = ffi.typeof([[struct {
@@ -256,6 +270,13 @@ function connectSock(ip, port)
 
 	assert(setSockOpt(fd, SOL_TCP, TCP_NODELAY, 1))
 
+	if jit.os == 'Linux'then
+		local tv = ffi.new('struct timeval', 1, 0)
+		assert(setSockOpt(fd, SOL_SOCKET, SO_RCVTIMEO, tv))
+	else
+		assert(setSockOpt(fd, SOL_SOCKET, SO_RCVTIMEO, 1000))
+	end
+
 	if sck.connect(fd, cssa, ssasz) < 0 then
 		return false, geterror()
 	end
@@ -313,6 +334,8 @@ if jit.os ~= 'Windows'then
 end
 
 function sendMesg(fd, msg, len, flags)
+	if not msg then return false end
+
 	flags = flags or dflags
 	len = len or ffi.C.strlen(msg)
 	msg = ffi.cast('char*', msg)
@@ -335,6 +358,8 @@ function sendMesg(fd, msg, len, flags)
 end
 
 function receiveMesg(fd, buffer, len, flags)
+	if not buffer and len > 1 then return end
+
 	flags = flags or 0
 	local ret = sck.recv(fd, buffer, len, flags)
 	if ret < 0 then
@@ -346,6 +371,8 @@ function receiveMesg(fd, buffer, len, flags)
 end
 
 function receiveString(fd, len, flags)
+	if len < 1 then return end
+
 	local buffer = ffi.new('char[?]', len)
 	if receiveMesg(fd, buffer, len, flags)then
 		return ffi.string(buffer, len)
@@ -356,45 +383,38 @@ local lines = {}
 
 function receiveLine(fd)
 	if not lines[fd]then
-		lines[fd] = {
-			linebuf = ffi.new'char[8192]',
-			rchar = ffi.new'char[1]',
-			waitdata = false,
-			recvbufpos = 0,
-			recvbuflen = 0,
-			linepos = 0
-		}
+		lines[fd] = ffi.new('struct line')
 	end
 	local ln = lines[fd]
-	if ln.linepos == 0 then
-		ffi.fill(ln.linebuf, 8192)
+	if ln.linecur == 0 then
+		ffi.fill(ln.line, 8192)
 	end
 	while true do
-		local len = receiveMesg(fd, ln.rchar, 1)
-		if len > 0 then
-			local sym = ln.rchar[0]
+		local len, err = receiveMesg(fd, ln.rcv, 1)
+		if len and len > 0 then
+			local sym = ln.rcv[0]
 			if sym == 10 then
-				local str = ffi.string(ln.linebuf, ln.linepos)
-				ln.linepos = 0
+				local str = ffi.string(ln.line, ln.linecur)
+				ln.linecur = 0
 				return str
 			elseif sym ~= 13 then
-				ln.linebuf[ln.linepos] = sym
-				ln.linepos = ln.linepos + 1
+				ln.line[ln.linecur] = sym
+				ln.linecur = ln.linecur + 1
+				if ln.linecur > 8192 then
+					local str = ffi.string(ln.line, ln.linecur)
+					ln.linecur = 0
+					return str, 'buffer_overflow'
+				end
 			end
-		end
-		if checkSock(fd) == 'closed'then
-			break
+		else
+			return nil, 'timeout'
 		end
 	end
-	local ln = ffi.string(ln.linebuf, ln.linepos)
-	ffi.fill(ln.linebuf, 8192)
-	ln.linepos = 0
-	return ln
 end
 
 function checkSock(fd)
 	local ret = sck.recv(fd, nil, 0, 0)
-	if ret < 0 then
+	if ret <= 0 then
 		local err = currerr()
 		return statuses[err]or 'unknown', err
 	end
@@ -410,7 +430,14 @@ function closeSock(fd)
 	end
 end
 
-function shutdownSock()
+function shutdownSock(fd, how)
+	if sck.shutdown(fd, how) ~= 0 then
+		return false, geterror()
+	end
+end
+
+function cleanupSock()
+	lines = nil
 	if jit.os == 'Windows'then
 		return sck.WSACleanup() == 0
 	end

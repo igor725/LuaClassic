@@ -1,23 +1,24 @@
-local smotd = 'server-motd'
-local sname = 'server-name'
-local allowws = 'allow-websocket'
-local sip = 'server-ip'
-local sport = 'server-port'
-local mplys = 'max-players'
-local gmd = 'server-gamemode'
-local hbt = 'heartbeat-type'
-local hbp = 'heartbeat-public'
+local smotd = 'serverMotd'
+local sname = 'serverName'
+local allowws = 'acceptWebsocket'
+local sip = 'serverIp'
+local sport = 'serverPort'
+local mplys = 'maxPlayers'
+local gmd = 'serverGamemode'
+local hbt = 'heartbeatType'
+local hbp = 'heartbeatPublic'
+local wmsg = 'welcomeMessage'
+local dperms = 'defaultPerms'
 
-local lseeds = 'level-seeds'
-local lnames = 'level-names'
-local wscripts = 'world-scripts'
-local ltypes = 'level-types'
-local unload = 'unload-world-after'
-local lvlsz = 'level-sizes'
-local gthc = 'generator-threads-count'
+local lseeds = 'levelSeeds'
+local lnames = 'levelNames'
+local ltypes = 'levelTypes'
+local lvlsz = 'levelSizes'
+local unload = 'unloadWorldAfter'
+local gthc = 'generatorThreadsCount'
 
-local gzcmplvl = 'gzip-compression-level'
-local plytimeout = 'player-timeout'
+local gzcmplvl = 'gzipCompressionLevel'
+local plytimeout = 'playerTimeout'
 
 config = {
 	values = {
@@ -29,14 +30,30 @@ config = {
 		[mplys] = 20,
 		[gmd] = 'none',
 		[hbt] = 'none',
-		[hbp] = true,
+		[hbp] = false,
+		[wmsg] = '',
+		[dperms] = {
+			'commands.list',
+			'commands.info',
+			'commands.seed',
+			'commands.spawn',
+			'commands.help',
+			'commands.clear',
+			'commands.craft',
+			'commands.uptime'
+		},
 
-		[lseeds] = '',
-		[lnames] = 'world',
-		[wscripts] = false,
-		[ltypes] = 'default',
+		[lseeds] = {},
+		[lnames] = {
+			'world'
+		},
+		[ltypes] = {
+			'default'
+		},
 		[unload] = 600,
-		[lvlsz] = '256x256x256',
+		[lvlsz] = {
+			{256, 256, 256}
+		},
 		[gthc] = 2,
 
 		[gzcmplvl] = 5,
@@ -52,13 +69,14 @@ config = {
 		[gmd] = 'string',
 		[hbt] = 'string',
 		[hbp] = 'boolean',
+		[wmsg] = 'string',
+		[dperms] = 'table',
 
-		[lseeds] = 'string',
-		[lnames] = 'string',
-		[wscripts] = 'boolean',
-		[ltypes] = 'string',
+		[lseeds] = 'table',
+		[lnames] = 'table',
+		[ltypes] = 'table',
 		[unload] = 'number',
-		[lvlsz] = 'string',
+		[lvlsz] = 'table',
 		[gthc] = 'number',
 
 		[gzcmplvl] = 'number',
@@ -67,53 +85,72 @@ config = {
 }
 
 function config:parse()
-	local f, err, ec = io.open('server.properties', 'rb')
-	if not f then
-		if ec == 2 then
+	local chunk, err = loadfile('cfg.lua')
+	if err then
+		if err:find('^cannot%sopen')then
 			self.changed = true
 			self:save()
 			return true
-		else
-			return false, err
 		end
+		log.error(err)
+		return false, err
 	end
-	local ln = 1
-	for line in f:lines()do
-		local key, value = line:match'(.*)=(.*)'
-		if key then
-			if value == 'true'or value == 'false'then
-				value = (value == 'true')
-			end
-			value = tonumber(value)or value
-			local typ = self.types[key]
-			local gtyp = type(value)
-			if typ and gtyp ~= typ then
-				log.error((CONF_VTYPERR):format(key, typ, gtyp))
-				return
-			end
-			self.values[key] = value
-		else
-			log.error((CONF_INVALIDSYNTAX):format('properties', ln))
-		end
+	chunk(self.values)
+	for k, v in pairs(self.values)do
+		local etype = self.types[k]
+		assert(type(v) == etype, ('Parameter %q have invalid type (%s expected)'):format(k, etype))
 	end
-	f:close()
 	return true
+end
+
+local function writeLuaString(file, val)
+	if val:find('\n')then
+		file:write('[[' .. val .. ']]')
+	else
+		file:write('\'' .. val .. '\'')
+	end
 end
 
 function config:save()
 	if not self.changed then return true end
-	local f, err = io.open('server.properties', 'wb')
-	if f then
-		for key, value in pairs(self.values)do
-			value = tostring(value)
-			f:write(('%s=%s\n'):format(key, value))
-		end
-		f:close()
-		self.changed = false
-		return true
-	else
+	local cfg, err = io.open('cfg.lua', 'w')
+	if not cfg then
 		return false, err
 	end
+	cfg:write('local t = ...\n')
+	for k, v in pairs(self.values)do
+		cfg:write(('t.%s = '):format(k))
+		local t = self.types[k]
+		if t == 'table'then
+			cfg:write('{')
+			if #v > 0 then
+				cfg:write('\n')
+				for i = 1, #v do
+					cfg:write('\t')
+					local vv = v[i]
+					if type(vv) == 'table'then
+						cfg:write('{' .. table.concat(vv, ', ') .. '}')
+					elseif type(vv) == 'string'then
+						writeLuaString(cfg, vv)
+					else
+						cfg:write(tostring(vv) .. '\n')
+					end
+					if i ~= #v then
+						cfg:write(',')
+					end
+				end
+				cfg:write('\n')
+			end
+			cfg:write('}')
+		elseif t == 'string'then
+			writeLuaString(cfg, v)
+		else
+			cfg:write(tostring(v))
+		end
+		cfg:write('\n')
+	end
+	self.changed = false
+	return true
 end
 
 function config:get(key)
@@ -121,6 +158,7 @@ function config:get(key)
 end
 
 function config:set(key, value)
+	if self.types[key] ~= type(value)then return false end
 	self.values[key] = value
 	self.changed = true
 	return true

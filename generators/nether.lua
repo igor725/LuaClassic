@@ -269,7 +269,7 @@ return function(world, seed)
 
 	local threads = {}
 
-	local count = config:get('generator-threads-count')
+	local count = config:get('generatorThreadsCount')
 	for i = 0, count - 1 do
 		startX = math.floor(dx * i / count)
 		endX = math.floor(dx * (i + 1) / count) - 1
@@ -291,7 +291,7 @@ return function(world, seed)
 		end
 	end
 
-	world:setSpawn(x, y + 2, z)
+	world:setSpawn(x + 0.5, y + 2.5, z + 0.5)
 	world:setEnvProp(MEP_SIDESBLOCK, 0)
 	world:setEnvProp(MEP_EDGEBLOCK, 11)
 	world:setEnvProp(MEP_EDGELEVEL, heightLava + 1)

@@ -767,7 +767,7 @@ function unloadWorld(wname)
 			end
 		end)
 		world:save()
-		world.buf = nil
+		world.ldata = nil
 		worlds[wname] = nil
 		collectgarbage()
 		return true
@@ -801,6 +801,15 @@ function regenerateWorld(world, gentype, seed)
 	world = getWorld(world)
 	if not world then return false, WORLD_NE end
 	if world:isReadOnly()then return false, WORLD_RO end
+	local locked = false
+	playersForEach(function(player)
+		if player:isInWorld(world)and player.thread then
+			locked = true
+		end
+	end)
+	if locked then
+		return false, WORLD_LOCKED
+	end
 	local gen, err = openGenerator(gentype)
 	if not gen then
 		return false, err

@@ -13,8 +13,7 @@ function timer.Create(id, reps, delay, func)
 		paused = false,
     delay = delay,
     curr = delay,
-		func = func,
-    reps = 0
+		func = func
   }
   return timer
 end
@@ -58,8 +57,7 @@ function timer.Update(dt)
 	      else
 	        data.curr = data.delay
 	        data.repeats = data.repeats - 1
-	        data.reps = data.reps + 1
-					local status, ret = pcall(data.func, data.reps)
+					local status, ret = pcall(data.func, data.repeats)
 					if not status then
 						ret = tostring(ret)
 						log.error((TMR_ERR):format(id, ret))

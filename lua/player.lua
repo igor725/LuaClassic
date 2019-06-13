@@ -1,5 +1,5 @@
 local function getKickTimeout()
-	return config:get('player-timeout')
+	return config:get('playerTimeout')
 end
 
 local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
@@ -235,7 +235,7 @@ local player_mt = {
 		if not self.isSpawned then
 			pos.x, pos.y, pos.z = x, y, z
 			return
-		
+
 		elseif self.isTeleported then
 			self.isTeleported = false
 			pos.x, pos.y, pos.z = x, y, z
@@ -243,27 +243,36 @@ local player_mt = {
 		elseif pos.x ~= x or pos.y ~= y or pos.z ~= z then
 			local dx, dy, dz = x - pos.x, y - pos.y, z - pos.z
 			pos.x, pos.y, pos.z = x, y, z
-			
+
 			hooks:call('onPlayerMove', self, dx, dy, dz)
 			if onPlayerMove then
 				onPlayerMove(self, dx, dy, dz)
 			end
-			
-			if self.speedY then
-				if self.speedY and dy >= 0 and self.speedY < 0 then
-					hooks:call('onPlayerLanded', self, self.speedY2)
+
+			if self.oldDY < 0 then
+				if dy >= 0 then
+					if self.fallingStartY and self.fallingStartY > pos.y then
+						hooks:call('onPlayerLanded', self, self.fallingStartY - pos.y)
+					end
+					self.fallingStartY = nil
+				else
+					if not self.fallingStartY then
+						self.fallingStartY = pos.y
+					end
 				end
-				
-				self.speedY2 = self.speedY
 			end
-			
-			self.speedY = dy / dt
-		
+
+			self.oldDY2 = self.oldDY
+			self.oldDY = dy
+
 			checkForPortal(self, x, y, z)
 			return true
-		elseif self.speedY and self.speedY < 0 then
-			self.speedY = 0
-			hooks:call('onPlayerLanded', self, self.speedY2)
+		elseif self.oldDY < 0 then
+			self.oldDY = 0
+			if self.fallingStartY and self.fallingStartY > pos.y then
+				hooks:call('onPlayerLanded', self, self.fallingStartY - pos.y)
+			end
+			self.fallingStartY = nil
 			return
 		end
 	end,
@@ -306,7 +315,17 @@ local player_mt = {
 	checkPermission = function(self, nm, silent)
 		local sect = nm:match('(.*)%.')
 		local perms = permissions:getFor(self:getUID())
-		if table.hasValue(perms, '*.*', sect .. '.*', nm)then
+
+		if (perms and table.hasValue(perms, '-*.*', '-' .. sect .. '.*', '-' .. nm))then
+			if not silent then
+				self:sendMessage((MESG_PERMERROR):format(nm))
+			end
+			return false
+		end
+
+		local a, b, c = '*.*', sect .. '.*', nm
+		if (perms and table.hasValue(perms, a, b, c))or
+		table.hasValue(permissions.list.default, a, b, c)then
 			return true
 		else
 			if not silent then
@@ -439,6 +458,7 @@ local player_mt = {
 	end,
 
 	sendNetMesg = function(self, msg, opcode)
+		if not self.canSend then return end
 		local cl = self:getClient()
 		if self:isWebClient()then
 			msg = encodeWsFrame(msg, opcode or 0x02)
@@ -455,8 +475,10 @@ local player_mt = {
 		return self:sendNetMesg(rawPacket)
 	end,
 	sendMap = function(self)
+		if self.thread then return end
 		if not self.handshaked then return end
 		local world = getWorld(self)
+		self.canSend = false
 		if not world.ldata then
 			self:sendMessage(MESG_LEVELLOAD, MT_STATUS1)
 			world:triggerLoad()
@@ -465,12 +487,12 @@ local player_mt = {
 		local addr = world:getAddr()
 		local size = world:getSize()
 		local sendMap_gen = lanes.gen('*', sendMap)
-		local cmplvl = config:get('gzip-compression-level')
+		local cmplvl = config:get('gzipCompressionLevel')
 		self.thread = sendMap_gen(self:getClient(), addr, size, cmplvl, self:isWebClient())
 	end,
 	sendMOTD = function(self, sname, smotd)
-		sname = sname or config:get('server-name')
-		smotd = smotd or config:get('server-motd')
+		sname = sname or config:get('serverName')
+		smotd = smotd or config:get('serverMotd')
 		self:sendPacket(
 			false,
 			0x00,
@@ -496,22 +518,21 @@ local player_mt = {
 
 		local parts
 		if id == 0 then
-			parts = ceil(#mesg / 62)
+			parts = ceil(#mesg / 60)
 		else
 			parts = 1
 		end
 		if parts > 1 then
 			for i = 1, parts do
-				local mpart = mesg:sub(i * 62 - 61, i * 62)
+				local mpart = mesg:sub(i * 60 - 59, i * 60)
 				if i == parts then
 					mpart = lastcolor .. mpart
 				end
-				self:sendPacket(false, 0x0d, id, lastcolor .. mpart)
+				self:sendPacket(false, 0x0D, id, ((i > 1 and '> ')or'') .. lastcolor .. mpart)
 				lastcolor = mpart:match('.*(&%x)')or lastcolor or''
 			end
 		else
-			mesg = mesg
-			self:sendPacket(false, 0x0d, id, mesg)
+			self:sendPacket(false, 0x0D, id, mesg)
 		end
 	end,
 
@@ -589,18 +610,18 @@ local player_mt = {
 			end
 		end)
 
-		cpe:extCallHook('postPlayerSpawn', self)
-		hooks:call('postPlayerSpawn', self)
-		if self.firstSpawn then
-			hooks:call('postPlayerFirstSpawn', self)
-			self.firstSpawn = false
-		end
 		local world = getWorld(self)
 		world.players = world.players + 1
 		world.emptyfrom = nil
 		self.isSpawned = true
+		cpe:extCallHook('postPlayerSpawn', self)
+		hooks:call('postPlayerSpawn', self)
 		if postPlayerSpawn then
 			postPlayerSpawn(self)
+		end
+		if self.firstSpawn then
+			hooks:call('postPlayerFirstSpawn', self)
+			self.firstSpawn = false
 		end
 
 		return true
@@ -642,39 +663,41 @@ local player_mt = {
 			return
 		end
 
-		if CTIME > self.kickTimeout then
-			if self.isSpawned then
-				self:kick(KICK_TIMEOUT)
-				return
-			end
-		end
-
 		if self.thread then
 			local pworld = getWorld(self)
 			if self.thread.status == 'error'then
 				log.error(self.thread[-1])
 				self.thread = nil
-				self:kick(KICK_MAPTHREADERR)
+				self:kick(KICK_MAPTHREADERR, true)
 				return
 			elseif self.thread.status == 'done'then
 				local mesg = self.thread[1]
+				self.thread = nil
+
 				if mesg then
 					if mesg == 0 then
+						self.canSend = true
 						local dim = pworld:getData('dimensions')
 						self:sendPacket(false, 0x04, dim.x, dim.y, dim.z)
 						self:spawn()
 					else
 						log.error('MAPSEND ERROR', mesg)
-						self:kick((KICK_INTERR):format(IE_GZ))
+						self:kick((IE_MSG):format(IE_GZ), true)
 					end
-					self.thread = nil
-					self.kickTimeout = CTIME + getKickTimeout()
+					self.kickTimeout = CTIME + 60
 					pworld.unloadLocked = false
 				end
 			elseif self.thread.status == 'running' then --TODO: Improve this
 				pworld.unloadLocked = true
 			end
 			return
+		end
+
+		if CTIME > self.kickTimeout then
+			if self.isSpawned then
+				self:kick(KICK_TIMEOUT)
+				return
+			end
 		end
 
 		if self.handshakeStage2 then
@@ -794,8 +817,7 @@ function findFreeID(player)
 			return -1
 		end
 	end
-	local mp = config:get('max-players')
-	if s > mp then s = -1 end
+	if s > config:get('maxPlayers')then s = -1 end
 	return s
 end
 
@@ -836,7 +858,11 @@ function newPlayer(cl)
 		pos = pos,
 		lastOnlineTime = 0,
 		isSpawned = false,
+		oldDY = 0,
+		oldDY2 = 0,
+		fallingStartY = 0,
 		firstSpawn = true,
+		canSend = true,
 		waitingExts = -1,
 		eye = eye,
 		extensions = {},

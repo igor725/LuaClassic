@@ -1,18 +1,11 @@
 permissions = {
 	list = {
-		default = {
-			'commands.list',
-			'commands.info',
-			'commands.seed',
-			'commands.spawn',
-			'commands.help',
-			'commands.clear',
-			'commands.craft',
-		}
+		default = {}
 	}
 }
 
 function permissions:parse()
+	self.list.default = config:get('defaultPerms')or{}
 	local h, err, ec = io.open('permissions.txt', 'r')
 	if not h then
 		if ec == 2 then
@@ -68,7 +61,11 @@ function permissions:delFor(k, perm)
 end
 
 function permissions:getFor(key)
-	return self.list[key]or self.list.default
+	return self.list[key]
+end
+
+function permissions:getDefault()
+	return self.list.default
 end
 
 function permissions:save()
@@ -76,9 +73,11 @@ function permissions:save()
 	local h, err = io.open('permissions.txt', 'wb')
 	if h then
 		for key, plist in pairs(self.list)do
-			h:write(key .. '\n')
-			for i = 1, #plist do
-				h:write(('\t%s\n'):format(plist[i]))
+			if key ~= 'default'then
+				h:write(key .. '\n')
+				for i = 1, #plist do
+					h:write(('\t%s\n'):format(plist[i]))
+				end
 			end
 		end
 		h:close()

@@ -1,3 +1,21 @@
+local function spawnMobFor(mob, player)
+	if player:isInWorld(mob)then
+		local id = mob.id
+		local cx, cy, cz = mob:getPos(true)
+		local cay, cap = mob:getEyePos(true)
+		local cname = ''
+
+		if not player:isSupported('ChangeModel')then
+			cname = mob.model
+		end
+
+		player:sendPacket(player:isSupported('ExtEntityPositions'), 0x07, id, cname, cx, cy, cz, cay, cap)
+		if #cname == 0 then
+			player:sendPacket(false, 0x1D, id, mob.model)
+		end
+	end
+end
+
 local mob_mt = {
 	getPos = function(self, forNet)
 		local p = self.pos
@@ -36,34 +54,15 @@ local mob_mt = {
 		end)
 	end,
 
-	spawn = function(self)
+	spawn = function(self, player)
+		if player then
+			spawnMobFor(self, player)
+			return true
+		end
 		if self.isSpawned then return false end
-		local dat, datcpe
-		local id = self.id
-		local cx, cy, cz = self:getPos(true)
-		local cay, cap = self:getEyePos(true)
-
 		playersForEach(function(player)
-			local cname = ''
-			if not player:isSupported('ChangeModel')then
-				cname = self.model
-			end
-
-			if player:isInWorld(self)then
-				if player:isSupported('ExtEntityPositions')then
-					datcpe = datcpe or cpe:generatePacket(0x07, id, cname, cx, cy, cz, cay, cap)
-					player:sendNetMesg(datcpe)
-				else
-					dat = dat or generatePacket(0x07, id, cname, cx, cy, cz, cay, cap)
-					player:sendNetMesg(dat)
-				end
-
-				if #cname == 0 then
-					player:sendPacket(false, 0x1D, id, self.model)
-				end
-			end
+			spawnMobFor(self, player)
 		end)
-
 		self.isSpawned = true
 		return true
 	end,
@@ -100,6 +99,9 @@ function findMobFreeID()
 end
 
 function newMob(type, world, x, y, z, yaw, pitch)
+	world = getWorld(world)
+	if not world then return false end
+	world = world:getName()
 	local id = findMobFreeID()
 	if not id then return false end
 	IDS[id] = true

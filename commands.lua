@@ -20,8 +20,7 @@ addCommand('info', function(isConsole, player)
 	local str1 = (CMD_SVINFO1):format(jit.os, jit.arch, jit.version)
 	local str2 = (CMD_SVINFO2):format(gcinfo() / 1024)
 	if isConsole then
-		print(str1)
-		print(str2)
+		io.write(str1, '\n', str2, '\n')
 	else
 		player:sendMessage(str1)
 		player:sendMessage(str2)
@@ -40,8 +39,32 @@ addCommand('stop', function()
 	_STOP = true
 end)
 
-addCommand('restart', function()
-	_STOP = 'restart'
+addCommand('restart', function(isConsole, player, args)
+	if timer.IsCreated('svrestart')then
+		timer.Remove('svrestart')
+		newChatMessage(CMD_CANCELRST)
+		return
+	end
+	local time = tonumber(args[1])
+	if time then
+		timer.Create('svrestart', time, 1, function(repLeft)
+			if repLeft == 0 then
+				_STOP = 'restart'
+			elseif repLeft <= 10 then
+				newChatMessage((CMD_RSTTMR):format(repLeft))
+			end
+		end)
+	else
+		_STOP = 'restart'
+	end
+end)
+
+addCommand('uptime', function()
+	local tm = gettime() - START_TIME
+	local h = tm / 3600
+	local m = (tm/60) % 60
+	local s = tm % 60
+	return (CMD_UPTIME):format(h, m, s)
 end)
 
 addCommand('seed', function(isConsole, player, args)
@@ -211,6 +234,9 @@ end)
 
 addCommand('addperm', function(isConsole, player, args)
 	if #args == 2 then
+		if args[1] == 'default'then
+			config.changed = true
+		end
 		permissions:addFor(args[1], args[2])
 	else
 		return false
@@ -219,7 +245,10 @@ end)
 
 addCommand('delperm', function(isConsole, player, args)
 	if #args == 2 then
-		permissions:addFor(args[1], args[2])
+		if args[1] == 'default'then
+			config.changed = true
+		end
+		permissions:delFor(args[1], args[2])
 	else
 		return false
 	end
@@ -343,19 +372,18 @@ addCommand('ban', function(isConsole, player, args)
 end)
 
 addCommand('kick', function(isConsole, player, args)
-	if #args > 0 then
-		local p = getPlayerByName(args[1])
-		local reason = KICK_NOREASON
-		if p then
-			if #args > 1 then
-				reason = table.concat(args, ' ', 2)
-			end
-			p:kick(reason)
-		else
-			return MESG_PLAYERNF
+	if #args < 1 then return false end
+
+	local p = getPlayerByName(args[1])
+	local reason = KICK_NOREASON
+	if p then
+		if #args > 1 then
+			reason = table.concat(args, ' ', 2)
 		end
+		p:kick(reason)
+	else
+		return MESG_PLAYERNF
 	end
-	return false
 end)
 
 addCommand('tp', function(isConsole, player, args)
@@ -377,10 +405,10 @@ addCommand('tp', function(isConsole, player, args)
 		end
 	end
 	if not ply1 then
-		return (MESG_PLAYERNFA):format(ply1)
+		return (MESG_PLAYERNFA):format(args[1])
 	end
 	if not ply2 then
-		return (MESG_PLAYERNFA):format(ply2)
+		return (MESG_PLAYERNFA):format(args[2]or args[1])
 	end
 
 	if not ply1:isInWorld(ply2)then
