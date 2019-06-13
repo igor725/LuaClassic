@@ -299,7 +299,7 @@ local function survCanCraft(player, bid, quantity)
 			if inv[nId] < cnt then
 				canCraft = false
 				lacks = lacks or''
-				lacks = lacks .. ('%d %s, '):format(cnt - inv[nId], survBlocknames[nId])
+				lacks = lacks .. ('%d %s, '):format(amount, survBlocknames[nId])
 			end
 		end
 		return canCraft, lacks and lacks:sub(1, -3)
@@ -577,7 +577,7 @@ return function()
 		if blocks > 3 and player.oldDY2 < -0.3 then
 			local pos = player.pos
 			local blockInsidePlayer = getWorld(player):getBlock(math.floor(pos.x+.5), math.floor(pos.y-1.5), math.floor(pos.z+.5))
-			
+
 			if not (8 <= blockInsidePlayer and blockInsidePlayer <= 11) then
 				survDamage(nil, player, blocks / 2 - 0.5, SURV_DMG_FALL)
 			end

@@ -667,7 +667,7 @@ local player_mt = {
 			if self.thread.status == 'error'then
 				log.error(self.thread[-1])
 				self.thread = nil
-				self:kick(KICK_MAPTHREADERR)
+				self:kick(KICK_MAPTHREADERR, true)
 				return
 			elseif self.thread.status == 'done'then
 				local mesg = self.thread[1]
