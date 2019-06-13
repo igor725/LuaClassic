@@ -543,7 +543,7 @@ return function()
 	hooks:add('postPlayerSpawn', 'survival', function(player)
 		survUpdateHealth(player)
 		local h = player.isInGodmode and 1 or 0
-		player:hackControl(h, h, h, 1, 1, -1)
+		player:hackControl(h, h, h, 0, 1, -1)
 		survUpdateInventory(player)
 		survResumeTimers(player)
 	end)
