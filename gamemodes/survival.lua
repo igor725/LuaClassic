@@ -225,7 +225,14 @@ end
 local function survRespawn(player)
 	player.health = SURV_MAX_HEALTH
 	player.oxygen = SURV_MAX_OXYGEN
-	ffi.fill(player.inventory, 65)
+	
+	for i = 1, 65 do
+		if player.inventory[i] > 0 then
+			player:setInventoryOrder(i, 0)
+		end
+	end
+	
+	ffi.fill(player.inventory, 66)
 	survUpdateBlockInfo(player)
 	survUpdateHealth(player)
 	survStopBreaking(player)
@@ -339,8 +346,13 @@ local function survInvAddBlock(player, id, quantity)
 		dc = SURV_MAX_BLOCKS
 	end
 
+	if inv[id] == 0 then
+		player:setInventoryOrder(id, id)
+	end
+	
 	inv[id] = dc
 	survUpdateBlockInfo(player)
+	
 
 	return quantity
 end
@@ -440,7 +452,7 @@ return function()
 	hooks:add('onPlayerCreate', 'survival', function(player)
 		player.lastClickedBlock = newVector(0, 0, 0)
 		player.currClickedBlock = newVector(0, 0, 0)
-		player.inventory = ffi.new('uint8_t[65]')
+		player.inventory = ffi.new('uint8_t[66]')
 		player.health = SURV_MAX_HEALTH
 		player.oxygen = SURV_MAX_OXYGEN
 		player.action = SURV_ACT_NONE
@@ -525,6 +537,12 @@ return function()
 		local h = player.isInGodmode and 1 or 0
 		player:hackControl(h, h, h, 1, 1, -1)
 		survResumeTimers(player)
+		
+		for i = 1, 65 do
+			if player.inventory[i] == 0 then
+				player:setInventoryOrder(i, 0)
+			end
+		end
 	end)
 
 	hooks:add('onPlayerDespawn', 'survival', function(player)
@@ -594,6 +612,7 @@ return function()
 
 			if player.inventory[id] == 0 then
 				player:holdThis(0)
+				player:setInventoryOrder(id, 0)
 			end
 		end
 	end)
@@ -649,31 +668,90 @@ return function()
 
 	addCommand('craft', function(isConsole, player, args)
 		if isConsole then return CON_INGAMECMD end
-
-		local quantity = tonumber(args[1])or 1
-		local bId = player:getHeldBlock()
-		local recipe = survCraft[bId]
-		local inv = player.inventory
-
-		if recipe then
-			local oQuantity = recipe.count * quantity
-			local bName = survBlocknames[bId]
-			if(64 - inv[bId]) < (quantity * recipe.count)then
-				return 'You can\'t take more than 64 blocks of ' .. bName
-			end
-			local canBeCrafted, lacks = survCanCraft(player, bId, quantity)
-			if canBeCrafted then
-				for nId, ammount in pairs(recipe.needs)do
-					inv[nId] = inv[nId] - ammount * quantity
+		
+		if #args > 0 and args[1] == "info" then
+			local bId = player:getHeldBlock()
+			
+			if survCraft[bId] then
+				local lacks = ''
+				local needs = survCraft[bId].needs
+				
+				for i = 1, #needs do
+					local nId = needs[i]
+					lacks = lacks .. ('%d %s, '):format(needs[nId], survBlocknames[nId])
 				end
-				inv[bId] = inv[bId] + oQuantity
-				survUpdateBlockInfo(player)
-				return ('%d block(-s) of %s crafted'):format(oQuantity, bName)
-			else
+				
 				return ('You need %s to craft %s'):format(lacks, bName)
+			else
+				return 'Selected block can\'t be crafted.'
 			end
+		end
+		
+		if not player.inCraftMenu then
+			player.inCraftMenu = true
+			
+			for i = 1, 65 do
+				if player.inventory[i] == 0 then
+					player:setInventoryOrder(i, i)
+				end
+			end
+			
+			return 'Open inventory and choose block to craft. Use command /craft <count> to craft choosed block or /craft info to get recipe.'
 		else
-			return 'Selected block can\'t be crafted. Choose block from inventory and write /craft to craft it.'
+			if #args > 0 then
+				local bId = player:getHeldBlock()
+	
+				if bId ~= 0 then
+					local quantity = tonumber(args[1]) or 1
+					if quantity < 0 then
+						return 'You can\' craft negative count of blocks'
+					end
+					local recipe = survCraft[bId]
+					local inv = player.inventory
+
+					if recipe then
+						local oQuantity = recipe.count * quantity
+						local bName = survBlocknames[bId]
+						if(64 - inv[bId]) < (quantity * recipe.count)then
+							return 'You can\'t take more than 64 blocks of ' .. bName
+						end
+						local canBeCrafted, lacks = survCanCraft(player, bId, quantity)
+						if canBeCrafted then
+							for nId, ammount in pairs(recipe.needs)do
+								inv[nId] = inv[nId] - ammount * quantity
+							end
+							inv[bId] = inv[bId] + oQuantity
+							survUpdateBlockInfo(player)
+							
+							-- Close craft menu if craft was successful
+							for i = 1, 65 do
+								if player.inventory[i] == 0 then
+									player:setInventoryOrder(i, 0)
+								end
+							end
+							
+							player.inCraftMenu = false
+							
+							return ('%d block(-s) of %s crafted'):format(oQuantity, bName)
+						else
+							return ('You need %s to craft %s'):format(lacks, bName)
+						end
+					else
+						return 'Selected block can\'t be crafted. Choose block from inventory and write /craft to craft it.'
+					end
+				end
+			else
+				-- quit without crafting
+				for i = 1, 65 do
+					if player.inventory[i] == 0 then
+						player:setInventoryOrder(i, 0)
+					end
+				end
+				
+				player.inCraftMenu = false
+				
+				return 'Quit without crafting.'
+			end
 		end
 	end)
 
@@ -715,6 +793,7 @@ return function()
 			local quantity = tonumber(args[1])or 1
 			if inv[bId] >= quantity then
 				inv[bId] = inv[bId] - quantity
+				player:setInventoryOrder(bId, inv[bId] > 0 and bId or 0)
 				survUpdateBlockInfo(player)
 				return ('Dropped %d %s blocks'):format(quantity, survBlocknames[bId])
 			end
@@ -722,8 +801,10 @@ return function()
 	end)
 
 	addCommand('kill', function(isConsole, player, args)
-		if #args < 1 then return false end
-		player = getPlayerByName(args[1])
+		if #args > 0 then 
+			player = getPlayerByName(args[1])
+		end
+		
 		if player then
 			if not survDamage(nil, player, SURV_MAX_HEALTH, 0)then
 				return 'This player cannot be damaged'
@@ -914,9 +995,9 @@ return function()
 		return val and 1 or 0
 	end)
 
-	saveAdd('inventory', 'c65', function(player, data)
-		ffi.copy(player.inventory, data, 65)
+	saveAdd('inventory', 'c66', function(player, data)
+		ffi.copy(player.inventory, data, 66)
 	end, function(inventory)
-		return ffi.string(inventory, 65)
+		return ffi.string(inventory, 66)
 	end)
 end
