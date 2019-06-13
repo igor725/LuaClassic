@@ -680,7 +680,7 @@ local player_mt = {
 						self:spawn()
 					else
 						log.error('MAPSEND ERROR', mesg)
-						self:kick((IE_MSG):format(IE_GZ))
+						self:kick((IE_MSG):format(IE_GZ), true)
 					end
 					self.kickTimeout = CTIME + 60
 					pworld.unloadLocked = false
