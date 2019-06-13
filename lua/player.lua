@@ -458,7 +458,7 @@ local player_mt = {
 	end,
 
 	sendNetMesg = function(self, msg, opcode)
-		if self.thread then return end
+		if not self.isMapLoaded then return end
 		local cl = self:getClient()
 		if self:isWebClient()then
 			msg = encodeWsFrame(msg, opcode or 0x02)
@@ -478,6 +478,7 @@ local player_mt = {
 		if self.thread then return end
 		if not self.handshaked then return end
 		local world = getWorld(self)
+		self.isMapLoaded = false
 		if not world.ldata then
 			self:sendMessage(MESG_LEVELLOAD, MT_STATUS1)
 			world:triggerLoad()
@@ -683,6 +684,7 @@ local player_mt = {
 						self:kick((IE_MSG):format(IE_GZ), true)
 					end
 					self.kickTimeout = CTIME + 60
+					self.isMapLoaded = true
 					pworld.unloadLocked = false
 				end
 			elseif self.thread.status == 'running' then --TODO: Improve this
