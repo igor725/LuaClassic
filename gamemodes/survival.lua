@@ -346,7 +346,7 @@ local function survDamage(attacker, victim, damage, dmgtype)
 	if victim.isInGodmode then return false end
 
 	if dmgtype == SURV_DMG_PLAYER then
-		if not attacker:checkPermission('god.hurt')then
+		if attacker.isInGodmode and not attacker:checkPermission('god.hurt')then
 			return
 		end
 		-- knockback
