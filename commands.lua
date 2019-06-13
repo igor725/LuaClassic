@@ -39,8 +39,24 @@ addCommand('stop', function()
 	_STOP = true
 end)
 
-addCommand('restart', function()
-	_STOP = 'restart'
+addCommand('restart', function(isConsole, player, args)
+	if timer.IsCreated('svrestart')then
+		timer.Remove('svrestart')
+		newChatMessage(CMD_CANCELRST)
+		return
+	end
+	local time = tonumber(args[1])
+	if time then
+		timer.Create('svrestart', time, 1, function(repLeft)
+			if repLeft == 0 then
+				_STOP = 'restart'
+			elseif repLeft <= 10 then
+				newChatMessage((CMD_RSTTMR):format(repLeft))
+			end
+		end)
+	else
+		_STOP = 'restart'
+	end
 end)
 
 addCommand('uptime', function()

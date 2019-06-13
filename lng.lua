@@ -102,6 +102,8 @@ CMD_WTCURR         = 'At this moment weather is &e%s&f in &a%s'
 CMD_SEED           = 'Seed: %d'
 CMD_GIVE           = '%d %s block(-s) given to &a%s'
 CMD_UPTIME         = 'Uptime: %dh %dm %ds'
+CMD_CANCELRST      = '&a***&f Restart cancelled'
+CMD_RSTTMR         = '&c***&f Server will restart in %d seconds!'
 
 WORLD_RO           = '&cThis world in readonly mode'
 WORLD_NE           = 'This world does not exists'

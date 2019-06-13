@@ -375,7 +375,7 @@ function init()
 	_GAMEMODE = config:get('serverGamemode')
 	if _GAMEMODE and #_GAMEMODE > 0 and _GAMEMODE ~= 'none'then
 		log.info('Loading gamemode', mode)
-		local chunk, err = loadfile('gamemodes/' .. mode .. '.lua')
+		local chunk, err = loadfile('gamemodes/' .. _GAMEMODE .. '.lua')
 		if chunk then
 			initGamemode = chunk()
 		else
@@ -445,7 +445,6 @@ succ, err = xpcall(function()
 		if ETIME then
 			dt = CTIME - ETIME
 			dt = math.min(.1, dt)
-			cpe:extCallHook('onUpdate', dt)
 			hooks:call('onUpdate', dt)
 			timer.Update(dt)
 			if uwa > 0 then
@@ -479,7 +478,7 @@ succ, err = xpcall(function()
 			sleep((NextUpdate - gettime())*1000)
 		end
 	end
-end,debug.traceback)
+end, debug.traceback)
 
 ecode = 0
 
