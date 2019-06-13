@@ -5,6 +5,7 @@ local cm = {
 		['zombie'] = 2,
 		['humanoid'] = 2,
 		['sitting'] = 1,
+		['chibi'] = 1,
 		['pig'] = 1,
 		['sheep'] = 1,
 		['skeleton'] = 2,
