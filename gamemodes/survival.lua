@@ -99,6 +99,25 @@ local survCraft = {
 		},
 		count = 1
 	},
+	[2] = {
+		needs = {
+			[18] = 1,
+			[3] = 1
+		},
+		count = 1
+	},
+	[3] = {
+		needs = {
+			[2] = 1
+		},
+		count = 1
+	},
+	[4] = {
+		needs = {
+			[1] = 1
+		},
+		count = 1
+	},
 	[5] = {
 		needs = {
 			[17] = 1
@@ -153,6 +172,12 @@ local survCraft = {
 			[4] = 1
 		},
 		count = 2
+	},
+	[52] = {
+		needs = {
+			[12] = 4
+		},
+		count = 4
 	},
 	[54] = {
 		needs = {
@@ -259,8 +284,8 @@ local function survCanCraft(player, bid, quantity)
 
 	if recipe then
 		local canCraft = true
-		for nId, ammount in pairs(recipe.needs)do
-			local cnt = quantity * ammount
+		for nId, amount in pairs(recipe.needs)do
+			local cnt = quantity * amount
 			if inv[nId] < cnt then
 				canCraft = false
 				lacks = lacks or''
@@ -536,8 +561,13 @@ return function()
 	end)
 
 	hooks:add('onPlayerLanded', 'survival', function(player, blocks)
-		if blocks > 3 then
-			survDamage(nil, player, blocks / 2 - 0.5, SURV_DMG_FALL)
+		if blocks > 3 and player.oldDY < -0.08 then
+			local pos = player.pos
+			local blockInsidePlayer = getWorld(player):getBlock(math.floor(pos.x+.5), math.floor(pos.y-1.5), math.floor(pos.z+.5))
+			
+			if not (8 <= blockInsidePlayer and blockInsidePlayer <= 11) then
+				survDamage(nil, player, blocks / 2 - 0.5, SURV_DMG_FALL)
+			end
 		end
 	end)
 
@@ -684,17 +714,14 @@ return function()
 		if args[1] == 'info'then
 			local bId = player:getHeldBlock()
 
-			if survCraft[bId]then
+			if survCraft[bId] then
 				local lacks = ''
-				local needs = survCraft[bId].needs
-				local bName = survBlocknames[bId]
 
-				for i = 1, #needs do
-					local nId = needs[i]
-					lacks = lacks .. ('%d %s, '):format(needs[nId], survBlocknames[nId])
+				for nId, amount in pairs(survCraft[bId].needs) do
+					lacks = lacks .. ('%d %s, '):format(amount, survBlocknames[nId])
 				end
 
-				return ('You need %s to craft %s'):format(lacks, bName)
+				return ('You need %s to craft %s'):format(lacks:sub(1, -3), survBlocknames[bId])
 			else
 				return 'Selected block can\'t be crafted.'
 			end
