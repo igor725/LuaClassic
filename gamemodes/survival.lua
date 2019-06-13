@@ -639,9 +639,9 @@ return function()
 				end
 				if tgplayer and CTIME > player.nextHit then
 					-- critical damage
-					local blocks = player.fallingStartY - player.pos.y
+					-- local blocks = player.fallingStartY - player.pos.y
 
-					survDamage(player, tgplayer, 1 + blocks, SURV_DMG_PLAYER)
+					survDamage(player, tgplayer, 1 --[[+ blocks]], SURV_DMG_PLAYER)
 					survStopBreaking(player)
 
 					-- timeout
