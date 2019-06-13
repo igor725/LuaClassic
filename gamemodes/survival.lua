@@ -530,8 +530,7 @@ return function()
 		survRemoveTimers(player)
 	end)
 
-	hooks:add('onPlayerLanded', 'survival', function(player, speedY)
-		local blocks = speedY ^ 2 / 250
+	hooks:add('onPlayerLanded', 'survival', function(player, blocks)
 		if blocks > 3 then
 			survDamage(nil, player, blocks / 2 - 0.5, SURV_DMG_FALL)
 		end
@@ -838,23 +837,6 @@ return function()
 		survUpdateBlockInfo(target)
 
 		return ('Godmode &a%s&f for %s.'):format(target, state)
-	end)
-
-	addCommand('full', function(isConsole, player, args)
-		local bid
-		if isConsole then
-			if #args < 1 then return false end
-			player = getPlayerByName(args[1])
-			bid = tonumber(args[2])
-		end
-		if not player then return MESG_PLAYERNF end
-		bid = bid or player:getHeldBlock()
-
-		local given = survInvAddBlock(player, bid, SURV_MAX_BLOCKS)
-		if given > 0 then
-			player:holdThis(bid)
-			return (CMD_GIVE):format(given, survBlocknames[bid], player)
-		end
 	end)
 
 	function toAngle(x, y)
