@@ -54,9 +54,15 @@ function prePlayerFirstSpawn(player)
 	newChatMessage('&e' .. msg)
 end
 
-function onPlayerDestroy(player)
+function onPlayerDisconnect(player)
 	if not player.silentKick then
-		local msg = printf(MESG_DISCONN, player, player:getLeaveReason())
+		local reason = player:getLeaveReason()
+		local msg
+		if not reason then
+			msg = printf(MESG_WORDISCONN, player)
+		else
+			msg = printf(MESG_DISCONN, player, reason)
+		end
 		newChatMessage('&e' .. msg)
 	end
 

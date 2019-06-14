@@ -649,16 +649,19 @@ local player_mt = {
 		end
 		players[self] = nil
 		IDS[self:getID()] = nil
-		self.leavereason = self.leavereason or'Disconnected'
+
+		cpe:extCallHook('onPlayerDestroy', self)
+		hooks:call('onPlayerDestroy', self)
+		if onPlayerDestroy then
+			onPlayerDestroy(self)
+		end
 
 		if self.handshaked then
 			self.lastOnlineTime = self:getOnlineTime()
-			cpe:extCallHook('onPlayerDestroy', self)
-			hooks:call('onPlayerDestroy', self)
-			if onPlayerDestroy then
-				onPlayerDestroy(self)
-			end
 			SERVER_ONLINE = (SERVER_ONLINE or 1) - 1
+			if onPlayerDisconnect then
+				onPlayerDisconnect(self)
+			end
 		end
 		-- Causes incorrect kick-packet sending
 		-- closeSock(self:getClient())

@@ -76,6 +76,7 @@ MESG_PERMERROR     = 'You do not have &c%s&f permission.'
 MESG_LEVELLOAD     = 'Please wait, server is loading this level...'
 MESG_CONN          = 'Player %s connected to server'
 MESG_DISCONN       = 'Player %s disconnected from server (%s)'
+MESG_WORDISCONN    = 'Player %s disconnected from server'
 MESG_UNKNOWNCMD    = 'Unknown command'
 MESG_NOTWSCONN     = 'This port accepts only websocket connections.'
 

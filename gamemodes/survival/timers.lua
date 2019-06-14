@@ -23,7 +23,7 @@ function survRemoveTimers(player)
 	end
 end
 
-hooks:add('onPlayerHandshakeDone', 'surv_timers', function(player)
+hooks:add('postPlayerFirstSpawn', 'surv_timers', function(player)
 	local name = player:getName()
 	timer.Create(name .. '_hp_regen', -1, 5, function()
 		local int, fr = math.modf(player.health)
