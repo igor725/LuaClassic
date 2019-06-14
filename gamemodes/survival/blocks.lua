@@ -43,7 +43,8 @@ local survMiningSpeed = {
 	[49] = 250,
 	[50] = 10,
 	[51] = 0,
-	[54] = 0
+	[54] = 0,
+	[65] = 7.5
 }
 
 local survMiningSpeedWithTool = {
@@ -60,6 +61,7 @@ local survMiningSpeedWithTool = {
 	[45] = 3,
 	[48] = 3,
 	[50] = 3,
+	[65] = 1.15
 }
 
 for i = 21, 36 do
@@ -69,7 +71,6 @@ end
 for i = 37, 40 do
 	survMiningSpeed[i] = 0
 end
-
 
 function survGetDropBlock(held, bid)
 	if bid == 1 then
