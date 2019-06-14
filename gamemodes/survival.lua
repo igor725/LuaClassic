@@ -229,11 +229,15 @@ local function distance(x1, y1, z1, x2, y2, z2)
 	return math.sqrt( (x2 - x1) ^ 2 + (y2 - y1) ^ 2 + (z2 - z1) ^ 2 )
 end
 
-local function survUpdateInventory(player)
+local function survUpdateInventory(player, id)
 	if player.isInGodmode or player.inCraftMenu then
 		for i = 1, 65 do
 			player:setInventoryOrder(i, i)
 		end
+		return
+	end
+	if id then
+		player:setInventoryOrder(id, player.inventory[id] > 0 and 1 or 0)
 		return
 	end
 	for i = 1, 65 do
@@ -256,6 +260,7 @@ local function survUpdateHealth(player)
 end
 
 local function survUpdatePermission(player, id)
+	local quantity = player.inventory[id]
 	local canPlace = quantity > 0 and (player.isInGodmode or(id < 7 or id > 11))
 	player:setBlockPermissions(id, canPlace, player.isInGodmode)
 end
@@ -270,7 +275,7 @@ local function survUpdateBlockInfo(player)
 		local name = survBlocknames[id]or'UNKNOWN_BLOCK'
 		player:sendMessage('Block: ' .. name, MT_BRIGHT3)
 		player:sendMessage('Quantity: ' .. quantity, MT_BRIGHT2)
-		survUpdatePermission(player)
+		survUpdatePermission(player, id)
 	else
 		player:sendMessage('', MT_BRIGHT3)
 		player:sendMessage('', MT_BRIGHT2)
@@ -872,6 +877,8 @@ return function()
 				inv2[bId] = inv2[bId] + quantity
 				survUpdateBlockInfo(player)
 				survUpdateBlockInfo(target)
+				survUpdateInventory(player, bId)
+				survUpdateInventory(target, bId)
 				return ('Dropped %d %s blocks to %s'):format(quantity, survBlocknames[bId], target)
 			end
 		else
