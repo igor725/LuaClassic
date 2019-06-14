@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 --TODO: Try to use C structs instead of lua tables
 local bde = {
 	version = 2

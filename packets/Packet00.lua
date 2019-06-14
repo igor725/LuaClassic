@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 return function(player, pver, name, vkey, magic)
 	if pver == 0x07 then
 		name = trimStr(name)

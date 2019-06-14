@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 MT_CHAT     = 0
 MT_STATUS1  = 1
 MT_STATUS2  = 2

@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 packets = {
 	[0x00] = 'Bc64c64B',
 	[0x05] = '>hhhBB',

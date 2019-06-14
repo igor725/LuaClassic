@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 return function(player, x, y, z, mode, id)
 	local world = getWorld(player)
 	local cblock = world:getBlock(x, y, z)

@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 local function gBufSize(vec)
 	return vec.x * vec.y * vec.z + 4
 end

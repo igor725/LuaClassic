@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 return function(player, id, x, y, z, yaw, pitch)
 	player:setPos(x / 32, y / 32, z / 32)
 	player:setEyePos((yaw / 255) * 360, (pitch / 255) * 360)

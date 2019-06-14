@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 SURV_MAX_HEALTH = 10
 SURV_MAX_OXYGEN = 10
 SURV_MAX_BLOCKS = 64
@@ -504,7 +509,7 @@ end
 
 local function survCraftInfo(id)
 	local recipe = survCraft[id]
-	
+
 	if recipe then
 		local lacks = ''
 
@@ -702,10 +707,10 @@ return function()
 	hooks:add('onHeldBlockChange', 'survival', function(player, id)
 		player.heldBlockIsTool = not not survBreakingTools[id]
 		survUpdateBlockInfo(player)
-		
+
 		if player.inCraftMenu then
 			local bId = player:getHeldBlock()
-			
+
 			if bId > 0 then
 				player:sendMessage(survCraftInfo(bId))
 				if survCraft[bId] then
@@ -768,11 +773,11 @@ return function()
 			if args[1] == 'info'then
 				return survCraftInfo(player:getHeldBlock())
 			end
-			
+
 			-- craft if arg is number
 			local bId = player:getHeldBlock()
 			local quantity = tonumber(args[1])
-			
+
 			if quantity and bId ~= 0 then
 				if quantity < 0 then
 					return 'You can\' craft negative count of blocks'
@@ -796,7 +801,7 @@ return function()
 
 						-- Close craft menu if craft was successful
 						player.inCraftMenu = false
-						
+
 						survUpdateInventory(player)
 
 						return ('%d block(-s) of %s crafted'):format(oQuantity, bName)
@@ -808,12 +813,12 @@ return function()
 				end
 			end
 		end
-		
+
 		-- open/close craft menu if argument is wrong
 		if not player.inCraftMenu then
 			player.inCraftMenu = true
 			survUpdateInventory(player)
-	
+
 			player.heldBlockBeforeCrafting = player:getHeldBlock()
 			player:holdThis(0)
 
@@ -821,7 +826,7 @@ return function()
 		else
 			player.inCraftMenu = false
 			survUpdateInventory(player)
-		
+
 			player:holdThis(player.heldBlockBeforeCrafting)
 
 			return 'Quit without crafting.'

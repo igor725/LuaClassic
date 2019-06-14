@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 local GEN_BIOME_STEP = 20
 local GEN_BIOME_RADIUS = 2
 

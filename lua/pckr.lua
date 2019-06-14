@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 PCK_INVALID_HEADER = 1
 PCK_FILE_CORRUPTED = 2
 

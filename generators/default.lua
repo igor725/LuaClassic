@@ -1,8 +1,7 @@
---
--- Created by scaled
--- and Igor
--- for LuaClassic server
---
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
 
 local GEN_ENABLE_CAVES     = true
 local GEN_ENABLE_TREES     = true
@@ -135,7 +134,7 @@ local function heightMapGenerate(dimx, dimy, dimz)
 			else
 				heightMap[offset] = heightGrass
 			end
-			
+
 			if heightMap[offset] > dimy - 2 then
 				heightMap[offset] = dimy - 2
 			elseif heightMap[offset] < 3 then
@@ -198,7 +197,7 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 			local offset = z * dimx + x + 4
 
 			heightStone1 = math.max(height1 - math.random(4, 6), 1)
-			
+
 			-- stone
 			local step = dimz * dimx
 			for y = heightStone, heightStone1 - 1 do
@@ -256,7 +255,7 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 			else
 				biome = getBiome2(math.floor(x / GEN_BIOME_STEP + .5), math.floor(z / GEN_BIOME_STEP + .5))
 			end
-			
+
 			if biome == BIOME_NORMAL or biome == BIOME_TREES then
 				-- Dirt
 				for y = heightStone1, height1 - 2 do
@@ -321,7 +320,7 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 					-- Grass
 					map[offset + (height1 - 1) * step] = 3
 					map[offset + height1 * step] = 2
-					
+
 					-- Snow
 					map[offset + (height1 + 1) * step] = 53
 				else
@@ -333,7 +332,7 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 					for y = height1 + 1, heightWater - 1 do
 						map[offset + y * step] = 8
 					end
-					
+
 					if height1 == heightWater then
 						-- Snow
 						map[offset + (height1 + 1) * step] = 53
@@ -377,10 +376,10 @@ local function generateTrees(mapaddr, dimx, dimy, dimz, seed)
 	local x, z, baseHeight, baseHeight2, randBiome
 	for i = 1, TREES_COUNT do
 		randBiome = math.random(#biomesWithTrees)
-		
-		x = (biomesWithTrees[randBiome] % bsx) 
+
+		x = (biomesWithTrees[randBiome] % bsx)
 			* GEN_BIOME_STEP + math.random(GEN_BIOME_STEP) - GEN_BIOME_STEP / 2
-		z = math.floor(biomesWithTrees[randBiome] / bsx) 
+		z = math.floor(biomesWithTrees[randBiome] / bsx)
 			* GEN_BIOME_STEP + math.random(GEN_BIOME_STEP) - GEN_BIOME_STEP / 2
 
 		if x > dimx - 6 then
@@ -434,10 +433,10 @@ local function generateTrees(mapaddr, dimx, dimy, dimz, seed)
 				baseHeight2 = baseHeight + math.random(4, 6)
 
 				for y = baseHeight + 3, baseHeight2 + 2 do
-					local radius = y > baseHeight2 
+					local radius = y > baseHeight2
 						and ((y-baseHeight2) % 2) + 1
 						or (((y-baseHeight2) % 2) + math.random() * 2)
-					
+
 					local radiusCeil = math.ceil(radius)
 					radius = radius*radius
 					for dx = -radiusCeil, radiusCeil do
@@ -581,7 +580,7 @@ local function generateOres(mapaddr, dimx, dimy, dimz, seed)
 		x = math.random(dimx - GEN_ORE_VEIN_SIZE) - 1
 		z = math.random(dimz - GEN_ORE_VEIN_SIZE) - 1
 		y = math.floor(math.random() ^ 3 * math.min(dimy - GEN_ORE_VEIN_SIZE - 1, heightGrass + 15))
-		
+
 		ore = math.random(14, 16)
 		for dx = 0, GEN_ORE_VEIN_SIZE do
 			for dz = 0, GEN_ORE_VEIN_SIZE do
@@ -593,7 +592,7 @@ local function generateOres(mapaddr, dimx, dimy, dimz, seed)
 			end
 		end
 	end
-	
+
 	if heightGrass < genGravelVeinSize + 5 then
 		local GRAVEL_COUNT = dimx * dimy * dimz * GEN_GRAVEL_COUNT_MULT
 		for i = 1, GRAVEL_COUNT do
@@ -605,7 +604,7 @@ local function generateOres(mapaddr, dimx, dimy, dimz, seed)
 				getHeight(x, z+genGravelVeinSize),
 				getHeight(x+genGravelVeinSize, z+genGravelVeinSize)
 			)
-			
+
 			if maxY < genGravelVeinSize then
 				y = math.random(maxY)
 				for dz = 0, genGravelVeinSize do
@@ -769,7 +768,7 @@ return function(world, seed)
 	for i = 0, thlimit - 1 do
 		table.insert(threads, terrain_gen(mapaddr, dimx, dimy, dimz, startX, endX, seed + i))
 		log.debug(('TerrainGenerator: #%d thread spawned'):format(#threads))
-		
+
 		startX = endX + 1
 		endX = math.min(dimx - 1, endX + generatorStep)
 	end
@@ -845,7 +844,7 @@ return function(world, seed)
 	world:setData('seed', seed)
 	collectgarbage()
 	log.debug('DefaultGenerator: DONE')
-	
+
 
 	return true
 end

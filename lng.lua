@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 DEF_SERVERNAME     = 'A minecraft server'
 DEF_SERVERMOTD     = 'This server uses LuaClassic'
 
