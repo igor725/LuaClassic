@@ -49,7 +49,6 @@ local survMiningSpeed = {
 local survMiningSpeedWithTool = {
 	[1]  =  1.15,
 	[4]  =  1.5,
-	[5]  =  3,
 	[14] =  2.25,
 	[15] =  2.25,
 	[16] =  2.25,
