@@ -55,6 +55,13 @@ local survBlockDrop = {
 -- 	survBlockDrop[i] = survBlockDrop[14]
 -- end
 
+local survBreakingTools = {
+	[41] = 12,
+	[42] = 6,
+	[43] = 4,
+	[47] = 2
+}
+
 local survMiningSpeed = {
 	[-1] =  1,
 	[1]  =  7.5,
@@ -432,7 +439,16 @@ local function survBreakBlock(player, x, y, z)
 	if bid ~= 0 then
 		if survInvAddBlock(player, bid, dcount or 1) > 0 then
 			local heldBlock = player:getHeldBlock()
-			if heldBlock ~= bid and (heldBlock < 41 or heldBlock > 43) then
+			
+			local heldBlockIsTool = false
+			for tool, speed in pairs(survBreakingTools) do
+				if heldBlock == tool then
+					heldBlockIsTool = true
+					break
+				end
+			end
+			
+			if heldBlock ~= bid and not heldBlockIsTool then
 				player:holdThis(bid)
 			end
 		end
@@ -468,12 +484,13 @@ local function survBlockAction(player, button, action, x, y, z)
 				if player:getFluidLevel() > 1 then
 					tmSpeed = tmSpeed * 5
 				end
-				for i = 1, 3 do
-					if player:getHeldBlock() == 40 + i and player.inventory[40 + i] > 0 then
+				
+				for tool, speed in pairs(survBreakingTools) do
+					if player:getHeldBlock() == tool and player.inventory[tool] > 0 then
 						if survMiningSpeedWithTool[bid] then
-							tmSpeed = survMiningSpeedWithTool[bid] / 6 * i
+							tmSpeed = survMiningSpeedWithTool[bid] / speed * 2
 						else
-							tmSpeed = tmSpeed / 12 * i
+							tmSpeed = tmSpeed / speed
 						end
 						break
 					end
@@ -651,9 +668,9 @@ return function()
 				end
 				if tgplayer and CTIME > player.nextHit then
 					-- critical damage
-					-- local blocks = player.fallingStartY - player.pos.y
+					local blocks = player.fallingStartY and (player.fallingStartY - player.pos.y) or 0
 
-					survDamage(player, tgplayer, 1 --[[+ blocks]], SURV_DMG_PLAYER)
+					survDamage(player, tgplayer, 1 + math.max(0, blocks), SURV_DMG_PLAYER)
 					survStopBreaking(player)
 
 					-- timeout
@@ -789,7 +806,7 @@ return function()
 
 							return ('%d block(-s) of %s crafted'):format(oQuantity, bName)
 						else
-							return ('You need %s to craft %d %s'):format(lacks, oQuantity, bName)
+							return ('You need more %s to craft %d %s'):format(lacks, oQuantity, bName)
 						end
 					else
 						return 'Selected block can\'t be crafted.'
