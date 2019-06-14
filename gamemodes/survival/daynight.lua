@@ -14,10 +14,11 @@ local ptime = {
 }
 
 function survUpdateWorldTime(world)
+	if world:getData('isNether') then return end
 	local ds = SURV_DNTIME + SURV_SDTIME
 	local dsn = SURV_DNTIME * 2 + SURV_SDTIME
 	local dsns = SURV_DNTIME * 2 + SURV_SDTIME * 2
-	local time = world.data.time
+	local time = world:getData('time')
 
 	if time < SURV_DNTIME then
 		if world.ctpreset ~= 'day'then
@@ -40,7 +41,7 @@ function survUpdateWorldTime(world)
 			world:setTime('dawn')
 		end
 	else
-		world.data.time = -1
+		world:setData('time', -1)
 	end
 end
 
@@ -96,7 +97,7 @@ addCommand('freezetime', function(isConsole, player, args)
 	end
 
 	if world then
-		local tf = world.data.timefrozen
+		local tf = world:getData('timefrozen')
 		world.data.timefrozen = (tf == 1 and 0)or 1
 		if tf == 1 then
 			return 'Time resumed'
@@ -108,7 +109,7 @@ end)
 
 timer.Create('daynight_cycle', -1, 1, function()
 	worldsForEach(function(world)
-		if world.data.timefrozen ~= 1 then
+		if world:getData('timefrozen') ~= 1 then
 			world.data.time = (world.data.time or -1) + 1
 			survUpdateWorldTime(world)
 		end
