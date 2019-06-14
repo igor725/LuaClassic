@@ -6,6 +6,7 @@
 SURV_MAX_HEALTH = 10
 SURV_MAX_OXYGEN = 10
 
+gmLoad('lng')
 gmLoad('names')
 gmLoad('gui')
 gmLoad('blocks')

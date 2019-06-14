@@ -145,6 +145,7 @@ function onPlayerChatMessage(player, message)
 			end
 			if target then
 				target:sendMessage((CMD_WHISPER):format(player, message))
+				player:sendMessage(CMD_WHISPERSUCC)
 			else
 				player:sendMessage(MESG_PLAYERNF)
 			end
