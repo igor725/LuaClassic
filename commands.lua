@@ -45,6 +45,7 @@ addCommand('restart', function(isConsole, player, args)
 	end
 	local time = tonumber(args[1])
 	if time then
+		newChatMessage((CMD_RSTTMR):format(time))
 		timer.Create('svrestart', time, 1, function(repLeft)
 			if repLeft == 0 then
 				_STOP = 'restart'
