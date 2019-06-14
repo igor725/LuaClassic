@@ -40,8 +40,20 @@ local survBlockDrop = {
 	[18] = function()
 		return (math.random(0, 100) < 20 and 6)or 18
 	end,
+	-- WIP
+	-- [14] = function(held, bid)
+	-- 	if(held < 41 or held > 44)and held ~= 5 then
+	-- 		return 0
+	-- 	else
+	-- 		return bid
+	-- 	end
+	-- end,
 	[20] = 0
 }
+
+-- for i = 15, 16 do
+-- 	survBlockDrop[i] = survBlockDrop[14]
+-- end
 
 local survMiningSpeed = {
 	[-1] =  1,
@@ -410,11 +422,11 @@ end
 
 local function survBreakBlock(player, x, y, z)
 	local world = getWorld(player)
-	local bid = world:getBlock(x, y, z)
+	local cbid = world:getBlock(x, y, z)
 	local dcount
-	bid = survBlockDrop[bid]or bid
+	local bid = survBlockDrop[cbid]or cbid
 	if type(bid) == 'function'then
-		bid, dcount = bid()
+		bid, dcount = bid(player:getHeldBlock(), cbid)
 	end
 
 	if bid ~= 0 then
