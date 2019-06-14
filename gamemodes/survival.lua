@@ -685,6 +685,9 @@ return function()
 	end)
 
 	hooks:add('onPlayerPlaceBlock', 'survival', function(player, x, y, z, id)
+		if player.isInGodmode then
+			return false
+		end
 		if player.inCraftMenu then
 			return true
 		end
