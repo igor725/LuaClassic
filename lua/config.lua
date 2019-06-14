@@ -138,8 +138,8 @@ function config:save()
 					if i ~= #v then
 						cfg:write(',')
 					end
+					cfg:write('\n')
 				end
-				cfg:write('\n')
 			end
 			cfg:write('}')
 		elseif t == 'string'then

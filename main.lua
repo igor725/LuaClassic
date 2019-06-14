@@ -43,11 +43,7 @@ end
 function prePlayerFirstSpawn(player)
 	local wMsg = config:get('welcomeMessage')
 	if wMsg and #wMsg > 0 then
-		for line in wMsg:gmatch("[^\r\n]+") do
-			if #line > 0 then
-	    	player:sendMessage(line)
-			end
-		end
+		player:sendMessage(wMsg)
 	end
 	local msg = printf(MESG_CONN, player)
 	newChatMessage('&e' .. msg)

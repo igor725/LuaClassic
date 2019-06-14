@@ -17,13 +17,11 @@ addCommand('rc', function(isConsole, player, args)
 end)
 
 addCommand('info', function(isConsole, player)
-	local str1 = (CMD_SVINFO1):format(jit.os, jit.arch, jit.version)
-	local str2 = (CMD_SVINFO2):format(gcinfo() / 1024)
+	local info = (CMD_SVINFO):format(jit.os, jit.arch, jit.version, gcinfo() / 1024)
 	if isConsole then
-		io.write(str1, '\n', str2, '\n')
+		print(info)
 	else
-		player:sendMessage(str1)
-		player:sendMessage(str2)
+		player:sendMessage(info)
 	end
 end)
 
@@ -57,6 +55,15 @@ addCommand('restart', function(isConsole, player, args)
 	else
 		_STOP = 'restart'
 	end
+end)
+
+addCommand('players', function()
+	local list = CMD_PLISTHDR
+	playersForEach(function(player)
+		local webClient = (player:isWebClient()and ST_YES)or ST_NO
+		list = list .. (CMD_PLISTROW):format(player, webClient)
+	end)
+	return list
 end)
 
 addCommand('uptime', function()

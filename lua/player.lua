@@ -506,6 +506,15 @@ local player_mt = {
 		mesg = tostring(mesg)
 		id = id or MT_CHAT
 
+		if mesg:find('[\r\n]')then
+			for line in mesg:gmatch("[^\r\n]+") do
+				if #line > 0 then
+		    	self:sendMessage(line, id)
+				end
+			end
+			return
+		end
+
 		local lastcolor = ''
 		if not self:isSupported('FullCP437')then
 			mesg = mesg:gsub('.',function(s)
