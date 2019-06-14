@@ -70,7 +70,9 @@ addCommand('time', function(isConsole, player, args)
 
 	if not timeval and world then
 		return ('Time in &a%s&f now is: %d'):format(world, world:getData('time'))
-	else
+	elseif not world then
+		return WORLD_NF
+	elseif not timeval then
 		return
 	end
 
