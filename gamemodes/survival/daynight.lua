@@ -15,26 +15,26 @@ local ptime = {
 
 function survUpdateWorldTime(world)
 	local ds = SURV_DNTIME + SURV_SDTIME
-	local dsn = SURV_DNTIME + SURV_SDTIME * 2
+	local dsn = SURV_DNTIME * 2 + SURV_SDTIME
 	local dsns = SURV_DNTIME * 2 + SURV_SDTIME * 2
 	local time = world.data.time
 
-	if time <= SURV_DNTIME then
+	if time < SURV_DNTIME then
 		if world.ctpreset ~= 'day'then
 			world.ctpreset = 'day'
 			world:setTime('day')
 		end
-	elseif time <= ds then
+	elseif time < ds then
 		if world.ctpreset ~= 'dawn'then
 			world.ctpreset = 'dawn'
 			world:setTime('dawn')
 		end
-	elseif time <= dsn then
+	elseif time < dsn then
 		if world.ctpreset ~= 'night'then
 			world.ctpreset = 'night'
 			world:setTime('night')
 		end
-	elseif time <= dsns then
+	elseif time < dsns then
 		if world.ctpreset ~= 'sunset'then
 			world.ctpreset = 'sunset'
 			world:setTime('dawn')
