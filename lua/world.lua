@@ -363,6 +363,17 @@ function getWorld(w)
 	end
 end
 
+function addWSave(name, fmt, reader, writer)
+	wWriters[name] = {
+		format = fmt,
+		func = writer
+	}
+	wReaders[name] = {
+		format = fmt,
+		func = reader
+	}
+end
+
 function loadWorld(wname)
 	if getWorld(wname)then return true end
 	local lvlh = io.open(getWorldPath(wname), 'rb')
@@ -462,6 +473,15 @@ function regenerateWorld(world, gentype, seed)
 		end
 	end
 	return false, IE_UE
+end
+
+function worldsForEach(func)
+	for _, world in pairs(worlds)do
+		local ret = func(world)
+		if ret ~= nil then
+			return ret
+		end
+	end
 end
 
 function newWorld(wh, wn)

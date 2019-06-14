@@ -80,6 +80,35 @@ function newVector(x, y, z)
 	return ffi.new('vector', x, y, z)
 end
 
+function distance(x1, y1, z1, x2, y2, z2)
+	return math.sqrt( (x2 - x1) ^ 2 + (y2 - y1) ^ 2 + (z2 - z1) ^ 2 )
+end
+
+function toAngle(x, y)
+	if y == 0 then
+		if x < 0 then
+			return 180
+		elseif x > 0 then
+			return 0
+		else
+			return 0
+		end
+	else
+		angle = math.atan(y / x) / math.pi * 180
+
+		if x < 0 then
+			x = -x
+			if y < 0 then
+				angle = angle - 180
+			else
+				angle = angle + 180
+			end
+		end
+
+		return angle
+	end
+end
+
 floor = math.floor
 ceil = math.ceil
 bswap = bit.bswap

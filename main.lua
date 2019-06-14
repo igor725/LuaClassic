@@ -366,10 +366,14 @@ function init()
 
 	_GAMEMODE = config:get('serverGamemode')
 	if _GAMEMODE and #_GAMEMODE > 0 and _GAMEMODE ~= 'none'then
+		local path = 'gamemodes/' .. _GAMEMODE .. '/%s.lua'
+		function gmLoad(fn)
+			return assert(loadfile((path):format(fn)))()
+		end
 		log.info('Loading gamemode', mode)
-		local chunk, err = loadfile('gamemodes/' .. _GAMEMODE .. '.lua')
+		local chunk, err = loadfile((path):format('init'))
 		if chunk then
-			initGamemode = chunk()
+			initGamemode = chunk
 		else
 			log.fatal('Gamemode loading error:', err)
 		end
@@ -377,6 +381,12 @@ function init()
 
 	log.info('Loading banlist')
 	loadBanList()
+
+	if initGamemode then
+		initGamemode()
+		log.info('Gamemode:', _GAMEMODE)
+		initGamemode = nil
+	end
 
 	log.info(CON_WLOAD)
 	local sdlist = config:get('levelSeeds')
@@ -425,11 +435,6 @@ succ, err = xpcall(function()
 
 		if not INITED then
 			if init()then
-				if initGamemode then
-					initGamemode()
-					log.info('Gamemode:', _GAMEMODE)
-					initGamemode = nil
-				end
 				hooks:call('onInitDone')
 				INITED = true
 			end

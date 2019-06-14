@@ -40,7 +40,7 @@ CU_REGEN           = 'regen <world> [generator] [seed] - Regenerate specified wo
 CU_PUT             = 'put <playername> <worldname> - Teleport player to specified world'
 CU_WEATHER         = 'weather <world/weather type> [weather type] - Sets weather in specified world'
 CU_TIME            = 'time <world/preset name> [preset name] - Sets time in specified world'
-CU_GIVE            = '/give [player] <block id> <count>'
+CU_GIVE            = 'give [player] <block id> <count>'
 
 IE_MSG             = 'Internal server error: %s'
 IE_GZ              = 'Map compression failed'
