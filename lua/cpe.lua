@@ -13,10 +13,7 @@ cpe = {
 	},
 	psizes = {},
 	pexts = {},
-	exts = {
-		['LongerMessages'] = {},
-		['FullCP437'] = {}
-	}
+	exts = {}
 }
 
 local ext_mt = {
@@ -55,6 +52,9 @@ function cpe:init()
 			ext.load = nil
 		end
 	end
+	local emptyExt = setmetatable({}, ext_mt)
+	cpe.exts.LongerMessages = emptyExt
+	cpe.exts.FullCP437 = emptyExt
 	log.info('Successfully loaded', self.extCount, 'extensions.')
 end
 

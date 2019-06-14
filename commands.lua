@@ -72,6 +72,19 @@ addCommand('players', function()
 	return list
 end)
 
+addCommand('goto', function(isConsole, player, args)
+	if isConsole then return CON_INGAMECMD end
+	if #args < 1 then return false end
+
+	local wname = args[1]:lower()
+	local succ, msg = player:changeWorld(wname)
+	if not succ then
+		if msg == 0 then
+			player:sendMessage(WORLD_NE)
+		end
+	end
+end)
+
 addCommand('uptime', function()
 	local tm = gettime() - START_TIME
 	local h = tm / 3600

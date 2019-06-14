@@ -135,15 +135,6 @@ function onPlayerChatMessage(player, message)
 				player:sendMessage(MESG_UNKNOWNCMD)
 			end
 		end
-	elseif starts == '>'then
-		local wname = message:sub(2)
-		wname = wname:lower()
-		local succ, msg = player:changeWorld(wname)
-		if not succ then
-			if msg == 0 then
-				player:sendMessage(WORLD_NE)
-			end
-		end
 	elseif starts == '@'then
 		local name, message = message:match('^@(.-)%s(.+)')
 		if name and #name > 0 then
