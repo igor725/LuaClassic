@@ -311,6 +311,9 @@ local player_mt = {
 		end)
 		if canUse then
 			self.name = name
+			if config:get('storePlayersIn_G')then
+				_G[self.name] = self
+			end
 			return true
 		else
 			return false

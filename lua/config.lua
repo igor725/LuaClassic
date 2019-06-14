@@ -14,6 +14,7 @@ local hbt = 'heartbeatType'
 local hbp = 'heartbeatPublic'
 local wmsg = 'welcomeMessage'
 local dperms = 'defaultPerms'
+local spl = 'storePlayersIn_G'
 
 local lseeds = 'levelSeeds'
 local lnames = 'levelNames'
@@ -47,6 +48,7 @@ config = {
 			'commands.craft',
 			'commands.uptime'
 		},
+		[spl] = false,
 
 		[lseeds] = {},
 		[lnames] = {
@@ -76,6 +78,7 @@ config = {
 		[hbp] = 'boolean',
 		[wmsg] = 'string',
 		[dperms] = 'table',
+		[spl] = 'boolean',
 
 		[lseeds] = 'table',
 		[lnames] = 'table',
