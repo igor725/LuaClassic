@@ -255,6 +255,11 @@ local function survUpdateHealth(player)
 	player:sendMessage(str, MT_STATUS2)
 end
 
+local function survUpdatePermission(player, id)
+	local canPlace = quantity > 0 and (player.isInGodmode or(id < 7 or id > 11))
+	player:setBlockPermissions(id, canPlace, player.isInGodmode)
+end
+
 local function survUpdateBlockInfo(player)
 	local id = player:getHeldBlock()
 	if id > 0 then
@@ -265,7 +270,7 @@ local function survUpdateBlockInfo(player)
 		local name = survBlocknames[id]or'UNKNOWN_BLOCK'
 		player:sendMessage('Block: ' .. name, MT_BRIGHT3)
 		player:sendMessage('Quantity: ' .. quantity, MT_BRIGHT2)
-		player:setBlockPermissions(id, quantity > 0 and (id < 7 or id > 11), player.isInGodmode)
+		survUpdatePermission(player)
 	else
 		player:sendMessage('', MT_BRIGHT3)
 		player:sendMessage('', MT_BRIGHT2)
@@ -554,7 +559,7 @@ return function()
 			return
 		end
 		for i = 1, 65 do
-			player:setBlockPermissions(i, false, player.isInGodmode)
+			survUpdatePermission(player, i)
 		end
 
 		local name = player:getName()
@@ -910,7 +915,7 @@ return function()
 		target:hackControl(h, h, h, 1, 1, -1)
 
 		for i = 1, 65 do
-			target:setBlockPermissions(i, false, target.isInGodmode)
+			survUpdatePermission(player, i)
 		end
 
 		if target.isInGodmode then
