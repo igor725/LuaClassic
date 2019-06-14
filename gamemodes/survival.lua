@@ -502,6 +502,22 @@ local function survBlockAction(player, button, action, x, y, z)
 	end
 end
 
+local function survCraftInfo(id)
+	local recipe = survCraft[id]
+	
+	if recipe then
+		local lacks = ''
+
+		for nId, amount in pairs(recipe.needs) do
+			lacks = lacks .. ('%d %s, '):format(amount, survBlocknames[nId])
+		end
+
+		return ('Recipe: %s to craft %d %s'):format(lacks:sub(1, -3), recipe.count, survBlocknames[id])
+	else
+		return 'Selected block can\'t be crafted.'
+	end
+end
+
 local p_mt = getPlayerMT()
 
 p_mt.survDamage = function(player, attacker, dmg, dmgtype)
@@ -686,6 +702,17 @@ return function()
 	hooks:add('onHeldBlockChange', 'survival', function(player, id)
 		player.heldBlockIsTool = not not survBreakingTools[id]
 		survUpdateBlockInfo(player)
+		
+		if player.inCraftMenu then
+			local bId = player:getHeldBlock()
+			
+			if bId > 0 then
+				player:sendMessage(survCraftInfo(bId))
+				if survCraft[bId] then
+					player:sendMessage('To craft this block write /craft 1 or /craft <count>')
+				end
+			end
+		end
 	end)
 
 	addCommand('give', function(isConsole, player, args)
@@ -737,72 +764,67 @@ return function()
 		if isConsole then return CON_INGAMECMD end
 		if player.isInGodmode then return 'You can\'t craft things in god mode' end
 
-		if args[1] == 'info'then
+		if #args > 0 then
+			if args[1] == 'info'then
+				return survCraftInfo(player:getHeldBlock())
+			end
+			
+			-- craft if arg is number
 			local bId = player:getHeldBlock()
-			local recipe = survCraft[bId]
-			if recipe then
-				local lacks = ''
-
-				for nId, amount in pairs(recipe.needs) do
-					lacks = lacks .. ('%d %s, '):format(amount, survBlocknames[nId])
+			local quantity = tonumber(args[1])
+			
+			if quantity and bId ~= 0 then
+				if quantity < 0 then
+					return 'You can\' craft negative count of blocks'
 				end
+				local recipe = survCraft[bId]
+				local inv = player.inventory
 
-				return ('You need %s to craft %d %s'):format(lacks:sub(1, -3), recipe.count, survBlocknames[bId])
-			else
-				return 'Selected block can\'t be crafted.'
+				if recipe then
+					local oQuantity = recipe.count * quantity
+					local bName = survBlocknames[bId]
+					if(64 - inv[bId]) < (quantity * recipe.count)then
+						return 'You can\'t take more than 64 blocks of ' .. bName
+					end
+					local canBeCrafted, lacks = survCanCraft(player, bId, quantity)
+					if canBeCrafted then
+						for nId, ammount in pairs(recipe.needs)do
+							inv[nId] = inv[nId] - ammount * quantity
+						end
+						inv[bId] = inv[bId] + oQuantity
+						survUpdateBlockInfo(player)
+
+						-- Close craft menu if craft was successful
+						player.inCraftMenu = false
+						
+						survUpdateInventory(player)
+
+						return ('%d block(-s) of %s crafted'):format(oQuantity, bName)
+					else
+						return ('You need more %s to craft %d %s'):format(lacks, oQuantity, bName)
+					end
+				else
+					return 'Selected block can\'t be crafted.'
+				end
 			end
 		end
-
+		
+		-- open/close craft menu if argument is wrong
 		if not player.inCraftMenu then
 			player.inCraftMenu = true
 			survUpdateInventory(player)
+	
+			player.heldBlockBeforeCrafting = player:getHeldBlock()
+			player:holdThis(0)
 
-			return 'Open inventory and choose block to craft. Use command /craft <count> to craft choosed block or /craft info to get recipe.'
+			return 'Open inventory and choose block to craft.'
 		else
-			if #args > 0 then
-				local bId = player:getHeldBlock()
+			player.inCraftMenu = false
+			survUpdateInventory(player)
+		
+			player:holdThis(player.heldBlockBeforeCrafting)
 
-				if bId ~= 0 then
-					local quantity = tonumber(args[1]) or 1
-					if quantity < 0 then
-						return 'You can\' craft negative count of blocks'
-					end
-					local recipe = survCraft[bId]
-					local inv = player.inventory
-
-					if recipe then
-						local oQuantity = recipe.count * quantity
-						local bName = survBlocknames[bId]
-						if(64 - inv[bId]) < (quantity * recipe.count)then
-							return 'You can\'t take more than 64 blocks of ' .. bName
-						end
-						local canBeCrafted, lacks = survCanCraft(player, bId, quantity)
-						if canBeCrafted then
-							for nId, ammount in pairs(recipe.needs)do
-								inv[nId] = inv[nId] - ammount * quantity
-							end
-							inv[bId] = inv[bId] + oQuantity
-							survUpdateBlockInfo(player)
-
-							-- Close craft menu if craft was successful
-							player.inCraftMenu = false
-							survUpdateInventory(player)
-
-							return ('%d block(-s) of %s crafted'):format(oQuantity, bName)
-						else
-							return ('You need more %s to craft %d %s'):format(lacks, oQuantity, bName)
-						end
-					else
-						return 'Selected block can\'t be crafted.'
-					end
-				end
-			else
-				-- quit without crafting
-				player.inCraftMenu = false
-				survUpdateInventory(player)
-
-				return 'Quit without crafting.'
-			end
+			return 'Quit without crafting.'
 		end
 	end)
 
