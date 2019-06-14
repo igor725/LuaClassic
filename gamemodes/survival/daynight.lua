@@ -70,6 +70,8 @@ addCommand('time', function(isConsole, player, args)
 
 	if not timeval and world then
 		return ('Time in &a%s&f now is: %d'):format(world, world:getData('time'))
+	else
+		return
 	end
 
 	world:setData('time', timeval)
@@ -78,11 +80,38 @@ addCommand('time', function(isConsole, player, args)
 	return (CMD_TIMECHANGE):format(world, timeval)
 end)
 
+addCommand('freezetime', function(isConsole, player, args)
+	local world, timeval
+	if isConsole then
+		if #args < 1 then return false end
+		world = getWorld(args[1])
+	else
+		if #args < 1 then
+			world = getWorld(player)
+		else
+			world = getWorld(args[1])
+		end
+	end
+
+	if world then
+		local tf = world.data.timefrozen
+		world.data.timefrozen = (tf == 1 and 0)or 1
+		if tf == 1 then
+			return 'Time resumed'
+		else
+			return 'Time is frozen'
+		end
+	end
+end)
+
 timer.Create('daynight_cycle', -1, 1, function()
 	worldsForEach(function(world)
-		world.data.time = (world.data.time or -1) + 1
-		survUpdateWorldTime(world)
+		if world.data.timefrozen ~= 1 then
+			world.data.time = (world.data.time or -1) + 1
+			survUpdateWorldTime(world)
+		end
 	end)
 end)
 
 addWSave('time', '>H')
+addWSave('timefrozen', 'b')
