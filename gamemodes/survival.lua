@@ -34,32 +34,28 @@ local survBlocknames = {
 	'Crate', 'Stone brick'
 }
 
-local survBlockDrop = {
-	[1] = 4,
-	[2] = 3,
-	[18] = function()
+local function survBlockDrop(held, bid)
+	if bid == 1 then
+		return 4
+	elseif bid == 2 then
+		return 3
+	elseif bid == 18 then
 		return (math.random(0, 100) < 20 and 6)or 18
-	end,
-	-- WIP
-	-- [14] = function(held, bid)
-	-- 	if(held < 41 or held > 44)and held ~= 5 then
-	-- 		return 0
-	-- 	else
-	-- 		return bid
-	-- 	end
-	-- end,
-	[20] = 0
-}
-
--- for i = 15, 16 do
--- 	survBlockDrop[i] = survBlockDrop[14]
--- end
+	elseif bid == 20 then
+		return 0
+	elseif bid >= 14 and bid <= 16 then
+		if (held < 41 or held > 44)and held ~= 5 then
+			return 0
+		end
+	end
+	return bid
+end
 
 local survBreakingTools = {
 	[41] = 12,
 	[42] = 6,
 	[43] = 4,
-	[47] = 2
+	[5] = 2
 }
 
 local survMiningSpeed = {
@@ -430,25 +426,12 @@ end
 local function survBreakBlock(player, x, y, z)
 	local world = getWorld(player)
 	local cbid = world:getBlock(x, y, z)
-	local dcount
-	local bid = survBlockDrop[cbid]or cbid
-	if type(bid) == 'function'then
-		bid, dcount = bid(player:getHeldBlock(), cbid)
-	end
+	local heldBlock = player:getHeldBlock()
+	local bid, count = survBlockDrop(heldBlock, cbid)
 
 	if bid ~= 0 then
 		if survInvAddBlock(player, bid, dcount or 1) > 0 then
-			local heldBlock = player:getHeldBlock()
-			
-			local heldBlockIsTool = false
-			for tool, speed in pairs(survBreakingTools) do
-				if heldBlock == tool then
-					heldBlockIsTool = true
-					break
-				end
-			end
-			
-			if heldBlock ~= bid and not heldBlockIsTool then
+			if heldBlock ~= bid and not player.heldBlockIsTool then
 				player:holdThis(bid)
 			end
 		end
@@ -484,7 +467,7 @@ local function survBlockAction(player, button, action, x, y, z)
 				if player:getFluidLevel() > 1 then
 					tmSpeed = tmSpeed * 5
 				end
-				
+
 				for tool, speed in pairs(survBreakingTools) do
 					if player:getHeldBlock() == tool and player.inventory[tool] > 0 then
 						if survMiningSpeedWithTool[bid] then
@@ -701,6 +684,7 @@ return function()
 	end)
 
 	hooks:add('onHeldBlockChange', 'survival', function(player, id)
+		player.heldBlockIsTool = not not survBreakingTools[id]
 		survUpdateBlockInfo(player)
 	end)
 
@@ -1017,10 +1001,10 @@ return function()
 		timer.Create('Mobs engine moving' .. (os.time()*math.random()), -1, 0.1, function()
 			if mobsEngineLastUpdate then
 				local thisTime = gettime()
-			
+
 				for i = 1, #mobsEngineMobs do
 					local Mob = mobsEngineMobs[i]
-					
+
 					Mob.pos.x = Mob.startX + Mob.dirX * (thisTime - mobsEngineLastUpdate) / 3
 					Mob.pos.y = Mob.startY + Mob.dirY * (thisTime - mobsEngineLastUpdate) / 3
 					Mob.pos.z = Mob.startZ + Mob.dirZ * (thisTime - mobsEngineLastUpdate) / 3
@@ -1032,11 +1016,11 @@ return function()
 		timer.Create('Mobs engine' .. (os.time()*math.random()), -1, 3, function()
 			local MOB_STEP = 5
 			mobsEngineLastUpdate = gettime()
-			
+
 			for i = 1, #mobsEngineMobs do
 				local Mob = mobsEngineMobs[i]
 				local world = getWorld(Mob.worldName)
-				
+
 				Mob.dirX, Mob.dirZ = MOB_STEP * (math.random() * 2 - 1), MOB_STEP * (math.random() * 2 - 1)
 				Mob.startX, Mob.startY, Mob.startZ = Mob.pos.x, Mob.pos.y, Mob.pos.z
 
