@@ -352,8 +352,8 @@ function init()
 	players, IDS = {}, {}
 	worlds = {}
 
-	permissions:parse()
 	config:parse()
+	permissions:parse()
 	cpe:init()
 
 	uwa = config:get('unloadWorldAfter')
