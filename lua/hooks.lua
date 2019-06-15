@@ -19,6 +19,7 @@ hooks = {
 		['onPlayerPlaceBlock'] = {},
 		['prePlayerFirstSpawn'] = {},
 		['postPlayerFirstSpawn'] = {},
+		['postPlayerPlaceBlock'] = {},
 		['onPlayerHandshakeDone'] = {}
 	}
 }
