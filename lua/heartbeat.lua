@@ -68,7 +68,7 @@ hooks:add('onInitDone', 'heartbeat', function()
 				return
 			end
 			if not resp:lower():find('^http/.+200 ok$')then
-				lgo.error('Heartbeat server responded', resp)
+				log.error('Heartbeat server responded:', resp)
 				return
 			end
 
