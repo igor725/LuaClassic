@@ -74,7 +74,7 @@ function survDamage(attacker, victim, damage, dmgtype)
 	return true
 end
 
-hooks:add('onPlayerLanded', 'survival', function(player, blocks)
+hooks:add('onPlayerLanded', 'survival_damage', function(player, blocks)
 	if blocks > 3 and player.oldDY2 < -0.3 then
 		local pos = player.pos
 		local blockInsidePlayer = getWorld(player):getBlock(math.floor(pos.x+.5), math.floor(pos.y-1.5), math.floor(pos.z+.5))
