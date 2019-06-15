@@ -766,10 +766,12 @@ local player_mt = {
 			return false
 		end
 
-		local succ = writeData(file, pWriters, 'pdata\2', self, self.skippedData)
-
+		local lsucc, succ = pcall(writeData, file, pWriters, 'pdata\2', self, self.skippedData)
 		file:close()
-		return succ
+		if not lsucc or not succ then
+			os.remove(path)
+		end
+		return not lsucc and succ
 	end,
 	isPlayer = true
 }
