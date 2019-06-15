@@ -788,7 +788,7 @@ function getPlayerMT()
 	return player_mt
 end
 
-function saveAdd(key, fmt, rd, wr)
+function saveAdd(key, fmt, rd, wr, gn)
 	if type(key) ~= 'string'then return false end
 	if type(fmt) ~= 'string'then return false end
 
@@ -799,6 +799,7 @@ function saveAdd(key, fmt, rd, wr)
 
 	pWriters[key] = {
 		format = fmt,
+		getn = gn,
 		func = wr
 	}
 

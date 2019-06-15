@@ -30,3 +30,19 @@ function survInvAddBlock(player, id, quantity)
 
 	return quantity
 end
+
+saveAdd('inventory', 'tbl:>BB', function(player, id, quantity)
+	player.inventory[id] = quantity
+end, function(inv, i)
+	if i > 0 and inv[i] > 0 then
+		return i, inv[i]
+	end
+end, function(inv)
+	local cnt = 0
+	for i = 1, ffi.sizeof(inv) - 1 do
+		if inv[i] > 0 then
+			cnt = cnt + 1
+		end
+	end
+	return cnt
+end)

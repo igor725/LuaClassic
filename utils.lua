@@ -48,6 +48,7 @@ lanes = require('lanes').configure{
 struct = require('struct')
 
 function packTo(file, fmt, ...)
+	if select('#', ...) < 1 then return false end
 	local data = struct.pack(fmt, ...)
 	return file:write(data)
 end

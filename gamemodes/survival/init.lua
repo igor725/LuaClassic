@@ -122,9 +122,3 @@ saveAdd('isInGodmode', 'b', function(player, val)
 end, function(val)
 	return val and 1 or 0
 end)
-
-saveAdd('inventory', 'c66', function(player, data)
-	ffi.copy(player.inventory, data, 66)
-end, function(inventory)
-	return ffi.string(inventory, 66)
-end)
