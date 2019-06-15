@@ -69,6 +69,7 @@ hooks:add('onInitDone', 'heartbeat', function()
 			end
 			if not resp:lower():find('^http/.+200 ok$')then
 				log.error('Heartbeat server responded:', resp)
+				closeSock(fd)
 				return
 			end
 
