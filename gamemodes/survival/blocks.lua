@@ -179,15 +179,15 @@ function survBlockAction(player, button, action, x, y, z)
 	end
 end
 
-hooks:add('onPlayerDestroy', 'surv_breaking', function(player)
+hooks:add('onPlayerDestroy', 'surv_blocks', function(player)
 	survStopBreaking(player)
 end)
 
-hooks:add('onPlayerDespawn', 'surv_breaking', function(player)
+hooks:add('onPlayerDespawn', 'surv_blocks', function(player)
 	survStopBreaking(player)
 end)
 
-hooks:add('onHeldBlockChange', 'surv_breaking', function(player, id)
+hooks:add('onHeldBlockChange', 'surv_blocks', function(player, id)
 	if survBreakingTools[id] then
 		player.heldTool = id
 	else
@@ -195,7 +195,7 @@ hooks:add('onHeldBlockChange', 'surv_breaking', function(player, id)
 	end
 end)
 
-hooks:add('onPlayerPlaceBlock', 'surv_breaking', function(player, x, y, z, id)
+hooks:add('onPlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id)
 	if player.isInGodmode then
 		return false
 	end
