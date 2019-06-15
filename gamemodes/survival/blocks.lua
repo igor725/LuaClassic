@@ -143,11 +143,16 @@ function survBlockAction(player, button, action, x, y, z)
 				end
 
 				for tool, speed in pairs(survBreakingTools) do
-					if player:getHeldBlock() == tool and player.inventory[tool] > 0 then
-						if survMiningSpeedWithTool[bid] then
-							tmSpeed = survMiningSpeedWithTool[bid] / speed * 2
+					if player:getHeldBlock() == tool then
+						if player.inventory[tool] > 0 then
+							if survMiningSpeedWithTool[bid] then
+								tmSpeed = survMiningSpeedWithTool[bid] / speed * 2
+							else
+								tmSpeed = tmSpeed / speed
+							end
 						else
-							tmSpeed = tmSpeed / speed
+							player:sendMessage('You don\'t have this tool in inventory.')
+							player:holdThis(0)
 						end
 						break
 					end
