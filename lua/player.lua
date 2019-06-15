@@ -432,10 +432,10 @@ local player_mt = {
 		end
 	end,
 	readRawData = function(self)
+		local cl = self:getClient()
 		if not self._buf then
 			self._buf = ffi.new('uint8_t[256]')
 		end
-		local cl = self:getClient()
 		local id = self.waitPacket
 		if not id then
 			id = receiveString(cl, 1)
@@ -677,9 +677,14 @@ local player_mt = {
 	end,
 
 	serviceMessages = function(self)
-		local status = checkSock(self:getClient())
-		if status == 'closed'then
+		local cl = self:getClient()
+		local status, code = checkSock(cl)
+		if status == 'closed'or status == 'nonsock'then
+			closeSock(cl)
 			self:destroy()
+			return
+		elseif status == 'unknown'then
+			log.debug('Unknown socket err code:', code)
 			return
 		end
 

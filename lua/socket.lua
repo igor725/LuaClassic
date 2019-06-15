@@ -14,11 +14,13 @@ local statuses = {
 	[10054] = 'closed',
 	[10053] = 'closed',
 	[10035] = 'ok',
+	[10038] = 'nonsock',
 	-- POSIX
 	[11] = 'ok',
 	[32] = 'closed',
-	[3406] = 'ok',
+	[88] = 'nonsock',
 	[104] = 'closed',
+	[3406] = 'ok',
 	[3425] = 'closed'
 }
 
@@ -423,10 +425,10 @@ end
 function checkSock(fd)
 	local ret = sck.recv(fd, nil, 0, 0)
 	if ret <= 0 then
-		local err = currerr()
+		local err = 0
+		if ret ~= 0 then err = currerr()end
 		return statuses[err]or 'unknown', err
 	end
-	return 'ok'
 end
 
 function closeSock(fd)
