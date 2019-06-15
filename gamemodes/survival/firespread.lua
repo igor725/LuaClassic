@@ -5,6 +5,18 @@ local canBurn = {
 	[47] = true
 }
 
+local blocked = {
+	[0] = true,
+	[51] = true,
+	[53] = true,
+	[54] = true,
+	[60] = true
+}
+
+for i = 8, 11 do
+	blocked[i] = true
+end
+
 for i = 21, 65 do
 	if (i >= 21 and i <= 36) or i == 47 or (i >= 55 and i <= 59)or i == 64 then
 		canBurn[i] = true
@@ -63,6 +75,15 @@ function survUpdateFireBlock(world, x, y, z)
 		end)
 	end
 end
+
+hooks:add('onPlayerPlaceBlock', 'surv_fire', function(player, x, y, z, id)
+	if id == 54 then
+		local down = getWorld(player):getBlock(x, y - 1, z)
+		if blocked[down]then
+			return true
+		end
+	end
+end)
 
 hooks:add('postPlayerPlaceBlock', 'surv_fire', function(player, x, y, z, id)
 	local world = getWorld(player)
