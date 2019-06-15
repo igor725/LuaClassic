@@ -449,9 +449,9 @@ addCommand('tp', function(isConsole, player, args)
 	end
 
 	if not ply1:isInWorld(ply2)then
-		ply1:changeWorld(ply2.worldName, true, ply2:getPos())
+		ply1:changeWorld(ply2.worldName, true, ply2)
 	else
-		ply1:teleportTo(ply2:getPos())
+		ply1:teleportTo(ply2)
 	end
 	return CMD_TPDONE
 end)

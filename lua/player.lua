@@ -361,6 +361,10 @@ local player_mt = {
 
 	teleportTo = function(self, x, y, z, ay, ap)
 		self.isTeleported = true
+		if isPlayer(x)then
+			ay, ap = x:getEyePos()
+			x, y, z = x:getPos()
+		end
 		local pos = self.pos
 		pos.x, pos.y, pos.z = x, y, z
 		x = floor(x * 32)
@@ -385,12 +389,17 @@ local player_mt = {
 		end
 		local world = getWorld(wname)
 		if world then
-			local sx, sy, sz, say, sap = world:getSpawnPoint()
 			self:despawn()
 			self.worldName = wname
 			self.handshakeStage2 = true
-			self:setEyePos(ay or say, ap or sap)
-			self:setPos(x or sx, y or sy, z or sz)
+			if isPlayer(x)then
+				self:setEyePos(x:getEyePos())
+				self:setPos(x:getPos())
+			else
+				local sx, sy, sz, say, sap = world:getSpawnPoint()
+				self:setEyePos(ay or say, ap or sap)
+				self:setPos(x or sx, y or sy, z or sz)
+			end
 			return true
 		end
 		return false, 0
@@ -878,6 +887,10 @@ function broadcast(str, exid)
 			player:sendNetMesg(str)
 		end
 	end)
+end
+
+function isPlayer(val)
+	return type(val) == 'table'and val.isPlayer == true
 end
 
 function newPlayer(cl)
