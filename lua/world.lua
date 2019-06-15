@@ -303,9 +303,9 @@ local world_mt = {
 		return self.data.readonly
 	end,
 
-	fillBlocks = function(self, x1, y1, z1, x2, y2, z2, id)
+	fillBlocks = function(self, p1, p2, id)
 		if self:isReadOnly()then return false end
-		x1, y1, z1, x2, y2, z2 = makeNormalCube(x1, y1, z1, x2, y2, z2)
+		x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p2)
 		local buf = ''
 		for x = x2, x1 - 1 do
 			for y = y2, y1 - 1 do
@@ -322,9 +322,9 @@ local world_mt = {
 			end
 		end)
 	end,
-	replaceBlocks = function(self, x1, y1, z1, x2, y2, z2, id1, id2)
+	replaceBlocks = function(self, p1, p2, id1, id2)
 		if self:isReadOnly()then return false end
-		x1, y1, z1, x2, y2, z2 = makeNormalCube(x1, y1, z1, x2, y2, z2)
+		x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p2)
 		local buf = ''
 		for x = x2, x1 - 1 do
 			for y = y2, y1 - 1 do

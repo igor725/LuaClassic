@@ -129,8 +129,7 @@ addCommand('sel', function(isConsole, player)
 		player.onPlaceBlock = function(x, y, z, id)
 			if player.cuboidP1 then
 				player.cuboidP2 = {x, y, z}
-				local sx, sy, sz = unpack(player.cuboidP1)
-				SelectionCuboid:create(player, 0, '', sx, sy, sz, x, y, z)
+				SelectionCuboid:create(player, 0, '', player.cuboidP1, player.cuboidP2)
 				return true
 			end
 			player.cuboidP1 = {x, y, z}
@@ -159,7 +158,7 @@ addCommand('mkportal', function(isConsole, player, args)
 		local cworld = getWorld(player)
 		if getWorld(args[2])then
 			cworld.data.portals = cworld.data.portals or{}
-			local x1, y1, z1, x2, y2, z2 = makeNormalCube(p1[1], p1[2], p1[3], unpack(p2))
+			local x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p1)
 			cworld.data.portals[args[1]] = {
 				tpTo = args[2],
 				pt1 = newVector(x1, y1, z1),
@@ -205,11 +204,7 @@ addCommand('set', function(isConsole, player, args)
 	if id then
 		local p1, p2 = player.cuboidP1, player.cuboidP2
 		if p1 and p2 then
-			if not world:fillBlocks(
-				p1[1], p1[2], p1[3],
-				p2[1], p2[2], p2[3],
-				id
-			)then
+			if not world:fillBlocks(p1, p2, id)then
 				return WORLD_RO
 			end
 		else
@@ -229,10 +224,7 @@ addCommand('replace', function(isConsole, player, args)
 	local p1, p2 = player.cuboidP1, player.cuboidP2
 	if p1 and p2 then
 		if not world:replaceBlocks(
-			p1[1], p1[2], p1[3],
-			p2[1], p2[2], p2[3],
-			tonumber(id1),
-			tonumber(id2)
+			p1, p2, tonumber(id1), tonumber(id2)
 		)then
 			return WORLD_RO
 		end
