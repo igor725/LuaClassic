@@ -9,7 +9,7 @@ local bde = {
 }
 
 local function defineExBlockFor(player, opts)
-	if player:isSupported('BlockDefinitionsExt', 2)then
+	if player:isSupported('BlockDefinitionsExt', 2) then
 		opts.name = opts.name or'Unnamed block'
 		opts.solidity = opts.solidity or 2
 		opts.movespeed = opts.movespeed or 128

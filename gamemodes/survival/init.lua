@@ -16,7 +16,8 @@ gmLoad('damage')
 gmLoad('inventory')
 gmLoad('commands')
 gmLoad('daynight')
--- gmLoad('mob-ai')
+--gmLoad('items')
+--gmLoad('mob-ai')
 
 function survUpdatePermission(player, id)
 	local quantity = player.inventory[id]
