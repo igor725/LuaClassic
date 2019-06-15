@@ -9,11 +9,14 @@ local geterror
 local sck = ffi.C
 local error_cache = {}
 local statuses = {
+	[0] = 'ok',
 	-- Windows
 	[10054] = 'closed',
 	[10053] = 'closed',
 	[10035] = 'ok',
 	-- POSIX
+	[11] = 'ok',
+	[32] = 'closed',
 	[3406] = 'ok',
 	[104] = 'closed',
 	[3425] = 'closed'
