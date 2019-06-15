@@ -201,24 +201,43 @@ addCommand('set', function(isConsole, player, args)
 	if #args < 1 then return false end
 
 	local world = getWorld(player)
-	if world:isReadOnly()then
-		return WORLD_RO
-	end
 	id = tonumber(args[1])
 	if id then
-		id = math.max(0, math.min(255, id))
 		local p1, p2 = player.cuboidP1, player.cuboidP2
 		if p1 and p2 then
-			world:fillBlocks(
+			if not world:fillBlocks(
 				p1[1], p1[2], p1[3],
 				p2[1], p2[2], p2[3],
-				tonumber(id)
-			)
+				id
+			)then
+				return WORLD_RO
+			end
 		else
 			return CMD_SELCUBOID
 		end
 	else
 		return CMD_BLOCKID
+	end
+end)
+
+addCommand('replace', function(isConsole, player, args)
+	if isConsole then return CON_INGAMECMD end
+	if #args < 2 then return false end
+	local world = getWorld(player)
+
+	local id1, id2 = args[1], args[2]
+	local p1, p2 = player.cuboidP1, player.cuboidP2
+	if p1 and p2 then
+		if not world:replaceBlocks(
+			p1[1], p1[2], p1[3],
+			p2[1], p2[2], p2[3],
+			tonumber(id1),
+			tonumber(id2)
+		)then
+			return WORLD_RO
+		end
+	else
+		return CMD_SELCUBOID
 	end
 end)
 

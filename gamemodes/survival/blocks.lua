@@ -85,6 +85,8 @@ function survGetDropBlock(held, bid)
 		if (held < 41 or held > 44)and held ~= 5 then
 			return 0
 		end
+	elseif bid == 54 then
+		return 0
 	end
 	return bid
 end

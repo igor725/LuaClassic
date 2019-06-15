@@ -310,7 +310,8 @@ local world_mt = {
 		for x = x2, x1 - 1 do
 			for y = y2, y1 - 1 do
 				for z = z2, z1 - 1 do
-					self:setBlock(x, y, z, id)
+					local offset = self:getOffset(x, y, z)
+					self.ldata[offset] = id
 					buf = buf .. generatePacket(0x06, x, y, z, id)
 				end
 			end
@@ -320,6 +321,28 @@ local world_mt = {
 				player:sendNetMesg(buf)
 			end
 		end)
+	end,
+	replaceBlocks = function(self, x1, y1, z1, x2, y2, z2, id1, id2)
+		if self:isReadOnly()then return false end
+		x1, y1, z1, x2, y2, z2 = makeNormalCube(x1, y1, z1, x2, y2, z2)
+		local buf = ''
+		for x = x2, x1 - 1 do
+			for y = y2, y1 - 1 do
+				for z = z2, z1 - 1 do
+					local offset = self:getOffset(x, y, z)
+					if self.ldata[offset] == id1 then
+						self.ldata[offset] = id2
+						buf = buf .. generatePacket(0x06, x, y, z, id2)
+					end
+				end
+			end
+		end
+		playersForEach(function(player)
+			if player:isInWorld(self)then
+				player:sendNetMesg(buf)
+			end
+		end)
+		return true
 	end,
 
 	readGZIPData = function(self, wh)
