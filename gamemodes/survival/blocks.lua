@@ -79,14 +79,12 @@ function survGetDropBlock(held, bid)
 		return 3
 	elseif bid == 18 then
 		return (math.random(0, 100) < 20 and 6)or 18
-	elseif bid == 20 then
+	elseif bid == 20 or bid == 54 then
 		return 0
 	elseif bid >= 14 and bid <= 16 then
 		if (held < 41 or held > 44)and held ~= 5 then
 			return 0
 		end
-	elseif bid == 54 then
-		return 0
 	end
 	return bid
 end
