@@ -57,6 +57,7 @@ hooks:add('onPlayerCreate', 'surv_init', function(player)
 	player.action = SURV_ACT_NONE
 	player.oxyshow = false
 	player.deaths = 0
+	player.heldTool = 0
 end)
 
 hooks:add('postPlayerSpawn', 'surv_init', function(player)

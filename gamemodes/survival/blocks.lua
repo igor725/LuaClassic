@@ -105,7 +105,7 @@ function survBreakBlock(player, x, y, z)
 
 	if bid ~= 0 then
 		if survInvAddBlock(player, bid, dcount or 1) > 0 then
-			if heldBlock ~= bid and not player.heldBlockIsTool then
+			if heldBlock ~= bid and player.heldTool == 0 then
 				player:holdThis(bid)
 			end
 		end
@@ -142,19 +142,17 @@ function survBlockAction(player, button, action, x, y, z)
 					tmSpeed = tmSpeed * 5
 				end
 
-				for tool, speed in pairs(survBreakingTools) do
-					if player:getHeldBlock() == tool then
-						if player.inventory[tool] > 0 then
-							if survMiningSpeedWithTool[bid] then
-								tmSpeed = survMiningSpeedWithTool[bid] / speed * 2
-							else
-								tmSpeed = tmSpeed / speed
-							end
+				local tool = player.heldTool
+				if tool ~= 0 then
+					if player.inventory[tool] > 0 then
+						if survMiningSpeedWithTool[tool] then
+							tmSpeed = survMiningSpeedWithTool[tool] / survBreakingTools[tool] * 2
 						else
-							player:sendMessage('You don\'t have this tool in inventory.')
-							player:holdThis(0)
+							tmSpeed = tmSpeed / survBreakingTools[tool]
 						end
-						break
+					else
+						player:sendMessage('You don\'t have this tool in inventory.')
+						player:holdThis(0)
 					end
 				end
 
@@ -190,7 +188,11 @@ hooks:add('onPlayerDespawn', 'surv_breaking', function(player)
 end)
 
 hooks:add('onHeldBlockChange', 'surv_breaking', function(player, id)
-	player.heldBlockIsTool = not not survBreakingTools[id]
+	if survBreakingTools[id] then
+		player.heldTool = id
+	else
+		player.heldTool = 0
+	end
 end)
 
 hooks:add('onPlayerPlaceBlock', 'surv_breaking', function(player, x, y, z, id)
