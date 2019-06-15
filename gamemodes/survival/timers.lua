@@ -6,20 +6,23 @@
 local timers = {'_blocksdamage', '_hp_regen'}
 
 function survPauseTimers(player)
+	local name = player:getName()
 	for i = 1, #timers do
-		timer.Pause(timers[i])
+		timer.Pause(name .. timers[i])
 	end
 end
 
 function survResumeTimers(player)
+	local name = player:getName()
 	for i = 1, #timers do
-		timer.Resume(timers[i])
+		timer.Resume(name .. timers[i])
 	end
 end
 
 function survRemoveTimers(player)
+	local name = player:getName()
 	for i = 1, #timers do
-		timer.Remove(timers[i])
+		timer.Remove(name .. timers[i])
 	end
 end
 
