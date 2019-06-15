@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 return function(player, isPartial, message)
 	if isPartial == 1 then
 		player.messageBuffer = player.messageBuffer .. message

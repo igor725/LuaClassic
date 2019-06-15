@@ -1,0 +1,4 @@
+*.bat text eol=crlf
+*.lua text eol=lf
+*.txt text eol=lf
+*.sh text eol=lf

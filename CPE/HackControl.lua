@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 local hc = {
 	global = true,
 	defaults = {1, 1, 1, 1, 1, -1}

@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 local function getKickTimeout()
 	return config:get('playerTimeout')
 end
@@ -306,6 +311,9 @@ local player_mt = {
 		end)
 		if canUse then
 			self.name = name
+			if config:get('storePlayersIn_G')then
+				_G[self.name] = self
+			end
 			return true
 		else
 			return false
@@ -424,10 +432,10 @@ local player_mt = {
 		end
 	end,
 	readRawData = function(self)
+		local cl = self:getClient()
 		if not self._buf then
 			self._buf = ffi.new('uint8_t[256]')
 		end
-		local cl = self:getClient()
 		local id = self.waitPacket
 		if not id then
 			id = receiveString(cl, 1)
@@ -505,6 +513,15 @@ local player_mt = {
 	sendMessage = function(self, mesg, id)
 		mesg = tostring(mesg)
 		id = id or MT_CHAT
+
+		if mesg:find('[\r\n]')then
+			for line in mesg:gmatch("[^\r\n]+") do
+				if #line > 0 then
+		    	self:sendMessage(line, id)
+				end
+			end
+			return
+		end
 
 		local lastcolor = ''
 		if not self:isSupported('FullCP437')then
@@ -632,16 +649,19 @@ local player_mt = {
 		end
 		players[self] = nil
 		IDS[self:getID()] = nil
-		self.leavereason = self.leavereason or'Disconnected'
+
+		cpe:extCallHook('onPlayerDestroy', self)
+		hooks:call('onPlayerDestroy', self)
+		if onPlayerDestroy then
+			onPlayerDestroy(self)
+		end
 
 		if self.handshaked then
 			self.lastOnlineTime = self:getOnlineTime()
-			cpe:extCallHook('onPlayerDestroy', self)
-			hooks:call('onPlayerDestroy', self)
-			if onPlayerDestroy then
-				onPlayerDestroy(self)
-			end
 			SERVER_ONLINE = (SERVER_ONLINE or 1) - 1
+			if onPlayerDisconnect then
+				onPlayerDisconnect(self)
+			end
 		end
 		-- Causes incorrect kick-packet sending
 		-- closeSock(self:getClient())
@@ -657,9 +677,14 @@ local player_mt = {
 	end,
 
 	serviceMessages = function(self)
-		local status = checkSock(self:getClient())
-		if status == 'closed'then
+		local cl = self:getClient()
+		local status, code = checkSock(cl)
+		if status == 'closed'or status == 'nonsock'then
+			closeSock(cl)
 			self:destroy()
+			return
+		elseif status == 'unknown'then
+			log.debug('Unknown socket err code:', code)
 			return
 		end
 
@@ -727,12 +752,20 @@ local player_mt = {
 			return false
 		end
 		local sd = {}
-		local succ, err = parseData(file, pReaders, 'pdata\2', self, sd)
-		if not succ then
+		local lsucc, succ, err = pcall(parseData, file, pReaders, 'pdata\2', self, sd)
+		if not lsucc or not succ then
+			local etext
 			if err == PCK_INVALID_HEADER then
-				log.warn((SD_HDRERR):format(self))
-				return false
+				etext = (SD_ERR):format(self, SD_HDRERR)
+			elseif not lsucc then
+				etext = (SD_ERR):format(self, tostring(succ))
 			end
+			file:close()
+			log.error(etext)
+			os.rename(path, path .. '-corrupted')
+			self._dontsave = true
+			self:kick(KICK_PDATAERR, true)
+			return false
 		end
 		self.skippedData = sd
 		file:close()
@@ -746,10 +779,13 @@ local player_mt = {
 			return false
 		end
 
-		local succ = writeData(file, pWriters, 'pdata\2', self, self.skippedData)
-
+		local lsucc, succ, werr = pcall(writeData, file, pWriters, 'pdata\2', self, self.skippedData)
 		file:close()
-		return succ
+		if not lsucc or not succ then
+			os.rename(path, path .. '-corrupted')
+			log.error((not lsucc and succ)or werr)
+		end
+		return not lsucc and succ
 	end,
 	isPlayer = true
 }
@@ -768,7 +804,7 @@ function getPlayerMT()
 	return player_mt
 end
 
-function saveAdd(key, fmt, rd, wr)
+function saveAdd(key, fmt, rd, wr, gn)
 	if type(key) ~= 'string'then return false end
 	if type(fmt) ~= 'string'then return false end
 
@@ -779,6 +815,7 @@ function saveAdd(key, fmt, rd, wr)
 
 	pWriters[key] = {
 		format = fmt,
+		getn = gn,
 		func = wr
 	}
 

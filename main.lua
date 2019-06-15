@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 io.stdout:setvbuf('no')
 require('lng')
 
@@ -43,23 +48,25 @@ end
 function prePlayerFirstSpawn(player)
 	local wMsg = config:get('welcomeMessage')
 	if wMsg and #wMsg > 0 then
-		for line in wMsg:gmatch("[^\r\n]+") do
-			if #line > 0 then
-	    	player:sendMessage(line)
-			end
-		end
+		player:sendMessage(wMsg)
 	end
 	local msg = printf(MESG_CONN, player)
 	newChatMessage('&e' .. msg)
 end
 
-function onPlayerDestroy(player)
+function onPlayerDisconnect(player)
+	local reason = player:getLeaveReason()
+	local msg
+	if not reason then
+		msg = printf(MESG_WORDISCONN, player)
+	else
+		msg = printf(MESG_DISCONN, player, reason)
+	end
 	if not player.silentKick then
-		local msg = printf(MESG_DISCONN, player, player:getLeaveReason())
 		newChatMessage('&e' .. msg)
 	end
 
-	if player:isHandshaked()then
+	if player:isHandshaked()and not player._dontsave then
 		player:saveWrite()
 	end
 end
@@ -145,15 +152,6 @@ function onPlayerChatMessage(player, message)
 				player:sendMessage(MESG_UNKNOWNCMD)
 			end
 		end
-	elseif starts == '>'then
-		local wname = message:sub(2)
-		wname = wname:lower()
-		local succ, msg = player:changeWorld(wname)
-		if not succ then
-			if msg == 0 then
-				player:sendMessage(WORLD_NE)
-			end
-		end
 	elseif starts == '@'then
 		local name, message = message:match('^@(.-)%s(.+)')
 		if name and #name > 0 then
@@ -164,6 +162,7 @@ function onPlayerChatMessage(player, message)
 			end
 			if target then
 				target:sendMessage((CMD_WHISPER):format(player, message))
+				player:sendMessage(CMD_WHISPERSUCC)
 			else
 				player:sendMessage(MESG_PLAYERNF)
 			end
@@ -367,8 +366,8 @@ function init()
 	players, IDS = {}, {}
 	worlds = {}
 
-	permissions:parse()
 	config:parse()
+	permissions:parse()
 	cpe:init()
 
 	uwa = config:get('unloadWorldAfter')
@@ -385,10 +384,14 @@ function init()
 
 	_GAMEMODE = config:get('serverGamemode')
 	if _GAMEMODE and #_GAMEMODE > 0 and _GAMEMODE ~= 'none'then
+		local path = 'gamemodes/' .. _GAMEMODE .. '/%s.lua'
+		function gmLoad(fn)
+			return assert(loadfile((path):format(fn)))()
+		end
 		log.info('Loading gamemode', mode)
-		local chunk, err = loadfile('gamemodes/' .. _GAMEMODE .. '.lua')
+		local chunk, err = loadfile((path):format('init'))
 		if chunk then
-			initGamemode = chunk()
+			initGamemode = chunk
 		else
 			log.fatal('Gamemode loading error:', err)
 		end
@@ -396,6 +399,12 @@ function init()
 
 	log.info('Loading banlist')
 	loadBanList()
+
+	if initGamemode then
+		initGamemode()
+		log.info('Gamemode:', _GAMEMODE)
+		initGamemode = nil
+	end
 
 	log.info(CON_WLOAD)
 	local sdlist = config:get('levelSeeds')
@@ -444,11 +453,6 @@ succ, err = xpcall(function()
 
 		if not INITED then
 			if init()then
-				if initGamemode then
-					initGamemode()
-					log.info('Gamemode:', _GAMEMODE)
-					initGamemode = nil
-				end
 				hooks:call('onInitDone')
 				INITED = true
 			end

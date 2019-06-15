@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 function wsLoad()
 	WSGUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
 	WS_ST_HDR    = 0
@@ -26,7 +31,7 @@ function wsLoad()
 		sframe.ready = true
 		sframe.fd = fd
 	end
-	
+
 	function encodeWsFrame(data, opcode)
 		local plen = #data
 		local shortenc = false

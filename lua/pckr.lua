@@ -1,5 +1,9 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 PCK_INVALID_HEADER = 1
-PCK_FILE_CORRUPTED = 2
 
 function parseData(file, readers, hdr, dTable, dSkipped)
 	local fcur = file:seek('cur')
@@ -66,13 +70,32 @@ function writeData(file, writers, hdr, dTable, dSkipped)
 			elseif writer.format:find('^tbl:')then
 				local tfmt = writer.format:match('^tbl:(.+)')
 				local tfmtsz = struct.size(tfmt)
-				local sz = getn(value) * tfmtsz
-				packTo(file, '>H', sz)
-				for k, v in pairs(value)do
+				local sz = (writer.getn and writer.getn(value)) or getn(value)
+				local psz = sz * tfmtsz
+				packTo(file, '>H', psz)
+				if type(value) ~= 'cdata'then
+					for k, v in pairs(value)do
+						if writer.func then
+							packTo(file, tfmt, writer.func(dTable, k, v))
+						else
+							packTo(file, tfmt, k, v)
+						end
+					end
+				else
 					if writer.func then
-						packTo(file, tfmt, writer.func(dTable, k, v))
+						local csz = 0
+						for i = 0, ffi.sizeof(value) - 1 do
+							if packTo(file, tfmt, writer.func(value, i))then
+								csz = csz + tfmtsz
+								if csz == psz then
+									break
+								elseif csz > psz then
+									error('value ' .. key .. ' overflow')
+								end
+							end
+						end
 					else
-						packTo(file, tfmt, k, v)
+						file:write(ffi.string(value, sz))
 					end
 				end
 			else

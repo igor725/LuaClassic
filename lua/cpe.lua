@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 cpe = {
 	softwareName = 'LuaClassic',
 	inited = false,
@@ -47,6 +52,9 @@ function cpe:init()
 			ext.load = nil
 		end
 	end
+	local emptyExt = setmetatable({}, ext_mt)
+	cpe.exts.LongerMessages = emptyExt
+	cpe.exts.FullCP437 = emptyExt
 	log.info('Successfully loaded', self.extCount, 'extensions.')
 end
 

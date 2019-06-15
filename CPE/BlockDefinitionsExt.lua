@@ -1,10 +1,15 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 --TODO: Try to use C structs instead of lua tables
 local bde = {
 	version = 2
 }
 
 local function defineExBlockFor(player, opts)
-	if player:isSupported('BlockDefinitionsExt', 2)then
+	if player:isSupported('BlockDefinitionsExt', 2) then
 		opts.name = opts.name or'Unnamed block'
 		opts.solidity = opts.solidity or 2
 		opts.movespeed = opts.movespeed or 128

@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 WATER_LEAK_SIZE = 6
 
 local function gBufSize(vec)
@@ -318,69 +323,69 @@ local world_mt = {
 			end
 		end)
 	end,
-	
+
 	findWaterBlockToRemove = function(self, x, y, z)
 		local dirx, dirz = 0, 0
 		while true do
 			-- Check up
 			if self:getBlock(x, y+1, z) == 8 then
 				y = y + 1
-			
+
 			-- Check up forward
 			elseif self:getBlock(x+1, y+1, z) == 8 then
 				x = x + 1
 				y = y + 1
-			
+
 			-- Check up back
 			elseif self:getBlock(x-1, y+1, z) == 8 then
 				x = x - 1
 				y = y + 1
-			
+
 			-- Check up left
 			elseif self:getBlock(x, y+1, z+1) == 8 then
 				z = z + 1
 				y = y + 1
-			
+
 			-- Check up right
 			elseif self:getBlock(x, y+1, z-1) == 8 then
 				z = z - 1
 				y = y + 1
-			
+
 			-- Check forward
 			elseif dirx >= 0 and self:getBlock(x+1, y, z) == 8 then
 				dirx = 1
 				x = x + 1
-			
+
 			-- Check back
 			elseif dirx <= 0 and self:getBlock(x-1, y, z) == 8 then
 				dirx = -1
 				x = x - 1
-			
+
 			-- Check left
 			elseif dirz >= 0 and self:getBlock(x, y, z+1) == 8 then
 				dirz = 1
 				z = z + 1
-			
+
 			-- Check right
 			elseif dirz <= 0 and self:getBlock(x, y, z-1) == 8 then
 				dirz = -1
 				z = z - 1
-			
+
 			-- Block found
 			else
 				return x, y, z
 			end
 		end
 	end,
-	
+
 	findWaterBlockToCreate = function(self, x, y, z)
 		-- Under
 		if self:getBlock(x, y-1, z) == 0 then
 			return x, y-1, z
 		end
-		
+
 		local dirX, dirZ = 0, 0
-		
+
 		-- nearest x
 		for dx = -1, 1, 2 do
 			if self:getBlock(x+dx, y, z) == 0 then
@@ -388,13 +393,13 @@ local world_mt = {
 				if dirX == 0 then
 					dirX = math.random(0, 1) * 2 - 1
 				end
-				
+
 				if self:getBlock(x+dx, y-1, z) == 0 then
 					return x+dx, y-1, z
 				end
 			end
 		end
-		
+
 		-- nearest y
 		for dz = -1, 1, 2 do
 			if self:getBlock(x, y, z+dz) == 0 then
@@ -402,20 +407,20 @@ local world_mt = {
 				if dirZ == 0 then
 					dirZ = math.random(0, 1) * 2 - 1
 				end
-				
+
 				if self:getBlock(x, y-1, z+dz) == 0 then
 					return x, y-1, z+dz
 				end
 			end
 		end
-		
+
 		-- Check if block don't have way to escape
 		if dirX == 0 and dirZ == 0 then
 			return nil
 		end
-		
+
 		local limiterX, limiterZ = 0, 0
-		
+
 		-- 5 blocks forward
 		if dirX > 0 then
 			for dx = 2, WATER_LEAK_SIZE do
@@ -460,12 +465,12 @@ local world_mt = {
 				end
 			end
 		end
-		
+
 		-- Check if block don't have way to escape by diagonal
 		if dirX == 0 or dirZ == 0 then
 			return nil
 		end
-		
+
 		-- nearest squares
 		if dirX > 0 then
 			for dx = 1, limiterX do
@@ -483,7 +488,7 @@ local world_mt = {
 							end
 						end
 					end
-			
+
 				-- forward right square
 				else
 					for dz = 1, limiterZ do
@@ -516,7 +521,7 @@ local world_mt = {
 							end
 						end
 					end
-			
+
 				-- back right square
 				else
 					for dz = 1, limiterZ do
@@ -534,10 +539,10 @@ local world_mt = {
 				end
 			end
 		end
-		
+
 		return nil
 	end,
-	
+
 	updateWaterBlock = function(self, sx, sy, sz, x, y, z)
 		if not x then
 			x, y, z = sx, sy, sz
@@ -545,7 +550,7 @@ local world_mt = {
 		local id = self:getBlock(x, y, z)
 		if id == 8 or id == 9 then
 			local newX, newY, newZ = self:findWaterBlockToCreate(x, y, z)
-			
+
 			if newX then
 				local remX, remY, remZ = self:findWaterBlockToRemove(x, y, z)
 				if self:getBlock(remX, remY, remZ) ~= 8 then
@@ -555,7 +560,7 @@ local world_mt = {
 					print("\tDiff: " .. (newX - x) .. ", " .. (newY - y) .. ", " .. (newZ - z))
 				else
 					self:setBlock(remX, remY, remZ, 0)
-				
+
 					self:setBlock(newX, newY, newZ, 8)
 					timer.Simple(.2, function()
 						self:updateWaterBlock(sx, sy, sz, newX, newY, newZ)
@@ -564,7 +569,7 @@ local world_mt = {
 			-- leak water by surface
 			elseif self:getBlock(x, y, z) ~= 0 then
 				local counter = 0
-				
+
 				-- nearest x
 				for dx = -1, 1, 2 do
 					if self:getBlock(x+dx, y, z) == 0 then
@@ -575,7 +580,7 @@ local world_mt = {
 							timer.Simple(.2, function()
 								self:updateWaterBlock(sx, sy, sz, x+dx, y, z)
 							end)
-							
+
 							counter = counter + 1
 						end
 					end
@@ -591,12 +596,12 @@ local world_mt = {
 							timer.Simple(.2, function()
 								self:updateWaterBlock(sx, sy, sz, x, y, z+dz)
 							end)
-							
+
 							counter = counter + 1
 						end
 					end
 				end
-				
+
 				--[[if counter == 0 then
 					-- Check up forward
 					if self:getBlock(x+1, y, z) == 8 then
@@ -604,21 +609,21 @@ local world_mt = {
 						timer.Simple(.2, function()
 							self:updateWaterBlock(sx, sy, sz, x, y, z)
 						end)
-					
+
 					-- Check up back
 					elseif self:getBlock(x-1, y, z) == 8 then
 						x = x - 1
 						timer.Simple(.2, function()
 							self:updateWaterBlock(sx, sy, sz, x, y, z)
 						end)
-					
+
 					-- Check up left
 					elseif self:getBlock(x, y, z+1) == 8 then
 						z = z + 1
 						timer.Simple(.2, function()
 							self:updateWaterBlock(sx, sy, sz, x, y, z)
 						end)
-					
+
 					-- Check up right
 					elseif self:getBlock(x, y, z-1) == 8 then
 						z = z - 1
@@ -639,27 +644,27 @@ local world_mt = {
 		elseif id == 46 then
 			local TNT_RADIUS = 5
 			local TNT_RADIUS2 = TNT_RADIUS * TNT_RADIUS
-			
+
 			--[[timer.Simple(.5, function()
 				self:setBlock(x, y, z, 0)
 			end)
-			
+
 			timer.Simple(1, function()
 				self:setBlock(x, y, z, 46)
 			end)
-			
+
 			timer.Simple(1.5, function()
 				self:setBlock(x, y, z, 0)
 			end)
-			
+
 			timer.Simple(2, function()
 				self:setBlock(x, y, z, 46)
 			end)
-			
+
 			timer.Simple(2.5, function()
 				self:setBlock(x, y, z, 0)
 			end)]]--
-			
+
 			timer.Simple(1, function()
 				for dx = -TNT_RADIUS, TNT_RADIUS do
 					for dz = -TNT_RADIUS, TNT_RADIUS do
@@ -740,6 +745,17 @@ function getWorld(w)
 		w = w:lower()
 		return worlds[w]
 	end
+end
+
+function addWSave(name, fmt, reader, writer)
+	wWriters[name] = {
+		format = fmt,
+		func = writer
+	}
+	wReaders[name] = {
+		format = fmt,
+		func = reader
+	}
 end
 
 function loadWorld(wname)
@@ -841,6 +857,15 @@ function regenerateWorld(world, gentype, seed)
 		end
 	end
 	return false, IE_UE
+end
+
+function worldsForEach(func)
+	for _, world in pairs(worlds)do
+		local ret = func(world)
+		if ret ~= nil then
+			return ret
+		end
+	end
 end
 
 function newWorld(wh, wn)

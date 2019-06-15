@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 timer = {
   active = {}
 }
@@ -27,6 +32,14 @@ end
 
 function timer.IsCreated(id)
   return not not timer.active[id]
+end
+
+function timer.Toggle(id)
+	if timer.IsCreated(id)then
+		local t = timer.active[id]
+		t.paused = not t.paused
+		return t.paused
+	end
 end
 
 function timer.Remove(id)

@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 local sc = {
 	global = true
 }
@@ -17,7 +22,7 @@ function sc:create(player, id, label, x1, y1, z1, x2, y2, z2, r, g, b, a)
 	b = b or 20
 	a = a or 100
 	x1, y1, z1, x2, y2, z2 = makeNormalCube(x1, y1, z1, x2, y2, z2)
-	
+
 	player:sendPacket(
 		false,
 		0x1A,

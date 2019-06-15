@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 LOG_DEBUG = 5
 LOG_WARN  = 4
 LOG_CHAT  = 3

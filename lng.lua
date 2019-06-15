@@ -1,13 +1,14 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 DEF_SERVERNAME     = 'A minecraft server'
 DEF_SERVERMOTD     = 'This server uses LuaClassic'
-
-CONF_VTYPERR       = 'Variable %s have wrong type, expected type: %s, but we got: %s'
-CONF_INVALIDSYNTAX = 'Invalid syntax in %s file on line %d'
 
 TMR_ERR            = 'timer %q error: %s'
 
 CON_INGAMECMD      = 'This command can\'t be called from console'
-CON_PROPINVALID    = 'Invalid server.properties configuration'
 CON_LJVER          = 'Server requires LuaJIT >= 2.0.0-beta11'
 CON_SAVESUCC       = 'Configuration saved successfully'
 CON_HELP           = 'For help, type "help" or "?"'
@@ -35,7 +36,6 @@ CU_REGEN           = 'regen <world> [generator] [seed] - Regenerate specified wo
 CU_PUT             = 'put <playername> <worldname> - Teleport player to specified world'
 CU_WEATHER         = 'weather <world/weather type> [weather type] - Sets weather in specified world'
 CU_TIME            = 'time <world/preset name> [preset name] - Sets time in specified world'
-CU_GIVE            = '/give [player] <block id> <count>'
 
 IE_MSG             = 'Internal server error: %s'
 IE_GZ              = 'Map compression failed'
@@ -44,11 +44,14 @@ IE_LE              = 'Lua error'
 
 ST_OFF             = '&cdisabled&f'
 ST_ON              = '&aenabled&f'
+ST_NO              = '&cNO&f'
+ST_YES             = '&aYES&f'
 
-SD_HDRERR          = '%s\'s data file has invalid header, file will be ignored.'
+SD_HDRERR          = 'Invalid header'
 SD_IOERR           = 'Can\'t open playerdata %q for %s! (%s)'
+SD_ERR             = '%s\'s data file corrupted: %s'
 
-KICK_SURVCPE       = 'Your client does not support required CPE exts.'
+KICK_PDATAERR      = 'PlayerData reading error, try to reconnect in a few seconds.'
 KICK_CONNREJ       = 'Server rejected your connection attempt'
 KICK_CPESEQERR     = 'Packet 0x10 not received before 0x11'
 KICK_CPEEXTCOUNT   = 'Invalid CPE extensions count received'
@@ -75,12 +78,12 @@ MESG_PERMERROR     = 'You do not have &c%s&f permission.'
 MESG_LEVELLOAD     = 'Please wait, server is loading this level...'
 MESG_CONN          = 'Player %s connected to server'
 MESG_DISCONN       = 'Player %s disconnected from server (%s)'
+MESG_WORDISCONN    = 'Player %s disconnected from server'
 MESG_UNKNOWNCMD    = 'Unknown command'
 MESG_NOTWSCONN     = 'This port accepts only websocket connections.'
 
 CMD_WMODE          = 'Readonly mode %s for &a%s'
-CMD_SVINFO1        = 'Server runned on %s %s with %s'
-CMD_SVINFO2        = 'Ram used: %.3fMB'
+CMD_SVINFO         = 'Server runned on %s %s with %s\nRam used: %.3fMB'
 CMD_TIMEPRESETNF   = 'Time preset not found'
 CMD_TIMEDISALLOW   = 'Time changing not allowed in the nether.'
 CMD_TIMECHANGE     = 'Time in &a%s&f changed to &e%s'
@@ -96,25 +99,19 @@ CMD_TPDONE         = 'Teleported'
 CMD_GENERR         = 'Error in generator: %s'
 CMD_WTCHANGE       = 'Weather in &a%s&f changed to &e%s'
 CMD_WHISPER        = 'Message from %s: %s'
+CMD_WHISPERSUCC    = 'Message sent'
 CMD_WHISPERSELF    = 'You can not send a private message to yourself'
 CMD_WTINVALID      = 'Invalid weather type'
 CMD_WTCURR         = 'At this moment weather is &e%s&f in &a%s'
 CMD_SEED           = 'Seed: %d'
-CMD_GIVE           = '%d %s block(-s) given to &a%s'
 CMD_UPTIME         = 'Uptime: %dh %dm %ds'
 CMD_CANCELRST      = '&a***&f Restart cancelled'
 CMD_RSTTMR         = '&c***&f Server will restart in %d seconds!'
+CMD_PLISTHDR       = 'Players online:'
+CMD_PLISTROW       = '\n%s (Is web client: %s)'
 
 WORLD_RO           = '&cThis world in readonly mode'
 WORLD_NE           = 'This world does not exists'
 WORLD_TOOBIGDIM    = 'World dimensions is too big'
 WORLD_WRITEFAIL    = 'Level data write operation failed!'
-WORLD_CORRUPT      = 'Unsupported map version or file corrupted.'
-WORLD_MAPOPT       = 'Unknown MAPOPT %q skipped!'
-WORLD_TPSTRLEN     = 'texPack: Invalid string size'
-WORLD_SCRSVERR     = 'One or more wscript not saved'
 WORLD_LOCKED       = 'This world can\'t be regenerated now. Try again later.'
-
-SURV_OXYGEN        = 'Oxygen: %.1f'
-SURV_KILL          = 'Player %s killed by %s.'
-SURV_MINING        = 'Mining block: %d%%...'

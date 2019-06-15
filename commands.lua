@@ -1,3 +1,8 @@
+--[[
+	Copyright (c) 2019 igor725, scaledteam
+	released under The MIT license http://opensource.org/licenses/MIT
+]]
+
 commands = {}
 
 function addCommand(name, func)
@@ -17,13 +22,11 @@ addCommand('rc', function(isConsole, player, args)
 end)
 
 addCommand('info', function(isConsole, player)
-	local str1 = (CMD_SVINFO1):format(jit.os, jit.arch, jit.version)
-	local str2 = (CMD_SVINFO2):format(gcinfo() / 1024)
+	local info = (CMD_SVINFO):format(jit.os, jit.arch, jit.version, gcinfo() / 1024)
 	if isConsole then
-		io.write(str1, '\n', str2, '\n')
+		print(info)
 	else
-		player:sendMessage(str1)
-		player:sendMessage(str2)
+		player:sendMessage(info)
 	end
 end)
 
@@ -47,6 +50,7 @@ addCommand('restart', function(isConsole, player, args)
 	end
 	local time = tonumber(args[1])
 	if time then
+		newChatMessage((CMD_RSTTMR):format(time))
 		timer.Create('svrestart', time, 1, function(repLeft)
 			if repLeft == 0 then
 				_STOP = 'restart'
@@ -56,6 +60,28 @@ addCommand('restart', function(isConsole, player, args)
 		end)
 	else
 		_STOP = 'restart'
+	end
+end)
+
+addCommand('players', function()
+	local list = CMD_PLISTHDR
+	playersForEach(function(player)
+		local webClient = (player:isWebClient()and ST_YES)or ST_NO
+		list = list .. (CMD_PLISTROW):format(player, webClient)
+	end)
+	return list
+end)
+
+addCommand('goto', function(isConsole, player, args)
+	if isConsole then return CON_INGAMECMD end
+	if #args < 1 then return false end
+
+	local wname = args[1]:lower()
+	local succ, msg = player:changeWorld(wname)
+	if not succ then
+		if msg == 0 then
+			player:sendMessage(WORLD_NE)
+		end
 	end
 end)
 
