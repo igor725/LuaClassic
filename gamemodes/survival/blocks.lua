@@ -145,8 +145,8 @@ function survBlockAction(player, button, action, x, y, z)
 				local tool = player.heldTool
 				if tool ~= 0 then
 					if player.inventory[tool] > 0 then
-						if survMiningSpeedWithTool[tool] then
-							tmSpeed = survMiningSpeedWithTool[tool] / survBreakingTools[tool] * 2
+						if survMiningSpeedWithTool[bid] then
+							tmSpeed = survMiningSpeedWithTool[bid] / survBreakingTools[tool] * 2
 						else
 							tmSpeed = tmSpeed / survBreakingTools[tool]
 						end
