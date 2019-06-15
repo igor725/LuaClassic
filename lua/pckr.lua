@@ -4,7 +4,6 @@
 ]]
 
 PCK_INVALID_HEADER = 1
-PCK_FILE_CORRUPTED = 2
 
 function parseData(file, readers, hdr, dTable, dSkipped)
 	local fcur = file:seek('cur')

@@ -66,7 +66,7 @@ function onPlayerDisconnect(player)
 		newChatMessage('&e' .. msg)
 	end
 
-	if player:isHandshaked()then
+	if player:isHandshaked()and not player._dontsave then
 		player:saveWrite()
 	end
 end

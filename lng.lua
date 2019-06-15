@@ -47,9 +47,11 @@ ST_ON              = '&aenabled&f'
 ST_NO              = '&cNO&f'
 ST_YES             = '&aYES&f'
 
-SD_HDRERR          = '%s\'s data file has invalid header, file will be ignored.'
+SD_HDRERR          = 'Invalid header'
 SD_IOERR           = 'Can\'t open playerdata %q for %s! (%s)'
+SD_ERR             = '%s\'s data file corrupted: %s'
 
+KICK_PDATAERR      = 'PlayerData reading error, try to reconnect in a few seconds.'
 KICK_CONNREJ       = 'Server rejected your connection attempt'
 KICK_CPESEQERR     = 'Packet 0x10 not received before 0x11'
 KICK_CPEEXTCOUNT   = 'Invalid CPE extensions count received'

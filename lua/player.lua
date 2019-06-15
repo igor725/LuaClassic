@@ -747,12 +747,20 @@ local player_mt = {
 			return false
 		end
 		local sd = {}
-		local succ, err = parseData(file, pReaders, 'pdata\2', self, sd)
-		if not succ then
+		local lsucc, succ, err = pcall(parseData, file, pReaders, 'pdata\2', self, sd)
+		if not lsucc or not succ then
+			local etext
 			if err == PCK_INVALID_HEADER then
-				log.warn((SD_HDRERR):format(self))
-				return false
+				etext = (SD_ERR):format(self, SD_HDRERR)
+			elseif not lsucc then
+				etext = (SD_ERR):format(self, tostring(succ))
 			end
+			file:close()
+			log.error(etext)
+			os.rename(path, path .. '-corrupted')
+			self._dontsave = true
+			self:kick(KICK_PDATAERR, true)
+			return false
 		end
 		self.skippedData = sd
 		file:close()
@@ -766,10 +774,11 @@ local player_mt = {
 			return false
 		end
 
-		local lsucc, succ = pcall(writeData, file, pWriters, 'pdata\2', self, self.skippedData)
+		local lsucc, succ, werr = pcall(writeData, file, pWriters, 'pdata\2', self, self.skippedData)
 		file:close()
 		if not lsucc or not succ then
-			os.remove(path)
+			os.rename(path, path .. '-corrupted')
+			log.error((not lsucc and succ)or werr)
 		end
 		return not lsucc and succ
 	end,
