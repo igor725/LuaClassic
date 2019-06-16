@@ -662,12 +662,6 @@ local player_mt = {
 		players[self] = nil
 		IDS[self:getID()] = nil
 
-		cpe:extCallHook('onPlayerDestroy', self)
-		hooks:call('onPlayerDestroy', self)
-		if onPlayerDestroy then
-			onPlayerDestroy(self)
-		end
-
 		if self.handshaked then
 			self.lastOnlineTime = self:getOnlineTime()
 			SERVER_ONLINE = (SERVER_ONLINE or 1) - 1
@@ -678,6 +672,11 @@ local player_mt = {
 		-- Causes incorrect kick-packet sending
 		-- closeSock(self:getClient())
 		self.handshaked = false
+		cpe:extCallHook('onPlayerDestroy', self)
+		hooks:call('onPlayerDestroy', self)
+		if onPlayerDestroy then
+			onPlayerDestroy(self)
+		end
 		log.debug(DBG_DESTROYPLAYER, self)
 	end,
 	kick = function(self, reason, silent)
