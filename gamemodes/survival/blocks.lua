@@ -202,12 +202,12 @@ hooks:add('onPlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id)
 	if player.inCraftMenu then
 		return true
 	end
-	if id > 0 and id < 65 and player.inventory[id] < 1 then
-		if not player.isInGodmode then
-			player:sendMessage('&cNot enough blocks')
-			return true
-		end
-	else
+	
+	if player.inventory[id] == 0 then
+		player:holdThis(0)
+		player:sendMessage('Not enough blocks.')
+		return true
+	elseif id ~= 0 then
 		player.inventory[id] = player.inventory[id] - 1
 		survUpdateBlockInfo(player)
 
