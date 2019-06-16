@@ -6,7 +6,7 @@
 cpe = {
 	softwareName = 'LuaClassic',
 	inited = false,
-	extCount = 0,
+	extCount = 2,
 	packets = {
 		sv = {},
 		cl = {}
