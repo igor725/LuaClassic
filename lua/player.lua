@@ -426,11 +426,11 @@ local player_mt = {
 	end,
 
 	readWsData = function(self)
-		local cl = self:getClient()
+		local fd = self:getClient()
 		local sframe = self._sframe
 		if not self._sframe then
 			sframe = ffi.new('struct ws_frame')
-			setupWFrameStruct(sframe, cl)
+			setupWFrameStruct(sframe, fd)
 			self._sframe = sframe
 		end
 		if receiveFrame(sframe)then
@@ -441,13 +441,13 @@ local player_mt = {
 		end
 	end,
 	readRawData = function(self)
-		local cl = self:getClient()
+		local fd = self:getClient()
 		if not self._buf then
 			self._buf = ffi.new('uint8_t[256]')
 		end
 		local id = self.waitPacket
 		if not id then
-			id = receiveString(cl, 1)
+			id = receiveString(fd, 1)
 			if not id then return end
 			id = id:byte()
 			self.waitPacket = id
@@ -463,7 +463,7 @@ local player_mt = {
 				end
 			end
 			if psz then
-				local dlen = receiveMesg(cl, self._buf, psz)
+				local dlen = receiveMesg(fd, self._buf, psz)
 				if dlen == psz then
 					self.waitPacket = nil
 					self:handlePacket(id, self._buf)
@@ -476,11 +476,10 @@ local player_mt = {
 
 	sendNetMesg = function(self, msg, opcode)
 		if not self.canSend then return end
-		local cl = self:getClient()
 		if self:isWebClient()then
 			msg = encodeWsFrame(msg, opcode or 0x02)
 		end
-		return sendMesg(cl, msg, #msg)
+		return sendMesg(self:getClient(), msg, #msg)
 	end,
 	sendPacket = function(self, isCPE, ...)
 		local rawPacket
@@ -689,10 +688,10 @@ local player_mt = {
 	end,
 
 	serviceMessages = function(self)
-		local cl = self:getClient()
-		local status, code = checkSock(cl)
+		local fd = self:getClient()
+		local status, code = checkSock(fd)
 		if status == 'closed'or status == 'nonsock'then
-			closeSock(cl)
+			closeSock(fd)
 			self:destroy()
 			return
 		elseif status == 'unknown'then
@@ -896,7 +895,7 @@ function isPlayer(val)
 	return type(val) == 'table'and val.isPlayer == true
 end
 
-function newPlayer(cl)
+function newPlayer(fd)
 	local dworld = getWorld('default')
 	local sx, sy, sz, syaw, spitch = dworld:getSpawnPoint()
 	local pos = newVector(sx, sy, sz)
@@ -919,7 +918,7 @@ function newPlayer(cl)
 		waitingExts = -1,
 		eye = eye,
 		extensions = {},
-		client = cl,
+		client = fd,
 		isTeleported = false
 	}, player_mt)
 end

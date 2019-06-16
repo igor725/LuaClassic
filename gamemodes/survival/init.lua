@@ -37,7 +37,6 @@ end)
 
 hooks:add('onPlayerHandshakeDone', 'surv_init', function(player)
 	if not player:isSupported('PlayerClick')or
-	not player:isSupported('FullCP437')or
 	not player:isSupported('HackControl')or
 	not player:isSupported('EnvColors')or
 	not player:isSupported('EnvMapAspect')or

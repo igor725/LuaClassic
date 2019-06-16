@@ -14,22 +14,24 @@ local cm = {
 		['pig'] = 1,
 		['sheep'] = 1,
 		['skeleton'] = 2,
-		['spider'] = 1
+		['spider'] = 1,
+		['head'] = 1
 	}
 }
 
 function cm:load()
 	registerSvPacket(0x1d, 'bbc64')
 	getPlayerMT().setModel = function(player, model)
-		if type(model) == 'number'then
-			if model < 0 or model > 49 then
+		local mnum = tonumber(model)
+		if mnum then
+			if mnum < 0 or mnum > 65 then
 				return false
 			end
-			model = tostring(model)
+			model = tostring(mnum)
 		else
 			model = model:lower()
 			if not self.allowed_models[model]then
-				model = 'humanoid'
+				return false
 			end
 		end
 
@@ -37,7 +39,7 @@ function cm:load()
 		playersForEach(function(ply)
 			if ply:isSupported('ChangeModel')then
 				local id = (ply == player and -1)or player:getID()
-				ply:sendPacket(false, 0x1d, id, model)
+				ply:sendPacket(false, 0x1D, id, model)
 			end
 		end)
 		return true
