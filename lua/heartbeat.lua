@@ -44,7 +44,7 @@ hooks:add('onInitDone', 'heartbeat', function()
 			local fd, err = connectSock(ip, _HEARTBEAT_PORT)
 
 			if not fd then
-				log.error('Heartbeat error: ' .. err)
+				log.error('Heartbeat error:', err)
 				return
 			end
 			local sName = encodeURI(config:get('serverName'))

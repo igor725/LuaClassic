@@ -329,6 +329,7 @@ end
 function acceptClients()
 	local cl, ip = acceptClient(server)
 	if not cl then return end
+	log.debug(DBG_INCOMINGCONN, ip)
 	if wsHandshake then
 		wsHandshake[cl] = {
 			state = 'testws',
@@ -375,6 +376,7 @@ function init()
 	if _GAMEMODE and #_GAMEMODE > 0 and _GAMEMODE ~= 'none'then
 		local path = 'gamemodes/' .. _GAMEMODE .. '/%s.lua'
 		function gmLoad(fn)
+			log.debug(DBG_GMLOAD, fn)
 			return assert(loadfile((path):format(fn)))()
 		end
 		log.info('Loading gamemode', mode)

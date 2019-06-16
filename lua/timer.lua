@@ -12,15 +12,18 @@ function timer.Simple(delay, func)
 end
 
 function timer.Create(id, reps, delay, func)
-  if delay <= 0 then return timer end
-  timer.active[id] = {
+  if delay <= 0 then return end
+	log.debug(DBG_NEWTIMER, id)
+  local t = {
     repeats = reps,
 		paused = false,
     delay = delay,
     curr = delay,
 		func = func
   }
-  return timer
+
+	timer.active[id] = t
+  return t
 end
 
 function timer.Reset(id)
@@ -45,20 +48,28 @@ end
 function timer.Remove(id)
 	if timer.IsCreated(id)then
 	  timer.active[id] = nil
+		log.debug(DBG_STOPTIMER, id)
+		return true
 	end
-  return tuner
+	return false
 end
 
 function timer.Pause(id)
 	if timer.IsCreated(id)then
 		timer.active[id].paused = true
+		log.debug(DBG_PAUSETIMER, id)
+		return true
 	end
+	return false
 end
 
 function timer.Resume(id)
 	if timer.IsCreated(id)then
 		timer.active[id].paused = false
+		log.debug(DBG_RESUMETIMER, id)
+		return true
 	end
+	return false
 end
 
 function timer.Update(dt)

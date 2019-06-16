@@ -506,6 +506,7 @@ local player_mt = {
 		local sendMap_gen = lanes.gen('*', sendMap)
 		local cmplvl = config:get('gzipCompressionLevel')
 		self.thread = sendMap_gen(self:getClient(), addr, size, cmplvl, self:isWebClient())
+		log.debug(DBG_NEWTHREAD, self.thread)
 	end,
 	sendMOTD = function(self, sname, smotd)
 		sname = sname or config:get('serverName')
@@ -581,6 +582,7 @@ local player_mt = {
 		if onPlayerDespawn then
 			onPlayerDespawn(self)
 		end
+		log.debug(DBG_DESPAWNPLAYER, self)
 		return true
 	end,
 	spawn = function(self)
@@ -649,6 +651,7 @@ local player_mt = {
 			hooks:call('postPlayerFirstSpawn', self)
 			self.firstSpawn = false
 		end
+		log.debug(DBG_SPAWNPLAYER, self)
 
 		return true
 	end,
@@ -675,6 +678,7 @@ local player_mt = {
 		-- Causes incorrect kick-packet sending
 		-- closeSock(self:getClient())
 		self.handshaked = false
+		log.debug(DBG_DESTROYPLAYER)
 	end,
 	kick = function(self, reason, silent)
 		reason = reason or KICK_NOREASON

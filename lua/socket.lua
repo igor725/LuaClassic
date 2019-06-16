@@ -410,7 +410,7 @@ function receiveLine(fd)
 			elseif sym ~= 13 then
 				ln.line[ln.linecur] = sym
 				ln.linecur = ln.linecur + 1
-				if ln.linecur > 8192 then
+				if ln.linecur > 8191 then
 					local str = ffi.string(ln.line, ln.linecur)
 					ln.linecur = 0
 					return str, 'buffer_overflow'
