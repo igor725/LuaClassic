@@ -74,7 +74,8 @@ function log.setLevel(lvl)
 end
 
 function log.debug(...)
-	printlogline(LOG_DEBUG, ...)
+	local info = debug.getinfo(3)
+	printlogline(LOG_DEBUG, info.short_src, info.currentline, '|', ...)
 end
 
 function log.warn(...)

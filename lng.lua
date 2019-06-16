@@ -117,7 +117,7 @@ DBG_DESPAWNPLAYER  = 'Player despawned:'
 DBG_DESTROYPLAYER  = 'Player destroyed:'
 DBG_NEWTIMER       = 'New timer:'
 DBG_STOPTIMER      = 'Timer stopped:'
-DBG_STOPTIMER      = 'Timer paused:'
+DBG_PAUSETIMER      = 'Timer paused:'
 DBG_RESUMETIMER    = 'Timer resumed:'
 DBG_GMLOAD         = 'gmLoad:'
 
