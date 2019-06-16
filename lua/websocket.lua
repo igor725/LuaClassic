@@ -17,7 +17,7 @@ function wsLoad()
 			uint8_t hdr[2];
 			uint8_t state;
 			uint8_t opcode;
-			uint8_t mask[3];
+			uint8_t mask[4];
 			uint16_t payload_len[1];
 			uint8_t* payload;
 			bool fin;

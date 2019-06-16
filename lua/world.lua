@@ -170,8 +170,7 @@ local world_mt = {
 		data.spawnpointeye = data.spawnpointeye or newAngle(0, 0)
 		data.size = sz
 		self.ldata = ffi.new('uint8_t[?]', sz)
-		local szint = ffi.new('int[1]', bswap(sz - 4))
-		ffi.copy(self.ldata, szint, 4)
+		ffi.cast('int*', self.ldata)[0] = bswap(sz - 4)
 		self.data = data
 		return true
 	end,
@@ -479,7 +478,7 @@ function regenerateWorld(world, gentype, seed)
 					player:despawn()
 				end
 			end)
-			ffi.fill(world.ldata + 4, world:getSize())
+			ffi.fill(world.ldata + 4, world:getSize() - 4)
 			local t = gettime()
 			local succ, err = pcall(gen, world, seed)
 			if not succ then

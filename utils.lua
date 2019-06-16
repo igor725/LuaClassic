@@ -284,6 +284,8 @@ if jit.os == 'Windows'then
 		bool  FindClose(void*);
 	]]
 
+	INVALID_HANDLE = ffi.cast('void*', -1)
+
 	function gettime()
 		local ft = ffi.new('filetime')
 		C.GetSystemTimeAsFileTime(ft)
@@ -317,7 +319,7 @@ if jit.os == 'Windows'then
 		return function()
 			if not file then
 				file = C.FindFirstFileA(path .. '\\*.' .. ext, fdata)
-				if file == ffi.cast('void*', -1)then
+				if file == INVALID_HANDLE then
 					return
 				end
 				return getName(), isFile()
