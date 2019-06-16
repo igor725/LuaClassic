@@ -678,7 +678,7 @@ local player_mt = {
 		-- Causes incorrect kick-packet sending
 		-- closeSock(self:getClient())
 		self.handshaked = false
-		log.debug(DBG_DESTROYPLAYER)
+		log.debug(DBG_DESTROYPLAYER, self)
 	end,
 	kick = function(self, reason, silent)
 		reason = reason or KICK_NOREASON
