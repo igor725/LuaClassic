@@ -141,3 +141,34 @@ addCommand('god', function(isConsole, player, args)
 
 	return (CMD_GOD):format(state, target)
 end)
+
+addCommand('home', function(isConsole, player, args)
+	if isConsole then return CON_INGAMECMD end
+
+	local hp = player.homepos
+	local ha = player.homeang
+
+	if hp and ha then
+		player:teleportTo(hp.x, hp.y, hp.z, ha.yaw, ha.pitch)
+	else
+		return CMD_HOMENF
+	end
+end)
+
+addCommand('sethome', function(isConsole, player, args)
+	if isConsole then return CON_INGAMECMD end
+
+	local hp = player.homepos
+	local ha = player.homeang
+
+	if hp and ha then
+		hp.x, hp.y, hp.z = player:getPos()
+		ha.yaw, ha.pitch = player:getEyePos()
+	else
+		hp = newVector(player:getPos())
+		ha = newAngle(player:getEyePos())
+	end
+	player.homepos = hp
+	player.homeang = ha
+	return CMD_HOMESET
+end)

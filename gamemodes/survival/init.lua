@@ -127,3 +127,13 @@ saveAdd('isInGodmode', 'b', function(player, val)
 end, function(val)
 	return val and 1 or 0
 end)
+saveAdd('homepos', '>fff', function(player, x, y, z)
+	return newVector(x, y, z)
+end, function(val)
+	return val.x, val.y, val.z
+end)
+saveAdd('homeang', '>ff', function(player, y, p)
+	return newAngle(y, p)
+end, function(val)
+	return val.yaw, val.pitch
+end)

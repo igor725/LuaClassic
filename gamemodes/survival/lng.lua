@@ -21,6 +21,8 @@ CMD_HEAL           = 'Player &a%s&f healed'
 CMD_TIMENOW        = 'Time in &a%s&f now is: %d'
 CMD_TIMESTART      = 'Time resumed'
 CMD_TIMESTOP       = 'Time is frozen'
+CMD_HOMESET        = 'You have successfully set your new home'
+CMD_HOMENF         = 'Home not found'
 
 MESG_NOTOOL        = 'You don\'t have this tool in inventory'
 MESG_NODMG         = 'This player cannot be damaged'
