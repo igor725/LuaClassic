@@ -4,6 +4,7 @@
 ]]
 
 SURV_MAX_BLOCKS = 64
+SURV_BRK_DONE   = 10
 
 SURV_ACT_NONE   = -1
 SURV_ACT_BREAK  = 1
@@ -93,7 +94,7 @@ function survStopBreaking(player)
 	if player.action ~= SURV_ACT_BREAK then return end
 	player.breakProgress = 0
 	player.action = SURV_ACT_NONE
-	player:sendMessage('', MT_STATUS3)
+	survUpdateMiningProgress(player)
 	timer.Remove(player:getName() .. '_surv_brk')
 end
 
@@ -163,11 +164,11 @@ function survBlockAction(player, button, action, x, y, z)
 						return
 					end
 
-					if player.breakProgress == 100 then
+					if player.breakProgress == SURV_BRK_DONE then
 						survBreakBlock(player, x, y, z)
 					else
-						player.breakProgress = math.min(player.breakProgress + 10, 100)
-						player:sendMessage((SURV_MINING):format(player.breakProgress), MT_STATUS3)
+						player.breakProgress = math.min(player.breakProgress + 1, 100)
+						survUpdateMiningProgress(player)
 					end
 				end)
 			end
