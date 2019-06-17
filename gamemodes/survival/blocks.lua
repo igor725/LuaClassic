@@ -73,17 +73,25 @@ for i = 37, 40 do
 	survMiningSpeed[i] = 0
 end
 
-function survGetDropBlock(held, bid)
-	if bid == 1 then
-		return 4
+function survGetDropBlock(player, bid)
+	if bid == 1 or bid == 4 then
+		if player.heldTool == 0 then
+			return 0
+		else
+			return 4
+		end
 	elseif bid == 2 then
 		return 3
 	elseif bid == 18 then
 		return (math.random(0, 100) < 20 and 6)or 18
 	elseif bid == 20 or bid == 54 then
 		return 0
-	elseif bid >= 14 and bid <= 16 then
-		if (held < 41 or held > 44)and held ~= 5 then
+	elseif
+	(bid >= 14 and bid <= 16)or
+	(bid >= 41 and bid <= 45)or
+	(bid >= 48 and bid <= 50)or
+	(bid >= 60 and bid <= 65)then
+		if player.heldTool == 0 then
 			return 0
 		end
 	end
@@ -102,7 +110,7 @@ function survBreakBlock(player, x, y, z)
 	local world = getWorld(player)
 	local cbid = world:getBlock(x, y, z)
 	local heldBlock = player:getHeldBlock()
-	local bid, count = survGetDropBlock(heldBlock, cbid)
+	local bid, count = survGetDropBlock(player, cbid)
 
 	if bid > 0 then
 		if survInvAddBlock(player, bid, dcount or 1) > 0 then
@@ -157,6 +165,7 @@ function survBlockAction(player, button, action, x, y, z)
 					end
 				end
 
+				survUpdateMiningProgress(player)
 				timer.Create(player:getName() .. '_surv_brk', 11, tmSpeed / 10, function()
 					local lb = player.lastClickedBlock
 					if lb.x ~= cb.x or lb.y ~= cb.y or lb.z ~= cb.z then
