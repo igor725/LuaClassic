@@ -24,7 +24,7 @@ function cm:load()
 	getPlayerMT().setModel = function(player, model)
 		local mnum = tonumber(model)
 		if mnum then
-			if mnum < 0 or mnum > 65 then
+			if not isValidBlockID(mnum)then
 				return false
 			end
 			model = tostring(mnum)

@@ -202,8 +202,8 @@ hooks:add('onPlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id)
 	if player.inCraftMenu then
 		return true
 	end
-	
-	if player.inventory[id] == 0 then
+
+	if id > 0 and player.inventory[id] == 0 then
 		player:holdThis(0)
 		player:sendMessage('Not enough blocks.')
 		return true

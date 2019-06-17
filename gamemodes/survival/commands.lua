@@ -52,7 +52,7 @@ addCommand('drop', function(isConsole, player, args)
 	if isConsole then return CON_INGAMECMD end
 
 	local bId = player:getHeldBlock()
-	if bId < 1 or bId > 65 then
+	if not isValidBlockID(bId)then
 		return
 	end
 
@@ -123,7 +123,8 @@ addCommand('god', function(isConsole, player, args)
 	local h = target.isInGodmode and 1 or 0
 	target:hackControl(h, h, h, 1, 1, -1)
 
-	for i = 1, 65 do
+	for i = 1, SURV_INV_SIZE do
+		if not isValidBlockID(i)then break end
 		survUpdatePermission(player, i)
 	end
 

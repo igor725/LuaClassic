@@ -64,19 +64,20 @@ function survDamage(attacker, victim, damage, dmgtype)
 	end)
 	if victim.health <= 0 then
 		victim.deaths = victim.deaths + 1
-		
+
 		-- give victim things to attacker
 		if attacker then
-			for i = 1, 65 do
+			for i = 1, SURV_INV_SIZE do
+				if not isValidBlockID(i)then break end
 				if victim.inventory[i] > 0 and attacker.inventory[i] == 0 then
 					attacker:setInventoryOrder(i, i)
 				end
 				attacker.inventory[i] = math.min(64, attacker.inventory[i] + victim.inventory[i])
 			end
-			
+
 			survUpdateBlockInfo(attacker)
 		end
-		
+
 		survRespawn(victim)
 		playersForEach(function(ply)
 			if ply:isInWorld(victim)then

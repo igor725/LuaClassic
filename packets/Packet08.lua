@@ -8,7 +8,9 @@ return function(player, id, x, y, z, yaw, pitch)
 	player:setEyePos((yaw / 255) * 360, (pitch / 255) * 360)
 
 	if player:isSupported('HeldBlock')then
-		id = math.max(0, math.min(255, id))
+		if not isValidBlockID(id)then
+			id = 0
+		end
 		if player.heldBlock ~= id then
 			player.heldBlock = id
 			hooks:call('onHeldBlockChange', player, id)

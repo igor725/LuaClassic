@@ -65,15 +65,46 @@ local function defineExBlockFor(player, opts)
 	end
 end
 
+local function removeDefinedBlock(player, id)
+	if player:isSupported('BlockDefinitions')then
+		player:sendPacket(false, 0x24, id)
+	end
+end
+
 function bde:load()
 	registerSvPacket(0x25, 'bbc64bbbbbbbbbbbbbbbbbbbbbb')
 	local bd = BlockDefinitions
 	bd.definedExBlocks = {}
 
 	function bd:createEx(opts)
+		if self.definedBlocks[opts.id]then
+			self.definedBlocks[opts.id] = nil
+			self:remove(opts.id)
+		end
+		if isValidBlockID(opts.id)then return false end
 		self.definedExBlocks[opts.id] = opts
 		playersForEach(function(player)
 			defineExBlockFor(player, opts)
+		end)
+		hooks:call('onBlockDefined', opts)
+		return true
+	end
+
+	function bd:isDefined(id)
+		if not id then return false end
+		if self.definedBlocks[id]then
+			return true
+		elseif self.definedExBlocks and self.definedExBlocks[id]then
+			return true
+		end
+		return false
+	end
+
+	function bd:remove(id)
+		self.definedBlocks[id] = nil
+		self.definedExBlocks[id] = nil
+		playersForEach(function(player)
+			removeDefinedBlock(player, id)
 		end)
 	end
 end

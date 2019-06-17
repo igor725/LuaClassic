@@ -146,6 +146,7 @@ function survCraftInfo(id)
 end
 
 function survCanCraft(player, bid, quantity)
+	if not isValidBlockID(bid)then return false end
 	local inv = player.inventory
 	local recipe = survCraft[bid]
 	local lacks

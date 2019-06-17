@@ -396,6 +396,11 @@ function addWSave(name, fmt, reader, writer)
 	}
 end
 
+function isValidBlockID(id)
+	return (id >= 0 and id <= 65)or
+	BlockDefinitions:isDefined(id)
+end
+
 function loadWorld(wname)
 	if getWorld(wname)then return true end
 	local lvlh = io.open(getWorldPath(wname), 'rb')

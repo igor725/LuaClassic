@@ -5,6 +5,7 @@
 
 SURV_MAX_HEALTH = 10
 SURV_MAX_OXYGEN = 10
+SURV_INV_SIZE = 255
 
 gmLoad('lng')
 gmLoad('names')
@@ -22,6 +23,7 @@ gmLoad('daynight')
 -- gmLoad('mob-ai')
 
 function survUpdatePermission(player, id)
+	if not isValidBlockID(id)then return end
 	local quantity = player.inventory[id]
 	local canPlace = player.isInGodmode or (quantity > 0 and (id < 7 or id > 11))
 	player:setBlockPermissions(id, canPlace, player.isInGodmode)
@@ -44,7 +46,8 @@ hooks:add('onPlayerHandshakeDone', 'surv_init', function(player)
 		player:kick(KICK_SURVCPE, true)
 		return
 	end
-	for i = 1, 65 do
+	for i = 1, SURV_INV_SIZE do
+		if not isValidBlockID(i)then break end
 		survUpdatePermission(player, i)
 	end
 end)
@@ -52,7 +55,7 @@ end)
 hooks:add('onPlayerCreate', 'surv_init', function(player)
 	player.lastClickedBlock = newVector(0, 0, 0)
 	player.currClickedBlock = newVector(0, 0, 0)
-	player.inventory = ffi.new('uint8_t[66]')
+	player.inventory = ffi.new('uint8_t[?]', SURV_INV_SIZE + 1)
 	player.health = SURV_MAX_HEALTH
 	player.oxygen = SURV_MAX_OXYGEN
 	player.action = SURV_ACT_NONE
