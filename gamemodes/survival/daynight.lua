@@ -70,7 +70,7 @@ addCommand('time', function(isConsole, player, args)
 	end
 
 	if not timeval and world then
-		return ('Time in &a%s&f now is: %d'):format(world, world:getData('time'))
+		return (CMD_TIMENOW):format(world, world:getData('time'))
 	elseif not world then
 		return WORLD_NF
 	elseif not timeval then
@@ -100,9 +100,9 @@ addCommand('freezetime', function(isConsole, player, args)
 		local tf = world:getData('timefrozen')
 		world.data.timefrozen = (tf == 1 and 0)or 1
 		if tf == 1 then
-			return 'Time resumed'
+			return CMD_TIMESTART
 		else
-			return 'Time is frozen'
+			return CMD_TIMESTOP
 		end
 	end
 end)

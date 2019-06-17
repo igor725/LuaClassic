@@ -103,7 +103,7 @@ function survBreakBlock(player, x, y, z)
 	local heldBlock = player:getHeldBlock()
 	local bid, count = survGetDropBlock(heldBlock, cbid)
 
-	if bid ~= 0 then
+	if bid > 0 then
 		if survInvAddBlock(player, bid, dcount or 1) > 0 then
 			if heldBlock ~= bid and player.heldTool == 0 then
 				player:holdThis(bid)
@@ -151,7 +151,7 @@ function survBlockAction(player, button, action, x, y, z)
 							tmSpeed = tmSpeed / survBreakingTools[tool]
 						end
 					else
-						player:sendMessage('You don\'t have this tool in inventory.')
+						player:sendMessage(MESG_NOTOOL)
 						player:holdThis(0)
 					end
 				end
@@ -205,7 +205,7 @@ hooks:add('onPlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id)
 
 	if id > 0 and player.inventory[id] == 0 then
 		player:holdThis(0)
-		player:sendMessage('Not enough blocks.')
+		player:sendMessage(MESG_NOTENOUGH)
 		return true
 	elseif id ~= 0 then
 		player.inventory[id] = player.inventory[id] - 1

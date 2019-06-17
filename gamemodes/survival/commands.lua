@@ -45,14 +45,14 @@ addCommand('heal', function(isConsole, player, args)
 
 	player.health = SURV_MAX_HEALTH
 	survUpdateHealth(player)
-	return ('Player &a%s&f healed.'):format(player)
+	return (CMD_HEAL):format(player)
 end)
 
 addCommand('drop', function(isConsole, player, args)
 	if isConsole then return CON_INGAMECMD end
 
 	local bId = player:getHeldBlock()
-	if not isValidBlockID(bId)then
+	if bId < 1 then
 		return
 	end
 
@@ -65,7 +65,7 @@ addCommand('drop', function(isConsole, player, args)
 			return MESG_PLAYERNF
 		end
 		if distance(x, y, z, target:getPos()) > 6 then
-			return 'This player is too far away from you.'
+			return CMD_DROPTOOFAR
 		end
 
 		local inv1 = player.inventory
@@ -81,7 +81,7 @@ addCommand('drop', function(isConsole, player, args)
 			survUpdateBlockInfo(target)
 			survUpdateInventory(player, bId)
 			survUpdateInventory(target, bId)
-			return ('Dropped %d %s blocks to %s'):format(quantity, survGetBlockName(bId), target)
+			return (CMD_DROPSUCCP):format(quantity, survGetBlockName(bId), target)
 		end
 	else
 		local inv = player.inventory
@@ -90,7 +90,7 @@ addCommand('drop', function(isConsole, player, args)
 			inv[bId] = inv[bId] - quantity
 			player:setInventoryOrder(bId, inv[bId] > 0 and bId or 0)
 			survUpdateBlockInfo(player)
-			return ('Dropped %d %s blocks'):format(quantity, survGetBlockName(bId))
+			return (CMD_DROPSUCCP):format(quantity, survGetBlockName(bId))
 		end
 	end
 end)
@@ -102,7 +102,7 @@ addCommand('kill', function(isConsole, player, args)
 
 	if player then
 		if not survDamage(nil, player, SURV_MAX_HEALTH, 0)then
-			return 'This player cannot be damaged'
+			return MESG_NODMG
 		end
 	else
 		return MESG_PLAYERNF
@@ -139,5 +139,5 @@ addCommand('god', function(isConsole, player, args)
 	survUpdateInventory(player)
 	survUpdateBlockInfo(target)
 
-	return ('Godmode %s for &a%s&f.'):format(state, target)
+	return (CMD_GOD):format(state, target)
 end)
