@@ -88,7 +88,9 @@ end)
 hooks:add('postPlayerPlaceBlock', 'surv_fire', function(player, x, y, z, id)
 	local world = getWorld(player)
 	if id == 54 then
-		survUpdateFireBlock(world, x, y, z)
+		if player:checkPermission('fire.spread')then
+			survUpdateFireBlock(world, x, y, z)
+		end
 	else
 		local up = world:getBlock(x, y + 1, z)
 		if up == 54 then

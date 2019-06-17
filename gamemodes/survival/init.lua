@@ -17,8 +17,8 @@ gmLoad('damage')
 gmLoad('inventory')
 gmLoad('commands')
 gmLoad('daynight')
+gmLoad('firespread')
 
--- gmLoad('firespread')
 -- gmLoad('items')
 -- gmLoad('mob-ai')
 
@@ -46,10 +46,6 @@ hooks:add('onPlayerHandshakeDone', 'surv_init', function(player)
 		player:kick(KICK_SURVCPE, true)
 		return
 	end
-	for i = 1, SURV_INV_SIZE do
-		if not isValidBlockID(i)then break end
-		survUpdatePermission(player, i)
-	end
 end)
 
 hooks:add('onPlayerCreate', 'surv_init', function(player)
@@ -66,7 +62,11 @@ end)
 
 hooks:add('postPlayerSpawn', 'surv_init', function(player)
 	local h = player.isInGodmode and 1 or 0
-	player:hackControl(h, h, h, 0, 0, -1)
+	player:hackControl(h, h, h, 0, 1, -1)
+	for i = 1, SURV_INV_SIZE do
+		if not isValidBlockID(i)then break end
+		survUpdatePermission(player, i)
+	end
 end)
 
 hooks:add('onPlayerClick', 'surv_init', function(player, ...)
