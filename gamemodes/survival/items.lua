@@ -1,8 +1,6 @@
--- #gmLoad('items')
-
--- test	
+-- test
 local opts = {
-	id = 41,
+	id = 66,
 	name = 'Iron pickaxe',
 	minX = 16,
 	maxX = 16,
@@ -13,7 +11,7 @@ local opts = {
 BlockDefinitions:createEx(opts)
 
 opts = {
-	id = 42,
+	id = 67,
 	name = 'Iron sword',
 	minX = 16,
 	maxX = 16,

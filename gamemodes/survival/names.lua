@@ -31,5 +31,7 @@ function survAddBlockName(id, name)
 end
 
 function survGetBlockName(id)
-	return survBlocknames[id]or'Unknown block'
+	return survBlocknames[id]
+	or BlockDefinitions:getOpt(id, 'name')
+	or'Unknown block'
 end

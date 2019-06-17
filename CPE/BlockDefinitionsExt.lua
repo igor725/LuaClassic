@@ -107,6 +107,16 @@ function bde:load()
 			removeDefinedBlock(player, id)
 		end)
 	end
+
+	function bd:getOpt(id, optkey)
+		local b = self.definedBlocks[id]
+		if not b then
+			b = self.definedExBlocks[id]
+		end
+		if b then
+			return b[optkey]
+		end
+	end
 end
 
 function bde:prePlayerSpawn(player)

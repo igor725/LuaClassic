@@ -94,6 +94,13 @@ function bd:remove(id)
 	end
 end
 
+function bd:getOpt(id, optkey)
+	local b = self.definedBlocks[id]
+	if b then
+		return b[optkey]
+	end
+end
+
 function bd:isDefined(id)
 	if not id then return false end
 	if self.definedBlocks[id]then
