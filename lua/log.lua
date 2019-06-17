@@ -98,3 +98,11 @@ function log.fatal(...)
 	log.error(...)
 	os.exit(1)
 end
+
+function log.assert(val, ...)
+	if not val then
+		log.fatal(...)
+	else
+		return val, ...
+	end
+end

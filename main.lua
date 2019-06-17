@@ -363,7 +363,7 @@ function init()
 	uwa = config:get('unloadWorldAfter')
 	local ip = config:get('serverIp')
 	local port = config:get('serverPort')
-	server = assert(bindSock(ip, port))
+	server = log.assert(bindSock(ip, port))
 
 	if config:get('acceptWebsocket')then
 		wsHandshake = {}
@@ -429,6 +429,10 @@ function init()
 	if not getWorld('default')then
 		log.fatal(CON_WLOADERR)
 	end
+
+	dirForEach('autorun', 'lua', function(_, path)
+		log.assert(loadfile(path))()
+	end)
 
 	log.info((CON_BINDSUCC):format(ip, port))
 	cmdh = initCmdHandler(handleConsoleCommand)
