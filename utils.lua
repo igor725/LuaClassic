@@ -176,14 +176,14 @@ local function woSpaces(...) -- It works faster than string.match
 	while true do
 		local b = select(idx, ...)
 		if not stStart then
-			if b ~= 32 then
+			if b ~= 32 and b ~= 0 then
 				stStart = idx
 				idx = select('#', ...)
 			else
 				idx = idx + 1
 			end
 		else
-			if b ~= 32 then
+			if b ~= 32 and b ~= 0 then
 				stEnd = idx
 				break
 			end

@@ -66,7 +66,7 @@ end)
 
 hooks:add('postPlayerSpawn', 'surv_init', function(player)
 	local h = player.isInGodmode and 1 or 0
-	player:hackControl(h, h, h, 0, 1, -1)
+	player:hackControl(h, h, h, 0, 0, -1)
 end)
 
 hooks:add('onPlayerClick', 'surv_init', function(player, ...)

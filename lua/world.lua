@@ -59,14 +59,14 @@ local wReaders = {
 		end
 	},
 	['portals'] = {
-		format = 'tbl:>HHHHHHc16',
-		func = function(wdata, x1, y1, z1, x2, y2, z2, pName)
+		format = 'tbl:>HHHHHHc16c16',
+		func = function(wdata, x1, y1, z1, x2, y2, z2, pName, tpTo)
 			wdata.portals = wdata.portals or{}
-			table.insert(wdata.portals, {
+			wdata.portals[trimStr(pName)] = {
 				pt1 = newVector(x1, y1, z1),
 				pt2 = newVector(x2, y2, z2),
-				tpTo = pName
-			})
+				tpTo = trimStr(tpTo)
+			}
 		end
 	},
 	['colors'] = {
@@ -126,12 +126,12 @@ local wWriters = {
 		end
 	},
 	['portals'] = {
-		format = 'tbl:>HHHHHHHc0',
-		func = function(_, p)
+		format = 'tbl:>HHHHHHc16c16',
+		func = function(wdata, pname, p)
 			return
 				p.pt1.x, p.pt1.y, p.pt1.z,
 				p.pt2.x, p.pt2.y, p.pt2.z,
-				#p.tpTo, p.tpTo
+				pname, p.tpTo
 		end
 	},
 	['colors'] = {
