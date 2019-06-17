@@ -59,7 +59,7 @@ local wReaders = {
 		end
 	},
 	['portals'] = {
-		format = 'tbl:>HHHHHHHc0',
+		format = 'tbl:>HHHHHHc16',
 		func = function(wdata, x1, y1, z1, x2, y2, z2, pName)
 			wdata.portals = wdata.portals or{}
 			table.insert(wdata.portals, {

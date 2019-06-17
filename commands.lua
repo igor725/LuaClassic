@@ -158,7 +158,7 @@ addCommand('mkportal', function(isConsole, player, args)
 		local cworld = getWorld(player)
 		if getWorld(args[2])then
 			cworld.data.portals = cworld.data.portals or{}
-			local x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p1)
+			local x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p2)
 			cworld.data.portals[args[1]] = {
 				tpTo = args[2],
 				pt1 = newVector(x1, y1, z1),

@@ -253,6 +253,7 @@ local player_mt = {
 			if onPlayerMove then
 				onPlayerMove(self, dx, dy, dz)
 			end
+			checkForPortal(self, x, y, z)
 
 			if self.oldDY < 0 then
 				if dy >= 0 then
@@ -269,8 +270,6 @@ local player_mt = {
 
 			self.oldDY2 = self.oldDY
 			self.oldDY = dy
-
-			checkForPortal(self, x, y, z)
 			return true
 		elseif self.oldDY < 0 then
 			self.oldDY = 0
