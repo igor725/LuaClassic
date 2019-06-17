@@ -76,11 +76,12 @@ addCommand('time', function(isConsole, player, args)
 	elseif not timeval then
 		return
 	end
+	if player:checkPermission('commands.time-set')then
+		world:setData('time', timeval)
+		survUpdateWorldTime(world)
 
-	world:setData('time', timeval)
-	survUpdateWorldTime(world)
-
-	return (CMD_TIMECHANGE):format(world, timeval)
+		return (CMD_TIMECHANGE):format(world, timeval)
+	end
 end)
 
 addCommand('freezetime', function(isConsole, player, args)
