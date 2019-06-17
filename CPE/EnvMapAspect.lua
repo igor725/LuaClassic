@@ -83,7 +83,7 @@ function ema:prePlayerSpawn(player)
 	if tpack then
 		setTexturePackFor(player, tpack)
 	else
-		setTexturePackFor(player, '')
+		setTexturePackFor(player, config:get('texPack')or'')
 	end
 end
 

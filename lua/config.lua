@@ -15,6 +15,7 @@ local hbp = 'heartbeatPublic'
 local wmsg = 'welcomeMessage'
 local dperms = 'defaultPerms'
 local spl = 'storePlayersIn_G'
+local texpack = 'texPack'
 
 local lseeds = 'levelSeeds'
 local lnames = 'levelNames'
@@ -49,6 +50,7 @@ config = {
 			'commands.uptime'
 		},
 		[spl] = false,
+		[texpack] = '',
 
 		[lseeds] = {},
 		[lnames] = {
@@ -79,6 +81,7 @@ config = {
 		[wmsg] = 'string',
 		[dperms] = 'table',
 		[spl] = 'boolean',
+		[texpack] = 'string',
 
 		[lseeds] = 'table',
 		[lnames] = 'table',
