@@ -261,9 +261,11 @@ local world_mt = {
 		local offset = self:getOffset(x, y, z)
 		if offset then
 			self.ldata[offset] = id
-			playersForEach(function(player)
-				player:sendPacket(false, 0x06, x, y, z, id)
-			end)
+			if self.players > 0 then
+				playersForEach(function(player)
+					player:sendPacket(false, 0x06, x, y, z, id)
+				end)
+			end
 		end
 	end,
 	setSpawn = function(self, x, y, z, ay, ap)
@@ -311,15 +313,19 @@ local world_mt = {
 				for z = z2, z1 - 1 do
 					local offset = self:getOffset(x, y, z)
 					self.ldata[offset] = id
-					buf = buf .. generatePacket(0x06, x, y, z, id)
+					if self.players > 0 then
+						buf = buf .. generatePacket(0x06, x, y, z, id)
+					end
 				end
 			end
 		end
-		playersForEach(function(player)
-			if player:isInWorld(self)then
-				player:sendNetMesg(buf)
-			end
-		end)
+		if self.players > 0 then
+			playersForEach(function(player)
+				if player:isInWorld(self)then
+					player:sendNetMesg(buf)
+				end
+			end)
+		end
 	end,
 	replaceBlocks = function(self, p1, p2, id1, id2)
 		if self:isReadOnly()then return false end
@@ -331,16 +337,20 @@ local world_mt = {
 					local offset = self:getOffset(x, y, z)
 					if self.ldata[offset] == id1 then
 						self.ldata[offset] = id2
-						buf = buf .. generatePacket(0x06, x, y, z, id2)
+						if self.players > 0 then
+							buf = buf .. generatePacket(0x06, x, y, z, id2)
+						end
 					end
 				end
 			end
 		end
-		playersForEach(function(player)
-			if player:isInWorld(self)then
-				player:sendNetMesg(buf)
-			end
-		end)
+		if self.players > 0 then
+			playersForEach(function(player)
+				if player:isInWorld(self)then
+					player:sendNetMesg(buf)
+				end
+			end)
+		end
 		return true
 	end,
 
@@ -435,13 +445,17 @@ function unloadWorld(wname)
 end
 
 function createWorld(wname, dims, gen, seed)
-	if world[wname]then return false end
+	if getWorld(wname)then return false end
 	local data = {dimensions = dims}
 	local tmpWorld = newWorld()
 	if tmpWorld:createWorld(data)then
 		tmpWorld:setName(wname)
 		worlds[wname] = tmpWorld
-		return regenerateWorld(wname, gen, seed)
+		if gen then
+			return regenerateWorld(wname, gen, seed)
+		else
+			return tmpWorld
+		end
 	else
 		return false
 	end
