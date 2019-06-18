@@ -3,7 +3,7 @@
 	released under The MIT license http://opensource.org/licenses/MIT
 ]]
 
-survCraft = {
+local survCraft = {
 	[1] = {
 		needs = {
 			[4] = 4,
@@ -128,6 +128,10 @@ survCraft = {
 		count = 4
 	}
 }
+
+function survAddCraft(id, craft)
+	survCraft[id] = craft
+end
 
 function survCraftInfo(id)
 	local recipe = survCraft[id]

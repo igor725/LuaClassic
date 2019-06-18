@@ -73,6 +73,10 @@ for i = 37, 40 do
 	survMiningSpeed[i] = 0
 end
 
+function survAddBreakingTool(id, speed)
+	survBreakingTools[id] = speed
+end
+
 function survGetDropBlock(player, bid)
 	if bid == 1 or bid == 4 then
 		if player.heldTool == 0 then
