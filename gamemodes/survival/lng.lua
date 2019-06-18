@@ -1,6 +1,7 @@
 CU_GIVE            = 'give [player] <block id> <count>'
 
 KICK_SURVCPE       = 'Your client does not support required CPE exts.'
+KICK_IGNORE        = 'Your client seems to be ignoring the setBlockPermission packet.'
 
 CMD_GIVE           = '%d %s block(-s) given to &a%s'
 CMD_CRAFTSUCC      = '%d block(-s) of %s crafted'

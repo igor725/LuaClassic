@@ -123,9 +123,9 @@ function survBreakBlock(player, x, y, z)
 			end
 		end
 	end
-	survStopBreaking(player)
 	hooks:call('onPlayerPlaceBlock', player, x, y, z, 0)
 	world:setBlock(x, y, z, 0)
+	survStopBreaking(player)
 end
 
 function survBlockAction(player, button, action, x, y, z)
@@ -214,6 +214,11 @@ hooks:add('onPlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id)
 		return false
 	end
 	if player.inCraftMenu then
+		return true
+	end
+
+	if id == 0 and player.breakProgress < 10 then
+		player:kick(KICK_IGNORE, true)
 		return true
 	end
 
