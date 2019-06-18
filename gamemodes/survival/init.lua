@@ -64,8 +64,9 @@ hooks:add('postPlayerSpawn', 'surv_init', function(player)
 	local h = player.isInGodmode and 1 or 0
 	player:hackControl(h, h, h, 0, 1, -1)
 	for i = 1, SURV_INV_SIZE do
-		if not isValidBlockID(i)then break end
-		survUpdatePermission(player, i)
+		if isValidBlockID(i)then
+			survUpdatePermission(player, i)
+		end
 	end
 end)
 

@@ -124,8 +124,9 @@ addCommand('god', function(isConsole, player, args)
 	target:hackControl(h, h, h, 1, 1, -1)
 
 	for i = 1, SURV_INV_SIZE do
-		if not isValidBlockID(i)then break end
-		survUpdatePermission(player, i)
+		if isValidBlockID(i)then
+			survUpdatePermission(player, i)
+		end
 	end
 
 	if target.isInGodmode then

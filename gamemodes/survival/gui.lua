@@ -54,8 +54,9 @@ end
 function survUpdateInventory(player, id)
 	if player.isInGodmode or player.inCraftMenu then
 		for i = 1, SURV_INV_SIZE do
-			if not isValidBlockID(i)then break end
-			player:setInventoryOrder(i, i)
+			if isValidBlockID(i)then
+				player:setInventoryOrder(i, i)
+			end
 		end
 		return
 	end
@@ -65,9 +66,10 @@ function survUpdateInventory(player, id)
 		return
 	end
 	for i = 1, SURV_INV_SIZE do
-		if not isValidBlockID(i)then break end
-		if player.inventory[i] == 0 then
-			player:setInventoryOrder(i, 0)
+		if isValidBlockID(i)then
+			if player.inventory[i] == 0 then
+				player:setInventoryOrder(i, 0)
+			end
 		end
 	end
 end

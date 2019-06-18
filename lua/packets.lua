@@ -6,7 +6,7 @@
 packets = {
 	[0x00] = 'Bc64c64B',
 	[0x05] = '>hhhBB',
-	[0x08] = '>bhhhBB',
+	[0x08] = '>BhhhBB',
 	[0x0d] = 'Bc64'
 }
 
