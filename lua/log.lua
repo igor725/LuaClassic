@@ -74,7 +74,8 @@ function log.setLevel(lvl)
 end
 
 function log.debug(...)
-	printlogline(LOG_DEBUG, ...)
+	local info = debug.getinfo(3)
+	printlogline(LOG_DEBUG, info.short_src, info.currentline, '|', ...)
 end
 
 function log.warn(...)
@@ -96,4 +97,12 @@ end
 function log.fatal(...)
 	log.error(...)
 	os.exit(1)
+end
+
+function log.assert(val, ...)
+	if not val then
+		log.fatal(...)
+	else
+		return val, ...
+	end
 end

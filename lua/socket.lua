@@ -97,6 +97,7 @@ MSG_EOR		= 0x8
 MSG_TRUNC	= 0x10
 MSG_CTRUNC	= 0x20
 MSG_WAITALL	= 0x40
+MSG_NOSIGNAL = 0x4000
 
 SHUT_RD = 0
 SHUT_WR = 1
@@ -340,13 +341,14 @@ end
 
 local dflags = 0
 if jit.os ~= 'Windows'then
-	dflags = 0x4000
+	dflags = MSG_NOSIGNAL
 end
 
 function sendMesg(fd, msg, len, flags)
 	if not msg then return false end
 
-	flags = flags or dflags
+	flags = flags or 0
+	flags = bit.bor(dflags, flags)
 	len = len or ffi.C.strlen(msg)
 	msg = ffi.cast('char*', msg)
 
@@ -410,7 +412,7 @@ function receiveLine(fd)
 			elseif sym ~= 13 then
 				ln.line[ln.linecur] = sym
 				ln.linecur = ln.linecur + 1
-				if ln.linecur > 8192 then
+				if ln.linecur > 8191 then
 					local str = ffi.string(ln.line, ln.linecur)
 					ln.linecur = 0
 					return str, 'buffer_overflow'

@@ -46,12 +46,20 @@ local heightMap
 local bsx, bsz
 local biomes
 
+local biomes_mt = {
+	__call = function(biomes, x, z)
+		x = math.floor(x / GEN_BIOME_STEP + 0.5)
+		z = math.floor(z / GEN_BIOME_STEP + 0.5)
+		return biomes[x + z * bsx]
+	end
+}
+
 local function biomesGenerate(dimx, dimz)
 	biomes = {}
 
 	-- Circles
-	bsx = math.floor(dimx / GEN_BIOME_STEP)+1
-	bsz = math.floor(dimz / GEN_BIOME_STEP)+2
+	bsx = math.floor(dimx / GEN_BIOME_STEP) + 1
+	bsz = math.floor(dimz / GEN_BIOME_STEP) + 2
 	for i = 0, bsx * bsz do
 		biomes[i] = 1
 	end
@@ -161,7 +169,7 @@ local function threadTerrain(mapaddr, dimx, dimy, dimz, startX, endX, seed)
 	set_debug_threadname('TerrainGenerator')
 	math.randomseed(seed)
 
-	local map = ffi.cast('char*', mapaddr)
+	local map = ffi.cast('uint8_t*', mapaddr)
 	local size = dimx * dimy * dimz + 4
 
 	local SetBlock = function(x, y, z, id)
@@ -353,7 +361,7 @@ local function generateTrees(mapaddr, dimx, dimy, dimz, seed)
 	set_debug_threadname('TreesGenerator')
 	math.randomseed(seed)
 
-	local map = ffi.cast('char*', mapaddr)
+	local map = ffi.cast('uint8_t*', mapaddr)
 	local size = dimx * dimy * dimz + 4
 
 	local SetBlock = function(x, y, z, id)
@@ -471,7 +479,7 @@ local function generateHouse(mapaddr, dimx, dimy, dimz, seed)
 	set_debug_threadname('HousesGenerator')
 	math.randomseed(seed)
 
-	local map = ffi.cast('char*', mapaddr)
+	local map = ffi.cast('uint8_t*', mapaddr)
 	local size = dimx * dimy * dimz + 4
 
 	local SetBlock = function(x, y, z, id)
@@ -564,7 +572,7 @@ local function generateOres(mapaddr, dimx, dimy, dimz, seed)
 	set_debug_threadname('OreGenerator')
 	math.randomseed(seed)
 
-	local map = ffi.cast('char*', mapaddr)
+	local map = ffi.cast('uint8_t*', mapaddr)
 	local size = dimx * dimy * dimz + 4
 
 	local SetBlock = function(x, y, z, id)
@@ -621,7 +629,7 @@ local function generateCaves(mapaddr, dimx, dimy, dimz, seed)
 	set_debug_threadname('CavesGenerator')
 	math.randomseed(seed)
 
-	local map = ffi.cast('char*', mapaddr)
+	local map = ffi.cast('uint8_t*', mapaddr)
 	local size = dimx * dimy * dimz + 4
 
 	local GetBlock = function(x, y, z)
@@ -835,6 +843,7 @@ return function(world, seed)
 
 	-- lavalavalava(world, dimx, dimy, dimz)
 
+	world.biomes = setmetatable(biomes, biomes_mt)
 	world:setSpawn(x + 0.5, y + 2.5, z + 0.5)
 	world:setEnvProp(MEP_SIDESBLOCK, 0)
 	world:setEnvProp(MEP_EDGEBLOCK, 8)
@@ -844,7 +853,6 @@ return function(world, seed)
 	world:setData('seed', seed)
 	collectgarbage()
 	log.debug('DefaultGenerator: DONE')
-
 
 	return true
 end

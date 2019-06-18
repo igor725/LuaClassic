@@ -10,12 +10,12 @@ local function check4md5()
 		error('no md5 function detected')
 	else
 		if type(md5) == 'table'then
-			md5func = assert(md5.sumhexa, 'No sumhexa function in md5 table')
+			md5func = log.assert(md5.sumhexa, 'No sumhexa function in md5 table')
 		elseif type(md5) == 'function'then
 			md5func = md5
 		end
 	end
-	assert(type(md5func) == 'function', 'Variable "md5func" is not a function')
+	log.assert(type(md5func) == 'function', 'Variable "md5func" is not a function')
 end
 
 local function encodeURI(str)
@@ -44,7 +44,7 @@ hooks:add('onInitDone', 'heartbeat', function()
 			local fd, err = connectSock(ip, _HEARTBEAT_PORT)
 
 			if not fd then
-				log.error('Heartbeat error: ' .. err)
+				log.error('Heartbeat error:', err)
 				return
 			end
 			local sName = encodeURI(config:get('serverName'))
@@ -68,7 +68,8 @@ hooks:add('onInitDone', 'heartbeat', function()
 				return
 			end
 			if not resp:lower():find('^http/.+200 ok$')then
-				lgo.error('Heartbeat server responded', resp)
+				log.error('Heartbeat server responded:', resp)
+				closeSock(fd)
 				return
 			end
 

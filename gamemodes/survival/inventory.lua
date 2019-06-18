@@ -4,7 +4,7 @@
 ]]
 
 function survInvAddBlock(player, id, quantity)
-	if not id or id < 1 or id > 65 then return 0 end
+	if not isValidBlockID(id)then return 0 end
 
 	quantity = quantity or 1
 	quantity = math.max(math.min(quantity, SURV_MAX_BLOCKS), 0)

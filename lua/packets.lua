@@ -6,7 +6,7 @@
 packets = {
 	[0x00] = 'Bc64c64B',
 	[0x05] = '>hhhBB',
-	[0x08] = '>bhhhBB',
+	[0x08] = '>BhhhBB',
 	[0x0d] = 'Bc64'
 }
 
@@ -35,7 +35,7 @@ function registerClPacket(id, fmt, handler)
 	packets[id] = fmt
 	psizes[id] = struct.size(fmt)
 	local path = (packetPathFormat):format(id)
-	pHandlers[id] = handler or assert(loadfile(path))()
+	pHandlers[id] = handler or log.assert(loadfile(path))()
 end
 
 function registerSvPacket(id, fmt)

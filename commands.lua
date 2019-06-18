@@ -129,8 +129,7 @@ addCommand('sel', function(isConsole, player)
 		player.onPlaceBlock = function(x, y, z, id)
 			if player.cuboidP1 then
 				player.cuboidP2 = {x, y, z}
-				local sx, sy, sz = unpack(player.cuboidP1)
-				SelectionCuboid:create(player, 0, '', sx, sy, sz, x, y, z)
+				SelectionCuboid:create(player, 0, '', player.cuboidP1, player.cuboidP2)
 				return true
 			end
 			player.cuboidP1 = {x, y, z}
@@ -159,7 +158,7 @@ addCommand('mkportal', function(isConsole, player, args)
 		local cworld = getWorld(player)
 		if getWorld(args[2])then
 			cworld.data.portals = cworld.data.portals or{}
-			local x1, y1, z1, x2, y2, z2 = makeNormalCube(p1[1], p1[2], p1[3], unpack(p2))
+			local x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p2)
 			cworld.data.portals[args[1]] = {
 				tpTo = args[2],
 				pt1 = newVector(x1, y1, z1),
@@ -201,24 +200,36 @@ addCommand('set', function(isConsole, player, args)
 	if #args < 1 then return false end
 
 	local world = getWorld(player)
-	if world:isReadOnly()then
-		return WORLD_RO
-	end
 	id = tonumber(args[1])
 	if id then
-		id = math.max(0, math.min(255, id))
 		local p1, p2 = player.cuboidP1, player.cuboidP2
 		if p1 and p2 then
-			world:fillBlocks(
-				p1[1], p1[2], p1[3],
-				p2[1], p2[2], p2[3],
-				tonumber(id)
-			)
+			if not world:fillBlocks(p1, p2, id)then
+				return WORLD_RO
+			end
 		else
 			return CMD_SELCUBOID
 		end
 	else
 		return CMD_BLOCKID
+	end
+end)
+
+addCommand('replace', function(isConsole, player, args)
+	if isConsole then return CON_INGAMECMD end
+	if #args < 2 then return false end
+	local world = getWorld(player)
+
+	local id1, id2 = args[1], args[2]
+	local p1, p2 = player.cuboidP1, player.cuboidP2
+	if p1 and p2 then
+		if not world:replaceBlocks(
+			p1, p2, tonumber(id1), tonumber(id2)
+		)then
+			return WORLD_RO
+		end
+	else
+		return CMD_SELCUBOID
 	end
 end)
 
@@ -438,9 +449,9 @@ addCommand('tp', function(isConsole, player, args)
 	end
 
 	if not ply1:isInWorld(ply2)then
-		ply1:changeWorld(ply2.worldName, true, ply2:getPos())
+		ply1:changeWorld(ply2.worldName, true, ply2)
 	else
-		ply1:teleportTo(ply2:getPos())
+		ply1:teleportTo(ply2)
 	end
 	return CMD_TPDONE
 end)
@@ -459,3 +470,4 @@ addCommand('help', function(isConsole)
 end)
 
 addAlias('help', '?')
+addAlias('goto', 'g')

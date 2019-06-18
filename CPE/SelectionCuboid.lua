@@ -12,7 +12,7 @@ function sc:load()
 	registerSvPacket(0x1B, 'bb')
 end
 
-function sc:create(player, id, label, x1, y1, z1, x2, y2, z2, r, g, b, a)
+function sc:create(player, id, label, p1, p2, r, g, b, a)
 	if not player:isSupported('SelectionCuboid')then
 		return false
 	end
@@ -21,7 +21,7 @@ function sc:create(player, id, label, x1, y1, z1, x2, y2, z2, r, g, b, a)
 	g = g or 250
 	b = b or 20
 	a = a or 100
-	x1, y1, z1, x2, y2, z2 = makeNormalCube(x1, y1, z1, x2, y2, z2)
+	x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p2)
 
 	player:sendPacket(
 		false,

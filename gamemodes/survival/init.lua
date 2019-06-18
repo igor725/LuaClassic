@@ -5,6 +5,7 @@
 
 SURV_MAX_HEALTH = 10
 SURV_MAX_OXYGEN = 10
+SURV_INV_SIZE = 255
 
 gmLoad('lng')
 gmLoad('names')
@@ -16,10 +17,13 @@ gmLoad('damage')
 gmLoad('inventory')
 gmLoad('commands')
 gmLoad('daynight')
---gmLoad('items')
---gmLoad('mob-ai')
+gmLoad('firespread')
+
+-- gmLoad('items')
+-- gmLoad('mob-ai')
 
 function survUpdatePermission(player, id)
+	if not isValidBlockID(id)then return end
 	local quantity = player.inventory[id]
 	local canPlace = player.isInGodmode or (quantity > 0 and (id < 7 or id > 11))
 	player:setBlockPermissions(id, canPlace, player.isInGodmode)
@@ -35,7 +39,6 @@ end)
 
 hooks:add('onPlayerHandshakeDone', 'surv_init', function(player)
 	if not player:isSupported('PlayerClick')or
-	not player:isSupported('FullCP437')or
 	not player:isSupported('HackControl')or
 	not player:isSupported('EnvColors')or
 	not player:isSupported('EnvMapAspect')or
@@ -43,15 +46,12 @@ hooks:add('onPlayerHandshakeDone', 'surv_init', function(player)
 		player:kick(KICK_SURVCPE, true)
 		return
 	end
-	for i = 1, 65 do
-		survUpdatePermission(player, i)
-	end
 end)
 
 hooks:add('onPlayerCreate', 'surv_init', function(player)
 	player.lastClickedBlock = newVector(0, 0, 0)
 	player.currClickedBlock = newVector(0, 0, 0)
-	player.inventory = ffi.new('uint8_t[66]')
+	player.inventory = ffi.new('uint8_t[?]', SURV_INV_SIZE + 1)
 	player.health = SURV_MAX_HEALTH
 	player.oxygen = SURV_MAX_OXYGEN
 	player.action = SURV_ACT_NONE
@@ -63,6 +63,11 @@ end)
 hooks:add('postPlayerSpawn', 'surv_init', function(player)
 	local h = player.isInGodmode and 1 or 0
 	player:hackControl(h, h, h, 0, 1, -1)
+	for i = 1, SURV_INV_SIZE do
+		if isValidBlockID(i)then
+			survUpdatePermission(player, i)
+		end
+	end
 end)
 
 hooks:add('onPlayerClick', 'surv_init', function(player, ...)
@@ -122,4 +127,14 @@ saveAdd('isInGodmode', 'b', function(player, val)
 	return val == 1
 end, function(val)
 	return val and 1 or 0
+end)
+saveAdd('homepos', '>fff', function(player, x, y, z)
+	return newVector(x, y, z)
+end, function(val)
+	return val.x, val.y, val.z
+end)
+saveAdd('homeang', '>ff', function(player, y, p)
+	return newAngle(y, p)
+end, function(val)
+	return val.yaw, val.pitch
 end)

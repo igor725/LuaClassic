@@ -65,6 +65,10 @@ hooks:add('postPlayerFirstSpawn', 'surv_timers', function(player)
 			end
 		end
 	end)
+
+	if player.isInGodmode then
+		survPauseTimers(player)
+	end
 end)
 
 hooks:add('postPlayerSpawn', 'surv_timers', function(player)

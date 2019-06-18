@@ -176,14 +176,14 @@ local function woSpaces(...) -- It works faster than string.match
 	while true do
 		local b = select(idx, ...)
 		if not stStart then
-			if b ~= 32 then
+			if b ~= 32 and b ~= 0 then
 				stStart = idx
 				idx = select('#', ...)
 			else
 				idx = idx + 1
 			end
 		else
-			if b ~= 32 then
+			if b ~= 32 and b ~= 0 then
 				stEnd = idx
 				break
 			end
@@ -284,6 +284,8 @@ if jit.os == 'Windows'then
 		bool  FindClose(void*);
 	]]
 
+	INVALID_HANDLE = ffi.cast('void*', -1)
+
 	function gettime()
 		local ft = ffi.new('filetime')
 		C.GetSystemTimeAsFileTime(ft)
@@ -317,7 +319,7 @@ if jit.os == 'Windows'then
 		return function()
 			if not file then
 				file = C.FindFirstFileA(path .. '\\*.' .. ext, fdata)
-				if file == ffi.cast('void*', -1)then
+				if file == INVALID_HANDLE then
 					return
 				end
 				return getName(), isFile()
@@ -390,27 +392,27 @@ function dirForEach(dir, ext, func)
 	end
 end
 
-function makeNormalCube(x1, y1, z1, x2, y2, z2)
-	local px1, py1, pz1 = x1, y1, z1
-	local px2, py2, pz2 = x2, y2, z2
+function makeNormalCube(p1, p2)
+	local px1, py1, pz1 = unpack(p1)
+	local px2, py2, pz2 = unpack(p2)
 
-	if x1 - x2 < 0 then
-		px1 = x2 + 1
-		px2 = x1
+	if p1[1] - p2[1] < 0 then
+		px1 = p2[1] + 1
+		px2 = p1[1]
 	else
-		px1 = x1 + 1
+		px1 = p1[1] + 1
 	end
-	if y1 - y2 < 0 then
-		py1 = y2 + 1
-		py2 = y1
+	if p1[2] - p2[2] < 0 then
+		py1 = p2[2] + 1
+		py2 = p1[2]
 	else
-		py1 = y1 + 1
+		py1 = p1[2] + 1
 	end
-	if z1 - z2 < 0 then
-		pz1 = z2 + 1
-		pz2 = z1
+	if p1[3] - p2[3] < 0 then
+		pz1 = p2[3] + 1
+		pz2 = p1[3]
 	else
-		pz1 = z1 + 1
+		pz1 = p1[3] + 1
 	end
 
 	return px1, py1, pz1, px2, py2, pz2
@@ -433,6 +435,7 @@ function watchThreads(threads)
 end
 
 require('hooks')
+require('log')
 dirForEach('lua', 'lua', function(file)
 	require(file:sub(1, -5))
 end)

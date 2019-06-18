@@ -61,14 +61,14 @@ local wReaders = {
 		end
 	},
 	['portals'] = {
-		format = 'tbl:>HHHHHHHc0',
-		func = function(wdata, x1, y1, z1, x2, y2, z2, pName)
+		format = 'tbl:>HHHHHHc16c16',
+		func = function(wdata, x1, y1, z1, x2, y2, z2, pName, tpTo)
 			wdata.portals = wdata.portals or{}
-			table.insert(wdata.portals, {
+			wdata.portals[trimStr(pName)] = {
 				pt1 = newVector(x1, y1, z1),
 				pt2 = newVector(x2, y2, z2),
-				tpTo = pName
-			})
+				tpTo = trimStr(tpTo)
+			}
 		end
 	},
 	['colors'] = {
@@ -128,12 +128,12 @@ local wWriters = {
 		end
 	},
 	['portals'] = {
-		format = 'tbl:>HHHHHHHc0',
-		func = function(_, p)
+		format = 'tbl:>HHHHHHc16c16',
+		func = function(wdata, pname, p)
 			return
 				p.pt1.x, p.pt1.y, p.pt1.z,
 				p.pt2.x, p.pt2.y, p.pt2.z,
-				#p.tpTo, p.tpTo
+				pname, p.tpTo
 		end
 	},
 	['colors'] = {
@@ -172,8 +172,7 @@ local world_mt = {
 		data.spawnpointeye = data.spawnpointeye or newAngle(0, 0)
 		data.size = sz
 		self.ldata = ffi.new('uint8_t[?]', sz)
-		local szint = ffi.new('int[1]', bswap(sz - 4))
-		ffi.copy(self.ldata, szint, 4)
+		ffi.cast('int*', self.ldata)[0] = bswap(sz - 4)
 		self.data = data
 		return true
 	end,
@@ -264,9 +263,11 @@ local world_mt = {
 		local offset = self:getOffset(x, y, z)
 		if offset then
 			self.ldata[offset] = id
-			playersForEach(function(player)
-				player:sendPacket(false, 0x06, x, y, z, id)
-			end)
+			if self.players > 0 then
+				playersForEach(function(player)
+					player:sendPacket(false, 0x06, x, y, z, id)
+				end)
+			end
 		end
 	end,
 	setSpawn = function(self, x, y, z, ay, ap)
@@ -305,23 +306,54 @@ local world_mt = {
 		return self.data.readonly
 	end,
 
-	fillBlocks = function(self, x1, y1, z1, x2, y2, z2, id)
+	fillBlocks = function(self, p1, p2, id)
 		if self:isReadOnly()then return false end
-		x1, y1, z1, x2, y2, z2 = makeNormalCube(x1, y1, z1, x2, y2, z2)
+		x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p2)
 		local buf = ''
 		for x = x2, x1 - 1 do
 			for y = y2, y1 - 1 do
 				for z = z2, z1 - 1 do
-					self:setBlock(x, y, z, id)
-					buf = buf .. generatePacket(0x06, x, y, z, id)
+					local offset = self:getOffset(x, y, z)
+					self.ldata[offset] = id
+					if self.players > 0 then
+						buf = buf .. generatePacket(0x06, x, y, z, id)
+					end
 				end
 			end
 		end
-		playersForEach(function(player)
-			if player:isInWorld(self)then
-				player:sendNetMesg(buf)
+		if self.players > 0 then
+			playersForEach(function(player)
+				if player:isInWorld(self)then
+					player:sendNetMesg(buf)
+				end
+			end)
+		end
+	end,
+	replaceBlocks = function(self, p1, p2, id1, id2)
+		if self:isReadOnly()then return false end
+		x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p2)
+		local buf = ''
+		for x = x2, x1 - 1 do
+			for y = y2, y1 - 1 do
+				for z = z2, z1 - 1 do
+					local offset = self:getOffset(x, y, z)
+					if self.ldata[offset] == id1 then
+						self.ldata[offset] = id2
+						if self.players > 0 then
+							buf = buf .. generatePacket(0x06, x, y, z, id2)
+						end
+					end
+				end
 			end
-		end)
+		end
+		if self.players > 0 then
+			playersForEach(function(player)
+				if player:isInWorld(self)then
+					player:sendNetMesg(buf)
+				end
+			end)
+		end
+		return true
 	end,
 
 	findWaterBlockToRemove = function(self, x, y, z)
@@ -758,6 +790,11 @@ function addWSave(name, fmt, reader, writer)
 	}
 end
 
+function isValidBlockID(id)
+	return (id >= 0 and id <= 65)or
+	BlockDefinitions:isDefined(id)
+end
+
 function loadWorld(wname)
 	if getWorld(wname)then return true end
 	local lvlh = io.open(getWorldPath(wname), 'rb')
@@ -792,13 +829,17 @@ function unloadWorld(wname)
 end
 
 function createWorld(wname, dims, gen, seed)
-	if world[wname]then return false end
+	if getWorld(wname)then return false end
 	local data = {dimensions = dims}
 	local tmpWorld = newWorld()
 	if tmpWorld:createWorld(data)then
 		tmpWorld:setName(wname)
 		worlds[wname] = tmpWorld
-		return regenerateWorld(wname, gen, seed)
+		if gen then
+			return regenerateWorld(wname, gen, seed)
+		else
+			return tmpWorld
+		end
 	else
 		return false
 	end
@@ -840,7 +881,7 @@ function regenerateWorld(world, gentype, seed)
 					player:despawn()
 				end
 			end)
-			ffi.fill(world.ldata + 4, world:getSize())
+			ffi.fill(world.ldata + 4, world:getSize() - 4)
 			local t = gettime()
 			local succ, err = pcall(gen, world, seed)
 			if not succ then

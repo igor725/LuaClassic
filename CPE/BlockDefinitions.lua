@@ -78,15 +78,35 @@ local function removeDefinedBlock(player, id)
 end
 
 function bd:load()
+	hooks:create('onBlockDefined')
+	hooks:create('onBlockUndefined')
 	registerSvPacket(0x23, 'bbc64bbbbbbbbbbbbbb')
 	registerSvPacket(0x24, 'bb')
 end
 
 function bd:remove(id)
-	self.definedBlocks[id] = nil
-	playersForEach(function(player)
-		removeDefinedBlock(player, id)
-	end)
+	if self.definedBlocks[id]and isValidBlockID(id)then
+		self.definedBlocks[id] = nil
+		playersForEach(function(player)
+			removeDefinedBlock(player, id)
+		end)
+		hooks:call('onBlockUndefined', id)
+	end
+end
+
+function bd:getOpt(id, optkey)
+	local b = self.definedBlocks[id]
+	if b then
+		return b[optkey]
+	end
+end
+
+function bd:isDefined(id)
+	if not id then return false end
+	if self.definedBlocks[id]then
+		return true
+	end
+	return false
 end
 
 function bd:prePlayerSpawn(player)
@@ -96,10 +116,13 @@ function bd:prePlayerSpawn(player)
 end
 
 function bd:create(opts)
+	if isValidBlockID(opts.id)then return false end
 	self.definedBlocks[opts.id] = opts
 	playersForEach(function(player)
 		defineBlockFor(player, opts)
 	end)
+	hooks:call('onBlockDefined', opts)
+	return true
 end
 
 return bd

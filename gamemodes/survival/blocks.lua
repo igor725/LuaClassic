@@ -4,6 +4,7 @@
 ]]
 
 SURV_MAX_BLOCKS = 64
+SURV_BRK_DONE   = 10
 
 SURV_ACT_NONE   = -1
 SURV_ACT_BREAK  = 1
@@ -72,17 +73,29 @@ for i = 37, 40 do
 	survMiningSpeed[i] = 0
 end
 
-function survGetDropBlock(held, bid)
-	if bid == 1 then
-		return 4
+function survAddBreakingTool(id, speed)
+	survBreakingTools[id] = speed
+end
+
+function survGetDropBlock(player, bid)
+	if bid == 1 or bid == 4 then
+		if player.heldTool == 0 then
+			return 0
+		else
+			return 4
+		end
 	elseif bid == 2 then
 		return 3
 	elseif bid == 18 then
 		return (math.random(0, 100) < 20 and 6)or 18
-	elseif bid == 20 then
+	elseif bid == 20 or bid == 54 then
 		return 0
-	elseif bid >= 14 and bid <= 16 then
-		if (held < 41 or held > 44)and held ~= 5 then
+	elseif
+	(bid >= 14 and bid <= 16)or
+	(bid >= 41 and bid <= 45)or
+	(bid >= 48 and bid <= 50)or
+	(bid >= 60 and bid <= 65)then
+		if player.heldTool == 0 then
 			return 0
 		end
 	end
@@ -93,7 +106,7 @@ function survStopBreaking(player)
 	if player.action ~= SURV_ACT_BREAK then return end
 	player.breakProgress = 0
 	player.action = SURV_ACT_NONE
-	player:sendMessage('', MT_STATUS3)
+	survUpdateMiningProgress(player)
 	timer.Remove(player:getName() .. '_surv_brk')
 end
 
@@ -101,9 +114,9 @@ function survBreakBlock(player, x, y, z)
 	local world = getWorld(player)
 	local cbid = world:getBlock(x, y, z)
 	local heldBlock = player:getHeldBlock()
-	local bid, count = survGetDropBlock(heldBlock, cbid)
+	local bid, count = survGetDropBlock(player, cbid)
 
-	if bid ~= 0 then
+	if bid > 0 then
 		if survInvAddBlock(player, bid, dcount or 1) > 0 then
 			if heldBlock ~= bid and player.heldTool == 0 then
 				player:holdThis(bid)
@@ -151,11 +164,12 @@ function survBlockAction(player, button, action, x, y, z)
 							tmSpeed = tmSpeed / survBreakingTools[tool]
 						end
 					else
-						player:sendMessage('You don\'t have this tool in inventory.')
+						player:sendMessage(MESG_NOTOOL)
 						player:holdThis(0)
 					end
 				end
 
+				survUpdateMiningProgress(player)
 				timer.Create(player:getName() .. '_surv_brk', 11, tmSpeed / 10, function()
 					local lb = player.lastClickedBlock
 					if lb.x ~= cb.x or lb.y ~= cb.y or lb.z ~= cb.z then
@@ -163,11 +177,11 @@ function survBlockAction(player, button, action, x, y, z)
 						return
 					end
 
-					if player.breakProgress == 100 then
+					if player.breakProgress == SURV_BRK_DONE then
 						survBreakBlock(player, x, y, z)
 					else
-						player.breakProgress = math.min(player.breakProgress + 10, 100)
-						player:sendMessage((SURV_MINING):format(player.breakProgress), MT_STATUS3)
+						player.breakProgress = math.min(player.breakProgress + 1, 100)
+						survUpdateMiningProgress(player)
 					end
 				end)
 			end
@@ -179,15 +193,15 @@ function survBlockAction(player, button, action, x, y, z)
 	end
 end
 
-hooks:add('onPlayerDestroy', 'surv_breaking', function(player)
+hooks:add('onPlayerDestroy', 'surv_blocks', function(player)
 	survStopBreaking(player)
 end)
 
-hooks:add('onPlayerDespawn', 'surv_breaking', function(player)
+hooks:add('onPlayerDespawn', 'surv_blocks', function(player)
 	survStopBreaking(player)
 end)
 
-hooks:add('onHeldBlockChange', 'surv_breaking', function(player, id)
+hooks:add('onHeldBlockChange', 'surv_blocks', function(player, id)
 	if survBreakingTools[id] then
 		player.heldTool = id
 	else
@@ -195,19 +209,19 @@ hooks:add('onHeldBlockChange', 'surv_breaking', function(player, id)
 	end
 end)
 
-hooks:add('onPlayerPlaceBlock', 'surv_breaking', function(player, x, y, z, id)
+hooks:add('onPlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id)
 	if player.isInGodmode then
 		return false
 	end
 	if player.inCraftMenu then
 		return true
 	end
-	if id > 0 and id < 65 and player.inventory[id] < 1 then
-		if not player.isInGodmode then
-			player:sendMessage('&cNot enough blocks')
-			return true
-		end
-	else
+
+	if id > 0 and player.inventory[id] == 0 then
+		player:holdThis(0)
+		player:sendMessage(MESG_NOTENOUGH)
+		return true
+	elseif id ~= 0 then
 		player.inventory[id] = player.inventory[id] - 1
 		survUpdateBlockInfo(player)
 

@@ -64,6 +64,21 @@ function survDamage(attacker, victim, damage, dmgtype)
 	end)
 	if victim.health <= 0 then
 		victim.deaths = victim.deaths + 1
+
+		-- give victim things to attacker
+		if attacker then
+			for i = 1, SURV_INV_SIZE do
+				if isValidBlockID(i)then
+					if victim.inventory[i] > 0 and attacker.inventory[i] == 0 then
+						attacker:setInventoryOrder(i, i)
+					end
+					attacker.inventory[i] = math.min(64, attacker.inventory[i] + victim.inventory[i])
+				end
+			end
+
+			survUpdateBlockInfo(attacker)
+		end
+
 		survRespawn(victim)
 		playersForEach(function(ply)
 			if ply:isInWorld(victim)then
@@ -74,7 +89,7 @@ function survDamage(attacker, victim, damage, dmgtype)
 	return true
 end
 
-hooks:add('onPlayerLanded', 'survival', function(player, blocks)
+hooks:add('onPlayerLanded', 'surv_damage', function(player, blocks)
 	if blocks > 3 and player.oldDY2 < -0.3 then
 		local pos = player.pos
 		local blockInsidePlayer = getWorld(player):getBlock(math.floor(pos.x+.5), math.floor(pos.y-1.5), math.floor(pos.z+.5))

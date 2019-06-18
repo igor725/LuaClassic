@@ -6,7 +6,7 @@
 cpe = {
 	softwareName = 'LuaClassic',
 	inited = false,
-	extCount = 0,
+	extCount = 2,
 	packets = {
 		sv = {},
 		cl = {}
@@ -34,7 +34,7 @@ function cpe:init()
 	local f = true
 	log.info('Loading Classic Protocol Extensions')
 	dirForEach('CPE', 'lua', function(filename, fullpath)
-		local chunk = assert(loadfile(fullpath))
+		local chunk = log.assert(loadfile(fullpath))
 		local ext = setmetatable(chunk(), ext_mt)
 		local extn = filename:sub(1,-5)
 		if not ext.disabled then

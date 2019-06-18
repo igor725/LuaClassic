@@ -177,27 +177,27 @@ end
 local httpPattern = '^get%s+(.+)%s+http/%d%.%d$'
 
 function wsDoHandshake()
-	for cl, data in pairs(wsHandshake)do
-		local status = checkSock(cl)
+	for fd, data in pairs(wsHandshake)do
+		local status = checkSock(fd)
 
 		if status == 'closed'then
-			wsHandshake[cl] = nil
+			wsHandshake[fd] = nil
 		end
 
 		if data.state == 'testws'then
-			local hdr = receiveString(cl, 3, MSG_PEEK)
+			local hdr = receiveString(fd, 3, MSG_PEEK)
 			if hdr then
 				if hdr:lower() == 'get'then
 					data.state = 'initial'
 				else
-					wsHandshake[cl] = nil
-					createPlayer(cl, data.ip, false)
+					wsHandshake[fd] = nil
+					createPlayer(fd, data.ip, false)
 				end
 			end
 		end
 
 		if data.state == 'initial'then
-			local req = receiveLine(cl)
+			local req = receiveLine(fd)
 			if req then
 				req = req:lower()
 				if req:find(httpPattern)then
@@ -211,7 +211,7 @@ function wsDoHandshake()
 		end
 
 		if data.state == 'headers'then
-			local ln = receiveLine(cl)
+			local ln = receiveLine(fd)
 			if ln == ''then
 				data.state = 'genresp'
 			elseif ln then
@@ -244,9 +244,9 @@ function wsDoHandshake()
 				'Upgrade: websocket\r\nConnection: Upgrade\r\n' ..
 				'Sec-WebSocket-Protocol: ClassiCube\r\n' ..
 				'Sec-WebSocket-Accept: %s\r\n\r\n'):format(wskey)
-				sendMesg(cl, response)
-				wsHandshake[cl] = nil
-				createPlayer(cl, data.ip, true)
+				sendMesg(fd, response)
+				wsHandshake[fd] = nil
+				createPlayer(fd, data.ip, true)
 			else
 				data.state = 'badrequest'
 			end
@@ -259,16 +259,16 @@ function wsDoHandshake()
 			'Content-Type: text/plain; charset=utf-8\r\n' ..
 			'Content-Length: %d\r\n\r\nBad request: %s')
 			:format(#msg + 13, msg)
-			sendMesg(cl, response)
-			closeSock(cl)
-			wsHandshake[cl] = nil
+			sendMesg(fd, response)
+			closeSock(fd)
+			wsHandshake[fd] = nil
 		end
 	end
 end
 
-function createPlayer(cl, ip, isWS)
+function createPlayer(fd, ip, isWS)
 	if not onConnectionAttempt or not onConnectionAttempt(ip)then
-		local player = newPlayer(cl)
+		local player = newPlayer(fd)
 		player.isWS = isWS
 		player.ip = ip
 
@@ -282,9 +282,9 @@ function createPlayer(cl, ip, isWS)
 	else
 		local rawPacket = generatePacket(0x0e, KICK_CONNREJ)
 		if isWS then
-			sendMesg(cl, encodeWsFrame(rawPacket, 0x02))
+			sendMesg(fd, encodeWsFrame(rawPacket, 0x02))
 		else
-			sendMesg(cl, rawPacket)
+			sendMesg(fd, rawPacket)
 		end
 	end
 end
@@ -338,17 +338,18 @@ function handleConsoleCommand(cmd)
 end
 
 function acceptClients()
-	local cl, ip = acceptClient(server)
-	if not cl then return end
+	local fd, ip = acceptClient(server)
+	if not fd then return end
+	log.debug(DBG_INCOMINGCONN, ip)
 	if wsHandshake then
-		wsHandshake[cl] = {
+		wsHandshake[fd] = {
 			state = 'testws',
 			headers = {},
 			ip = ip
 		}
 		return
 	end
-	createPlayer(cl, ip, false)
+	createPlayer(fd, ip, false)
 end
 
 function serviceMessages()
@@ -373,7 +374,7 @@ function init()
 	uwa = config:get('unloadWorldAfter')
 	local ip = config:get('serverIp')
 	local port = config:get('serverPort')
-	server = assert(bindSock(ip, port))
+	server = log.assert(bindSock(ip, port))
 
 	if config:get('acceptWebsocket')then
 		wsHandshake = {}
@@ -386,6 +387,7 @@ function init()
 	if _GAMEMODE and #_GAMEMODE > 0 and _GAMEMODE ~= 'none'then
 		local path = 'gamemodes/' .. _GAMEMODE .. '/%s.lua'
 		function gmLoad(fn)
+			log.debug(DBG_GMLOAD, fn)
 			return assert(loadfile((path):format(fn)))()
 		end
 		log.info('Loading gamemode', mode)
@@ -438,6 +440,10 @@ function init()
 	if not getWorld('default')then
 		log.fatal(CON_WLOADERR)
 	end
+
+	dirForEach('autorun', 'lua', function(_, path)
+		log.assert(loadfile(path))()
+	end)
 
 	log.info((CON_BINDSUCC):format(ip, port))
 	cmdh = initCmdHandler(handleConsoleCommand)

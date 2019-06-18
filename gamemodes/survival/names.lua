@@ -26,6 +26,12 @@ local survBlocknames = {
 	'Crate', 'Stone brick'
 }
 
+function survAddBlockName(id, name)
+	survBlocknames[id] = name
+end
+
 function survGetBlockName(id)
-	return survBlocknames[id]or'Unknown block'
+	return survBlocknames[id]
+	or BlockDefinitions:getOpt(id, 'name')
+	or'Unknown block'
 end

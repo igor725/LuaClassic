@@ -16,7 +16,7 @@ return function(player, isPartial, message)
 	out = (out == false and nil)or(out == nil and message)or tostring(out)
 	if out then
 		out = onPlayerChatMessage(player, out)
-		if out then
+		if out ~= nil then
 			player:sendMessage(tostring(out))
 		end
 	end
