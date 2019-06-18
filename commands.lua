@@ -470,3 +470,4 @@ addCommand('help', function(isConsole)
 end)
 
 addAlias('help', '?')
+addAlias('goto', 'g')

@@ -435,6 +435,7 @@ function watchThreads(threads)
 end
 
 require('hooks')
+require('log')
 dirForEach('lua', 'lua', function(file)
 	require(file:sub(1, -5))
 end)
