@@ -592,9 +592,12 @@ local world_mt = {
 				local remX, remY, remZ
 
 				if self:getBlock(sx, sy, sz) == 8 then
-					remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz)
+					remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz, x - newX, z - newZ)
+				elseif self:getBlock(sx, sy - 1, sz) == 8 then
+					sy = sy - 1
+					remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz, x - newX, z - newZ)
 				else
-					remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(x, y, z)
+					remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(x, y, z, x - newX, z - newZ)
 				end
 
 				if self:getBlock(remX, remY, remZ) ~= 8 then
@@ -622,6 +625,9 @@ local world_mt = {
 
 						if self:getBlock(sx, sy, sz) == 8 then
 							remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz, -dx, 0)
+						elseif self:getBlock(sx, sy - 1, sz) == 8 then
+							sy = sy - 1
+							remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz, -dx, 0)
 						else
 							remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(x, y, z, -dx, 0)
 						end
@@ -644,6 +650,9 @@ local world_mt = {
 						local remX, remY, remZ
 
 						if self:getBlock(sx, sy, sz) == 8 then
+							remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz, 0, -dz)
+						elseif self:getBlock(sx, sy - 1, sz) == 8 then
+							sy = sy - 1
 							remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz, 0, -dz)
 						else
 							remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(x, y, z, 0, -dz)
