@@ -408,7 +408,7 @@ local world_mt = {
 			else
 				return x, y, z, upX, upY, upZ
 			end
-			
+
 			if upY < y then
 				upX, upY, upZ = x, y, z
 			end
@@ -590,13 +590,13 @@ local world_mt = {
 
 			if newX then
 				local remX, remY, remZ
-				
+
 				if self:getBlock(sx, sy, sz) == 8 then
 					remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz)
 				else
 					remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(x, y, z)
 				end
-				
+
 				if self:getBlock(remX, remY, remZ) ~= 8 then
 					log.error("Trying to remove non-water block " .. remX .. ", " .. remY .. ", " .. remZ)
 				elseif self:getBlock(newX, newY, newZ) ~= 0 then
@@ -646,68 +646,6 @@ local world_mt = {
 					end
 				end
 			end
-		elseif id == 46 then
-			local TNT_RADIUS = 5
-			local TNT_RADIUS2 = TNT_RADIUS * TNT_RADIUS
-
-			--[[timer.Simple(.5, function()
-				self:setBlock(x, y, z, 0)
-			end)
-
-			timer.Simple(1, function()
-				self:setBlock(x, y, z, 46)
-			end)
-
-			timer.Simple(1.5, function()
-				self:setBlock(x, y, z, 0)
-			end)
-
-			timer.Simple(2, function()
-				self:setBlock(x, y, z, 46)
-			end)
-
-			timer.Simple(2.5, function()
-				self:setBlock(x, y, z, 0)
-			end)]]--
-
-			timer.Simple(1, function()
-				for dx = -TNT_RADIUS, TNT_RADIUS do
-					for dz = -TNT_RADIUS, TNT_RADIUS do
-						for dy = -TNT_RADIUS, TNT_RADIUS do
-							local bx, by, bz = x + dx, y + dy, z + dz
-							if
-								dx * dx + dz * dz + dy * dy < TNT_RADIUS2
-								and 0 < by and by < self.data.dimensions.y - 1
-								and 0 < bx and bx < self.data.dimensions.x - 1
-								and 0 < bz and bz < self.data.dimensions.z - 1
-								--and self:getBlock(bx, by, bz) ~= 46
-							then
-								if self:getBlock(bx, by, bz) ~= 8 then
-									self:setBlock(bx, by, bz, 0)
-								else
-									self:updateWaterBlock(sx, sy, sz, bx, by, bz)
-								end
-							end
-						end
-					end
-				end
-				for dx = -TNT_RADIUS-1, TNT_RADIUS+1 do
-					for dz = -TNT_RADIUS-1, TNT_RADIUS+1 do
-						for dy = -TNT_RADIUS-1, TNT_RADIUS+1 do
-							local bx, by, bz = x + dx, y + dy, z + dz
-							if
-								dx * dx + dz * dz + dy * dy >= TNT_RADIUS2
-								and 0 < by and by < self.data.dimensions.y - 1
-								and 0 < bx and bx < self.data.dimensions.x - 1
-								and 0 < bz and bz < self.data.dimensions.z - 1
-								and self:getBlock(bx, by, bz) ~= 0
-							then
-								self:updateWaterBlock(sx, sy, sz, bx, by, bz)
-							end
-						end
-					end
-				end
-			end)
 		end
 	end,
 
