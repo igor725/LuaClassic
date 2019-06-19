@@ -149,6 +149,84 @@ addCommand('unsel', function(isConsole, player)
 	unsel(player)
 end)
 
+addCommand('expand', function(isConsole, player, args)
+    if isConsole then return CON_INGAMECMD end
+    if #args < 1 then return false end
+    local world = getWorld(player)
+    local dir = args[1]
+    local cnt = tonumber(args[2])or 1
+    local p1 = player.cuboidP1
+    local p2 = player.cuboidP2
+    if not p1 or not p2 then
+        return CMD_SELCUBOID
+    end
+	
+	if dir == 'up'then
+    	if p1[2] > p2[2] then
+    		p1[2] = p1[2] + cnt
+    	else
+    		p2[2] = p2[2] + cnt
+    	end
+    	
+    elseif dir == 'down'then
+    	if p1[2] < p2[2] then
+    		p1[2] = p1[2] - cnt
+    	else
+    		p2[2] = p2[2] - cnt
+    	end
+    else
+		-- 0 is X+, 1 is Z+, 2 is X-, 3 is Z-
+		local dirPlayer = math.floor(((player.eye.yaw + 180 + 45 + 90) % 360) / 90)
+		local dirOffset
+		
+		if dir == 'forward' or dir == 'front'then
+			dirOffset = 0
+		elseif dir == 'left'then
+			dirOffset = 1
+		elseif dir == 'backward' or dir == 'back'then
+			dirOffset = 2
+		elseif dir == 'right'then
+			dirOffset = 3
+		else
+		    return 'Invalid direction'
+		end
+		
+		dirOffset = (dirPlayer - dirOffset + 4) % 4
+		
+		-- forward
+		if dirOffset == 0 then
+			if p1[1] > p2[1] then
+				p1[1] = p1[1] + cnt
+			else
+				p2[1] = p2[1] + cnt
+			end
+		-- backward
+		elseif dirOffset == 2 then
+			if p1[1] < p2[1] then
+				p1[1] = p1[1] - cnt
+			else
+				p2[1] = p2[1] - cnt
+			end
+		-- right
+		elseif dirOffset == 1 then
+			if p1[3] > p2[3] then
+				p1[3] = p1[3] + cnt
+			else
+				p2[3] = p2[3] + cnt
+			end
+		-- left
+		else --if dirOffset == 3 then
+			if p1[3] < p2[3] then
+				p1[3] = p1[3] - cnt
+			else
+				p2[3] = p2[3] - cnt
+			end
+		end
+   	end
+
+    SelectionCuboid:create(player, 0, '', p1, p2)
+end)
+
 addCommand('mkportal', function(isConsole, player, args)
 	if isConsole then return CON_INGAMECMD end
 	if #args < 2 then return false end
