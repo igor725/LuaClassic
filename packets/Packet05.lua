@@ -34,10 +34,6 @@ return function(player, x, y, z, mode, id)
 			hooks:call('postPlayerPlaceBlock', player, x, y, z, id)
 		else
 			player:sendPacket(false, 0x06, x, y, z, cblock)
-			return
-		end
-		if postPlayerPlaceBlock then
-			postPlayerPlaceBlock(player, x, y, z, id)
 		end
 	end
 end
