@@ -71,6 +71,19 @@ function onPlayerDisconnect(player)
 	end
 end
 
+function postPlayerPlaceBlock(player, x, y, z, id)
+	if config:get('waterPhysics')then
+		local world = getWorld(player)
+		for dx = -1, 1, 1 do -- Update neighboring blocks
+			for dy = -1, 1, 1 do
+				for dz = -1, 1, 1 do
+					world:updateWaterBlock(x - dx, y - dy, z - dz)
+				end
+			end
+		end
+	end
+end
+
 function onPlayerChatMessage(player, message)
 	local starts = message:sub(1, 1)
 	if not message:startsWith('#', '>', '/')then

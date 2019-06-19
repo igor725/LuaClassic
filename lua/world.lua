@@ -3,6 +3,8 @@
 	released under The MIT license http://opensource.org/licenses/MIT
 ]]
 
+WATER_LEAK_SIZE = 6
+
 local function gBufSize(vec)
 	return vec.x * vec.y * vec.z + 4
 end
@@ -352,6 +354,299 @@ local world_mt = {
 			end)
 		end
 		return true
+	end,
+
+	findWaterBlockToRemove = function(self, x, y, z)
+		local dirx, dirz = 0, 0
+		local upX, upY, upZ = x, y, z
+		while true do
+			-- Check up
+			if self:getBlock(x, y+1, z) == 8 then
+				y = y + 1
+
+			-- Check up forward
+			elseif self:getBlock(x+1, y+1, z) == 8 then
+				x = x + 1
+				y = y + 1
+
+			-- Check up back
+			elseif self:getBlock(x-1, y+1, z) == 8 then
+				x = x - 1
+				y = y + 1
+
+			-- Check up left
+			elseif self:getBlock(x, y+1, z+1) == 8 then
+				z = z + 1
+				y = y + 1
+
+			-- Check up right
+			elseif self:getBlock(x, y+1, z-1) == 8 then
+				z = z - 1
+				y = y + 1
+
+			-- Check forward
+			elseif dirx >= 0 and self:getBlock(x+1, y, z) == 8 then
+				dirx = 1
+				x = x + 1
+
+			-- Check back
+			elseif dirx <= 0 and self:getBlock(x-1, y, z) == 8 then
+				dirx = -1
+				x = x - 1
+
+			-- Check left
+			elseif dirz >= 0 and self:getBlock(x, y, z+1) == 8 then
+				dirz = 1
+				z = z + 1
+
+			-- Check right
+			elseif dirz <= 0 and self:getBlock(x, y, z-1) == 8 then
+				dirz = -1
+				z = z - 1
+
+			-- Block found
+			else
+				return x, y, z, upX, upY, upZ
+			end
+
+			if upY < y then
+				upX, upY, upZ = x, y, z
+			end
+		end
+	end,
+
+	findWaterBlockToCreate = function(self, x, y, z)
+		-- Under
+		if self:getBlock(x, y-1, z) == 0 then
+			return x, y-1, z
+		end
+
+		local dirX, dirZ = 0, 0
+
+		-- nearest x
+		for dx = -1, 1, 2 do
+			if self:getBlock(x+dx, y, z) == 0 then
+				dirX = dirX + dx
+				if dirX == 0 then
+					dirX = math.random(0, 1) * 2 - 1
+				end
+
+				if self:getBlock(x+dx, y-1, z) == 0 then
+					return x+dx, y-1, z
+				end
+			end
+		end
+
+		-- nearest y
+		for dz = -1, 1, 2 do
+			if self:getBlock(x, y, z+dz) == 0 then
+				dirZ = dirZ + dz
+				if dirZ == 0 then
+					dirZ = math.random(0, 1) * 2 - 1
+				end
+
+				if self:getBlock(x, y-1, z+dz) == 0 then
+					return x, y-1, z+dz
+				end
+			end
+		end
+
+		-- Check if block don't have way to escape
+		if dirX == 0 and dirZ == 0 then
+			return nil
+		end
+
+		local limiterX, limiterZ = 0, 0
+
+		-- 5 blocks forward
+		if dirX > 0 then
+			for dx = 2, WATER_LEAK_SIZE do
+				if self:getBlock(x+dx, y, z) ~= 0 then
+					limiterX = dx - 1
+					break
+				elseif self:getBlock(x+dx, y-1, z) == 0 then
+					return x+1, y, z
+				end
+			end
+		end
+		-- 5 blocks back
+		if dirX < 0 then
+			for dx = 2, WATER_LEAK_SIZE do
+				if self:getBlock(x-dx, y, z) ~= 0 then
+					limiterX = dx - 1
+					break
+				elseif self:getBlock(x-dx, y-1, z) == 0 then
+					return x-1, y, z
+				end
+			end
+		end
+		-- 5 blocks left
+		if dirZ > 0 then
+			for dz = 2, WATER_LEAK_SIZE do
+				if self:getBlock(x, y, z+dz) ~= 0 then
+					limiterZ = dz - 1
+					break
+				elseif self:getBlock(x, y-1, z+dz) == 0 then
+					return x, y, z+1
+				end
+			end
+		end
+		-- 5 blocks right
+		if dirZ < 0 then
+			for dz = 2, WATER_LEAK_SIZE do
+				if self:getBlock(x, y, z-dz) ~= 0 then
+					limiterZ = dz - 1
+					break
+				elseif self:getBlock(x, y-1, z-dz) == 0 then
+					return x, y, z-1
+				end
+			end
+		end
+
+		-- Check if block don't have way to escape by diagonal
+		if dirX == 0 or dirZ == 0 then
+			return nil
+		end
+
+		-- nearest squares
+		if dirX > 0 then
+			for dx = 1, limiterX do
+				-- forward left square
+				if dirZ > 0 then
+					for dz = 1, limiterZ do
+						if self:getBlock(x+dx, y, z+dz) ~= 0 then
+							break
+						end
+						if self:getBlock(x+dx, y-1, z+dz) == 0 then
+							if self:getBlock(x+1, y-1, z) then
+								return x+1, y, z
+							else
+								return x, y, z+1
+							end
+						end
+					end
+
+				-- forward right square
+				else
+					for dz = 1, limiterZ do
+						if self:getBlock(x+dx, y, z-dz) ~= 0 then
+							break
+						end
+						if self:getBlock(x+dx, y-1, z-dz) == 0 then
+							if self:getBlock(x+1, y-1, z) then
+								return x+1, y, z
+							else
+								return x, y, z-1
+							end
+						end
+					end
+				end
+			end
+		else
+			for dx = 1, limiterX do
+				-- back left square
+				if dirZ > 0 then
+					for dz = 1, limiterZ do
+						if self:getBlock(x-dx, y, z+dz) ~= 0 then
+							break
+						end
+						if self:getBlock(x-dx, y-1, z+dz) then
+							if self:getBlock(x-1, y-1, z) then
+								return x-1, y, z
+							else
+								return x, y, z+1
+							end
+						end
+					end
+
+				-- back right square
+				else
+					for dz = 1, limiterZ do
+						if self:getBlock(x-dx, y, z-dz) ~= 0 then
+							break
+						end
+						if self:getBlock(x-dx, y-1, z-dz) == 0 then
+							if self:getBlock(x-1, y-1, z) then
+								return x-1, y, z
+							else
+								return x, y, z-1
+							end
+						end
+					end
+				end
+			end
+		end
+
+		return nil
+	end,
+
+	updateWaterBlock = function(self, sx, sy, sz, x, y, z)
+		if not x then
+			x, y, z = sx, sy, sz
+		end
+		local id = self:getBlock(x, y, z)
+		if id == 8 or id == 9 then
+			local newX, newY, newZ = self:findWaterBlockToCreate(x, y, z)
+
+			if newX then
+				local remX, remY, remZ
+
+				if self:getBlock(sx, sy, sz) == 8 then
+					remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz)
+				else
+					remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(x, y, z)
+				end
+
+				if self:getBlock(remX, remY, remZ) ~= 8 then
+					log.error("Trying to remove non-water block " .. remX .. ", " .. remY .. ", " .. remZ)
+				elseif self:getBlock(newX, newY, newZ) ~= 0 then
+					log.error("Trying place water instead " .. (self:getBlock(newX, newY, newZ) == 8 and "water" or "usual") .. " block " .. newX .. ", " .. newY .. ", " .. newZ)
+					log.error("\tDiff: " .. (newX - x) .. ", " .. (newY - y) .. ", " .. (newZ - z))
+				else
+					self:setBlock(remX, remY, remZ, 0)
+
+					self:setBlock(newX, newY, newZ, 8)
+					timer.Simple(.2, function()
+						self:updateWaterBlock(sx, sy, sz, newX, newY, newZ)
+					end)
+				end
+			-- leak water by surface
+			elseif self:getBlock(x, y, z) ~= 0 then
+				local counter = 0
+
+				-- nearest x
+				for dx = -1, 1, 2 do
+					if self:getBlock(x+dx, y, z) == 0 then
+						local remX, remY, remZ = self:findWaterBlockToRemove(sx, sy, sz)--(x+dx, y, z)
+						if remX and remY > y then
+							self:setBlock(remX, remY, remZ, 0)
+							self:setBlock(x+dx, y, z, 8)
+							timer.Simple(.2, function()
+								self:updateWaterBlock(sx, sy, sz, x+dx, y, z)
+							end)
+
+							counter = counter + 1
+						end
+					end
+				end
+
+				-- nearest y
+				for dz = -1, 1, 2 do
+					if self:getBlock(x, y, z+dz) == 0 then
+						local remX, remY, remZ = self:findWaterBlockToRemove(sx, sy, sz)--(x, y, z+dz)
+						if remX and remY > y then
+							self:setBlock(remX, remY, remZ, 0)
+							self:setBlock(x, y, z+dz, 8)
+							timer.Simple(.2, function()
+								self:updateWaterBlock(sx, sy, sz, x, y, z+dz)
+							end)
+
+							counter = counter + 1
+						end
+					end
+				end
+			end
+		end
 	end,
 
 	readGZIPData = function(self, wh)
