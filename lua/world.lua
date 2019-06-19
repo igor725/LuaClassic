@@ -580,10 +580,13 @@ local world_mt = {
 		return nil
 	end,
 
-	updateWaterBlock = function(self, sx, sy, sz, x, y, z)
+	updateWaterBlock = function(self, sx, sy, sz, x, y, z, baseY)
 		if not x then
 			x, y, z = sx, sy, sz
 		end
+		
+		baseY = baseY or y
+		
 		local id = self:getBlock(x, y, z)
 		if id == 8 or id == 9 then
 			local newX, newY, newZ = self:findWaterBlockToCreate(x, y, z)
@@ -593,7 +596,7 @@ local world_mt = {
 
 				if self:getBlock(sx, sy, sz) == 8 then
 					remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz, x - newX, z - newZ)
-				elseif self:getBlock(sx, sy - 1, sz) == 8 then
+				elseif sy > baseY and self:getBlock(sx, sy - 1, sz) == 8 then
 					sy = sy - 1
 					remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz, x - newX, z - newZ)
 				else
@@ -610,8 +613,8 @@ local world_mt = {
 
 					self:setBlock(newX, newY, newZ, 8)
 					timer.Simple(.2, function()
-						self:updateWaterBlock(sx, sy, sz, x, y, z)
-						self:updateWaterBlock(sx, sy, sz, newX, newY, newZ)
+						self:updateWaterBlock(sx, sy, sz, x, y, z, baseY)
+						self:updateWaterBlock(sx, sy, sz, newX, newY, newZ, baseY)
 					end)
 				end
 			-- leak water by surface
@@ -625,7 +628,7 @@ local world_mt = {
 
 						if self:getBlock(sx, sy, sz) == 8 then
 							remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz, -dx, 0)
-						elseif self:getBlock(sx, sy - 1, sz) == 8 then
+						elseif sy > baseY and self:getBlock(sx, sy - 1, sz) == 8 then
 							sy = sy - 1
 							remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz, -dx, 0)
 						else
@@ -636,7 +639,7 @@ local world_mt = {
 							self:setBlock(remX, remY, remZ, 0)
 							self:setBlock(x+dx, y, z, 8)
 							timer.Simple(.2, function()
-								self:updateWaterBlock(sx, sy, sz, x+dx, y, z)
+								self:updateWaterBlock(sx, sy, sz, x+dx, y, z, baseY)
 							end)
 
 							counter = counter + 1
@@ -651,7 +654,7 @@ local world_mt = {
 
 						if self:getBlock(sx, sy, sz) == 8 then
 							remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz, 0, -dz)
-						elseif self:getBlock(sx, sy - 1, sz) == 8 then
+						elseif sy > baseY and self:getBlock(sx, sy - 1, sz) == 8 then
 							sy = sy - 1
 							remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz, 0, -dz)
 						else
@@ -662,7 +665,7 @@ local world_mt = {
 							self:setBlock(remX, remY, remZ, 0)
 							self:setBlock(x, y, z+dz, 8)
 							timer.Simple(.2, function()
-								self:updateWaterBlock(sx, sy, sz, x, y, z+dz)
+								self:updateWaterBlock(sx, sy, sz, x, y, z+dz, baseY)
 							end)
 
 							counter = counter + 1
