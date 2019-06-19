@@ -236,6 +236,15 @@ local world_mt = {
 			return 0
 		end
 	end,
+	getBlockUnsafe = function(self, x, y, z)
+		if not self.ldata then return false end
+		local offset = self:getOffset(x, y, z)
+		if offset then
+			return self.ldata[offset]
+		else
+			return nil
+		end
+	end,
 	getAddr = function(self)
 		return getAddr(self.ldata)
 	end,
@@ -309,31 +318,32 @@ local world_mt = {
 	fillBlocks = function(self, p1, p2, id)
 		if self:isReadOnly()then return false end
 		x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p2)
-		local buf = ''
+		
+		local mapaddr = ffi.cast('uint8_t*', self:getAddr())
+		for y = y2, y1 - 1 do
+			for z = z2, z1 - 1 do
+				ffi.fill(mapaddr + self:getOffset(x2, y, z), x1 - x2 - 1, id)
+			end
+		end
+		
+		BulkBlockUpdate:start(self)
 		for x = x2, x1 - 1 do
 			for y = y2, y1 - 1 do
 				for z = z2, z1 - 1 do
-					local offset = self:getOffset(x, y, z)
-					self.ldata[offset] = id
-					if self.players > 0 then
-						buf = buf .. generatePacket(0x06, x, y, z, id)
-					end
+					BulkBlockUpdate:write(x, y, z, id)
 				end
 			end
 		end
-		if self.players > 0 then
-			playersForEach(function(player)
-				if player:isInWorld(self)then
-					player:sendNetMesg(buf)
-				end
-			end)
-		end
+		
+		BulkBlockUpdate:push()
 		return true
 	end,
 	replaceBlocks = function(self, p1, p2, id1, id2)
 		if self:isReadOnly()then return false end
+		
+		BulkBlockUpdate:start(self)
+		
 		x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p2)
-		local buf = ''
 		for x = x2, x1 - 1 do
 			for y = y2, y1 - 1 do
 				for z = z2, z1 - 1 do
@@ -341,18 +351,11 @@ local world_mt = {
 					if self.ldata[offset] == id1 then
 						self.ldata[offset] = id2
 						if self.players > 0 then
-							buf = buf .. generatePacket(0x06, x, y, z, id2)
+							BulkBlockUpdate:write(x, y, z, id2)
 						end
 					end
 				end
 			end
-		end
-		if self.players > 0 then
-			playersForEach(function(player)
-				if player:isInWorld(self)then
-					player:sendNetMesg(buf)
-				end
-			end)
 		end
 		return true
 	end,
@@ -362,46 +365,46 @@ local world_mt = {
 		local upX, upY, upZ = x, y, z
 		while true do
 			-- Check up
-			if self:getBlock(x, y+1, z) == 8 then
+			if self:getBlockUnsafe(x, y+1, z) == 8 then
 				y = y + 1
 
 			-- Check up forward
-			elseif self:getBlock(x+1, y+1, z) == 8 then
+			elseif self:getBlockUnsafe(x+1, y+1, z) == 8 then
 				x = x + 1
 				y = y + 1
 
 			-- Check up back
-			elseif self:getBlock(x-1, y+1, z) == 8 then
+			elseif self:getBlockUnsafe(x-1, y+1, z) == 8 then
 				x = x - 1
 				y = y + 1
 
 			-- Check up left
-			elseif self:getBlock(x, y+1, z+1) == 8 then
+			elseif self:getBlockUnsafe(x, y+1, z+1) == 8 then
 				z = z + 1
 				y = y + 1
 
 			-- Check up right
-			elseif self:getBlock(x, y+1, z-1) == 8 then
+			elseif self:getBlockUnsafe(x, y+1, z-1) == 8 then
 				z = z - 1
 				y = y + 1
 
 			-- Check forward
-			elseif dirx >= 0 and self:getBlock(x+1, y, z) == 8 then
+			elseif dirx >= 0 and self:getBlockUnsafe(x+1, y, z) == 8 then
 				dirx = 1
 				x = x + 1
 
 			-- Check back
-			elseif dirx <= 0 and self:getBlock(x-1, y, z) == 8 then
+			elseif dirx <= 0 and self:getBlockUnsafe(x-1, y, z) == 8 then
 				dirx = -1
 				x = x - 1
 
 			-- Check left
-			elseif dirz >= 0 and self:getBlock(x, y, z+1) == 8 then
+			elseif dirz >= 0 and self:getBlockUnsafe(x, y, z+1) == 8 then
 				dirz = 1
 				z = z + 1
 
 			-- Check right
-			elseif dirz <= 0 and self:getBlock(x, y, z-1) == 8 then
+			elseif dirz <= 0 and self:getBlockUnsafe(x, y, z-1) == 8 then
 				dirz = -1
 				z = z - 1
 
@@ -417,8 +420,10 @@ local world_mt = {
 	end,
 
 	findWaterBlockToCreate = function(self, x, y, z)
+		if y == 0 then return end
+		
 		-- Under
-		if self:getBlock(x, y-1, z) == 0 then
+		if self:getBlockUnsafe(x, y-1, z) == 0 then
 			return x, y-1, z
 		end
 
@@ -426,13 +431,13 @@ local world_mt = {
 
 		-- nearest x
 		for dx = -1, 1, 2 do
-			if self:getBlock(x+dx, y, z) == 0 then
+			if self:getBlockUnsafe(x+dx, y, z) == 0 then
 				dirX = dirX + dx
 				if dirX == 0 then
 					dirX = math.random(0, 1) * 2 - 1
 				end
 
-				if self:getBlock(x+dx, y-1, z) == 0 then
+				if self:getBlockUnsafe(x+dx, y-1, z) == 0 then
 					return x+dx, y-1, z
 				end
 			end
@@ -440,13 +445,13 @@ local world_mt = {
 
 		-- nearest y
 		for dz = -1, 1, 2 do
-			if self:getBlock(x, y, z+dz) == 0 then
+			if self:getBlockUnsafe(x, y, z+dz) == 0 then
 				dirZ = dirZ + dz
 				if dirZ == 0 then
 					dirZ = math.random(0, 1) * 2 - 1
 				end
 
-				if self:getBlock(x, y-1, z+dz) == 0 then
+				if self:getBlockUnsafe(x, y-1, z+dz) == 0 then
 					return x, y-1, z+dz
 				end
 			end
@@ -462,10 +467,10 @@ local world_mt = {
 		-- 5 blocks forward
 		if dirX > 0 then
 			for dx = 2, WATER_LEAK_SIZE do
-				if self:getBlock(x+dx, y, z) ~= 0 then
+				if self:getBlockUnsafe(x+dx, y, z) ~= 0 then
 					limiterX = dx - 1
 					break
-				elseif self:getBlock(x+dx, y-1, z) == 0 then
+				elseif self:getBlockUnsafe(x+dx, y-1, z) == 0 then
 					return x+1, y, z
 				end
 			end
@@ -473,10 +478,10 @@ local world_mt = {
 		-- 5 blocks back
 		if dirX < 0 then
 			for dx = 2, WATER_LEAK_SIZE do
-				if self:getBlock(x-dx, y, z) ~= 0 then
+				if self:getBlockUnsafe(x-dx, y, z) ~= 0 then
 					limiterX = dx - 1
 					break
-				elseif self:getBlock(x-dx, y-1, z) == 0 then
+				elseif self:getBlockUnsafe(x-dx, y-1, z) == 0 then
 					return x-1, y, z
 				end
 			end
@@ -484,10 +489,10 @@ local world_mt = {
 		-- 5 blocks left
 		if dirZ > 0 then
 			for dz = 2, WATER_LEAK_SIZE do
-				if self:getBlock(x, y, z+dz) ~= 0 then
+				if self:getBlockUnsafe(x, y, z+dz) ~= 0 then
 					limiterZ = dz - 1
 					break
-				elseif self:getBlock(x, y-1, z+dz) == 0 then
+				elseif self:getBlockUnsafe(x, y-1, z+dz) == 0 then
 					return x, y, z+1
 				end
 			end
@@ -495,10 +500,10 @@ local world_mt = {
 		-- 5 blocks right
 		if dirZ < 0 then
 			for dz = 2, WATER_LEAK_SIZE do
-				if self:getBlock(x, y, z-dz) ~= 0 then
+				if self:getBlockUnsafe(x, y, z-dz) ~= 0 then
 					limiterZ = dz - 1
 					break
-				elseif self:getBlock(x, y-1, z-dz) == 0 then
+				elseif self:getBlockUnsafe(x, y-1, z-dz) == 0 then
 					return x, y, z-1
 				end
 			end
@@ -515,11 +520,11 @@ local world_mt = {
 				-- forward left square
 				if dirZ > 0 then
 					for dz = 1, limiterZ do
-						if self:getBlock(x+dx, y, z+dz) ~= 0 then
+						if self:getBlockUnsafe(x+dx, y, z+dz) ~= 0 then
 							break
 						end
-						if self:getBlock(x+dx, y-1, z+dz) == 0 then
-							if self:getBlock(x+1, y-1, z) then
+						if self:getBlockUnsafe(x+dx, y-1, z+dz) == 0 then
+							if self:getBlockUnsafe(x+1, y-1, z) then
 								return x+1, y, z
 							else
 								return x, y, z+1
@@ -530,11 +535,11 @@ local world_mt = {
 				-- forward right square
 				else
 					for dz = 1, limiterZ do
-						if self:getBlock(x+dx, y, z-dz) ~= 0 then
+						if self:getBlockUnsafe(x+dx, y, z-dz) ~= 0 then
 							break
 						end
-						if self:getBlock(x+dx, y-1, z-dz) == 0 then
-							if self:getBlock(x+1, y-1, z) then
+						if self:getBlockUnsafe(x+dx, y-1, z-dz) == 0 then
+							if self:getBlockUnsafe(x+1, y-1, z) then
 								return x+1, y, z
 							else
 								return x, y, z-1
@@ -548,11 +553,11 @@ local world_mt = {
 				-- back left square
 				if dirZ > 0 then
 					for dz = 1, limiterZ do
-						if self:getBlock(x-dx, y, z+dz) ~= 0 then
+						if self:getBlockUnsafe(x-dx, y, z+dz) ~= 0 then
 							break
 						end
-						if self:getBlock(x-dx, y-1, z+dz) then
-							if self:getBlock(x-1, y-1, z) then
+						if self:getBlockUnsafe(x-dx, y-1, z+dz) then
+							if self:getBlockUnsafe(x-1, y-1, z) then
 								return x-1, y, z
 							else
 								return x, y, z+1
@@ -563,10 +568,10 @@ local world_mt = {
 				-- back right square
 				else
 					for dz = 1, limiterZ do
-						if self:getBlock(x-dx, y, z-dz) ~= 0 then
+						if self:getBlockUnsafe(x-dx, y, z-dz) ~= 0 then
 							break
 						end
-						if self:getBlock(x-dx, y-1, z-dz) == 0 then
+						if self:getBlockUnsafe(x-dx, y-1, z-dz) == 0 then
 							if self:getBlock(x-1, y-1, z) then
 								return x-1, y, z
 							else

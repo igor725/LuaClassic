@@ -32,7 +32,7 @@ function bbu:push()
 end
 
 function bbu:write(x, y, z, id)
-	iptr[sbbu.count] = bswap(self.world:getOffset(x, y, z))
+	iptr[sbbu.count] = bswap(self.world:getOffset(x, y, z) - 4)
 	sbbu.blocks[sbbu.count] = id
 	sbbu.count = sbbu.count + 1
 	if sbbu.count == 255 then
