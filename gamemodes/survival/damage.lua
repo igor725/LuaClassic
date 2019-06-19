@@ -47,9 +47,17 @@ function survDamage(attacker, victim, damage, dmgtype)
 		local x, y, z = attacker:getPos()
 		local tx, ty, tz = victim:getPos()
 		local dx, dy, dz = tx - x, ty - y, tz - z
-		local length = math.sqrt(dx^2 + dy^2 + dz^2)
+		local length = math.sqrt(dx^2 + dy^2 + dz^2) * 1.2
 		dx, dy, dz = dx / length, dy / length, dz / length
-
+		
+		if getWorld(victim):getBlock(math.floor(tx) + (dx > 0 and 1 or -1), math.floor(ty), math.floor(tz - 0.5)) ~= 0 then
+			dx = 0
+		end
+		
+		if getWorld(victim):getBlock(math.floor(tx), math.floor(ty - 0.5), math.floor(tz) + (dz > 0 and 1 or -1)) ~= 0 then
+			dz = 0
+		end
+		
 		victim:teleportTo(tx + dx, ty + 0.5, tz + dz)
 	end
 
@@ -92,7 +100,7 @@ end
 hooks:add('onPlayerLanded', 'surv_damage', function(player, blocks)
 	if blocks > 3 and player.oldDY2 < -0.3 then
 		local pos = player.pos
-		local blockInsidePlayer = getWorld(player):getBlock(math.floor(pos.x+.5), math.floor(pos.y-1.5), math.floor(pos.z+.5))
+		local blockInsidePlayer = getWorld(player):getBlock(math.floor(pos.x), math.floor(pos.y-1.5), math.floor(pos.z))
 
 		if not (8 <= blockInsidePlayer and blockInsidePlayer <= 11) then
 			survDamage(nil, player, blocks / 2 - 0.5, SURV_DMG_FALL)
