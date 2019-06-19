@@ -318,14 +318,14 @@ local world_mt = {
 	fillBlocks = function(self, p1, p2, id)
 		if self:isReadOnly()then return false end
 		x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p2)
-		
+
 		local mapaddr = ffi.cast('uint8_t*', self:getAddr())
 		for y = y2, y1 - 1 do
 			for z = z2, z1 - 1 do
-				ffi.fill(mapaddr + self:getOffset(x2, y, z), x1 - x2 - 1, id)
+				ffi.fill(mapaddr + self:getOffset(x2, y, z), x1 - x2, id)
 			end
 		end
-		
+
 		BulkBlockUpdate:start(self)
 		for x = x2, x1 - 1 do
 			for y = y2, y1 - 1 do
@@ -334,15 +334,15 @@ local world_mt = {
 				end
 			end
 		end
-		
-		BulkBlockUpdate:push()
+
+		BulkBlockUpdate:done()
 		return true
 	end,
 	replaceBlocks = function(self, p1, p2, id1, id2)
 		if self:isReadOnly()then return false end
-		
+
 		BulkBlockUpdate:start(self)
-		
+
 		x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p2)
 		for x = x2, x1 - 1 do
 			for y = y2, y1 - 1 do
@@ -357,6 +357,8 @@ local world_mt = {
 				end
 			end
 		end
+
+		BulkBlockUpdate:done()
 		return true
 	end,
 
@@ -421,7 +423,7 @@ local world_mt = {
 
 	findWaterBlockToCreate = function(self, x, y, z)
 		if y == 0 then return end
-		
+
 		-- Under
 		if self:getBlockUnsafe(x, y-1, z) == 0 then
 			return x, y-1, z

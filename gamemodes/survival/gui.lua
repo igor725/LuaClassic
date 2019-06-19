@@ -44,10 +44,10 @@ function survUpdateMiningProgress(player)
 	if player.action == SURV_ACT_BREAK then
 		local progress = ('|'):rep(player.breakProgress)
 		local punfilled = ('|'):rep(SURV_BRK_DONE - player.breakProgress)
-		local msg = ('Mining: [&a%s&0%s&f]'):format(progress, punfilled)
-		player:sendMessage(msg, MT_BRIGHT2)
+		local msg = ('[&a%s&0%s&f]'):format(progress, punfilled)
+		player:sendMessage(msg, MT_ANNOUNCE)
 	elseif player.action == SURV_ACT_NONE then
-		player:sendMessage('', MT_BRIGHT2)
+		player:sendMessage('', MT_ANNOUNCE)
 	end
 end
 

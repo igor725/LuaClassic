@@ -1,5 +1,6 @@
 local bbu = {
-	global = true
+	global = true,
+	unsupport = {}
 }
 
 local sbbu = ffi.new([[struct {
@@ -9,7 +10,6 @@ local sbbu = ffi.new([[struct {
 	uint8_t blocks[256];
 }]])
 local iptr = ffi.cast('uint32_t*', sbbu.indices)
-local cptr = ffi.cast('char*', sbbu)
 
 function bbu:start(world)
 	ffi.fill(sbbu, 1282)
@@ -23,12 +23,20 @@ function bbu:clean()
 end
 
 function bbu:push()
-	playersForEach(function(player)
-		if player:isInWorld(self.world)then
-			sendMesg(player:getClient(), cptr, 1282)
-		end
-	end)
-	self:clean()
+	if sbbu.count > 0 then
+		playersForEach(function(player)
+			if player:isInWorld(self.world)then
+				if player:isSupported('BulkBlockUpdate')then
+					sendMesg(player:getClient(), sbbu, 1282)
+				else
+					if not table.hasValue(self.unsupport, player)then
+						table.insert(self.unsupport, player)
+					end
+				end
+			end
+		end)
+		self:clean()
+	end
 end
 
 function bbu:write(x, y, z, id)
@@ -37,6 +45,13 @@ function bbu:write(x, y, z, id)
 	sbbu.count = sbbu.count + 1
 	if sbbu.count == 255 then
 		self:push()
+	end
+end
+
+function bbu:done()
+	self:push()
+	for i = #self.unsupport, 1, -1 do
+		table.remove(self.unsupport, 1):sendMap()
 	end
 end
 
