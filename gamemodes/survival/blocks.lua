@@ -148,6 +148,7 @@ function survBlockAction(player, button, action, x, y, z)
 				lb.x, lb.y, lb.z = x, y, z
 				local tmSpeed = (survMiningSpeed[bid]or survMiningSpeed[-1])
 				if tmSpeed <= 0 then
+					player.breakProgress = 10
 					survBreakBlock(player, x, y, z)
 					return
 				end
