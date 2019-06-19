@@ -358,6 +358,7 @@ local world_mt = {
 
 	findWaterBlockToRemove = function(self, x, y, z)
 		local dirx, dirz = 0, 0
+		local upX, upY, upZ = x, y, z
 		while true do
 			-- Check up
 			if self:getBlock(x, y+1, z) == 8 then
@@ -405,7 +406,11 @@ local world_mt = {
 
 			-- Block found
 			else
-				return x, y, z
+				return x, y, z, upX, upY, upZ
+			end
+			
+			if upY < y then
+				upX, upY, upZ = x, y, z
 			end
 		end
 	end,
@@ -584,12 +589,19 @@ local world_mt = {
 			local newX, newY, newZ = self:findWaterBlockToCreate(x, y, z)
 
 			if newX then
-				local remX, remY, remZ = self:findWaterBlockToRemove(x, y, z)
+				local remX, remY, remZ
+				
+				if self:getBlock(sx, sy, sz) == 8 then
+					remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz)
+				else
+					remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(x, y, z)
+				end
+				
 				if self:getBlock(remX, remY, remZ) ~= 8 then
-					print("[ERROR] Trying to remove non-water block " .. remX .. ", " .. remY .. ", " .. remZ)
+					log.error("Trying to remove non-water block " .. remX .. ", " .. remY .. ", " .. remZ)
 				elseif self:getBlock(newX, newY, newZ) ~= 0 then
-					print("[ERROR] Trying place water instead " .. (self:getBlock(newX, newY, newZ) == 8 and "water" or "usual") .. " block " .. newX .. ", " .. newY .. ", " .. newZ)
-					print("\tDiff: " .. (newX - x) .. ", " .. (newY - y) .. ", " .. (newZ - z))
+					log.error("Trying place water instead " .. (self:getBlock(newX, newY, newZ) == 8 and "water" or "usual") .. " block " .. newX .. ", " .. newY .. ", " .. newZ)
+					log.error("\tDiff: " .. (newX - x) .. ", " .. (newY - y) .. ", " .. (newZ - z))
 				else
 					self:setBlock(remX, remY, remZ, 0)
 
@@ -605,7 +617,7 @@ local world_mt = {
 				-- nearest x
 				for dx = -1, 1, 2 do
 					if self:getBlock(x+dx, y, z) == 0 then
-						local remX, remY, remZ = self:findWaterBlockToRemove(x+dx, y, z)
+						local remX, remY, remZ = self:findWaterBlockToRemove(sx, sy, sz)--(x+dx, y, z)
 						if remX and remY > y then
 							self:setBlock(remX, remY, remZ, 0)
 							self:setBlock(x+dx, y, z, 8)
@@ -621,7 +633,7 @@ local world_mt = {
 				-- nearest y
 				for dz = -1, 1, 2 do
 					if self:getBlock(x, y, z+dz) == 0 then
-						local remX, remY, remZ = self:findWaterBlockToRemove(x, y, z+dz)
+						local remX, remY, remZ = self:findWaterBlockToRemove(sx, sy, sz)--(x, y, z+dz)
 						if remX and remY > y then
 							self:setBlock(remX, remY, remZ, 0)
 							self:setBlock(x, y, z+dz, 8)
@@ -633,46 +645,7 @@ local world_mt = {
 						end
 					end
 				end
-
-				--[[if counter == 0 then
-					-- Check up forward
-					if self:getBlock(x+1, y, z) == 8 then
-						x = x + 1
-						timer.Simple(.2, function()
-							self:updateWaterBlock(sx, sy, sz, x, y, z)
-						end)
-
-					-- Check up back
-					elseif self:getBlock(x-1, y, z) == 8 then
-						x = x - 1
-						timer.Simple(.2, function()
-							self:updateWaterBlock(sx, sy, sz, x, y, z)
-						end)
-
-					-- Check up left
-					elseif self:getBlock(x, y, z+1) == 8 then
-						z = z + 1
-						timer.Simple(.2, function()
-							self:updateWaterBlock(sx, sy, sz, x, y, z)
-						end)
-
-					-- Check up right
-					elseif self:getBlock(x, y, z-1) == 8 then
-						z = z - 1
-						timer.Simple(.2, function()
-							self:updateWaterBlock(sx, sy, sz, x, y, z)
-						end)
-					end
-				end]]--
 			end
-		-- lava eating water
-		--[[elseif id == 10 or id == 11 then
-			if self:getBlock(x, y+1, z) == 8 then
-				self:setBlock(x, y+1, z, 0)
-				timer.Simple(.2, function()
-					self:updateWaterBlock(sx, sy, sz, x, y+2, z)
-				end)
-			end]]--
 		elseif id == 46 then
 			local TNT_RADIUS = 5
 			local TNT_RADIUS2 = TNT_RADIUS * TNT_RADIUS
