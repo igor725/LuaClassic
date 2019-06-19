@@ -328,6 +328,7 @@ local world_mt = {
 				end
 			end)
 		end
+		return true
 	end,
 	replaceBlocks = function(self, p1, p2, id1, id2)
 		if self:isReadOnly()then return false end
@@ -584,9 +585,9 @@ local world_mt = {
 		if not x then
 			x, y, z = sx, sy, sz
 		end
-		
+
 		baseY = baseY or y
-		
+
 		local id = self:getBlock(x, y, z)
 		if id == 8 or id == 9 then
 			local newX, newY, newZ = self:findWaterBlockToCreate(x, y, z)
@@ -634,7 +635,7 @@ local world_mt = {
 						else
 							remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(x, y, z, -dx, 0)
 						end
-						
+
 						if remX and remY > y then
 							self:setBlock(remX, remY, remZ, 0)
 							self:setBlock(x+dx, y, z, 8)
@@ -660,7 +661,7 @@ local world_mt = {
 						else
 							remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(x, y, z, 0, -dz)
 						end
-						
+
 						if remX and remY > y then
 							self:setBlock(remX, remY, remZ, 0)
 							self:setBlock(x, y, z+dz, 8)
@@ -839,8 +840,8 @@ function regenerateWorld(world, gentype, seed)
 end
 
 function worldsForEach(func)
-	for _, world in pairs(worlds)do
-		local ret = func(world)
+	for name, world in pairs(worlds)do
+		local ret = func(world, name)
 		if ret ~= nil then
 			return ret
 		end

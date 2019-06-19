@@ -82,7 +82,7 @@ local mob_mt = {
 	end,
 
 	destroy = function(self)
-		IDS[self.id] = nil
+		entities[self.id] = nil
 		self:despawn()
 		return true
 	end,
@@ -94,7 +94,7 @@ mob_mt.__index = mob_mt
 
 function findMobFreeID()
 	local s = -2
-	while IDS[s]do
+	while entities[s]do
 		s = s - 1
 		if s < -128 then
 			return false
@@ -109,7 +109,7 @@ function newMob(type, world, x, y, z, yaw, pitch)
 	world = world:getName()
 	local id = findMobFreeID()
 	if not id then return false end
-	IDS[id] = true
+	entities[id] = true
 
 	local pos = newVector(x, y, z)
 	local eye = newAngle(yaw or 0, pitch or 0)

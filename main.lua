@@ -366,8 +366,7 @@ function init()
 		log.setLevel(loglvl)
 	end
 	log.info(CON_START)
-	players, IDS = {}, {}
-	worlds = {}
+	entities, worlds = {}, {}
 
 	config:parse()
 	permissions:parse()
@@ -471,14 +470,14 @@ succ, err = xpcall(function()
 			hooks:call('onUpdate', dt)
 			timer.Update(dt)
 			if uwa > 0 then
-				for _, world in pairs(worlds)do
+				worldsForEach(function(world)
 					if world.emptyfrom then
 						if CTIME - world.emptyfrom > uwa then
 							world:unload()
 							world.emptyfrom = nil
 						end
 					end
-				end
+				end)
 			end
 			if onUpdate then
 				onUpdate(dt)
@@ -521,7 +520,7 @@ if INITED then
 	end
 
 	log.info(CON_WSAVE)
-	for wname, world in pairs(worlds)do
+	worldsForEach(function(world, wname)
 		if wname ~= 'default'then
 			if world:save()then
 				log.debug('World', wname, 'saved')
@@ -529,7 +528,7 @@ if INITED then
 				log.error(wname, 'saving error')
 			end
 		end
-	end
+	end)
 end
 
 if server then closeSock(server)end

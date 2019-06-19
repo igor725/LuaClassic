@@ -35,9 +35,9 @@ local function defineBlockFor(player, opts)
 		opts.name = opts.name or'Unnamed block'
 		opts.solidity = opts.solidity or 2
 		opts.movespeed = opts.movespeed or 128
-		opts.topTex = opts.topTex or 1
-		opts.sideTex = opts.sideTex or 1
-		opts.bottomTex = opts.bottomTex or 1
+		opts.topTex = opts.topTex or opts.tex or 1
+		opts.sideTex = opts.sideTex or opts.tex or 1
+		opts.bottomTex = opts.bottomTex or opts.tex or 1
 		opts.transLight = opts.transLight or 0
 		opts.walkSound = opts.walkSound or 2
 		opts.fullBright = opts.fullBright or 0

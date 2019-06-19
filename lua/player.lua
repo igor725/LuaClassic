@@ -224,8 +224,7 @@ local player_mt = {
 	setID = function(self, id)
 		if id >= 0 then
 			self.id = id
-			IDS[id] = self
-			players[self] = id
+			entities[id] = self
 			return true
 		else
 			return false
@@ -657,8 +656,7 @@ local player_mt = {
 		if self.isSpawned then
 			self:despawn()
 		end
-		players[self] = nil
-		IDS[self:getID()] = nil
+		entities[self:getID()] = nil
 
 		if self.handshaked then
 			self.lastOnlineTime = self:getOnlineTime()
@@ -802,10 +800,13 @@ local player_mt = {
 player_mt.__index = player_mt
 
 function playersForEach(func)
-	for player, id in pairs(players)do
-		local ret = func(player, id)
-		if ret ~= nil then
-			return ret
+	for id = 0, config:get('maxPlayers')do
+		local player = entities[id]
+		if player then
+			local ret = func(player, id)
+			if ret ~= nil then
+				return ret
+			end
 		end
 	end
 end
@@ -853,12 +854,12 @@ function findPlayer(namepart)
 end
 
 function getPlayerByID(id)
-	return IDS[id]
+	return entities[id]
 end
 
 function findFreeID(player)
 	local s = 0
-	while IDS[s]do
+	while entities[s]do
 		s = s + 1
 		if s > 127 then
 			return -1

@@ -297,9 +297,10 @@ addCommand('list', function(isConsole, player)
 	else
 		player:sendMessage(CMD_WORLDLST)
 	end
-	for wn, world in pairs(worlds)do
+	local dworld = getWorld('default')
+	worldsForEach(function(world, wn)
 		if wn ~= 'default'then
-			local dfld = (getWorld('default') == world and' (default)')or''
+			local dfld = (dworld == world and' (default)')or''
 			local wstr = '   - ' .. wn .. dfld
 			if isConsole then
 				print(wstr)
@@ -307,7 +308,7 @@ addCommand('list', function(isConsole, player)
 				player:sendMessage(wstr)
 			end
 		end
-	end
+	end)
 end)
 
 addCommand('put', function(isConsole, player, args)
