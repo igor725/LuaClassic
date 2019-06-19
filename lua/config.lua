@@ -16,6 +16,7 @@ local wmsg = 'welcomeMessage'
 local dperms = 'defaultPerms'
 local spl = 'storePlayersIn_G'
 local texpack = 'texPack'
+local wphys = 'waterPhysics'
 
 local lseeds = 'levelSeeds'
 local lnames = 'levelNames'
@@ -51,6 +52,7 @@ config = {
 		},
 		[spl] = false,
 		[texpack] = '',
+		[wphys] = false,
 
 		[lseeds] = {},
 		[lnames] = {
@@ -82,6 +84,7 @@ config = {
 		[dperms] = 'table',
 		[spl] = 'boolean',
 		[texpack] = 'string',
+		[wphys] = 'boolean',
 
 		[lseeds] = 'table',
 		[lnames] = 'table',
