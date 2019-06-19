@@ -356,8 +356,8 @@ local world_mt = {
 		return true
 	end,
 
-	findWaterBlockToRemove = function(self, x, y, z)
-		local dirx, dirz = 0, 0
+	findWaterBlockToRemove = function(self, x, y, z, dirx, dirz)
+		local dirx, dirz = dirx or 0, dirz or 0
 		local upX, upY, upZ = x, y, z
 		while true do
 			-- Check up
@@ -607,6 +607,7 @@ local world_mt = {
 
 					self:setBlock(newX, newY, newZ, 8)
 					timer.Simple(.2, function()
+						self:updateWaterBlock(sx, sy, sz, x, y, z)
 						self:updateWaterBlock(sx, sy, sz, newX, newY, newZ)
 					end)
 				end
@@ -617,7 +618,14 @@ local world_mt = {
 				-- nearest x
 				for dx = -1, 1, 2 do
 					if self:getBlock(x+dx, y, z) == 0 then
-						local remX, remY, remZ = self:findWaterBlockToRemove(sx, sy, sz)--(x+dx, y, z)
+						local remX, remY, remZ
+
+						if self:getBlock(sx, sy, sz) == 8 then
+							remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz, -dx, 0)
+						else
+							remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(x, y, z, -dx, 0)
+						end
+						
 						if remX and remY > y then
 							self:setBlock(remX, remY, remZ, 0)
 							self:setBlock(x+dx, y, z, 8)
@@ -633,7 +641,14 @@ local world_mt = {
 				-- nearest y
 				for dz = -1, 1, 2 do
 					if self:getBlock(x, y, z+dz) == 0 then
-						local remX, remY, remZ = self:findWaterBlockToRemove(sx, sy, sz)--(x, y, z+dz)
+						local remX, remY, remZ
+
+						if self:getBlock(sx, sy, sz) == 8 then
+							remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(sx, sy, sz, 0, -dz)
+						else
+							remX, remY, remZ, sx, sy, sz = self:findWaterBlockToRemove(x, y, z, 0, -dz)
+						end
+						
 						if remX and remY > y then
 							self:setBlock(remX, remY, remZ, 0)
 							self:setBlock(x, y, z+dz, 8)
