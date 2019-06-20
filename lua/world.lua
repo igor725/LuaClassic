@@ -849,9 +849,11 @@ end
 
 function worldsForEach(func)
 	for name, world in pairs(worlds)do
-		local ret = func(world, name)
-		if ret ~= nil then
-			return ret
+		if name ~= 'default'then
+			local ret = func(world, name)
+			if ret ~= nil then
+				return ret
+			end
 		end
 	end
 end

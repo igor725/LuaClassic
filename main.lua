@@ -453,6 +453,25 @@ function init()
 	return true
 end
 
+function saveAll()
+	playersForEach(function(ply)
+		ply:saveWrite()
+	end)
+	if config:save()and permissions:save()then
+		log.info(CON_SAVESUCC)
+	else
+		log.error(CON_SAVEERR)
+	end
+	log.info(CON_WSAVE)
+	worldsForEach(function(world)
+		if world:save()then
+			log.debug('World', wname, 'saved')
+		else
+			log.error(wname, 'saving error')
+		end
+	end)
+end
+
 succ, err = xpcall(function()
 	while not _STOP do
 		ETIME = CTIME
@@ -513,22 +532,7 @@ if INITED then
 		end
 	end)
 
-	if config:save()and permissions:save()then
-		log.info(CON_SAVESUCC)
-	else
-		log.error(CON_SAVEERR)
-	end
-
-	log.info(CON_WSAVE)
-	worldsForEach(function(world, wname)
-		if wname ~= 'default'then
-			if world:save()then
-				log.debug('World', wname, 'saved')
-			else
-				log.error(wname, 'saving error')
-			end
-		end
-	end)
+	saveAll()
 end
 
 if server then closeSock(server)end
