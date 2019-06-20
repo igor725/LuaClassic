@@ -181,9 +181,9 @@ local world_mt = {
 		local pt = self:getPath()
 		local wh = assert(io.open(pt, 'wb'))
 		writeData(wh, wWriters, 'wdata\0', self.data, self.skipped)
-		local gStatus, gErr = gz.compress(self.ldata, self:getData('size'), 4, function(out, stream)
+		local gStatus, gErr = gz.compress(self.ldata, self:getData('size'), 4, function(stream)
 			local chunksz = 1024 - stream.avail_out
-			C.fwrite(out, 1, chunksz, wh)
+			C.fwrite(stream.next_out - chunksz, 1, chunksz, wh)
 			if C.ferror(wh) ~= 0 then
 				logWorldError(self, WORLD_WRITEFAIL)
 				gz.defEnd(stream)

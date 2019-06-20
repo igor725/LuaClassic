@@ -25,10 +25,10 @@ return function(player, id, x, y, z, yaw, pitch)
 		if ply:isInWorld(player)then
 			if ply:isSupported('ExtEntityPositions')then
 				cpepck = cpepck or cpe:generatePacket(0x08, pid, x, y, z, yaw, pitch)
-				ply:sendNetMesg(cpepck)
+				ply:sendNetMesg(cpepck, #cpepck)
 			else
 				pck = pck or generatePacket(0x08, pid, x, y, z, yaw, pitch)
-				ply:sendNetMesg(pck)
+				ply:sendNetMesg(pck, #pck)
 			end
 		end
 	end)

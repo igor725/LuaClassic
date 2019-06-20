@@ -50,10 +50,10 @@ local mob_mt = {
 			if player:isInWorld(self)then
 				if player:isSupported('ExtEntityPositions')then
 					datcpe = datcpe or cpe:generatePacket(0x08, id, cx, cy, cz, cay, cap)
-					player:sendNetMesg(datcpe)
+					player:sendNetMesg(datcpe, #datcpe)
 				else
 					dat = dat or generatePacket(0x08, id, cx, cy, cz, cay, cap)
-					player:sendNetMesg(dat)
+					player:sendNetMesg(dat, #dat)
 				end
 			end
 		end)

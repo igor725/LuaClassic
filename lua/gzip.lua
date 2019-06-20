@@ -72,7 +72,8 @@ local function infstreamend(stream)
 	return _zlib.inflateEnd(stream)
 end
 
-local function deflate(_in, len, level, callback)
+local function deflate(_in, len, level, callback, out)
+	out = out or outbuff
 	level = level or 4
 	local stream = ffi.new('z_stream')
 	local streamsz = ffi.sizeof(stream)
@@ -88,7 +89,7 @@ local function deflate(_in, len, level, callback)
 	stream.next_in = _in
 
 	repeat
-		stream.next_out = outbuff
+		stream.next_out = out
 		stream.avail_out = CHUNK_SIZE
 		ret = _zlib.deflate(stream, Z_FINISH)
 
@@ -99,7 +100,7 @@ local function deflate(_in, len, level, callback)
 			return false, err
 		end
 
-		callback(outbuff, stream)
+		callback(stream)
 	until stream.avail_out ~= 0
 
 	defstreamend(stream)

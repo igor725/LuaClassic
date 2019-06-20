@@ -27,7 +27,7 @@ function bbu:push()
 		playersForEach(function(player)
 			if player:isInWorld(self.world)then
 				if player:isSupported('BulkBlockUpdate')then
-					sendMesg(player:getClient(), sbbu, 1282)
+					player:sendNetMesg(sbbu, 1282)
 				else
 					if not table.hasValue(self.unsupport, player)then
 						table.insert(self.unsupport, player)

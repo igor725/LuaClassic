@@ -29,18 +29,21 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 		mapStart = '\2'
 	end
 
-	sendMesg(fd, mapStart)
-	local succ, gErr = gz.compress(map, maplen, cmplvl, function(out, stream)
-		local chunksz = 1024 - stream.avail_out
-		local gzchunk = ffi.string(out, 1024)
-		local b1 = math.floor(chunksz / 256)
-		local b2 = chunksz % 256
-		local dat = string.char(0x03, b1, b2) .. gzchunk .. '\100'
-		if isWS then
-			dat = encodeWsFrame(dat, 0x02)
-		end
+	local smap = ffi.new[[struct {
+		uint8_t id;
+		uint8_t chunklen[2];
+		uint8_t chunkdata[1024];
+		uint8_t complete;
+	}]]
+	local u16cl = ffi.cast('uint16_t*', smap.chunklen)
+	smap.complete = 100
+	smap.id = 0x03
 
-		local _, err = sendMesg(fd, dat, #dat)
+	sendMesg(fd, mapStart)
+	local succ, gErr = gz.compress(map, maplen, cmplvl, function(stream)
+		u16cl[0] = htons(1024 - stream.avail_out)
+
+		local _, err = sendMesg(fd, smap, 1028)
 		if err == 'closed'then
 			gz.defEnd(stream)
 			gErr = err
@@ -48,7 +51,7 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 			gz.defEnd(stream)
 			gErr = err
 		end
-	end)
+	end, smap.chunkdata)
 
 	return gErr or 0
 end
@@ -472,12 +475,15 @@ local player_mt = {
 		end
 	end,
 
-	sendNetMesg = function(self, msg, opcode)
+	sendNetMesg = function(self, msg, len)
+		if not msg then return end
 		if not self.canSend then return end
+
+		msg = ffi.cast('char*', msg)
 		if self:isWebClient()then
-			msg = encodeWsFrame(msg, opcode or 0x02)
+			msg = encodeWsFrame(msg, 0x02)
 		end
-		return sendMesg(self:getClient(), msg, #msg)
+		return sendMesg(self:getClient(), msg, len)
 	end,
 	sendPacket = function(self, isCPE, ...)
 		local rawPacket
@@ -486,7 +492,7 @@ local player_mt = {
 		else
 			rawPacket = generatePacket(...)
 		end
-		return self:sendNetMesg(rawPacket)
+		return self:sendNetMesg(rawPacket, #rawPacket)
 	end,
 	sendMap = function(self)
 		if self.thread then return end
@@ -617,19 +623,19 @@ local player_mt = {
 			if ply:isInWorld(self)then
 				if self:isSupported('ExtEntityPositions')then
 					datcpe = datcpe or cpe:generatePacket(0x07, sId, cname, cx, cy, cz, cay, cap)
-					self:sendNetMesg(datcpe)
+					self:sendNetMesg(datcpe, #datcpe)
 				else
 					dat = dat or generatePacket(0x07, sId, cname, cx, cy, cz, cay, cap)
-					self:sendNetMesg(dat)
+					self:sendNetMesg(dat, #dat)
 				end
 
 				if sId ~= -1 then
 					if ply:isSupported('ExtEntityPositions')then
 						dat2cpe = dat2cpe or cpe:generatePacket(0x07, pId, name, x, y, z, ay, ap)
-						ply:sendNetMesg(dat2cpe)
+						ply:sendNetMesg(dat2cpe, #dat2cpe)
 					else
 						dat2 = dat2 or generatePacket(0x07, pId, name, x, y, z, ay, ap)
-						ply:sendNetMesg(dat2)
+						ply:sendNetMesg(dat2, #dat2)
 					end
 				end
 			end
@@ -886,7 +892,7 @@ end
 function broadcast(str, exid)
 	playersForEach(function(player, id)
 		if id ~= exid then
-			player:sendNetMesg(str)
+			player:sendNetMesg(str, #str)
 		end
 	end)
 end
