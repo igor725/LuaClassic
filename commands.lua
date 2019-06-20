@@ -160,18 +160,20 @@ addCommand('expand', function(isConsole, player, args)
         return CMD_SELCUBOID
     end
 
+	local dimx, dimy, dimz = getWorld(player):getDimensions()
+	
 	if dir == 'up'then
     	if p1[2] > p2[2] then
-    		p1[2] = p1[2] + cnt
+    		p1[2] = math.min(p1[2] + cnt, dimy - 1)
     	else
-    		p2[2] = p2[2] + cnt
+    		p2[2] = math.min(p2[2] + cnt, dimy - 1)
     	end
 
     elseif dir == 'down'then
     	if p1[2] < p2[2] then
-    		p1[2] = p1[2] - cnt
+    		p1[2] = math.max(p1[2] - cnt, 0)
     	else
-    		p2[2] = p2[2] - cnt
+    		p2[2] = math.max(p2[2] - cnt, 0)
     	end
     else
 		-- 0 is X+, 1 is Z+, 2 is X-, 3 is Z-
@@ -192,46 +194,38 @@ addCommand('expand', function(isConsole, player, args)
 
 		dirOffset = (dirPlayer - dirOffset + 4) % 4
 
+
+		
 		-- forward
 		if dirOffset == 0 then
 			if p1[1] > p2[1] then
-				p1[1] = p1[1] + cnt
+				p1[1] = math.min(p1[1] + cnt, dimx - 1)
 			else
-				p2[1] = p2[1] + cnt
+				p2[1] = math.min(p2[1] + cnt, dimx - 1)
 			end
 		-- backward
 		elseif dirOffset == 2 then
 			if p1[1] < p2[1] then
-				p1[1] = p1[1] - cnt
+				p1[1] = math.max(p1[1] - cnt, 0)
 			else
-				p2[1] = p2[1] - cnt
+				p2[1] = math.max(p2[1] - cnt, 0)
 			end
 		-- right
 		elseif dirOffset == 1 then
 			if p1[3] > p2[3] then
-				p1[3] = p1[3] + cnt
+				p1[3] = math.min(p1[3] + cnt, dimz - 1)
 			else
-				p2[3] = p2[3] + cnt
+				p2[3] = math.min(p2[3] + cnt, dimz - 1)
 			end
 		-- left
 		else --if dirOffset == 3 then
 			if p1[3] < p2[3] then
-				p1[3] = p1[3] - cnt
+				p1[3] = math.max(p1[3] - cnt, 0)
 			else
-				p2[3] = p2[3] - cnt
+				p2[3] = math.max(p2[3] - cnt, 0)
 			end
 		end
    	end
-
-		local dx, dy, dz = getWorld(player):getDimensions()
-		dx, dy, dz = dx - 1, dy - 1, dz - 1
-		--Omg
-		p1[1] = math.max(math.min(dx, p1[1]), 0)
-		p1[2] = math.max(math.min(dy, p1[2]), 0)
-		p1[3] = math.max(math.min(dz, p1[3]), 0)
-		p2[1] = math.max(math.min(dx, p2[1]), 0)
-		p2[2] = math.max(math.min(dy, p2[2]), 0)
-		p2[3] = math.max(math.min(dz, p2[3]), 0)
 
     SelectionCuboid:create(player, 0, '', p1, p2)
 end)
