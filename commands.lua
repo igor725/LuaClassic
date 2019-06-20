@@ -10,7 +10,11 @@ function addCommand(name, func)
 end
 
 function addAlias(name, alias)
-	commands[alias] = commands[name]
+	if not commands[alias]then
+		commands[alias] = commands[name]
+		return true
+	end
+	return false
 end
 
 addCommand('rc', function(isConsole, player, args)
@@ -150,32 +154,32 @@ addCommand('unsel', function(isConsole, player)
 end)
 
 addCommand('expand', function(isConsole, player, args)
-    if isConsole then return CON_INGAMECMD end
-    if #args < 1 then return false end
-    local dir = args[1]
-    local cnt = tonumber(args[2])or 1
-    local p1 = player.cuboidP1
-    local p2 = player.cuboidP2
-    if not p1 or not p2 then
-        return CMD_SELCUBOID
-    end
+	if isConsole then return CON_INGAMECMD end
+	if #args < 1 then return false end
+	local dir = args[1]
+	local cnt = tonumber(args[2])or 1
+	local p1 = player.cuboidP1
+	local p2 = player.cuboidP2
+	if not p1 or not p2 then
+		return CMD_SELCUBOID
+	end
 
 	local dimx, dimy, dimz = getWorld(player):getDimensions()
-	
-	if dir == 'up'then
-    	if p1[2] > p2[2] then
-    		p1[2] = math.min(p1[2] + cnt, dimy - 1)
-    	else
-    		p2[2] = math.min(p2[2] + cnt, dimy - 1)
-    	end
 
-    elseif dir == 'down'then
-    	if p1[2] < p2[2] then
-    		p1[2] = math.max(p1[2] - cnt, 0)
-    	else
-    		p2[2] = math.max(p2[2] - cnt, 0)
-    	end
-    else
+	if dir == 'up'then
+		if p1[2] > p2[2] then
+			p1[2] = math.min(p1[2] + cnt, dimy - 1)
+		else
+			p2[2] = math.min(p2[2] + cnt, dimy - 1)
+		end
+
+	elseif dir == 'down'then
+		if p1[2] < p2[2] then
+			p1[2] = math.max(p1[2] - cnt, 0)
+		else
+			p2[2] = math.max(p2[2] - cnt, 0)
+		end
+	else
 		-- 0 is X+, 1 is Z+, 2 is X-, 3 is Z-
 		local dirPlayer = math.floor(((player.eye.yaw + 180 + 45 + 90) % 360) / 90)
 		local dirOffset
@@ -189,13 +193,11 @@ addCommand('expand', function(isConsole, player, args)
 		elseif dir == 'right'then
 			dirOffset = 3
 		else
-		    return 'Invalid direction'
+			return 'Invalid direction'
 		end
 
 		dirOffset = (dirPlayer - dirOffset + 4) % 4
 
-
-		
 		-- forward
 		if dirOffset == 0 then
 			if p1[1] > p2[1] then
@@ -203,21 +205,21 @@ addCommand('expand', function(isConsole, player, args)
 			else
 				p2[1] = math.min(p2[1] + cnt, dimx - 1)
 			end
-		-- backward
+			-- backward
 		elseif dirOffset == 2 then
 			if p1[1] < p2[1] then
 				p1[1] = math.max(p1[1] - cnt, 0)
 			else
 				p2[1] = math.max(p2[1] - cnt, 0)
 			end
-		-- right
+			-- right
 		elseif dirOffset == 1 then
 			if p1[3] > p2[3] then
 				p1[3] = math.min(p1[3] + cnt, dimz - 1)
 			else
 				p2[3] = math.min(p2[3] + cnt, dimz - 1)
 			end
-		-- left
+			-- left
 		else --if dirOffset == 3 then
 			if p1[3] < p2[3] then
 				p1[3] = math.max(p1[3] - cnt, 0)
@@ -225,9 +227,9 @@ addCommand('expand', function(isConsole, player, args)
 				p2[3] = math.max(p2[3] - cnt, 0)
 			end
 		end
-   	end
+	end
 
-    SelectionCuboid:create(player, 0, '', p1, p2)
+	SelectionCuboid:create(player, 0, '', p1, p2)
 end)
 
 addCommand('mkportal', function(isConsole, player, args)
@@ -553,3 +555,4 @@ end)
 
 addAlias('help', '?')
 addAlias('goto', 'g')
+addAlias('list', 'worlds')

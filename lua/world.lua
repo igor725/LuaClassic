@@ -749,6 +749,7 @@ function loadWorld(wname)
 	local status, world = pcall(newWorld, lvlh, wname)
 	if status then
 		worlds[wname] = world
+		table.insert(nworlds, world)
 		return true
 	end
 	return false, world
@@ -769,6 +770,12 @@ function unloadWorld(wname)
 		world:save()
 		world.ldata = nil
 		worlds[wname] = nil
+		for i = #nworlds, 1, -1 do
+			if nworlds[i] == world then
+				table.remove(nworlds, i)
+				break
+			end
+		end
 		collectgarbage()
 		return true
 	end
@@ -848,12 +855,12 @@ function regenerateWorld(world, gentype, seed)
 end
 
 function worldsForEach(func)
-	for name, world in pairs(worlds)do
-		if name ~= 'default'then
-			local ret = func(world, name)
-			if ret ~= nil then
-				return ret
-			end
+	for i = 1, #nworlds do
+		local world = nworlds[i]
+		local name = world:getName()
+		local ret = func(world, name)
+		if ret ~= nil then
+			return ret
 		end
 	end
 end

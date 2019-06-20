@@ -367,6 +367,7 @@ function init()
 	end
 	log.info(CON_START)
 	entities, worlds = {}, {}
+	nworlds = {}
 
 	config:parse()
 	permissions:parse()
@@ -415,7 +416,8 @@ function init()
 	local tlist = config:get('levelTypes')
 	local slist = config:get('levelSizes')
 
-	for num, wn in pairs(wlist)do
+	for num = 1, #wlist do
+		local wn = wlist[num]
 		wn = wn:lower()
 		local world
 		local lvlh = io.open('worlds/' .. wn .. '.map', 'rb')
@@ -432,6 +434,7 @@ function init()
 		end
 		if world and world.isWorld then
 			worlds[wn] = world
+			nworlds[num] = world
 			world.emptyfrom = CTIME
 			if num == 1 then
 				worlds['default'] = world
@@ -463,7 +466,7 @@ function saveAll()
 		log.error(CON_SAVEERR)
 	end
 	log.info(CON_WSAVE)
-	worldsForEach(function(world)
+	worldsForEach(function(world, wname)
 		if world:save()then
 			log.debug('World', wname, 'saved')
 		else
