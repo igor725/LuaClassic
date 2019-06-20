@@ -152,7 +152,6 @@ end)
 addCommand('expand', function(isConsole, player, args)
     if isConsole then return CON_INGAMECMD end
     if #args < 1 then return false end
-    local world = getWorld(player)
     local dir = args[1]
     local cnt = tonumber(args[2])or 1
     local p1 = player.cuboidP1
@@ -160,14 +159,14 @@ addCommand('expand', function(isConsole, player, args)
     if not p1 or not p2 then
         return CMD_SELCUBOID
     end
-	
+
 	if dir == 'up'then
     	if p1[2] > p2[2] then
     		p1[2] = p1[2] + cnt
     	else
     		p2[2] = p2[2] + cnt
     	end
-    	
+
     elseif dir == 'down'then
     	if p1[2] < p2[2] then
     		p1[2] = p1[2] - cnt
@@ -178,7 +177,7 @@ addCommand('expand', function(isConsole, player, args)
 		-- 0 is X+, 1 is Z+, 2 is X-, 3 is Z-
 		local dirPlayer = math.floor(((player.eye.yaw + 180 + 45 + 90) % 360) / 90)
 		local dirOffset
-		
+
 		if dir == 'forward' or dir == 'front'then
 			dirOffset = 0
 		elseif dir == 'left'then
@@ -190,9 +189,9 @@ addCommand('expand', function(isConsole, player, args)
 		else
 		    return 'Invalid direction'
 		end
-		
+
 		dirOffset = (dirPlayer - dirOffset + 4) % 4
-		
+
 		-- forward
 		if dirOffset == 0 then
 			if p1[1] > p2[1] then
@@ -223,6 +222,16 @@ addCommand('expand', function(isConsole, player, args)
 			end
 		end
    	end
+
+		local dx, dy, dz = getWorld(player):getDimensions()
+		dx, dy, dz = dx - 1, dy - 1, dz - 1
+		--Omg
+		p1[1] = math.max(math.min(dx, p1[1]), 0)
+		p1[2] = math.max(math.min(dy, p1[2]), 0)
+		p1[3] = math.max(math.min(dz, p1[3]), 0)
+		p2[1] = math.max(math.min(dx, p2[1]), 0)
+		p2[2] = math.max(math.min(dy, p2[2]), 0)
+		p2[3] = math.max(math.min(dz, p2[3]), 0)
 
     SelectionCuboid:create(player, 0, '', p1, p2)
 end)

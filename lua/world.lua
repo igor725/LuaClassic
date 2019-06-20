@@ -322,7 +322,10 @@ local world_mt = {
 		local mapaddr = ffi.cast('uint8_t*', self:getAddr())
 		for y = y2, y1 - 1 do
 			for z = z2, z1 - 1 do
-				ffi.fill(mapaddr + self:getOffset(x2, y, z), x1 - x2, id)
+				local offset = self:getOffset(x2, y, z)
+				if offset then
+					ffi.fill(mapaddr + offset, x1 - x2, id)
+				end
 			end
 		end
 
@@ -348,11 +351,9 @@ local world_mt = {
 			for y = y2, y1 - 1 do
 				for z = z2, z1 - 1 do
 					local offset = self:getOffset(x, y, z)
-					if self.ldata[offset] == id1 then
+					if offset and self.ldata[offset] == id1 then
 						self.ldata[offset] = id2
-						if self.players > 0 then
-							BulkBlockUpdate:write(x, y, z, id2)
-						end
+						BulkBlockUpdate:write(x, y, z, id2)
 					end
 				end
 			end
