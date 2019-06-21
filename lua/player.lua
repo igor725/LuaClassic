@@ -786,20 +786,22 @@ local player_mt = {
 		return true
 	end,
 	saveWrite = function(self)
-		local path = self:savePath()
-		local file, err = io.open(path, 'wb')
+		local pt = self:savePath()
+		local pt_tmp = pt .. '.tmp'
+		local file, err = io.open(pt_tmp, 'wb')
 		if not file then
-			log.error((SD_IOERR):format(path, 'writing', err))
-			return false
+			return false, (SD_IOERR):format(path, 'writing', err)
 		end
 
 		local lsucc, succ, werr = pcall(writeData, file, pWriters, 'pdata\2', self, self.skippedData)
 		file:close()
+
 		if not lsucc or not succ then
-			os.rename(path, path .. '-corrupted')
-			log.error((not lsucc and succ)or werr)
+			os.remove(pt_tmp)
+			return false, (not lsucc and succ)or werr
 		end
-		return not lsucc and succ
+		os.rename(pt_tmp, pt)
+		return true
 	end,
 	isPlayer = true
 }

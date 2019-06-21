@@ -67,7 +67,7 @@ function onPlayerDisconnect(player)
 	end
 
 	if player:isHandshaked()and not player._dontsave then
-		player:saveWrite()
+		log.assert(player:saveWrite())
 	end
 end
 
@@ -458,7 +458,7 @@ end
 
 function saveAll()
 	playersForEach(function(ply)
-		ply:saveWrite()
+		log.assert(ply:saveWrite())
 	end)
 	if config:save()and permissions:save()then
 		log.info(CON_SAVESUCC)
@@ -467,11 +467,7 @@ function saveAll()
 	end
 	log.info(CON_WSAVE)
 	worldsForEach(function(world, wname)
-		if world:save()then
-			log.debug('World', wname, 'saved')
-		else
-			log.error(wname, 'saving error')
-		end
+		log.assert(world:save())
 	end)
 end
 

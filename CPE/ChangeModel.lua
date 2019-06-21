@@ -25,16 +25,19 @@ function cm:load()
 		local mnum = tonumber(model)
 		if mnum then
 			if not isValidBlockID(mnum)then
+				player:setModel('humanoid')
 				return false
 			end
 			model = tostring(mnum)
 		else
 			model = model:lower()
 			if not self.allowed_models[model]then
+				player:setModel('humanoid')
 				return false
 			end
 		end
 
+		if player.model == model then return true end
 		player.model = model
 		playersForEach(function(ply)
 			if ply:isSupported('ChangeModel')then

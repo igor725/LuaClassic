@@ -179,8 +179,17 @@ local world_mt = {
 	save = function(self)
 		if not self.ldata then return true end
 		local pt = self:getPath()
-		local wh = assert(io.open(pt, 'wb'))
-		writeData(wh, wWriters, 'wdata\0', self.data, self.skipped)
+		local pt_tmp = pt .. '.tmp'
+		local wh = assert(io.open(pt_tmp, 'wb'))
+
+		local lsucc, succ, werr = pcall(writeData, wh, wWriters, 'wdata\0', self.data, self.skipped)
+
+		if not lsucc or not succ then
+			wh:close()
+			os.remove(pt_tmp)
+			return false, (not lsucc and succ)or werr
+		end
+
 		local gStatus, gErr = gz.compress(self.ldata, self:getData('size'), 4, function(stream)
 			local chunksz = 1024 - stream.avail_out
 			C.fwrite(stream.next_out - chunksz, 1, chunksz, wh)
@@ -190,6 +199,9 @@ local world_mt = {
 			end
 		end)
 		wh:close()
+		if gStatus then
+			os.rename(pt_tmp, pt)
+		end
 		return gStatus, gErr
 	end,
 	unload = function(self)

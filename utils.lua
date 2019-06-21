@@ -264,6 +264,12 @@ if jit.os == 'Windows'then
 		  unsigned int dwHighDateTime;
 		} filetime;
 
+		int MoveFileExA(
+			const char *lpExistingFileName,
+			const char *lpNewFileName,
+			unsigned long dwFlags
+		);
+
 		typedef struct {
 			unsigned int dwFileAttributes;
 			filetime  ftCreationTime;
@@ -330,6 +336,16 @@ if jit.os == 'Windows'then
 			else
 				C.FindClose(file)
 			end
+		end
+	end
+
+	function os.rename(oldfile, newfile)
+		local ret = ffi.C.MoveFileExA(oldfile, newfile, 1)
+		if ret == 0 then
+			local err = ffi.C.GetLastError()
+			return nil, 'WinAPI error ' .. err
+		else
+			return true
 		end
 	end
 else

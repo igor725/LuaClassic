@@ -90,7 +90,7 @@ function writeData(file, writers, hdr, dTable, dSkipped)
 								if csz == psz then
 									break
 								elseif csz > psz then
-									error('value ' .. key .. ' overflow')
+									return false, 'value ' .. key .. ' overflow'
 								end
 							end
 						end

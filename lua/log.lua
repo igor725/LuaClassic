@@ -102,7 +102,6 @@ end
 function log.assert(val, ...)
 	if not val then
 		log.fatal(...)
-	else
-		return val, ...
 	end
+	return val, ...
 end
