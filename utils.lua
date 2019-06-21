@@ -342,8 +342,7 @@ if jit.os == 'Windows'then
 	function os.rename(oldfile, newfile)
 		local ret = ffi.C.MoveFileExA(oldfile, newfile, 1)
 		if ret == 0 then
-			local err = ffi.C.GetLastError()
-			return nil, 'WinAPI error ' .. err
+			return nil, ffi.C.GetLastError()
 		else
 			return true
 		end

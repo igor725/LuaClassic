@@ -40,11 +40,22 @@ function bbu:push()
 end
 
 function bbu:write(x, y, z, id)
-	iptr[sbbu.count] = bswap(self.world:getOffset(x, y, z) - 4)
-	sbbu.blocks[sbbu.count] = id
-	sbbu.count = sbbu.count + 1
-	if sbbu.count == 255 then
-		self:push()
+	local offset
+	if x and y and not z and not id then
+		offset = x
+		id = y
+	else
+		offset = self.world:getOffset(x, y, z)
+	end
+
+	if offset and id then
+		iptr[sbbu.count] = bswap(offset - 4)
+		sbbu.blocks[sbbu.count] = id
+		sbbu.count = sbbu.count + 1
+		if sbbu.count == 255 then
+			self:push()
+		end
+		return offset
 	end
 end
 

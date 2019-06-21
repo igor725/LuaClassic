@@ -655,7 +655,6 @@ local player_mt = {
 			self.firstSpawn = false
 		end
 		log.debug(DBG_SPAWNPLAYER, self)
-
 		return true
 	end,
 	destroy = function(self)
@@ -671,14 +670,15 @@ local player_mt = {
 				onPlayerDisconnect(self)
 			end
 		end
+
 		-- Causes incorrect kick-packet sending
 		-- closeSock(self:getClient())
-		self.handshaked = false
 		cpe:extCallHook('onPlayerDestroy', self)
 		hooks:call('onPlayerDestroy', self)
 		if onPlayerDestroy then
 			onPlayerDestroy(self)
 		end
+
 		log.debug(DBG_DESTROYPLAYER, self)
 	end,
 	kick = function(self, reason, silent)

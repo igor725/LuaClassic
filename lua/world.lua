@@ -331,26 +331,21 @@ local world_mt = {
 		if self:isReadOnly()then return false end
 		x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p2)
 
-		local mapaddr = ffi.cast('uint8_t*', self:getAddr())
+		BulkBlockUpdate:start(self)
+		local map = self.ldata
 		for y = y2, y1 - 1 do
 			for z = z2, z1 - 1 do
 				local offset = self:getOffset(x2, y, z)
 				if offset then
-					ffi.fill(mapaddr + offset, x1 - x2, id)
+					ffi.fill(map + offset, x1 - x2, id)
+					for i = offset, offset + (x1 - x2) - 1 do
+						BulkBlockUpdate:write(i, id)
+					end
 				end
 			end
 		end
-
-		BulkBlockUpdate:start(self)
-		for x = x2, x1 - 1 do
-			for y = y2, y1 - 1 do
-				for z = z2, z1 - 1 do
-					BulkBlockUpdate:write(x, y, z, id)
-				end
-			end
-		end
-
 		BulkBlockUpdate:done()
+
 		return true
 	end,
 	replaceBlocks = function(self, p1, p2, id1, id2)
@@ -365,7 +360,7 @@ local world_mt = {
 					local offset = self:getOffset(x, y, z)
 					if offset and self.ldata[offset] == id1 then
 						self.ldata[offset] = id2
-						BulkBlockUpdate:write(x, y, z, id2)
+						BulkBlockUpdate:write(offset, id2)
 					end
 				end
 			end

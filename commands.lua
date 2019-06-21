@@ -298,6 +298,120 @@ addCommand('set', function(isConsole, player, args)
 	end
 end)
 
+addCommand('copy', function(isConsole, player, args)
+	if isConsole then return CON_INGAMECMD end
+	local p1, p2 = player.cuboidP1, player.cuboidP2
+	if not p1 or not p2 then return CMD_SELCUBOID end
+
+	if player.cpybuf then
+		player.cpybuf = nil
+		collectgarbage()
+	end
+
+	local x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p2)
+	local cdx, cdy, cdz = (x1 - x2) + 1, (y1 - y2) + 1, (z1 - z2) + 1
+	local bsz = 6 + cdx * cdy * cdz
+	local cbuf = ffi.new('uint8_t[?]', bsz)
+	local sptr = ffi.cast('uint16_t*', cbuf)
+	local pos = 6
+	sptr[0] = cdx sptr[1] = cdy sptr[2] = cdz
+
+	local world = getWorld(player)
+	local dx, dy, dz = world:getDimensions()
+	for y = y2, y1 do
+		for z = z2, z1 do
+			for x = x2, x1 do
+				local offset = z * dx + y * (dx * dz) + x + 4
+				cbuf[pos] = world.ldata[offset]
+				pos = pos + 1
+			end
+		end
+	end
+
+	player.cpybuf = cbuf
+	player.cpybufsz = bsz
+	return 'Copied'
+end)
+
+addCommand('paste', function(isConsole, player)
+	if isConsole then return CON_INGAMECMD end
+	local cbuf = player.cpybuf
+	if not cbuf then return 'No cpybuf'end
+
+	local px, py, pz = player:getPos()
+	px, py, pz = floor(px), floor(py), floor(pz)
+	local d = ffi.cast('uint16_t*', cbuf)
+	local cdx, cdy, cdz = d[0], d[1], d[2]
+	local world = getWorld(player)
+
+	BulkBlockUpdate:start(world)
+	for y = 0, cdy - 1 do
+		for z = 0, cdz - 1 do
+			for x = 0, cdx - 1 do
+				local coffset = z * cdx + y * (cdx * cdz) + x + 6
+				local woffset = world:getOffset(px + x, py + y, pz + z)
+				local id = cbuf[coffset]
+				if world.ldata[woffset] ~= id then
+					world.ldata[woffset] = id
+					BulkBlockUpdate:write(woffset, id)
+				end
+			end
+		end
+	end
+	BulkBlockUpdate:done()
+end)
+
+addCommand('save', function(isConsole, player, args)
+	if isConsole then return CON_INGAMECMD end
+	if #args < 1 then return false end
+
+	local path = 'saves/' .. args[1] .. '.dmp'
+	if path:find('%.%.')then return false end
+
+	local f = io.open(path, 'wb')
+	C.fwrite(player.cpybuf, player.cpybufsz, 1, f)
+	f:close()
+	return 'Saved to: ' .. path
+end)
+
+addCommand('load', function(isConsole, player, args)
+	if isConsole then return CON_INGAMECMD end
+	if #args < 1 then return false end
+
+	local path = 'saves/' .. args[1] .. '.dmp'
+	if path:find('%.%.')then return false end
+
+	local f, err = io.open(path)
+	if not f then
+		return err
+	end
+
+	if player.cpybuf then
+		player.cpybuf = nil
+		collectgarbage()
+	end
+
+	local fsz = f:seek('end')
+	f:seek('set', 0)
+	local cbuf = ffi.new('uint8_t[?]', fsz)
+	C.fread(cbuf, fsz, 1, f)
+	player.cpybuf = cbuf
+	player.cpybufsz = fsz
+
+	return 'Loaded'
+end)
+
+addCommand('unload', function(isConsole, player)
+	if isConsole then return CON_INGAMECMD end
+
+	if player.cpybuf then
+		player.cpybuf = nil
+		collectgarbage()
+		return 'Unloaded'
+	end
+	return 'No cpybuf'
+end)
+
 addCommand('replace', function(isConsole, player, args)
 	if isConsole then return CON_INGAMECMD end
 	if #args < 2 then return false end
