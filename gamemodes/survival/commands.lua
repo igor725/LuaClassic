@@ -42,9 +42,14 @@ addCommand('heal', function(isConsole, player, args)
 	if isConsole and #args < 1 then return false end
 	player = getPlayerByName(args[1])or player
 	if not player then return MESG_PLAYERNF end
-
-	player.health = SURV_MAX_HEALTH
-	survUpdateHealth(player)
+	if player.health ~= SURV_MAX_HEALTH then
+		player.health = SURV_MAX_HEALTH
+		survUpdateHealth(player)
+	end
+	if player.oxygen ~= SURV_MAX_OXYGEN then
+		player.oxygen = SURV_MAX_OXYGEN
+		survUpdateOxygen(player)
+	end
 	return (CMD_HEAL):format(player)
 end)
 
@@ -96,9 +101,8 @@ addCommand('drop', function(isConsole, player, args)
 end)
 
 addCommand('kill', function(isConsole, player, args)
-	if #args > 0 then
-		player = getPlayerByName(args[1])
-	end
+	if isConsole and #args < 1 then return false end
+	player = getPlayerByName(args[1])or player
 
 	if player then
 		if not survDamage(nil, player, SURV_MAX_HEALTH, 0)then
@@ -113,7 +117,7 @@ addCommand('god', function(isConsole, player, args)
 	if isConsole and #args < 1 then return false end
 	local target = getPlayerByName(args[1])or player
 	if not target then return MESG_PLAYERNF end
-	if target ~= player and not player:checkPermission('commands.god-others')then
+	if player and target ~= player and not player:checkPermission('commands.god-others')then
 		return
 	end
 
@@ -125,19 +129,20 @@ addCommand('god', function(isConsole, player, args)
 
 	for i = 1, SURV_INV_SIZE do
 		if isValidBlockID(i)then
-			survUpdatePermission(player, i)
+			survUpdatePermission(target, i)
 		end
 	end
 
 	if target.isInGodmode then
 		survPauseTimers(target)
-		player.inCraftMenu = false
+		target.inCraftMenu = false
 	else
 		target.health = SURV_MAX_HEALTH
 		survResumeTimers(target)
 	end
+
 	survUpdateHealth(target)
-	survUpdateInventory(player)
+	survUpdateInventory(target)
 	survUpdateBlockInfo(target)
 
 	return (CMD_GOD):format(state, target)
