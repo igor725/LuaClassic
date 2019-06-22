@@ -18,14 +18,14 @@ end
 function survUpdateOxygen(player)
 	local str = ''
 
-	if player.oxygen >= SURV_MAX_OXYGEN then
+	if player.oxygen >= SURV_MAX_OXYGEN or player.oxygen <= 0 then
 		player.oxyshow = false
 		player.loxygen = nil
 	else
 		if player.loxygen and math.abs(player.oxygen - player.loxygen) < 1 then
 			return
 		end
-		str = '&b' .. ('\7'):rep(ceil(player.oxygen))
+		str = '&b' .. ('\7'):rep(floor(player.oxygen))
 		player.loxygen = player.oxygen
 	end
 	player:sendMessage(str, MT_STATUS3)
