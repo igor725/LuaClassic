@@ -311,6 +311,10 @@ addCommand('copy', function(isConsole, player, args)
 	local x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p2)
 	local cdx, cdy, cdz = (x1 - x2) + 1, (y1 - y2) + 1, (z1 - z2) + 1
 	local bsz = 6 + cdx * cdy * cdz
+	local msz = parseSizeStr(config:get('maxSaveSize'))
+	if bsz > msz then
+		return 'Selected cuboid is too big'
+	end
 	local cbuf = ffi.new('uint8_t[?]', bsz)
 	local sptr = ffi.cast('uint16_t*', cbuf)
 	local pos = 6
@@ -351,7 +355,7 @@ addCommand('paste', function(isConsole, player)
 				local coffset = z * cdx + y * (cdx * cdz) + x + 6
 				local woffset = world:getOffset(px + x, py + y, pz + z)
 				local id = cbuf[coffset]
-				if world.ldata[woffset] ~= id then
+				if woffset and world.ldata[woffset] ~= id then
 					world.ldata[woffset] = id
 					BulkBlockUpdate:write(woffset, id)
 				end

@@ -17,6 +17,7 @@ local dperms = 'defaultPerms'
 local spl = 'storePlayersIn_G'
 local texpack = 'texPack'
 local wphys = 'waterPhysics'
+local smsz = 'maxSaveSize'
 
 local lseeds = 'levelSeeds'
 local lnames = 'levelNames'
@@ -53,6 +54,7 @@ config = {
 		[spl] = false,
 		[texpack] = '',
 		[wphys] = false,
+		[smsz] = '5M',
 
 		[lseeds] = {},
 		[lnames] = {
@@ -85,6 +87,7 @@ config = {
 		[spl] = 'boolean',
 		[texpack] = 'string',
 		[wphys] = 'boolean',
+		[smsz] = 'string',
 
 		[lseeds] = 'table',
 		[lnames] = 'table',

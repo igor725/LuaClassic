@@ -159,6 +159,40 @@ function printf(...)
 	return str
 end
 
+function parseSizeStr(str)
+	local sz, suff = '', ''
+
+	for i = 1, #str do
+		local b = str:byte(i, i)
+		if b >= 48 and b <= 57 then
+			sz = sz .. string.char(b)
+		elseif b == 46 then
+			sz = sz .. '.'
+		elseif (b >= 65 and b <= 90)or (b >= 97 and b <= 122)then
+			suff = suff .. string.char(b)
+		end
+	end
+
+	if sz then
+		sz = tonumber(sz)
+		suff = suff:lower()
+
+		if sz < 0 then
+			return 0
+		end
+		if suff == 'b'or suff == ''then
+			return sz
+		elseif suff == 'kb'or suff == 'k'then
+			return sz * 1000
+		elseif suff == 'mb'or suff == 'm'then
+			return sz * 1e6
+		elseif suff == 'gb'or suff == 'g'then
+			return sz * 1e9
+		end
+	end
+	return -1
+end
+
 function getn(t)
 	local c = 0
 	for _ in pairs(t)do c = c + 1 end
