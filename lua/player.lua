@@ -628,7 +628,7 @@ local player_mt = {
 			local cname = ply:getName()
 
 			local dat, datcpe
-			if ply:isInWorld(self)then
+			if ply:isInWorld(self) and (ply.isSpawned or sId == -1)then
 				if self:isSupported('ExtEntityPositions')then
 					datcpe = datcpe or cpe:generatePacket(0x07, sId, cname, cx, cy, cz, cay, cap)
 					self:sendNetMesg(datcpe, #datcpe)
