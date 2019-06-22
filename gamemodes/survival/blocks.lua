@@ -126,6 +126,7 @@ function survBreakBlock(player, x, y, z)
 	hooks:call('onPlayerPlaceBlock', player, x, y, z, 0)
 	world:setBlock(x, y, z, 0)
 	survStopBreaking(player)
+	hooks:call('postPlayerPlaceBlock', player, x, y, z, 0, cbid)
 end
 
 function survBlockAction(player, button, action, x, y, z)
@@ -207,6 +208,16 @@ hooks:add('onHeldBlockChange', 'surv_blocks', function(player, id)
 		player.heldTool = id
 	else
 		player.heldTool = 0
+	end
+end)
+
+hooks:add('postPlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id, prev)
+	if id == 0 and prev == 60 then
+		if math.random(0, 1) == 1 then
+			local world = getWorld(player)
+			world:setBlock(x, y, z, 8)
+			world:updateWaterBlock(x, y, z)
+		end
 	end
 end)
 

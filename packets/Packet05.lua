@@ -29,9 +29,9 @@ return function(player, x, y, z, mode, id)
 			world:setBlock(x, y, z, id)
 			broadcast(generatePacket(0x06, x, y, z, id))
 			if postPlayerPlaceBlock then
-				postPlayerPlaceBlock(player, x, y, z, id)
+				postPlayerPlaceBlock(player, x, y, z, id, cblock)
 			end
-			hooks:call('postPlayerPlaceBlock', player, x, y, z, id)
+			hooks:call('postPlayerPlaceBlock', player, x, y, z, id, cblock)
 		else
 			player:sendPacket(false, 0x06, x, y, z, cblock)
 		end

@@ -398,6 +398,7 @@ local player_mt = {
 		if world then
 			self:despawn()
 			self.worldName = wname
+			self.fallingStartY = nil
 			self.handshakeStage2 = true
 			if isPlayer(x)then
 				self:setEyePos(x:getEyePos())

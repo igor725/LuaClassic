@@ -597,6 +597,7 @@ local world_mt = {
 	end,
 
 	updateWaterBlock = function(self, sx, sy, sz, x, y, z, baseY)
+		if not config:get('waterPhysics')then return end
 		if not x then
 			x, y, z = sx, sy, sz
 		end
