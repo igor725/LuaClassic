@@ -48,12 +48,9 @@ ffi.cdef[[
 	};
 
 	uint16_t htons(uint16_t hostshort);
-	unsigned long htonl(unsigned long hostlong);
 	uint16_t ntohs(uint16_t netshort);
-	unsigned long ntohl(unsigned long netlong);
-	unsigned long inet_addr(const char* cp);
+	uint32_t inet_addr(const char* cp);
 
-	int         inet_aton(const char* cp, struct in_addr* inp);
 	const char* inet_ntop(int af, const void* src, char* dst, size_t cnt);
 
 	struct hostent* gethostbyname(const char* hostname);
@@ -345,7 +342,7 @@ if jit.os ~= 'Windows'then
 end
 
 function sendMesg(fd, msg, len, flags)
-	if not msg then return false end
+	if not msg or msg == nil then return false end
 
 	flags = flags or 0
 	flags = bit.bor(dflags, flags)
@@ -370,7 +367,7 @@ function sendMesg(fd, msg, len, flags)
 end
 
 function receiveMesg(fd, buffer, len, flags)
-	if not buffer and len > 1 then return end
+	if not buffer or buffer == nil and len > 1 then return end
 
 	flags = flags or 0
 	local ret = sck.recv(fd, buffer, len, flags)
@@ -446,12 +443,13 @@ function shutdownSock(fd, how)
 	if sck.shutdown(fd, how) ~= 0 then
 		return false, geterror()
 	end
+	return true
 end
 
 function cleanupSock()
 	lines = nil
 	if jit.os == 'Windows'then
-		return sck.WSACleanup() == 0
+		return sck.WSACleanup() == 0, geterror()
 	end
 	return true
 end
@@ -462,18 +460,4 @@ end
 
 function ntohs(short)
 	return sck.ntohs(short)
-end
-
-if not ... then
-	server = assert(bindSock('0.0.0.0', 25565))
-
-	while true do
-		local client = acceptClient(server)
-		if client then
-			print('New client:', client)
-			sendMesg(client, 'Test message\n')
-			closeSock(client)
-		end
-	end
-	assert(shutdownSock(server))
 end

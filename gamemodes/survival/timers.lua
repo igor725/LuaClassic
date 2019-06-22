@@ -52,15 +52,16 @@ hooks:add('postPlayerFirstSpawn', 'surv_timers', function(player)
 			return
 		end
 		if level > 1 then
-			player.oxygen = math.max(player.oxygen - .2, 0)
-			if player.oxygen == 0 then
+			if player.oxygen > 0 then
+				player.oxygen = math.max(player.oxygen - .2, 0)
+			else
 				survDamage(nil, player, 1, SURV_DMG_WATER)
 			end
 			survUpdateOxygen(player)
 			player.oxyshow = true
 		else
 			if player.oxyshow then
-				player.oxygen = math.min(player.oxygen + .05, SURV_MAX_OXYGEN)
+				player.oxygen = math.min(player.oxygen + .12, SURV_MAX_OXYGEN)
 				survUpdateOxygen(player)
 			end
 		end
