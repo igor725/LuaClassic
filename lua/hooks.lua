@@ -5,6 +5,7 @@
 
 hooks = {
 	list = {
+		['preInit'] = {},
 		['onUpdate'] = {},
 		['onInitDone'] = {},
 		['onPlayerMove'] = {},

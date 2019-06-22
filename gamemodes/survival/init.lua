@@ -6,6 +6,7 @@
 SURV_MAX_HEALTH = 10
 SURV_MAX_OXYGEN = 10
 SURV_INV_SIZE = 255
+SURV_DEF_SPAWNRAD = 32
 
 gmLoad('lng')
 gmLoad('names')
@@ -21,6 +22,11 @@ gmLoad('firespread')
 
 -- gmLoad('items')
 -- gmLoad('mob-ai')
+
+config.types.spawnRadius = 'number'
+if not config:get('spawnRadius')then
+	config:set('spawnRadius', SURV_DEF_SPAWNRAD)
+end
 
 function survUpdatePermission(player, id)
 	if not isValidBlockID(id)then return end

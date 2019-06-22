@@ -115,7 +115,9 @@ function config:parse()
 	chunk(self.values)
 	for k, v in pairs(self.values)do
 		local etype = self.types[k]
-		log.assert(type(v) == etype, ('Parameter %q have invalid type (%s expected)'):format(k, etype))
+		if etype then
+			log.assert(type(v) == etype, ('Parameter %q have invalid type (%s expected)'):format(k, etype))
+		end
 	end
 	return true
 end

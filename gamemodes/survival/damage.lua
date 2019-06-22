@@ -44,20 +44,29 @@ function survDamage(attacker, victim, damage, dmgtype)
 			return
 		end
 		-- knockback
+		local world = getWorld(victim)
 		local x, y, z = attacker:getPos()
 		local tx, ty, tz = victim:getPos()
+		local spawnRad = tonumber(config:get('spawnRadius'))or SURV_DEF_SPAWNRAD
+
+		if spawnRad then
+			local sx, sy, sz = world:getSpawnPoint()
+			if distance(tx, ty, tz, sx, sy, sz) < spawnRad and not attacker:checkPermission('spawn.hurt')then
+				return
+			end
+		end
 		local dx, dy, dz = tx - x, ty - y, tz - z
 		local length = math.sqrt(dx^2 + dy^2 + dz^2) * 1.2
 		dx, dy, dz = dx / length, dy / length, dz / length
-		
-		if getWorld(victim):getBlock(math.floor(tx) + (dx > 0 and 1 or -1), math.floor(ty), math.floor(tz - 0.5)) ~= 0 then
+
+		if world:getBlock(math.floor(tx) + (dx > 0 and 1 or -1), math.floor(ty), math.floor(tz - 0.5)) ~= 0 then
 			dx = 0
 		end
-		
-		if getWorld(victim):getBlock(math.floor(tx), math.floor(ty - 0.5), math.floor(tz) + (dz > 0 and 1 or -1)) ~= 0 then
+
+		if world:getBlock(math.floor(tx), math.floor(ty - 0.5), math.floor(tz) + (dz > 0 and 1 or -1)) ~= 0 then
 			dz = 0
 		end
-		
+
 		victim:teleportTo(tx + dx, ty + 0.5, tz + dz)
 	end
 
