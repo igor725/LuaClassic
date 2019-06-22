@@ -32,20 +32,19 @@ function wsLoad()
 		sframe.fd = fd
 	end
 
-	function encodeWsFrame(data, opcode)
-		local plen = #data
+	function encodeWsFrame(data, len, opcode)
 		local shortenc = false
-		if plen > 125 then
+		if len > 125 then
 			shortenc = true
 		end
 
 		local b1 = bit.bor(0x80, bit.band(opcode, 0x0F))
 		if shortenc then
-			return struct.pack('>BBH', b1, 126, plen) .. data
+			return struct.pack('>BBH', b1, 126, len) .. data
 		else
 			return string.char(
 				b1,
-				plen
+				len
 			) .. data
 		end
 	end

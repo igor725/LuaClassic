@@ -284,7 +284,7 @@ function createPlayer(fd, ip, isWS)
 	else
 		local rawPacket = generatePacket(0x0e, KICK_CONNREJ)
 		if isWS then
-			sendMesg(fd, encodeWsFrame(rawPacket, 0x02))
+			sendMesg(fd, encodeWsFrame(rawPacket, #rawPacket, 0x02))
 		else
 			sendMesg(fd, rawPacket)
 		end

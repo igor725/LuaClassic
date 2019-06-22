@@ -24,7 +24,7 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 	local gErr = nil
 
 	if isWS then
-		mapStart = encodeWsFrame('\2', 0x02)
+		mapStart = encodeWsFrame('\2', 1, 0x02)
 	else
 		mapStart = '\2'
 	end
@@ -43,13 +43,19 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 	local succ, gErr = gz.compress(map, maplen, cmplvl, function(stream)
 		u16cl[0] = htons(1024 - stream.avail_out)
 
-		local _, err = sendMesg(fd, smap, 1028)
+		local err
+
+		if isWS then
+			local wframe = encodeWsFrame(ffi.string(smap, 1028), 1028, 0x02)
+			err = select(2, sendMesg(fd, wframe, 1032))
+		else
+			err = select(2, sendMesg(fd, smap, 1028))
+		end
+
 		if err == 'closed'then
 			gz.defEnd(stream)
-			gErr = err
 		elseif err ~= nil then
 			gz.defEnd(stream)
-			gErr = err
 		end
 	end, smap.chunkdata)
 
@@ -479,10 +485,11 @@ local player_mt = {
 		if not msg then return end
 		if not self.canSend then return end
 
-		msg = ffi.cast('char*', msg)
 		if self:isWebClient()then
-			msg = encodeWsFrame(msg, 0x02)
+			msg = encodeWsFrame(msg, len, 0x02)
+			len = #msg
 		end
+		msg = ffi.cast('char*', msg)
 		return sendMesg(self:getClient(), msg, len)
 	end,
 	sendPacket = function(self, isCPE, ...)
