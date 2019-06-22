@@ -220,7 +220,7 @@ function gethostbyname(hostname)
 end
 
 function parseIPv4(sin_addr)
-	local ptr = sck.inet_ntop(AF_INET, sin_addr, ffi.new('char[15]'), 15)
+	local ptr = sck.inet_ntop(AF_INET, sin_addr, ffi.new('char[16]'), 16)
 	return ffi.string(ptr)
 end
 

@@ -234,21 +234,22 @@ end)
 
 addCommand('mkportal', function(isConsole, player, args)
 	if isConsole then return CON_INGAMECMD end
-	if #args < 2 then return false end
+	if #args < 1 then return false end
 
 	local p1, p2 = player.cuboidP1, player.cuboidP2
 	if p1 and p2 then
 		local cworld = getWorld(player)
 		local portalname = args[1]
+		local worldname = args[2]or args[1]
 		local portals = cworld.data.portals or{}
 		cworld.data.portals = portals
 		if portals[portalname]then
 			return CMD_AEPORTAL
 		end
-		if getWorld(args[2])then
+		if getWorld(worldname)then
 			local x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p2)
 			portals[portalname] = {
-				tpTo = args[2],
+				tpTo = worldname,
 				pt1 = newVector(x1, y1, z1),
 				pt2 = newVector(x2, y2, z2)
 			}
