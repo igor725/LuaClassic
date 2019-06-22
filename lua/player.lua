@@ -39,7 +39,7 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 	smap.complete = 100
 	smap.id = 0x03
 
-	sendMesg(fd, mapStart)
+	sendMesg(fd, mapStart, #mapStart)
 	local succ, gErr = gz.compress(map, maplen, cmplvl, function(stream)
 		u16cl[0] = htons(1024 - stream.avail_out)
 
@@ -52,9 +52,7 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 			err = select(2, sendMesg(fd, smap, 1028))
 		end
 
-		if err == 'closed'then
-			gz.defEnd(stream)
-		elseif err ~= nil then
+		if err == 'closed'or err == 'nonsock'then
 			gz.defEnd(stream)
 		end
 	end, smap.chunkdata)
