@@ -29,10 +29,11 @@ end
 
 function bbu:push()
 	if sbbu.count > 0 then
+		local str = ffi.string(sbbu, 1282)
 		playersForEach(function(player)
 			if player:isInWorld(self.world)then
 				if player:isSupported('BulkBlockUpdate')then
-					player:sendNetMesg(sbbu, 1282)
+					player:sendNetMesg(str, 1282)
 				else
 					if not table.hasValue(self.unsupport, player)then
 						table.insert(self.unsupport, player)
