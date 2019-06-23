@@ -42,16 +42,17 @@ function _restartHeartbeat(sSalt)
 			local fd, err = connectSock(_HEARTBEAT_IP, _HEARTBEAT_PORT)
 
 			if not fd then
-				log.error('Heartbeat error:', err)
+				log.error('Heartbeat connection error:', err)
 				return
 			end
+
 			local sName = encodeURI(config:get('serverName'))
-			local sPort = config:get('serverPort')
-			local sOnline = getCurrentOnline()
 			local sPublic = config:get('heartbeatPublic')
+			local sWeb = config:get('acceptWebsocket')
+			local sPort = config:get('serverPort')
 			local sMax = config:get('maxPlayers')
 			local sSoftware = cpe.softwareName
-			local sWeb = config:get('acceptWebsocket')
+			local sOnline = getCurrentOnline()
 
 			local request = (_HEARTBEAT_URL):format(sName, sPort, sOnline, sMax, sSalt, sPublic, sSoftware, sWeb)
 			sendMesg(fd, ('GET %s HTTP/1.1\n'):format(request))
@@ -65,10 +66,11 @@ function _restartHeartbeat(sSalt)
 				closeSock(fd)
 				return
 			end
+
+			local ok = true
 			if not resp:lower():find('^http/.+200 ok$')then
 				log.error('Heartbeat server responded:', resp)
-				closeSock(fd)
-				return
+				ok = false
 			end
 
 			local respHdrs = {}
@@ -78,19 +80,29 @@ function _restartHeartbeat(sSalt)
 				local key, value = line:match('(.-):%s*(.*)$')
 				if key then
 					respHdrs[key:lower()] = tonumber(value)or value
+					if not ok then
+						log.debug(line)
+					end
 				end
 			end
 
-			while true do
-				local line = receiveLine(fd)
-				if not line or line == ''then break end
-				if line:find(_HEARTBEAT_VALID)then
-					_HEARTBEAT_SALT = sSalt
-					if _HEARTBEAT_PLAY ~= line then
-						_HEARTBEAT_PLAY = line
-						log.info('Server URL:', line)
+			if ok then
+				while true do
+					local line = receiveLine(fd)
+					if not line or line == ''then break end
+					if line:find(_HEARTBEAT_VALID)then
+						_HEARTBEAT_SALT = sSalt
+						if _HEARTBEAT_PLAY ~= line then
+							_HEARTBEAT_PLAY = line
+							log.info('Server URL:', line)
+						end
+						break
 					end
-					break
+				end
+			else
+				local clen = tonumber(respHdrs['content-length'])
+				if clen then
+					log.debug(receiveString(fd, clen))
 				end
 			end
 			closeSock(fd)
