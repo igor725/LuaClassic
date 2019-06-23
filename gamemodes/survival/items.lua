@@ -143,7 +143,7 @@ for i = 1, 5 do
 	})
 end
 
----- Color of zero order
+---- Color of first order
 -- Black
 local DYE_BLACK = 173
 survAddCraft(173, {
@@ -162,17 +162,6 @@ survAddCraft(175, {
 	count = 4
 })
 
--- Gray
-local DYE_GRAY = 174
-survAddCraft(174, {
-	needs = {
-		[DYE_WHITE] = 1,
-		[DYE_BLACK] = 1
-	},
-	count = 2
-})
-
----- Color of first order
 -- Red
 local DYE_RED = 160
 survAddCraft(160, {
@@ -202,6 +191,16 @@ survAddCraft(179, {
 
 
 ---- Color of second order
+-- Gray
+local DYE_GRAY = 174
+survAddCraft(174, {
+	needs = {
+		[DYE_WHITE] = 1,
+		[DYE_BLACK] = 1
+	},
+	count = 2
+})
+
 -- Yellow
 local DYE_YELLOW = 162
 survAddCraft(162, {
@@ -330,6 +329,7 @@ survAddCraft(177, {
 	count = 2
 })
 
+---- Colors of 4 order
 -- Brown
 survAddCraft(178, {
 	needs = {
