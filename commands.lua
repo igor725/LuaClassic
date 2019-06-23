@@ -68,7 +68,7 @@ addCommand('restart', function(isConsole, player, args)
 end)
 
 addCommand('players', function()
-	local list = CMD_PLISTHDR
+	local list = (CMD_PLISTHDR):format(getCurrentOnline())
 	playersForEach(function(player)
 		local webClient = (player:isWebClient()and ST_YES)or ST_NO
 		list = list .. (CMD_PLISTROW):format(player, webClient)

@@ -12,7 +12,7 @@ SURV_DMG_FIRE = 5
 function survRespawn(player)
 	player.health = SURV_MAX_HEALTH
 	player.oxygen = SURV_MAX_OXYGEN
-	ffi.fill(player.inventory, 66)
+	ffi.fill(player.inventory, SURV_INV_SIZE)
 
 	survUpdateInventory(player)
 	survUpdateBlockInfo(player)
