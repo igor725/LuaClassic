@@ -668,9 +668,10 @@ local player_mt = {
 		if self.isSpawned then
 			self:despawn()
 		end
+		_G[self:getName()] = nil
 		entities[self:getID()] = nil
 		SERVER_ONLINE = math.max((SERVER_ONLINE or 1) - 1, 0)
-		
+
 		if self.handshaked then
 			self.lastOnlineTime = self:getOnlineTime()
 			if onPlayerDisconnect then
