@@ -205,9 +205,12 @@ addCommand('craft', function(isConsole, player, args)
 					survUpdateBlockInfo(player)
 
 					-- Close craft menu if craft was successful
+					if player.inCraftMenu then
+						survUpdateInventory(player)
+					else
+						player:setInventoryOrder(bId, bId)
+					end
 					player.inCraftMenu = false
-
-					survUpdateInventory(player)
 
 					return (CMD_CRAFTSUCC):format(oQuantity, bName)
 				else
