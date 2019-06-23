@@ -168,6 +168,7 @@ function config:save()
 		end
 		cfg:write('\n')
 	end
+	cfg:close()
 	self.changed = false
 	return true
 end
