@@ -28,20 +28,18 @@ local function encodeURI(str)
 	return str
 end
 
-hooks:add('onInitDone', 'heartbeat', function()
+function _restartHeartbeat(sSalt)
 	local hbtype = config:get('heartbeatType')
 	if hbtype == 'classicube'then
-		check4md5()
-		math.randomseed(os.time())
-		local sSalt = randomStr(6)
+		sSalt = sSalt or randomStr(6)
 		_HEARTBEAT_HOST = 'classicube.net'
-		_HEARTBEAT_DELAY = 50
+		_HEARTBEAT_IP = gethostbyname(_HEARTBEAT_HOST)
+		_HEARTBEAT_DELAY = 45
 		_HEARTBEAT_PORT = 80
 		_HEARTBEAT_VALID = '^http://www%.classicube%.net/server/play/'
 		_HEARTBEAT_URL = '/server/heartbeat?name=%s&port=%d&users=%d&max=%d&salt=%s&public=%s&software=%s&web=%s'
 		_HEARTBEAT_CLK = function()
-			local ip = gethostbyname(_HEARTBEAT_HOST)
-			local fd, err = connectSock(ip, _HEARTBEAT_PORT)
+			local fd, err = connectSock(_HEARTBEAT_IP, _HEARTBEAT_PORT)
 
 			if not fd then
 				log.error('Heartbeat error:', err)
@@ -57,9 +55,9 @@ hooks:add('onInitDone', 'heartbeat', function()
 
 			local request = (_HEARTBEAT_URL):format(sName, sPort, sOnline, sMax, sSalt, sPublic, sSoftware, sWeb)
 			sendMesg(fd, ('GET %s HTTP/1.1\n'):format(request))
-			sendMesg(fd, ('Connection: close\n'):format(_HEARTBEAT_HOST))
-			sendMesg(fd, ('Accept: */*\n'):format(_HEARTBEAT_HOST))
-			sendMesg(fd, ('User-Agent: LC/1.1\n'):format(_HEARTBEAT_HOST))
+			sendMesg(fd, 'Cache-Control: no-cache, no-store\n')
+			sendMesg(fd, 'Accept: application/x-www-form-urlencoded\n')
+			sendMesg(fd, 'User-Agent: LC/1.1\n')
 			sendMesg(fd, ('Host: www.%s\n\n'):format(_HEARTBEAT_HOST))
 
 			local resp = receiveLine(fd)
@@ -115,4 +113,11 @@ hooks:add('onInitDone', 'heartbeat', function()
 		timer.Create('heartbeat', -1, _HEARTBEAT_DELAY, _HEARTBEAT_CLK)
 		_HEARTBEAT_CLK()
 	end
+end
+
+hooks:add('onInitDone', 'heartbeat', function()
+	check4md5()
+	math.randomseed(os.time())
+	local sSalt = randomStr(6)
+	_restartHeartbeat(sSalt)
 end)
