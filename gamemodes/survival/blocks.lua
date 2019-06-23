@@ -9,12 +9,8 @@ SURV_BRK_DONE   = 10
 SURV_ACT_NONE   = -1
 SURV_ACT_BREAK  = 1
 
-local survBreakingTools = {
-	[41] = 12,
-	[42] = 6,
-	[43] = 4,
-	[5] = 2
-}
+local survTools = {}
+local survToolTypes = {}
 
 local survMiningSpeed = {
 	[-1] =  1,
@@ -45,36 +41,77 @@ local survMiningSpeed = {
 	[50] = 10,
 	[51] = 0,
 	[54] = 0,
+	[64] = 3,
 	[65] = 7.5
 }
 
 local survMiningSpeedWithTool = {
-	[1]  =  1.15,
-	[4]  =  1.5,
-	[14] =  2.25,
-	[15] =  2.25,
-	[16] =  2.25,
+	-- shovel
+	{
+		[2] = survMiningSpeed[2] / 2,
+		[3] = survMiningSpeed[3] / 2,
+		[12] = survMiningSpeed[12] / 2,
+		[13] = survMiningSpeed[13] / 2
+	},
+	-- pickaxe
+	{
+		[1]  =  1.15,
+		[4]  =  1.5,
+		[14] =  2.25,
+		[15] =  2.25,
+		[16] =  2.25,
 
-	[41] = 2.25,
-	[42] = 3.75,
-	[43] = 3,
-	[44] = 3,
-	[45] = 3,
-	[48] = 3,
-	[50] = 3,
-	[65] = 1.15
+		[41] = 2.25,
+		[42] = 3.75,
+		[43] = 3,
+		[44] = 3,
+		[45] = 3,
+		[48] = 3,
+		[50] = 3,
+		[52] = 0.65,
+		[65] = 1.15
+	},
+	-- axe
+	{
+		[5] = survMiningSpeed[5] / 2,
+		[17] = survMiningSpeed[17] / 2,
+		[47] = survMiningSpeed[47] / 2,
+		[64] = survMiningSpeed[64] / 2
+	},
+	{
+		[18] = 0.2
+	}
 }
 
 for i = 21, 36 do
 	survMiningSpeed[i] = 1.15
+	survMiningSpeedWithTool[4][i] = 1.15 / 2
+end
+for i = 55, 60 do
+	survMiningSpeed[i] = 1.15
+	survMiningSpeedWithTool[4][i] = 1.15 / 2
 end
 
 for i = 37, 40 do
 	survMiningSpeed[i] = 0
 end
 
-function survAddBreakingTool(id, speed)
-	survBreakingTools[id] = speed
+function survIsItem(id)
+	return survTools[id] ~= nil
+end
+
+function survAddTool(id, toolType, speed)
+	survTools[id] = speed
+	survToolTypes[id] = toolType
+end
+
+function survPlayerGetTool(player)
+	local toolType = survToolTypes[player.heldTool]
+	if toolType then
+		return survTools[player.heldTool], toolType
+	end
+	
+	return
 end
 
 function survGetDropBlock(player, bid)
@@ -160,10 +197,9 @@ function survBlockAction(player, button, action, x, y, z)
 				local tool = player.heldTool
 				if tool ~= 0 then
 					if player.inventory[tool] > 0 then
-						if survMiningSpeedWithTool[bid] then
-							tmSpeed = survMiningSpeedWithTool[bid] / survBreakingTools[tool] * 2
-						else
-							tmSpeed = tmSpeed / survBreakingTools[tool]
+						local toolType = survToolTypes[tool]
+						if survMiningSpeedWithTool[toolType][bid] then
+							tmSpeed = survMiningSpeedWithTool[toolType][bid] / survTools[tool]
 						end
 					else
 						player:sendMessage(MESG_NOTOOL)
@@ -204,7 +240,7 @@ hooks:add('onPlayerDespawn', 'surv_blocks', function(player)
 end)
 
 hooks:add('onHeldBlockChange', 'surv_blocks', function(player, id)
-	if survBreakingTools[id] then
+	if survTools[id] then
 		player.heldTool = id
 	else
 		player.heldTool = 0

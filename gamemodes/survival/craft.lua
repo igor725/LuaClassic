@@ -112,7 +112,7 @@ local survCraft = {
 		needs = {
 			[12] = 4
 		},
-		count = 4
+		count = 1
 	},
 	[54] = {
 		needs = {

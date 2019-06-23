@@ -21,6 +21,10 @@ function survRespawn(player)
 	player:moveToSpawn()
 end
 
+function survHealThis(player, addHp)
+	player.health = math.min(player.health + addHp, SURV_MAX_HEALTH)
+end
+
 function getKiller(attacker, dmgtype)
 	if dmgtype == SURV_DMG_PLAYER then
 		return 'player ' .. attacker:getName()

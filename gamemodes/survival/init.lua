@@ -20,7 +20,7 @@ gmLoad('commands')
 gmLoad('daynight')
 gmLoad('firespread')
 
--- gmLoad('items')
+gmLoad('items')
 -- gmLoad('mob-ai')
 
 config.types.spawnRadius = 'number'
@@ -31,7 +31,7 @@ end
 function survUpdatePermission(player, id)
 	if not isValidBlockID(id)then return end
 	local quantity = player.inventory[id]
-	local canPlace = player.isInGodmode or (quantity > 0 and (id < 7 or id > 11))
+	local canPlace = player.isInGodmode or (quantity > 0 and (id < 7 or id > 11)) and not survIsItem(id)
 	player:setBlockPermissions(id, canPlace, player.isInGodmode)
 end
 
@@ -113,10 +113,18 @@ hooks:add('onPlayerClick', 'surv_init', function(player, ...)
 				player.nextHit = 0
 			end
 			if tgplayer and CTIME > player.nextHit then
+				-- get damage from sword
+				local power, toolType = survPlayerGetTool(player)
+				
+				local damage = 1
+				if toolType == 4 then
+					damage = power
+				end
+				
 				-- critical damage
-				local blocks = player.fallingStartY and (player.fallingStartY - player.pos.y) or 0
+				local blocks = math.max(0, player.fallingStartY and (player.fallingStartY - player.pos.y) or 0)
 
-				survDamage(player, tgplayer, 1 + math.max(0, blocks), SURV_DMG_PLAYER)
+				survDamage(player, tgplayer, damage + blocks, SURV_DMG_PLAYER)
 				survStopBreaking(player)
 
 				-- timeout
