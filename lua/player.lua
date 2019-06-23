@@ -318,7 +318,9 @@ local player_mt = {
 		if canUse then
 			self.name = name
 			if config:get('storePlayersIn_G')then
-				_G[self.name] = self
+				if _G[name] == nil then
+					_G[name] = self
+				end
 			end
 			return true
 		else
@@ -668,7 +670,12 @@ local player_mt = {
 		if self.isSpawned then
 			self:despawn()
 		end
-		_G[self:getName()] = nil
+		if config:get('storePlayersIn_G')then
+			local name = self:getName()
+			if _G[name] == self then
+				_G[name] = nil
+			end
+		end
 		entities[self:getID()] = nil
 		SERVER_ONLINE = math.max((SERVER_ONLINE or 1) - 1, 0)
 
