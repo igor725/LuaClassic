@@ -76,7 +76,7 @@ addCommand('time', function(isConsole, player, args)
 	elseif not timeval then
 		return
 	end
-	if player:checkPermission('commands.time-set')then
+	if not player or player:checkPermission('commands.time-set')then
 		world:setData('time', timeval)
 		survUpdateWorldTime(world)
 
