@@ -38,13 +38,13 @@ end
 
 function survDamage(attacker, victim, damage, dmgtype)
 	if victim.isInGodmode then return false end
+	local world = getWorld(victim)
 
 	if dmgtype == SURV_DMG_PLAYER then
 		if attacker.isInGodmode and not attacker:checkPermission('god.hurt')then
 			return
 		end
 		-- knockback
-		local world = getWorld(victim)
 		local x, y, z = attacker:getPos()
 		local tx, ty, tz = victim:getPos()
 		local spawnRad = tonumber(config:get('spawnRadius'))or SURV_DEF_SPAWNRAD
@@ -72,10 +72,10 @@ function survDamage(attacker, victim, damage, dmgtype)
 
 	victim.health = victim.health - damage
 	survUpdateHealth(victim)
-	victim:setEnvProp(MEP_MAXFOGDIST, 1)
-	victim:setEnvColor(EC_FOG, 255, 40, 40)
-	timer.Create(victim:getName() .. '_hurt', 1, .07, function()
-		local r, g, b = getWorld(victim):getEnvColor(EC_FOG)
+	victim:setEnvProp(MEP_MAXFOGDIST, 8)
+	victim:setEnvColor(EC_FOG, 140, 40, 40)
+	timer.Create(victim:getName() .. '_hurt', 1, .1, function()
+		local r, g, b = world:getEnvColor(EC_FOG)
 		victim:setEnvProp(MEP_MAXFOGDIST, 0)
 		victim:setEnvColor(EC_FOG, r, g, b)
 	end)

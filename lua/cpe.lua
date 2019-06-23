@@ -33,18 +33,8 @@ function cpe:init()
 
 	local f = true
 	log.info('Loading Classic Protocol Extensions')
-	dirForEach('CPE', 'lua', function(filename, fullpath)
-		local chunk = log.assert(loadfile(fullpath))
-		local ext = setmetatable(chunk(), ext_mt)
-		local extn = filename:sub(1,-5)
-		if not ext.disabled then
-			self.exts[extn] = ext
-			if ext.global then
-				_G[extn] = ext
-			end
-			self.extCount = self.extCount + 1
-			log.debug('EXT', extn, ext:getVersion())
-		end
+	dirForEach('CPE', 'lua', function(_, fullpath)
+		self:loadExt(fullpath)
 	end)
 	for extn, ext in pairs(self.exts)do
 		if ext.load then
@@ -56,6 +46,22 @@ function cpe:init()
 	cpe.exts.LongerMessages = emptyExt
 	cpe.exts.FullCP437 = emptyExt
 	log.info('Successfully loaded', self.extCount, 'extensions.')
+end
+
+function cpe:loadExt(path)
+	local filename = path:match('^.+/(.+)$')
+	local chunk = log.assert(loadfile(path))
+	local ext = setmetatable(chunk(), ext_mt)
+	local extn = filename:sub(1,-5)
+
+	if not ext.disabled then
+		self.exts[extn] = ext
+		if ext.global then
+			_G[extn] = ext
+		end
+		self.extCount = self.extCount + 1
+		log.debug('EXT', extn, ext:getVersion())
+	end
 end
 
 function cpe:registerSvPacket(id, fmt)
