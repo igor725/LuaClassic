@@ -70,6 +70,7 @@ function _restartHeartbeat(sSalt)
 			local ok = true
 			if not resp:lower():find('^http/.+200 ok$')then
 				log.error('Heartbeat server responded:', resp)
+				log.debug('Request:', request)
 				ok = false
 			end
 
