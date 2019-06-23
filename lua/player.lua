@@ -148,6 +148,7 @@ local player_mt = {
 	init = function(self, id)
 		self.handshaked = false
 		self.handshakeStage2 = false
+		SERVER_ONLINE = (SERVER_ONLINE or 0) + 1
 		self:setID(id)
 	end,
 
@@ -668,12 +669,10 @@ local player_mt = {
 			self:despawn()
 		end
 		entities[self:getID()] = nil
-
+		SERVER_ONLINE = math.max((SERVER_ONLINE or 1) - 1, 0)
+		
 		if self.handshaked then
 			self.lastOnlineTime = self:getOnlineTime()
-			if not self.handshakeStage2 then
-				SERVER_ONLINE = math.max((SERVER_ONLINE or 1) - 1, 0)
-			end
 			if onPlayerDisconnect then
 				onPlayerDisconnect(self)
 			end
@@ -750,7 +749,6 @@ local player_mt = {
 		if self.handshakeStage2 then
 			self:sendMOTD()self:sendMap()
 			self.handshakeStage2 = false
-			SERVER_ONLINE = (SERVER_ONLINE or 0) + 1
 			return
 		end
 
