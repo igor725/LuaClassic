@@ -671,7 +671,9 @@ local player_mt = {
 
 		if self.handshaked then
 			self.lastOnlineTime = self:getOnlineTime()
-			SERVER_ONLINE = (SERVER_ONLINE or 1) - 1
+			if not self.handshakeStage2 then
+				SERVER_ONLINE = math.max((SERVER_ONLINE or 1) - 1, 0)
+			end
 			if onPlayerDisconnect then
 				onPlayerDisconnect(self)
 			end
@@ -748,6 +750,7 @@ local player_mt = {
 		if self.handshakeStage2 then
 			self:sendMOTD()self:sendMap()
 			self.handshakeStage2 = false
+			SERVER_ONLINE = (SERVER_ONLINE or 0) + 1
 			return
 		end
 
