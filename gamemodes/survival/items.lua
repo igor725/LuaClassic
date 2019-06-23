@@ -349,3 +349,11 @@ survAddCraft(180, {
 })
 
 
+-- Craft for red bricks
+survAddCraft(45, {
+	needs = {
+		[65] = 4,
+		[DYE_RED] = 1
+	},
+	count = 4
+})
