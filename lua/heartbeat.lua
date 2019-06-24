@@ -161,9 +161,13 @@ local function hThread(data)
 	end
 end
 
+function updateHbtData(key, value)
+	linda:send(key, value)
+end
+
 local function sendOnline()
 	if heartbeatThread then
-		linda:send('online', getCurrentOnline())
+		updateHbtData('online', getCurrentOnline())
 	end
 end
 
@@ -227,9 +231,9 @@ end)
 
 hooks:add('onConfigChanged', 'heartbeat', function(key, value)
 	if key == 'serverName'then
-		linda:send('name', encodeURI(value))
+		updateHbtData('name', encodeURI(value))
 	elseif key == 'heartbeatPublic'then
-		linda:send('public', value)
+		updateHbtData('public', value)
 	end
 end)
 
