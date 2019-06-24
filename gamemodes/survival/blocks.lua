@@ -96,13 +96,13 @@ for i = 37, 40 do
 	survMiningSpeed[i] = 0
 end
 
-function survIsItem(id)
-	return survTools[id] ~= nil
-end
-
 function survAddTool(id, toolType, speed)
 	survTools[id] = speed
 	survToolTypes[id] = toolType
+end
+
+function survSetMiningSpeed(id, speed)
+	survMiningSpeed[id] = speed
 end
 
 function survPlayerGetTool(player)

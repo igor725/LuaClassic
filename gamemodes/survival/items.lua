@@ -4,13 +4,13 @@ function survAddItem(texY, texX, name)
 	local opts = {
 		id = id,
 		name = name,
-		minX = 16,
-		maxX = 16,
-		leftTex = id,
-		rightTex = id,
-		blockDraw = BD_TRANSPARENT
+		shape = 0,
+		sideTex = id,
+		transLight = 1
 	}
-	BlockDefinitions:createEx(opts)
+	BlockDefinitions:create(opts)
+	
+	survSetMiningSpeed(id, 0)
 	
 	return id
 end
@@ -92,7 +92,8 @@ survAddItem(1, 5, 'Apple')
 survAddItem(1, 6, 'Meat')
 survAddItem(1, 7, 'Rotten Meat')
 survAddItem(1, 8, 'Bone')
-survAddItem(1, 9, 'String')
+survAddItem(1, 9, 'Powder')
+survAddItem(1, 10, 'String')
 
 -- DYES
 local DYE_NAMES = {

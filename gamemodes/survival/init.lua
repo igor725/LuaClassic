@@ -31,7 +31,7 @@ end
 function survUpdatePermission(player, id)
 	if not isValidBlockID(id)then return end
 	local quantity = player.inventory[id]
-	local canPlace = player.isInGodmode or (quantity > 0 and (id < 7 or id > 11)) and not survIsItem(id)
+	local canPlace = player.isInGodmode or (quantity > 0 and (id < 7 or id > 11))
 	player:setBlockPermissions(id, canPlace, player.isInGodmode)
 end
 
