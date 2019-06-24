@@ -35,7 +35,13 @@ local function hThread(data)
 			ffi.C.Sleep(ms)
 		end
 	else
-		ffi.cdef'void usleep(uint32_t);'
+		ffi.cdef[[
+			void usleep(uint32_t);
+			struct timeval {
+				long tv_sec;
+				long tv_usec;
+			};
+		]]
 		function sleep(ms)
 			ffi.C.usleep(ms * 1000)
 		end
