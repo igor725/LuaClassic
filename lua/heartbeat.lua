@@ -118,6 +118,7 @@ local function hThread(data)
 				local line = receiveLine(fd)
 				if not line or line == ''then break end
 				if line:find(data.valid)then
+					closeSock(fd)
 					return line
 				end
 			end
