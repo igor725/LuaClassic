@@ -178,7 +178,9 @@ function config:get(key)
 end
 
 function config:set(key, value)
+	if self.values[key] == values then return true end
 	if self.types[key] ~= type(value)then return false end
+	hooks:call('onConfigChanged', key, value)
 	self.values[key] = value
 	self.changed = true
 	return true

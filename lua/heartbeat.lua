@@ -3,20 +3,8 @@
 	released under The MIT license http://opensource.org/licenses/MIT
 ]]
 
-local md5func
-
-local function check4md5()
-	if not md5 then
-		error('no md5 function detected')
-	else
-		if type(md5) == 'table'then
-			md5func = log.assert(md5.sumhexa, 'No sumhexa function in md5 table')
-		elseif type(md5) == 'function'then
-			md5func = md5
-		end
-	end
-	log.assert(type(md5func) == 'function', 'Variable "md5func" is not a function')
-end
+local linda = lanes.linda()
+local heartbeatData
 
 local function encodeURI(str)
 	if (str) then
@@ -28,89 +16,185 @@ local function encodeURI(str)
 	return str
 end
 
-function _restartHeartbeat(sSalt)
-	local hbtype = config:get('heartbeatType')
-	if hbtype == 'classicube'then
-		sSalt = sSalt or randomStr(6)
-		_HEARTBEAT_HOST = 'classicube.net'
-		_HEARTBEAT_IP = gethostbyname(_HEARTBEAT_HOST)
-		_HEARTBEAT_DELAY = 45
-		_HEARTBEAT_PORT = 80
-		_HEARTBEAT_VALID = '^http://www%.classicube%.net/server/play/'
-		_HEARTBEAT_URL = '/server/heartbeat?name=%s&port=%d&users=%d&max=%d&salt=%s&public=%s&software=%s&web=%s'
-		_HEARTBEAT_CLK = function()
-			local fd, err = connectSock(_HEARTBEAT_IP, _HEARTBEAT_PORT)
+local function hThread(data)
+	ffi = require('ffi')
+	require('socket')
 
-			if not fd then
-				log.error('Heartbeat connection error:', err)
-				return
+	local currServerURL
+
+	local defaultHeaders = {
+		['Accept'] = 'application/x-www-form-urlencoded',
+		['Cache-Control'] = 'no-cache, no-store',
+		['User-Agent'] = 'LC/1.2'
+	}
+
+	local sleep
+	if jit.os == 'Windows'then
+		ffi.cdef'void Sleep(uint32_t);'
+		function sleep(ms)
+			ffi.C.Sleep(ms)
+		end
+	else
+		ffi.cdef'void usleep(uint32_t);'
+		function sleep(ms)
+			ffi.C.usleep(ms * 1000)
+		end
+	end
+
+	local function sendHeader(fd, key, value)
+		sendMesg(fd, ('%s: %s\n'):format(key, value))
+		if data.debug then
+			print('request header', key, value)
+		end
+	end
+
+	local function heartbeatRequest(request)
+		local ip = gethostbyname(data.host)
+		local fd, err = connectSock(ip, data.hbport or 80)
+
+		if not fd then
+			print('heartbeat thread error', err)
+			return
+		end
+
+		if data.debug then
+			print('heartbeat request', request)
+		end
+		sendMesg(fd, ('GET %s HTTP/1.1\n'):format(request))
+		if data.headers then
+			for k, v in pairs(data.headers)do
+				sendHeader(fd, k, v)
 			end
-
-			local sName = encodeURI(config:get('serverName'))
-			local sPublic = config:get('heartbeatPublic')
-			local sWeb = config:get('acceptWebsocket')
-			local sPort = config:get('serverPort')
-			local sMax = config:get('maxPlayers')
-			local sSoftware = cpe.softwareName
-			local sOnline = getCurrentOnline()
-
-			local request = (_HEARTBEAT_URL):format(sName, sPort, sOnline, sMax, sSalt, sPublic, sSoftware, sWeb)
-			sendMesg(fd, ('GET %s HTTP/1.1\n'):format(request))
-			sendMesg(fd, 'Cache-Control: no-cache, no-store\n')
-			sendMesg(fd, 'Accept: application/x-www-form-urlencoded\n')
-			sendMesg(fd, 'User-Agent: LC/1.1\n')
-			sendMesg(fd, ('Host: www.%s\n\n'):format(_HEARTBEAT_HOST))
-
-			local resp = receiveLine(fd)
-			if not resp then
-				closeSock(fd)
-				return
+			for k, v in pairs(defaultHeaders)do
+				if not data.headers[k]then
+					sendHeader(fd, k, v)
+				end
 			end
-
-			local ok = true
-			if not resp:lower():find('^http/.+200 ok$')then
-				log.error('Heartbeat server responded:', resp)
-				log.debug('Request:', request)
-				ok = false
+		else
+			for k, v in pairs(defaultHeaders)do
+				sendHeader(fd, k, v)
 			end
+		end
+		sendMesg(fd, '\n')
 
-			local respHdrs = {}
+		local httpOK, delim = true
+		local resp = receiveLine(fd)
+		if not resp then
+			if data.debug then
+				print('no heartbeat response')
+			end
+			closeSock(fd)
+			return
+		end
+		if not resp:lower():find('^http/.+200 ok$')then
+			delim = ('*'):rep(20)
+			print(delim)
+			print('heartbeat server responded', resp)
+			print('heartbeat request', request)
+			httpOK = false
+		end
+
+		local respHdrs = {}
+		while true do
+			local line = receiveLine(fd)
+			if not line or line == ''then break end
+			local key, value = line:match('(.-):%s*(.*)$')
+			if key then
+				respHdrs[key:lower()] = value
+				if data.debug then
+					print('heartbeat response header', key, value)
+				end
+			end
+		end
+
+		if httpOK then
 			while true do
 				local line = receiveLine(fd)
 				if not line or line == ''then break end
-				local key, value = line:match('(.-):%s*(.*)$')
-				if key then
-					respHdrs[key:lower()] = tonumber(value)or value
-					if not ok then
-						log.debug(line)
-					end
+				if line:find(data.valid)then
+					return line
 				end
 			end
-
-			if ok then
-				while true do
-					local line = receiveLine(fd)
-					if not line or line == ''then break end
-					if line:find(_HEARTBEAT_VALID)then
-						_HEARTBEAT_SALT = sSalt
-						if _HEARTBEAT_PLAY ~= line then
-							_HEARTBEAT_PLAY = line
-							log.info('Server URL:', line)
-						end
-						break
-					end
-				end
-			else
-				local clen = tonumber(respHdrs['content-length'])
-				if clen then
-					log.debug(receiveString(fd, clen))
+		else
+			local clen = tonumber(respHdrs['content-length'])
+			if clen and clen > 0 then
+				if data.debug then
+					print('heartbeat response body', receiveString(fd, clen))
 				end
 			end
-			closeSock(fd)
 		end
 
+		closeSock(fd)
+		if not httpOK then
+			print(delim)
+		end
+	end
+
+	local function heartbeatClick()
+		local request = (data.request):gsub('%b{}', function(s)
+			return tostring(data[s:sub(2, -2)])
+		end)
+
+		local url = heartbeatRequest(request)
+		if url and url ~= currServerURL then
+			linda:send('url', url)
+			currServerURL = url
+		end
+	end
+
+	while true do
+		for k, v in pairs(data)do
+			local _, newValue = linda:receive(0, k)
+			if _ ~= nil then
+				data[k] = newValue
+				if k == 'salt'then
+					linda:send(k, newValue)
+				end
+			end
+		end
+		if data.salt and#data.salt > 0 then
+			heartbeatClick()
+			sleep(data.delay or 10000)
+		else
+			sleep(100)
+		end
+	end
+end
+
+local function sendOnline()
+	if heartbeatThread then
+		linda:send('online', getCurrentOnline())
+	end
+end
+
+hooks:add('onInitDone', 'heartbeat', function()
+	math.randomseed(os.time())
+	local hb = config:get('heartbeatType')
+	if hb == 'classicube'then
+		local ccreq = '/server/heartbeat?name={name}&port={port}&users={online}' ..
+		'&max={max}&salt={salt}&public={public}&software={software}&web={webSupport}'
+		local sSalt = randomStr(12)
+
+		heartbeatData = {
+			valid = '^http://www%.classicube%.net/server/play/',
+			headers = {['Host'] = 'www.classicube.net'},
+			name = encodeURI(config:get('serverName')),
+			webSupport = config:get('acceptWebsocket'),
+			public = config:get('heartbeatPublic'),
+			port = config:get('serverPort'),
+			max = config:get('maxPlayers'),
+			software = cpe.softwareName,
+			online = getCurrentOnline(),
+			host = 'classicube.net',
+			request = ccreq,
+			salt = sSalt,
+			delay = 25
+		}
+		heartbeatThread = lanes.gen('*', hThread)(heartbeatData)
+		heartbeatSalt = sSalt
+
 		function onPlayerAuth(player, name, key)
-			if key ~= md5func(_HEARTBEAT_SALT .. name)then
+			if key ~= md5.sumhexa(heartbeatData.salt .. name)then
 				return false, 'Invalid session, restart your client and try to connect again.'
 			end
 			player:setUID(name)
@@ -121,16 +205,33 @@ function _restartHeartbeat(sSalt)
 			return true
 		end
 	end
-
-	if _HEARTBEAT_HOST then
-		timer.Create('heartbeat', -1, _HEARTBEAT_DELAY, _HEARTBEAT_CLK)
-		_HEARTBEAT_CLK()
-	end
-end
-
-hooks:add('onInitDone', 'heartbeat', function()
-	check4md5()
-	math.randomseed(os.time())
-	local sSalt = randomStr(6)
-	_restartHeartbeat(sSalt)
 end)
+
+hooks:add('onUpdate', 'heartbeat', function()
+	if heartbeatThread then
+		if heartbeatThread.status == 'error'then
+			log.error('Heartbeat thread error', heartbeatThread[-1])
+			heartbeatThread = nil
+			return
+		end
+		local _, v = linda:receive(0, 'salt')
+		if v then
+			heartbeatSalt = v
+		end
+		local _, url = linda:receive(0, 'url')
+		if url then
+			log.info('Server URL:', url)
+		end
+	end
+end)
+
+hooks:add('onConfigChanged', 'heartbeat', function(key, value)
+	if key == 'serverName'then
+		linda:send('name', encodeURI(value))
+	elseif key == 'heartbeatPublic'then
+		linda:send('public', value)
+	end
+end)
+
+hooks:add('postPlayerFirstSpawn', 'heartbeat', sendOnline)
+hooks:add('onPlayerDestroy', 'heartbeat', sendOnline)

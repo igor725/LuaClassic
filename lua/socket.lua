@@ -346,8 +346,8 @@ function sendMesg(fd, msg, len, flags)
 
 	flags = flags or 0
 	flags = bit.bor(dflags, flags)
+	msg = ffi.cast('const char*', msg)
 	len = len or ffi.C.strlen(msg)
-	msg = ffi.cast('char*', msg)
 
 	local snlen = sck.send(fd, msg, len, flags)
 	if snlen < 0 then
