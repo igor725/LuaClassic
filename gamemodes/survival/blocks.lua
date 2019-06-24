@@ -3,7 +3,7 @@
 	released under The MIT license http://opensource.org/licenses/MIT
 ]]
 
-SURV_MAX_BLOCKS = 64
+SURV_STACK_SIZE = 99
 SURV_BRK_DONE   = 10
 
 SURV_ACT_NONE   = -1
@@ -110,7 +110,7 @@ function survPlayerGetTool(player)
 	if toolType then
 		return survTools[player.heldTool], toolType
 	end
-	
+
 	return
 end
 

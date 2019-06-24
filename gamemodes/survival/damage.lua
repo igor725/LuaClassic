@@ -93,7 +93,7 @@ function survDamage(attacker, victim, damage, dmgtype)
 					if victim.inventory[i] > 0 and attacker.inventory[i] == 0 then
 						attacker:setInventoryOrder(i, i)
 					end
-					attacker.inventory[i] = math.min(64, attacker.inventory[i] + victim.inventory[i])
+					attacker.inventory[i] = math.min(SURV_STACK_SIZE, attacker.inventory[i] + victim.inventory[i])
 				end
 			end
 

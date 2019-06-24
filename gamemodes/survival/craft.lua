@@ -193,8 +193,8 @@ addCommand('craft', function(isConsole, player, args)
 			if recipe then
 				local oQuantity = recipe.count * quantity
 				local bName = survGetBlockName(bId)
-				if(64 - inv[bId]) < (quantity * recipe.count)then
-					return (CMD_CRAFTTOOMANY):format(bName)
+				if(SURV_STACK_SIZE - inv[bId]) < (quantity * recipe.count)then
+					return (CMD_CRAFTTOOMANY):format(SURV_STACK_SIZE, bName)
 				end
 				local canBeCrafted, lacks = survCanCraft(player, bId, quantity)
 				if canBeCrafted then

@@ -22,14 +22,14 @@ addCommand('give', function(isConsole, player, args)
 			count = args[3]
 		elseif #args == 1 then
 			id = args[1]
-			count = 64
+			count = SURV_STACK_SIZE
 		end
 	end
 	if not player then return MESG_PLAYERNF end
 
 	id = tonumber(id)or 0
-	count = tonumber(count)or SURV_MAX_BLOCKS
-	count = math.min(math.max(count, 1), SURV_MAX_BLOCKS)
+	count = tonumber(count)or SURV_STACK_SIZE
+	count = math.min(math.max(count, 1), SURV_STACK_SIZE)
 
 	local given = survInvAddBlock(player, id, count)
 	if given > 0 then
@@ -76,7 +76,7 @@ addCommand('drop', function(isConsole, player, args)
 
 		local inv1 = player.inventory
 		local inv2 = target.inventory
-		quantity = math.min(quantity, SURV_MAX_BLOCKS - inv2[bId])
+		quantity = math.min(quantity, SURV_STACK_SIZE - inv2[bId])
 		if quantity < 1 then
 			return false
 		end
