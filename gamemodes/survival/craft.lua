@@ -172,13 +172,14 @@ end
 
 addCommand('craft', function(isConsole, player, args)
 	if isConsole then return CON_INGAMECMD end
+	
+	if args[1] == 'info'then
+		return survCraftInfo(player:getHeldBlock())
+	end
+	
 	if player.isInGodmode then return CMD_CRAFTGOD end
-
+	
 	if #args > 0 then
-		if args[1] == 'info'then
-			return survCraftInfo(player:getHeldBlock())
-		end
-
 		-- craft if arg is number
 		local bId = player:getHeldBlock()
 		local quantity = tonumber(args[1])

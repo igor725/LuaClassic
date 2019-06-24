@@ -93,7 +93,7 @@ survAddItem(1, 6, 'Meat')
 survAddItem(1, 7, 'Rotten Meat')
 survAddItem(1, 8, 'Bone')
 survAddItem(1, 9, 'Powder')
-survAddItem(1, 10, 'String')
+local ITEM_STRING = survAddItem(1, 10, 'String')
 
 -- DYES
 local DYE_NAMES = {
@@ -120,7 +120,7 @@ local DYE_NAMES = {
 	'Turquoise'
 }
 
-for i = 1, 16 do
+for i = 1, 15 do
 	local id = survAddItem(2, i-1, DYE_NAMES[i] .. ' Dye')
 	
 	survAddCraft(20 + i, {
@@ -131,6 +131,15 @@ for i = 1, 16 do
 		count = 4
 	})
 end
+
+survAddItem(2, 15, 'White Dye')
+
+survAddCraft(36, {
+	needs = {
+		[ITEM_STRING] = 4
+	},
+	count = 1
+})
 
 for i = 1, 5 do
 	local id = survAddItem(3, i-1, DYE_NAMES[i+16] .. ' Dye')
