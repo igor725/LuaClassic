@@ -198,7 +198,7 @@ hooks:add('onInitDone', 'heartbeat', function()
 			host = 'classicube.net',
 			request = ccreq,
 			salt = sSalt,
-			delay = 25
+			delay = 25000
 		}
 		heartbeatThread = lanes.gen('*', hThread)(heartbeatData)
 		heartbeatSalt = sSalt
