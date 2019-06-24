@@ -62,13 +62,14 @@ addCommand('drop', function(isConsole, player, args)
 	end
 
 	if #args > 1 then
-		local target = getPlayerByName(args[1])
-		local quantity = tonumber(args[2])or 1
+		local target = getPlayerByName(args[1])or getPlayerByName(args[2])
+		local quantity = tonumber(args[2])or tonumber(args[1])or 1
 		local x, y, z = player:getPos()
 
 		if not target then
 			return MESG_PLAYERNF
 		end
+
 		if distance(x, y, z, target:getPos()) > 6 then
 			return CMD_DROPTOOFAR
 		end
@@ -77,8 +78,9 @@ addCommand('drop', function(isConsole, player, args)
 		local inv2 = target.inventory
 		quantity = math.min(quantity, SURV_MAX_BLOCKS - inv2[bId])
 		if quantity < 1 then
-			return
+			return false
 		end
+
 		if inv1[bId] >= quantity then
 			inv1[bId] = inv1[bId] - quantity
 			inv2[bId] = inv2[bId] + quantity
@@ -88,16 +90,8 @@ addCommand('drop', function(isConsole, player, args)
 			survUpdateInventory(target, bId)
 			return (CMD_DROPSUCCP):format(quantity, survGetBlockName(bId), target)
 		end
-	else
-		local inv = player.inventory
-		local quantity = tonumber(args[1])or 1
-		if inv[bId] >= quantity then
-			inv[bId] = inv[bId] - quantity
-			player:setInventoryOrder(bId, inv[bId] > 0 and bId or 0)
-			survUpdateBlockInfo(player)
-			return (CMD_DROPSUCCP):format(quantity, survGetBlockName(bId))
-		end
 	end
+	return false
 end)
 
 addCommand('kill', function(isConsole, player, args)

@@ -746,6 +746,7 @@ function addWSave(name, fmt, reader, writer)
 end
 
 function isValidBlockID(id)
+	if not id then return false end`
 	return (id >= 0 and id <= 65)or
 	BlockDefinitions:isDefined(id)
 end

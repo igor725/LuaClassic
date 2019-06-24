@@ -133,7 +133,7 @@ function onPlayerChatMessage(player, message)
 			local cmf = commands[cmd]
 			if cmf then
 				if player:checkPermission('commands.' .. cmd)then
-					local succ, rtval = pcall(cmf, false, player, args)
+					local succ, rtval = xpcall(cmf, debug.traceback, false, player, args)
 					if not succ then
 						player:sendMessage((IE_MSG):format(IE_LE))
 						log.error('Command', cmd, 'got error:', rtval)
@@ -318,7 +318,7 @@ function handleConsoleCommand(cmd)
 
 		local cmf = commands[cmd]
 		if cmf then
-			local succ, rtval = pcall(cmf, true, nil, args)
+			local succ, rtval = xpcall(cmf, debug.traceback, true, nil, args)
 			if not succ then
 				log.error('Command', cmd, 'got error:', rtval)
 				return

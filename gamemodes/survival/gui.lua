@@ -67,7 +67,7 @@ function survUpdateInventory(player, id)
 		return
 	end
 	if id then
-		if not isValidBlockID(i)then return end
+		if not isValidBlockID(id)then return end
 		player:setInventoryOrder(id, player.inventory[id] > 0 and 1 or 0)
 		return
 	end
