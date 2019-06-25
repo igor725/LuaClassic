@@ -42,6 +42,7 @@ function getKiller(attacker, dmgtype)
 end
 
 function survDamage(attacker, victim, damage, dmgtype)
+	if not victim.isPlayer then print(victim)return false end -- Temporarily
 	if victim.isInGodmode then return false end
 	local world = getWorld(victim)
 

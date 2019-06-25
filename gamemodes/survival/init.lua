@@ -84,7 +84,7 @@ end)
 hooks:add('onPlayerClick', 'surv_init', function(player, ...)
 	local button  = select(1, ...)
 	local action  = select(2, ...)
-	local tgent   = select(5, ...)
+	local tgid    = select(5, ...)
 	local x, y, z = select(6, ...)
 
 	if button == 1 and action == 0 then
@@ -116,9 +116,9 @@ hooks:add('onPlayerClick', 'surv_init', function(player, ...)
 		return
 	end
 
-	local dist_player = 9999
+	local dist_entity = 9999
 	local dist_block = 9999
-	local tgplayer
+	local tgentity
 
 	if x ~= -1 and y ~= -1 and z ~= -1 then
 		dist_block = distance(x + .5, y + .5, z + .5, player:getPos())
@@ -126,22 +126,20 @@ hooks:add('onPlayerClick', 'surv_init', function(player, ...)
 		survStopBreaking(player)
 	end
 
-	if tgent >= 0 then
-		tgplayer = getPlayerByID(tgent)
-		if tgplayer then
-			x, y, z = player:getPos()
-			dist_player = distance(x, y, z, tgplayer:getPos())
-		end
+	tgentity = entities[tgid]
+	if tgentity then
+		x, y, z = player:getPos()
+		dist_entity = distance(x, y, z, tgentity:getPos())
 	end
 
-	if dist_block < dist_player then
+	if dist_block < dist_entity then
 		survBlockAction(player, button, action, x, y, z)
-	elseif dist_player < dist_block and dist_player < 3.5 then
+	elseif dist_entity < dist_block and dist_entity < 3.5 then
 		if button == 0 and action == 0 then
 			if not player.nextHit then
 				player.nextHit = 0
 			end
-			if tgplayer and CTIME > player.nextHit then
+			if tgentity and CTIME > player.nextHit then
 				-- get damage from sword
 				local power, toolType = survPlayerGetTool(player)
 
@@ -153,7 +151,7 @@ hooks:add('onPlayerClick', 'surv_init', function(player, ...)
 				-- critical damage
 				local blocks = math.max(0, player.fallingStartY and (player.fallingStartY - player.pos.y) or 0)
 
-				survDamage(player, tgplayer, damage + blocks, SURV_DMG_PLAYER)
+				survDamage(player, tgentity, damage + blocks, SURV_DMG_PLAYER)
 				survStopBreaking(player)
 
 				-- timeout

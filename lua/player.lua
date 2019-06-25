@@ -877,10 +877,6 @@ function findPlayer(namepart)
 	end)
 end
 
-function getPlayerByID(id)
-	return entities[id]
-end
-
 function findFreeID(player)
 	local s = 0
 	while entities[s]do
