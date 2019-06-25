@@ -47,7 +47,7 @@ local mob_mt = {
 		local cay, cap = self:getEyePos(true)
 
 		playersForEach(function(player)
-			if player:isInWorld(self)then
+			if player:isInWorld(self)and player.isSpawned then
 				if player:isSupported('ExtEntityPositions')then
 					datcpe = datcpe or cpe:generatePacket(0x08, id, cx, cy, cz, cay, cap)
 					player:sendNetMesg(datcpe, #datcpe)
