@@ -260,6 +260,40 @@ hooks:add('postPlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id, p
 			world:setBlock(x, y, z, 8)
 			world:updateWaterBlock(x, y, z)
 		end
+	elseif id == 6 then
+		local world = getWorld(player)
+		local dimx, dimy, dimz = world:getDimensions()
+		
+		if y == 0 then return end
+		
+		if y > 1 and world:getBlock(x, y-1, z) == 53 then
+			y = y - 1
+		end
+		
+		if 
+			y < dimy - 8
+			and world:getBlock(x, y-1, z) == 2
+			and 3 < x and x < dimx - 4
+			and 3 < z and z < dimz - 4
+		then
+			local treeType = 1
+			
+			for i = -1, 1, 2 do
+				if world:getBlock(x+i, y, z) == 53 then
+					treeType = 2
+					break
+				end
+			end
+			
+			for i = -1, 1, 2 do
+				if world:getBlock(x, y, z+i) == 53 then
+					treeType = 2
+					break
+				end
+			end
+			
+			treeCreate(x, y, z, treeType, world)
+		end
 	end
 end)
 
