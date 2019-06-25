@@ -124,7 +124,9 @@ function survGetDropBlock(player, bid)
 	elseif bid == 2 then
 		return 3
 	elseif bid == 18 then
-		return (math.random(0, 100) < 20 and 6)or 18
+		local r = math.random(0, 100)
+		local drp = (player.heldTool ~= 0 and 18)or 0
+		return (r < 20 and 6)or(r < 40 and 149)or drp
 	elseif bid == 20 or bid == 54 then
 		return 0
 	elseif
