@@ -798,6 +798,7 @@ function createWorld(wname, dims, gen, seed)
 	if tmpWorld:createWorld(data)then
 		tmpWorld:setName(wname)
 		worlds[wname] = tmpWorld
+		table.insert(nworlds, tmpWorld)
 		if gen then
 			return regenerateWorld(wname, gen, seed)
 		else
