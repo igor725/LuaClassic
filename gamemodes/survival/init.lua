@@ -21,7 +21,7 @@ gmLoad('daynight')
 gmLoad('firespread')
 
 gmLoad('items')
--- gmLoad('mob-ai')
+gmLoad('mobs')
 
 config.types.spawnRadius = 'number'
 if not config:get('spawnRadius')then
