@@ -266,8 +266,10 @@ hooks:add('postPlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id, p
 		
 		if y == 0 then return end
 		
+		local treeType = 1
 		if y > 1 and world:getBlock(x, y-1, z) == 53 then
 			y = y - 1
+			treeType = 2
 		end
 		
 		if 
@@ -276,8 +278,6 @@ hooks:add('postPlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id, p
 			and 3 < x and x < dimx - 4
 			and 3 < z and z < dimz - 4
 		then
-			local treeType = 1
-			
 			for i = -1, 1, 2 do
 				if world:getBlock(x+i, y, z) == 53 then
 					treeType = 2
