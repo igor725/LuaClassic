@@ -180,14 +180,13 @@ local httpPattern = '^get%s+(.+)%s+http/%d%.%d$'
 
 function wsDoHandshake()
 	for fd, data in pairs(wsHandshake)do
-		local status = checkSock(fd)
-
-		if status == 'closed'then
-			wsHandshake[fd] = nil
-		end
-
 		if data.state == 'testws'then
-			local hdr = receiveString(fd, 3, MSG_PEEK)
+			local hdr, closed = receiveString(fd, 3, MSG_PEEK)
+			if closed then
+				closeSock(fd)
+				wsHandshake[fd] = nil
+				return
+			end
 			if hdr then
 				if hdr:lower() == 'get'then
 					data.state = 'initial'
@@ -199,7 +198,12 @@ function wsDoHandshake()
 		end
 
 		if data.state == 'initial'then
-			local req = receiveLine(fd)
+			local req, closed = receiveLine(fd)
+			if closed then
+				closeSock(fd)
+				wsHandshake[fd] = nil
+				return
+			end
 			if req then
 				req = req:lower()
 				if req:find(httpPattern)then
@@ -213,7 +217,12 @@ function wsDoHandshake()
 		end
 
 		if data.state == 'headers'then
-			local ln = receiveLine(fd)
+			local ln, err = receiveLine(fd)
+			if err == 2 then
+				closeSock(fd)
+				wsHandshake[fd] = nil
+				return
+			end
 			if ln == ''then
 				data.state = 'genresp'
 			elseif ln then
@@ -261,8 +270,8 @@ function wsDoHandshake()
 			'Content-Type: text/plain; charset=utf-8\r\n' ..
 			'Content-Length: %d\r\n\r\nBad request: %s')
 			:format(#msg + 13, msg)
+			table.insert(waitClose, fd)
 			sendMesg(fd, response)
-			closeSock(fd)
 			wsHandshake[fd] = nil
 		end
 	end

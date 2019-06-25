@@ -60,7 +60,10 @@ function wsLoad()
 		end
 
 		if sframe.state == WS_ST_HDR then
-			local sz = receiveMesg(sframe.fd, sframe.hdr, 2)
+			local sz, closed = receiveMesg(sframe.fd, sframe.hdr, 2)
+			if closed then
+				return -1
+			end
 			if sz == 2 then
 				local hdr = sframe.hdr
 				sframe.fin = bit.band(bit.rshift(hdr[0], 0x07)) == 1
@@ -77,7 +80,10 @@ function wsLoad()
 		end
 
 		if sframe.state == WS_ST_PLEN then
-			local sz = receiveMesg(sframe.fd, sframe.payload_len, 2)
+			local sz, closed = receiveMesg(sframe.fd, sframe.payload_len, 2)
+			if closed then
+				return -1
+			end
 			if sz == 2 then
 				sframe.payload_len[0] = ntohs(sframe.payload_len[0])
 				sframe.state = WS_ST_MASK
@@ -85,7 +91,10 @@ function wsLoad()
 		end
 
 		if sframe.state == WS_ST_MASK then
-			local sz = receiveMesg(sframe.fd, sframe.mask, 4)
+			local sz, closed = receiveMesg(sframe.fd, sframe.mask, 4)
+			if closed then
+				return -1
+			end
 			if sz == 4 then
 				sframe.state = WS_ST_RCVPL
 			end
@@ -96,7 +105,10 @@ function wsLoad()
 			if sframe.payload == nil then
 				sframe.payload = ffi.new('uint8_t[?]', plen + 1)
 			end
-			local sz = receiveMesg(sframe.fd, sframe.payload, plen)
+			local sz, closed = receiveMesg(sframe.fd, sframe.payload, plen)
+			if closed then
+				return -1
+			end
 			if sz == plen then
 				if sframe.masked then
 					for i = 0, sz - 1 do

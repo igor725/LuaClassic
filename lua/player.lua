@@ -442,7 +442,10 @@ local player_mt = {
 			setupWFrameStruct(sframe, fd)
 			self._sframe = sframe
 		end
-		if receiveFrame(sframe)then
+		local st = receiveFrame(sframe)
+		if st == -1 then
+			self:destroy()
+		elseif st then
 			if sframe.opcode == 0x02 then
 				local id = sframe.payload[0]
 				self:handlePacket(id, sframe.payload + 1)
@@ -454,9 +457,13 @@ local player_mt = {
 		if not self._buf then
 			self._buf = ffi.new('uint8_t[256]')
 		end
-		local id = self.waitPacket
+		local id, closed = self.waitPacket
 		if not id then
-			id = receiveString(fd, 1)
+			id, closed = receiveString(fd, 1)
+			if closed then
+				self:destroy()
+				return
+			end
 			if not id then return end
 			id = id:byte()
 			self.waitPacket = id
@@ -472,7 +479,11 @@ local player_mt = {
 				end
 			end
 			if psz then
-				local dlen = receiveMesg(fd, self._buf, psz)
+				local dlen, closed = receiveMesg(fd, self._buf, psz)
+				if closed then
+					self:destroy()
+					return
+				end
 				if dlen == psz then
 					self.waitPacket = nil
 					self:handlePacket(id, self._buf)
@@ -707,17 +718,6 @@ local player_mt = {
 	end,
 
 	serviceMessages = function(self)
-		local fd = self:getClient()
-		local status, code = checkSock(fd)
-		if status == 'closed'or status == 'nonsock'then
-			closeSock(fd)
-			self:destroy()
-			return
-		elseif status == 'unknown'then
-			log.debug('Unknown socket err code:', code)
-			return
-		end
-
 		if self.thread then
 			local pworld = getWorld(self)
 			if self.thread.status == 'error'then

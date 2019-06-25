@@ -5,24 +5,14 @@
 
 --TODO: Refactor dis shiet
 
-local geterror
+local geterror, currerr
 local sck = ffi.C
 local error_cache = {}
-local statuses = {
-	[0] = 'ok',
-	-- Windows
-	[10054] = 'closed',
-	[10053] = 'closed',
-	[10035] = 'ok',
-	[10038] = 'nonsock',
-	-- POSIX
-	[11] = 'ok',
-	[32] = 'closed',
-	[88] = 'nonsock',
-	[104] = 'closed',
-	[3406] = 'ok',
-	[3425] = 'closed'
-}
+
+local function isClosed(err)
+	return err == 10053 or err == 10054 or
+	err == 32 or err == 104 or err == 3425
+end
 
 ffi.cdef[[
 	struct in_addr {
@@ -367,24 +357,28 @@ function sendMesg(fd, msg, len, flags)
 end
 
 function receiveMesg(fd, buffer, len, flags)
-	if not buffer or buffer == nil and len > 1 then return end
+	if not buffer then return end
 
 	flags = flags or 0
 	local ret = sck.recv(fd, buffer, len, flags)
 	if ret < 0 then
-		return false, geterror()
+		return false, isClosed(currerr())
 	elseif ret > 0 then
-		return ret
+		return ret, false
+	else
+		return nil, true
 	end
-	return nil
 end
 
 function receiveString(fd, len, flags)
 	if len < 1 then return end
 
 	local buffer = ffi.new('char[?]', len)
-	if receiveMesg(fd, buffer, len, flags)then
-		return ffi.string(buffer, len)
+	local succ, err = receiveMesg(fd, buffer, len, flags)
+	if succ then
+		return ffi.string(buffer, len), err
+	else
+		return nil, err
 	end
 end
 
@@ -399,7 +393,12 @@ function receiveLine(fd)
 		ffi.fill(ln.line, 8192)
 	end
 	while true do
-		local len, err = receiveMesg(fd, ln.rcv, 1)
+		local len, closed = receiveMesg(fd, ln.rcv, 1)
+		if closed then
+			local str = ffi.string(ln.line, ln.linecur)
+			ln.linecur = 0
+			return str, 2
+		end
 		if len and len > 0 then
 			local sym = ln.rcv[0]
 			if sym == 10 then
@@ -412,21 +411,12 @@ function receiveLine(fd)
 				if ln.linecur > 8191 then
 					local str = ffi.string(ln.line, ln.linecur)
 					ln.linecur = 0
-					return str, 'buffer_overflow'
+					return str, 0
 				end
 			end
 		else
-			return nil, 'timeout'
+			return nil, 1
 		end
-	end
-end
-
-function checkSock(fd)
-	local ret = sck.recv(fd, nil, 0, 0)
-	if ret <= 0 then
-		local err = 0
-		if ret ~= 0 then err = currerr()end
-		return statuses[err]or 'unknown', err
 	end
 end
 
