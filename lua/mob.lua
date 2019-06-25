@@ -59,11 +59,7 @@ local mob_mt = {
 		end)
 	end,
 
-	spawn = function(self, player)
-		if player then
-			spawnMobFor(self, player)
-			return true
-		end
+	spawn = function(self)
 		if self.isSpawned then return false end
 		playersForEach(function(player)
 			spawnMobFor(self, player)
@@ -109,12 +105,10 @@ function newMob(type, world, x, y, z, yaw, pitch)
 	world = world:getName()
 	local id = findMobFreeID()
 	if not id then return false end
-	entities[id] = true
 
 	local pos = newVector(x, y, z)
 	local eye = newAngle(yaw or 0, pitch or 0)
-
-	return setmetatable({
+	local mob = setmetatable({
 		id = id,
 		pos = pos,
 		eye = eye,
@@ -122,4 +116,16 @@ function newMob(type, world, x, y, z, yaw, pitch)
 		isSpawned = false,
 		worldName = world
 	}, mob_mt)
+
+	entities[id] = mob
+	return mob
 end
+
+hooks:add('postPlayerFirstSpawn', 'mobs', function(player)
+	for id = -128, -2 do
+		local mob = entities[id]
+		if mob then
+			spawnMobFor(mob, player)
+		end
+	end
+end)
