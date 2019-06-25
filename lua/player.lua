@@ -686,8 +686,9 @@ local player_mt = {
 			end
 		end
 
-		-- Causes incorrect kick-packet sending
-		-- closeSock(self:getClient())
+		local cl = self:getClient()
+		shutdownSock(cl, SHUT_WR)
+		table.insert(waitClose, cl)
 		cpe:extCallHook('onPlayerDestroy', self)
 		hooks:call('onPlayerDestroy', self)
 		if onPlayerDestroy then

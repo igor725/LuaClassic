@@ -30,7 +30,7 @@ end
 
 function survCanPlace(id)
 	return (id < 7 or id > 11)and
-	(id < 149 and id > 151)
+	(id < 149 or id > 151)
 end
 
 function survUpdatePermission(player, id)

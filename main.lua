@@ -355,10 +355,17 @@ function acceptClients()
 	createPlayer(fd, ip, false)
 end
 
+local cwait = ffi.new('uint8_t[256]')
 function serviceMessages()
 	playersForEach(function(player)
 		player:serviceMessages()
 	end)
+	for i = #waitClose, 1, -1 do
+		local fd = waitClose[i]
+		while receiveMesg(fd, cwait, 256)do end
+		table.remove(waitClose, i)
+		closeSock(fd)
+	end
 end
 
 function init()
@@ -368,6 +375,7 @@ function init()
 	end
 	log.info(CON_START)
 	entities, worlds = {}, {}
+	waitClose = {}
 	nworlds = {}
 
 	config:parse()
