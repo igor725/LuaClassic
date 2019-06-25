@@ -28,10 +28,15 @@ if not config:get('spawnRadius')then
 	config:set('spawnRadius', SURV_DEF_SPAWNRAD)
 end
 
+function survCanPlace(id)
+	return (id < 7 or id > 11)and
+	(id < 149 and id > 151)
+end
+
 function survUpdatePermission(player, id)
 	if not isValidBlockID(id)then return end
 	local quantity = player.inventory[id]
-	local canPlace = player.isInGodmode or (quantity > 0 and (id < 7 or id > 11))
+	local canPlace = player.isInGodmode or (quantity > 0 and survCanPlace(id))
 	player:setBlockPermissions(id, canPlace, player.isInGodmode)
 end
 
@@ -82,6 +87,30 @@ hooks:add('onPlayerClick', 'surv_init', function(player, ...)
 	local tgent   = select(5, ...)
 	local x, y, z = select(6, ...)
 
+	if button == 1 and action == 0 then
+		local held = player:getHeldBlock()
+		if (held < 149 or held > 150)or
+		player.action ~= SURV_ACT_NONE then
+			return
+		end
+		local quantity = player.inventory[held]
+		if quantity < 1 then
+			return
+		end
+		if player.health < 10 then
+			survHeal(player, .5)
+			player.inventory[held] = quantity - 1
+			survUpdateBlockInfo(player)
+			if quantity == 1 then
+				survUpdateInventory(player)
+				player:holdThis(0)
+			end
+		else
+			player:sendMessage(SURV_NOT_HUNGRY)
+		end
+		return
+	end
+
 	if action == 1 then
 		survStopBreaking(player)
 		return
@@ -115,12 +144,12 @@ hooks:add('onPlayerClick', 'surv_init', function(player, ...)
 			if tgplayer and CTIME > player.nextHit then
 				-- get damage from sword
 				local power, toolType = survPlayerGetTool(player)
-				
+
 				local damage = 1
 				if toolType == 4 then
 					damage = power
 				end
-				
+
 				-- critical damage
 				local blocks = math.max(0, player.fallingStartY and (player.fallingStartY - player.pos.y) or 0)
 

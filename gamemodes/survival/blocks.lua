@@ -275,6 +275,10 @@ hooks:add('onPlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id)
 		player:sendMessage(MESG_NOTENOUGH)
 		return true
 	elseif id ~= 0 then
+		if not survCanPlace(id)then
+			survUpdatePermission(player, id)
+			return true
+		end
 		player.inventory[id] = player.inventory[id] - 1
 		survUpdateBlockInfo(player)
 

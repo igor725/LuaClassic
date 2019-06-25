@@ -4,14 +4,15 @@
 ]]
 
 commands = {}
+aliases = {}
 
 function addCommand(name, func)
 	commands[name] = func
 end
 
 function addAlias(name, alias)
-	if not commands[alias]then
-		commands[alias] = commands[name]
+	if not aliases[alias]then
+		aliases[alias] = name
 		return true
 	end
 	return false
@@ -680,3 +681,4 @@ end)
 addAlias('help', '?')
 addAlias('goto', 'g')
 addAlias('list', 'worlds')
+addAlias('sel', 'cuboid')

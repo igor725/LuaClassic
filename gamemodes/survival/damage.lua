@@ -21,8 +21,9 @@ function survRespawn(player)
 	player:moveToSpawn()
 end
 
-function survHealThis(player, addHp)
+function survHeal(player, addHp)
 	player.health = math.min(player.health + addHp, SURV_MAX_HEALTH)
+	survUpdateHealth(player)
 end
 
 function getKiller(attacker, dmgtype)

@@ -130,6 +130,7 @@ function onPlayerChatMessage(player, message)
 		if #args > 0 then
 			local cmd = table.remove(args, 1):sub(2)
 			cmd = cmd:lower()
+			cmd = aliases[cmd]or cmd
 			local cmf = commands[cmd]
 			if cmf then
 				if player:checkPermission('commands.' .. cmd)then
@@ -315,6 +316,7 @@ function handleConsoleCommand(cmd)
 		if not cmd then return end
 		local argstr = table.concat(args,' ')
 		cmd = cmd:lower()
+		cmd = aliases[cmd]or cmd
 
 		local cmf = commands[cmd]
 		if cmf then
