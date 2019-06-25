@@ -182,6 +182,10 @@ function survBlockAction(player, button, action, x, y, z)
 	if action == 0 and player.inventory[bid] < 255 then
 		if player.action == SURV_ACT_NONE then
 			if button == 0 then
+				if world:isReadOnly()then
+					player:sendMessage(WORLD_RO, MT_ANNOUNCE)
+					return
+				end
 				player.action = SURV_ACT_BREAK
 				player.breakProgress = 0
 				local lb = player.lastClickedBlock
