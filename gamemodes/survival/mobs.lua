@@ -103,9 +103,11 @@ timer.Create('Mobs_smooth_moving', -1, 0.1, function()
 		Mob.pos.x = Mob.startX + Mob.dirX * (thisTime - mobsLastUpdate) / MOB_STEP_INVERVAL
 		Mob.pos.z = Mob.startZ + Mob.dirZ * (thisTime - mobsLastUpdate) / MOB_STEP_INVERVAL
 
-		if world:getBlock(math.floor(Mob.pos.x), math.floor(Mob.pos.y - 2), math.floor(Mob.pos.z)) == 0 then
+		local blockInside = world:getBlock(math.floor(Mob.pos.x), math.floor(Mob.pos.y - 1), math.floor(Mob.pos.z))
+		local blockUnder = world:getBlock(math.floor(Mob.pos.x), math.floor(Mob.pos.y - 2), math.floor(Mob.pos.z))
+		if blockUnder == 0 then
 			Mob.pos.y = Mob.pos.y - 1
-		elseif world:getBlock(math.floor(Mob.pos.x), math.floor(Mob.pos.y - 1), math.floor(Mob.pos.z)) ~= 0 then
+		elseif blockInside ~= 0 and blockInside ~= 53 then
 			Mob.pos.y = Mob.pos.y + 1
 		end
 		Mob:updatePos()
