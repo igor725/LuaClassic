@@ -9,7 +9,7 @@ local function haveGround(player)
 		for _z = -1, 1 do
 			for _y = -1, 1 do
 				local id = world:getBlock(x + _x, y + _y, z + _z)
-				if id ~= 0 and (id < 8 or id > 11) then
+				if id ~= 0 then
 					haveGround = true
 					break
 				end
