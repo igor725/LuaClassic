@@ -481,7 +481,7 @@ end
 
 function saveAll()
 	playersForEach(function(ply)
-		log.assert(ply:saveWrite())
+		log.eassert(ply:saveWrite())
 	end)
 	if config:save()and permissions:save()then
 		log.debug(CON_SAVESUCC)
@@ -490,7 +490,7 @@ function saveAll()
 	end
 	log.debug(CON_WSAVE)
 	worldsForEach(function(world, wname)
-		log.assert(world:save())
+		log.eassert(world:save())
 	end)
 end
 

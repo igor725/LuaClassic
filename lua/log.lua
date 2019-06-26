@@ -105,3 +105,10 @@ function log.assert(val, ...)
 	end
 	return val, ...
 end
+
+function log.eassert(val, ...)
+	if not val then
+		log.error(...)
+	end
+	return val, ...
+end
