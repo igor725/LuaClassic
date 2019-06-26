@@ -21,7 +21,10 @@ local cm = {
 
 function cm:load()
 	registerSvPacket(0x1d, 'bbc64')
-	getPlayerMT().setModel = function(player, model)
+	getPlayerMT().setModel = function(player, model, scale)
+		if not model then return false end
+		scale = tonumber(scale)or 1
+
 		local mnum = tonumber(model)
 		if mnum then
 			if not isValidBlockID(mnum)then
@@ -37,32 +40,49 @@ function cm:load()
 			end
 		end
 
-		if player.model == model then return true end
+		if player.model == model and scale == player.modelscale then return true end
 		player.model = model
+		player.modelscale = scale
+
+		local mdstr
+		if scale ~= 1 then
+			mdstr = ('%s|%.2f'):format(model, scale)
+		else
+			mdstr = model
+		end
+
 		playersForEach(function(ply)
 			if ply:isSupported('ChangeModel')then
 				local id = (ply == player and -1)or player:getID()
-				ply:sendPacket(false, 0x1D, id, model)
+				ply:sendPacket(false, 0x1D, id, mdstr)
 			end
 		end)
 		return true
 	end
 
 	getPlayerMT().getModelHeight = function(player)
-		local mdl = player.model
-		return self.allowed_models[mdl]or (tonumber(mdl)and 1)or 2
+		return self.allowed_models[player.model] * player.modelscale
 	end
 
 	saveAdd('model', 'string')
+	saveAdd('modelscale', '>f')
 end
 
 function cm:postPlayerSpawn(player)
 	player.model = player.model or'humanoid'
+	player.modelscale = player.modelscale or 1
+
 	if player:isSupported('ChangeModel')then
 		playersForEach(function(ply)
 			if ply.model then
+				local mdstr
+				if player.modelscale ~= 1 then
+					mdstr = ('%s|%.2f'):format(ply.model, ply.modelscale)
+				else
+					mdstr = ply.model
+				end
 				local id = (ply == player and -1)or ply:getID()
-				player:sendPacket(false, 0x1d, id, ply.model)
+				player:sendPacket(false, 0x1D, id, mdstr)
 			end
 		end)
 	end
