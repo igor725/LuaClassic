@@ -40,6 +40,7 @@ local survMiningSpeed = {
 	[49] = 250,
 	[50] = 10,
 	[51] = 0,
+	[53] = 0.5,
 	[54] = 0,
 	[64] = 3,
 	[65] = 7.5
@@ -51,7 +52,8 @@ local survMiningSpeedWithTool = {
 		[2] = survMiningSpeed[2] / 2,
 		[3] = survMiningSpeed[3] / 2,
 		[12] = survMiningSpeed[12] / 2,
-		[13] = survMiningSpeed[13] / 2
+		[13] = survMiningSpeed[13] / 2,
+		[53] = 0.1
 	},
 	-- pickaxe
 	{
