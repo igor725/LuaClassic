@@ -454,7 +454,7 @@ local player_mt = {
 		if not self._buf then
 			self._buf = ffi.new('uint8_t[256]')
 		end
-		local id, closed = self.waitPacket
+		local id, closed = self._waitPacket
 		if not id then
 			id, closed = receiveString(fd, 1)
 			if closed then
@@ -463,30 +463,35 @@ local player_mt = {
 			end
 			if not id then return end
 			id = id:byte()
-			self.waitPacket = id
-		end
-
-		if id then
 			local psz = psizes[id]
 			local cpesz = cpe.psizes[id]
 			if cpesz then
 				if self:isSupported(cpe.pexts[id])then
 					psz = cpesz
-					fmt = cpe.packets.cl[id]
 				end
 			end
 			if psz then
-				local dlen, closed = receiveMesg(fd, self._buf, psz)
-				if closed then
-					self:destroy()
-					return
-				end
-				if dlen == psz then
-					self.waitPacket = nil
-					self:handlePacket(id, self._buf)
-				end
+				self._receivedData = 0
+				self._remainingData = psz
+				self._waitPacket = id
+			end
+		end
+
+		if self._waitPacket then
+			local dlen, closed = receiveMesg(fd, self._buf + self._receivedData, self._remainingData)
+			if closed then
+				self:destroy()
+				return
+			end
+			self._remainingData = self._remainingData - dlen
+
+			if self._remainingData == 0 then
+				self._waitPacket = nil
+				self._remainingData = nil
+				self._receivedData = nil
+				self:handlePacket(id, self._buf)
 			else
-				self:kick(KICK_INVALIDPACKET)
+				self._receivedData = self._receivedData + dlen
 			end
 		end
 	end,

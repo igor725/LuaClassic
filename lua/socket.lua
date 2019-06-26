@@ -374,9 +374,9 @@ function receiveString(fd, len, flags)
 	if len < 1 then return end
 
 	local buffer = ffi.new('char[?]', len)
-	local succ, err = receiveMesg(fd, buffer, len, flags)
-	if succ then
-		return ffi.string(buffer, len), err
+	local rlen, err = receiveMesg(fd, buffer, len, flags)
+	if rlen then
+		return ffi.string(buffer, rlen), err
 	else
 		return nil, err
 	end
