@@ -147,9 +147,18 @@ addCommand('home', function(isConsole, player, args)
 
 	local hp = player.homepos
 	local ha = player.homeang
+	local hw = player.homeworld
 
-	if hp and ha then
-		player:teleportTo(hp.x, hp.y, hp.z, ha.yaw, ha.pitch)
+	if hp and ha and hw then
+		local wld = getWorld(hw)
+		if not wld then
+			return WORLD_NF
+		end
+		if player:isInWorld(wld)then
+			player:teleportTo(hp.x, hp.y, hp.z, ha.yaw, ha.pitch)
+		else
+			player:changeWorld(wld, true, hp.x, hp.y, hp.z, ha.yaw, ha.pitch)
+		end
 	else
 		return CMD_HOMENF
 	end
@@ -170,5 +179,6 @@ addCommand('sethome', function(isConsole, player, args)
 	end
 	player.homepos = hp
 	player.homeang = ha
+	player.homeworld = player.worldName
 	return CMD_HOMESET
 end)

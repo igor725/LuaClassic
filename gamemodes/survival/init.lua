@@ -180,3 +180,4 @@ saveAdd('homeang', '>ff', function(player, y, p)
 end, function(val)
 	return val.yaw, val.pitch
 end)
+saveAdd('homeworld', 'string')

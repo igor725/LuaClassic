@@ -395,9 +395,9 @@ local player_mt = {
 		local world = getWorld(wname)
 		if world then
 			self:despawn()
-			self.worldName = wname
 			self.fallingStartY = nil
 			self.handshakeStage2 = true
+			self.worldName = world:getName()
 			if isPlayer(x)then
 				self:setEyePos(x:getEyePos())
 				self:setPos(x:getPos())
@@ -515,6 +515,7 @@ local player_mt = {
 		if self.thread then return end
 		if not self.handshaked then return end
 		local world = getWorld(self)
+		if not world then return end
 		self.canSend = false
 		if not world.ldata then
 			self:sendMessage(MESG_LEVELLOAD, MT_STATUS1)
