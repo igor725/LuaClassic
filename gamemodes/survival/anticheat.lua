@@ -1,3 +1,5 @@
+anticheatEnabled = true
+
 local function haveGround(player)
 	local world = getWorld(player)
 	local x, y, z = player:getPos()
@@ -26,6 +28,7 @@ hooks:add('postPlayerFirstSpawn', 'anticheat', function(player)
 end)
 
 hooks:add('onPlayerMove', 'anticheat', function(player, dx, dy, dz)
+	if not anticheatEnabled then return end
 	if player.acBypass or player.isInGodmode then return end
 	local x, y, z = player:getPos()
 
@@ -55,4 +58,11 @@ end)
 hooks:add('onPlayerLanded', 'anticheat', function(player)
 	player.cheatScore = 0
 	player.landY = select(2, player:getPos())
+end)
+
+addCommand('ac', function(isConsole, player, args)
+	if args[1] == 'toggle'then
+		anticheatEnabled = not anticheatEnabled
+		return ('Anticheat %s'):format((anticheatEnabled and ST_ON)or ST_OFF)
+	end
 end)
