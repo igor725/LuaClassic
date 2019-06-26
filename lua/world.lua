@@ -736,10 +736,12 @@ local world_mt = {
 				os.rename(pt .. '.tmp', pt)
 			end
 		else
-			if self.emptyfrom then
-				if CTIME - self.emptyfrom > uwa then
-					self:unload()
-					self.emptyfrom = nil
+			if uwa > 0 then
+				if self.emptyfrom then
+					if CTIME - self.emptyfrom > uwa then
+						self:unload()
+						self.emptyfrom = nil
+					end
 				end
 			end
 		end

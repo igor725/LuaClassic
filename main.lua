@@ -510,11 +510,9 @@ succ, err = xpcall(function()
 			dt = math.min(.1, dt)
 			hooks:call('onUpdate', dt)
 			timer.Update(dt)
-			if uwa > 0 then
-				worldsForEach(function(world)
-					world:update()
-				end)
-			end
+			worldsForEach(function(world)
+				world:update()
+			end)
 			if onUpdate then
 				onUpdate(dt)
 			end
