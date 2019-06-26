@@ -4,45 +4,48 @@
 ]]
 
 hooks = {
-	list = {
-		['preInit'] = {},
-		['onUpdate'] = {},
-		['onInitDone'] = {},
-		['onPlayerMove'] = {},
-		['onPlayerChat'] = {},
-		['onPlayerLanded'] = {},
-		['onPlayerRotate'] = {},
-		['prePlayerSpawn'] = {},
-		['onPlayerCreate'] = {},
-		['onPlayerDespawn'] = {},
-		['onPlayerDestroy'] = {},
-		['postPlayerSpawn'] = {},
-		['onConfigChanged'] = {},
-		['postPlayerTeleport'] = {},
-		['onPlayerPlaceBlock'] = {},
-		['prePlayerFirstSpawn'] = {},
-		['postPlayerFirstSpawn'] = {},
-		['postPlayerPlaceBlock'] = {},
-		['onPlayerHandshakeDone'] = {}
-	}
+	list = {}
 }
 
-function hooks:create(hookname)
-	self.list[hookname] = {}
+function hooks:recalculatePriority(hookname)
+	local prt = self.list[hookname].priority
+	table.sort(prt, function(a, b)
+		return prt[a] < prt[b]
+	end)
 end
 
-function hooks:add(hookname, bname, func)
-	self.list[hookname][bname] = func
+function hooks:create(hookname)
+	self.list[hookname] = {priority = {}}
+end
+
+function hooks:add(hookname, bname, func, priority)
+	priority = priority or 100
+	local hks = self.list[hookname]
+	hks.priority[bname] = priority
+	table.insert(hks.priority, bname)
+	hks[bname] = func
+
+	self:recalculatePriority(hookname)
 end
 
 function hooks:remove(hookname, bname)
-	self.list[hookname][bname] = nil
+	local hks = self.list[hookname]
+	hks.priority[bname] = nil
+	for i = #hks.priority, 1, -1 do
+		if hks.priority[i] == bname then
+			table.remove(hks.priority, i)
+		end
+	end
+	hks[bname] = nil
+
+	self:recalculatePriority(hookname)
 end
 
 function hooks:call(hookname, ...)
 	local hks = self.list[hookname]
 	if hks then
-		for _, fnc in pairs(hks)do
+		for i = 1, #hks.priority do
+			local fnc = hks[hks.priority[i]]
 			local x = fnc(...)
 			if x ~= nil then
 				return x
@@ -50,3 +53,23 @@ function hooks:call(hookname, ...)
 		end
 	end
 end
+
+hooks:create('preInit')
+hooks:create('onUpdate')
+hooks:create('onInitDone')
+hooks:create('onPlayerMove')
+hooks:create('onPlayerChat')
+hooks:create('onPlayerLanded')
+hooks:create('onPlayerRotate')
+hooks:create('prePlayerSpawn')
+hooks:create('onPlayerCreate')
+hooks:create('onPlayerDespawn')
+hooks:create('onPlayerDestroy')
+hooks:create('postPlayerSpawn')
+hooks:create('onConfigChanged')
+hooks:create('postPlayerTeleport')
+hooks:create('onPlayerPlaceBlock')
+hooks:create('prePlayerFirstSpawn')
+hooks:create('postPlayerFirstSpawn')
+hooks:create('postPlayerPlaceBlock')
+hooks:create('onPlayerHandshakeDone')

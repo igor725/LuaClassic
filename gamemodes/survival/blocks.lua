@@ -157,17 +157,18 @@ function survBreakBlock(player, x, y, z)
 	local heldBlock = player:getHeldBlock()
 	local bid, count = survGetDropBlock(player, cbid)
 
-	if bid > 0 then
-		if survInvAddBlock(player, bid, dcount or 1) > 0 then
-			if heldBlock ~= bid and player.heldTool == 0 then
-				player:holdThis(bid)
+	if not hooks:call('onPlayerPlaceBlock', player, x, y, z, 0)then
+		if bid > 0 then
+			if survInvAddBlock(player, bid, dcount or 1) > 0 then
+				if heldBlock ~= bid and player.heldTool == 0 then
+					player:holdThis(bid)
+				end
 			end
 		end
+		world:setBlock(x, y, z, 0)
+		hooks:call('postPlayerPlaceBlock', player, x, y, z, 0, cbid)
 	end
-	hooks:call('onPlayerPlaceBlock', player, x, y, z, 0)
-	world:setBlock(x, y, z, 0)
 	survStopBreaking(player)
-	hooks:call('postPlayerPlaceBlock', player, x, y, z, 0, cbid)
 end
 
 function survBlockAction(player, button, action, x, y, z)
@@ -265,16 +266,16 @@ hooks:add('postPlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id, p
 	elseif id == 6 then
 		local world = getWorld(player)
 		local dimx, dimy, dimz = world:getDimensions()
-		
+
 		if y == 0 then return end
-		
+
 		local treeType = 1
 		if y > 1 and world:getBlock(x, y-1, z) == 53 then
 			y = y - 1
 			treeType = 2
 		end
-		
-		if 
+
+		if
 			y < dimy - 8
 			and world:getBlock(x, y-1, z) == 2
 			and 3 < x and x < dimx - 4
@@ -286,14 +287,14 @@ hooks:add('postPlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id, p
 					break
 				end
 			end
-			
+
 			for i = -1, 1, 2 do
 				if world:getBlock(x, y, z+i) == 53 then
 					treeType = 2
 					break
 				end
 			end
-			
+
 			treeCreate(x, y, z, treeType, world)
 		end
 	end
