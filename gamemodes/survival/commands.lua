@@ -119,7 +119,7 @@ addCommand('god', function(isConsole, player, args)
 	local state = (target.isInGodmode and ST_ON)or ST_OFF
 
 	local h = target.isInGodmode and 1 or 0
-	target:hackControl(h, h, h, 1, 1, -1)
+	target:hackControl(h, h, h, 0, 1, -1)
 
 	for i = 1, SURV_INV_SIZE do
 		if isValidBlockID(i)then
