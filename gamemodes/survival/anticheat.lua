@@ -1,4 +1,4 @@
-anticheatEnabled = true
+anticheatEnabled = false
 
 local function haveGround(player)
 	local world = getWorld(player)

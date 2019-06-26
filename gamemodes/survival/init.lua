@@ -21,7 +21,6 @@ gmLoad('inventory')
 gmLoad('commands')
 gmLoad('daynight')
 gmLoad('firespread')
-
 gmLoad('anticheat')
 
 config.types.spawnRadius = 'number'
@@ -53,6 +52,8 @@ hooks:add('onPlayerHandshakeDone', 'surv_init', function(player)
 	if not player:isSupported('PlayerClick')or
 	not player:isSupported('HackControl')or
 	not player:isSupported('EnvColors')or
+	not player:isSupported('BlockDefinitions')or
+	not player:isSupported('BlockDefinitionsExt', 2)or
 	not player:isSupported('EnvMapAspect')or
 	not player:isSupported('HeldBlock')then
 		player:kick(KICK_SURVCPE, true)

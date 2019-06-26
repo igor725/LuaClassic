@@ -18,6 +18,7 @@ local spl = 'storePlayersIn_G'
 local texpack = 'texPack'
 local wphys = 'waterPhysics'
 local smsz = 'maxSaveSize'
+local asave = 'auosaveDelay'
 
 local lseeds = 'levelSeeds'
 local lnames = 'levelNames'
@@ -55,6 +56,7 @@ config = {
 		[texpack] = '',
 		[wphys] = false,
 		[smsz] = '5M',
+		[asave] = 600,
 
 		[lseeds] = {},
 		[lnames] = {

@@ -467,6 +467,11 @@ function init()
 		log.assert(loadfile(path))()
 	end)
 
+	local asave = config:get('auosaveDelay')
+	if asave > 0 then
+		timer.Create('autosave', -1, asave, saveAll)
+	end
+
 	log.info((CON_BINDSUCC):format(ip, port))
 	cmdh = initCmdHandler(handleConsoleCommand)
 	log.info(CON_HELP)
@@ -479,11 +484,11 @@ function saveAll()
 		log.assert(ply:saveWrite())
 	end)
 	if config:save()and permissions:save()then
-		log.info(CON_SAVESUCC)
+		log.debug(CON_SAVESUCC)
 	else
 		log.error(CON_SAVEERR)
 	end
-	log.info(CON_WSAVE)
+	log.debug(CON_WSAVE)
 	worldsForEach(function(world, wname)
 		log.assert(world:save())
 	end)
@@ -507,12 +512,7 @@ succ, err = xpcall(function()
 			timer.Update(dt)
 			if uwa > 0 then
 				worldsForEach(function(world)
-					if world.emptyfrom then
-						if CTIME - world.emptyfrom > uwa then
-							world:unload()
-							world.emptyfrom = nil
-						end
-					end
+					world:update()
 				end)
 			end
 			if onUpdate then
@@ -550,6 +550,17 @@ if INITED then
 	end)
 
 	saveAll()
+	local saveDone = false
+	while not saveDone do
+		saveDone = true
+		worldsForEach(function(world)
+			if world.gzipThread then
+				world:update()
+				saveDone = false
+			end
+		end)
+		sleep(20)
+	end
 end
 
 if server then closeSock(server)end

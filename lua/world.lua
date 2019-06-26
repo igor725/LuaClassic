@@ -21,6 +21,31 @@ local function logWorldError(world, str)
 	log.error(world:getName(), ':', str)
 end
 
+local function wsaveThread(maddr, mlen, path)
+	ffi = require('ffi')
+	ffi.cdef[[
+		size_t fwrite(const void* ptr, size_t size, size_t count, void* stream);
+		int    ferror(void* stream);
+	]]
+	require('gzip')
+	C = ffi.C
+
+	local wh = io.open(path, 'ab') -- Oh...
+	local mapdata = ffi.cast('uint8_t*', maddr)
+
+	local gStatus, gErr = gz.compress(mapdata, mlen, 4, function(stream)
+		local chunksz = 1024 - stream.avail_out
+		C.fwrite(stream.next_out - chunksz, 1, chunksz, wh)
+		if C.ferror(wh) ~= 0 then
+			gz.defEnd(stream)
+			error('file writing error')
+		end
+	end)
+	wh:close()
+	if not gStatus then error(gErr)end
+	return true
+end
+
 local wReaders = {
 	['dimensions'] = {
 		format = '>HHH',
@@ -176,34 +201,6 @@ local world_mt = {
 		self.data = data
 		return true
 	end,
-	save = function(self)
-		if not self.ldata then return true end
-		local pt = self:getPath()
-		local pt_tmp = pt .. '.tmp'
-		local wh = assert(io.open(pt_tmp, 'wb'))
-
-		local lsucc, succ, werr = pcall(writeData, wh, wWriters, 'wdata\0', self.data, self.skipped)
-
-		if not lsucc or not succ then
-			wh:close()
-			os.remove(pt_tmp)
-			return false, (not lsucc and succ)or werr
-		end
-
-		local gStatus, gErr = gz.compress(self.ldata, self:getData('size'), 4, function(stream)
-			local chunksz = 1024 - stream.avail_out
-			C.fwrite(stream.next_out - chunksz, 1, chunksz, wh)
-			if C.ferror(wh) ~= 0 then
-				logWorldError(self, WORLD_WRITEFAIL)
-				gz.defEnd(stream)
-			end
-		end)
-		wh:close()
-		if gStatus then
-			os.rename(pt_tmp, pt)
-		end
-		return gStatus, gErr
-	end,
 	unload = function(self)
 		if self.players > 0 or self.unloadLocked then return false end
 		self:save()
@@ -218,8 +215,6 @@ local world_mt = {
 				self:readGZIPData(wh)
 				wh:close()
 				return true
-			else
-				return false
 			end
 		end
 		return false
@@ -711,6 +706,45 @@ local world_mt = {
 		return false
 	end,
 
+	save = function(self)
+		if self.gzipThread then return false end
+		if not self.ldata then return true end
+		local pt = self:getPath()
+		local pt_tmp = pt .. '.tmp'
+		local wh = assert(io.open(pt_tmp, 'wb'))
+
+		local lsucc, succ, werr = pcall(writeData, wh, wWriters, 'wdata\0', self.data, self.skipped)
+
+		if not lsucc or not succ then
+			wh:close()
+			return false, (not lsucc and succ)or werr
+		end
+
+		wh:close()
+		self.gzipThread = lanes.gen('*', wsaveThread)(getAddr(self.ldata), self:getData('size'), pt_tmp)
+		return true
+	end,
+	update = function(self)
+		if self.gzipThread then
+			local th = self.gzipThread
+			if th.status == 'error'then
+				logWorldError(self, th[-1])
+				self.gzipThread = nil
+			elseif th.status == 'done'then
+				self.gzipThread = nil
+				local pt = self:getPath()
+				os.rename(pt .. '.tmp', pt)
+			end
+		else
+			if self.emptyfrom then
+				if CTIME - self.emptyfrom > uwa then
+					self:unload()
+					self.emptyfrom = nil
+				end
+			end
+		end
+	end,
+
 	isWorld = true,
 	players = 0
 }
@@ -771,6 +805,7 @@ function unloadWorld(wname)
 	end
 
 	if world then
+		if world.gzipThread then return false end
 		playersForEach(function(player)
 			if player:isInWorld(wname)then
 				player:changeWorld('default')
@@ -821,6 +856,7 @@ end
 function regenerateWorld(world, gentype, seed)
 	world = getWorld(world)
 	if not world then return false, WORLD_NE end
+	if world.gzipThread then return false end
 	if world:isReadOnly()then return false, WORLD_RO end
 	local locked = false
 	playersForEach(function(player)
