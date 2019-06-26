@@ -14,14 +14,15 @@ gmLoad('gui')
 gmLoad('blocks')
 gmLoad('timers')
 gmLoad('craft')
+gmLoad('items')
+gmLoad('mobs')
 gmLoad('damage')
 gmLoad('inventory')
 gmLoad('commands')
 gmLoad('daynight')
 gmLoad('firespread')
 
-gmLoad('items')
-gmLoad('mobs')
+gmLoad('anticheat')
 
 config.types.spawnRadius = 'number'
 if not config:get('spawnRadius')then

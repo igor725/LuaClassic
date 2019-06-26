@@ -247,9 +247,9 @@ local player_mt = {
 		if not self.isSpawned then
 			pos.x, pos.y, pos.z = x, y, z
 			return
-
 		elseif self.isTeleported then
 			self.isTeleported = false
+			hooks:call('postPlayerTeleport', self)
 			pos.x, pos.y, pos.z = x, y, z
 			return
 		elseif pos.x ~= x or pos.y ~= y or pos.z ~= z then
@@ -278,7 +278,7 @@ local player_mt = {
 			return true
 		elseif self.oldDY < 0 then
 			self.oldDY = 0
-			
+
 			hooks:call('onPlayerLanded', self, self.fallingStartY and math.max(0, self.fallingStartY - pos.y) or 0)
 			self.fallingStartY = nil
 			return
@@ -694,8 +694,6 @@ local player_mt = {
 			end
 		end
 
-		local cl = self:getClient()
-		shutdownSock(cl, SHUT_WR)
 		table.insert(waitClose, cl)
 		cpe:extCallHook('onPlayerDestroy', self)
 		hooks:call('onPlayerDestroy', self)
@@ -703,6 +701,8 @@ local player_mt = {
 			onPlayerDestroy(self)
 		end
 
+		local cl = self:getClient()
+		shutdownSock(cl, SHUT_WR)
 		log.debug(DBG_DESTROYPLAYER, self)
 	end,
 	kick = function(self, reason, silent)

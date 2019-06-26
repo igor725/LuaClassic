@@ -18,6 +18,7 @@ hooks = {
 		['onPlayerDestroy'] = {},
 		['postPlayerSpawn'] = {},
 		['onConfigChanged'] = {},
+		['postPlayerTeleport'] = {},
 		['onPlayerPlaceBlock'] = {},
 		['prePlayerFirstSpawn'] = {},
 		['postPlayerFirstSpawn'] = {},
