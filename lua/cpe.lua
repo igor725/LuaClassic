@@ -50,7 +50,7 @@ end
 
 function cpe:loadExt(path)
 	local filename = path:match('^.+/(.+)$')
-	local chunk = log.assert(loadfile(path))
+	local chunk = log.eassert(loadfile(path))
 	local ext = setmetatable(chunk(), ext_mt)
 	local extn = filename:sub(1,-5)
 

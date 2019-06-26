@@ -28,14 +28,14 @@ function cm:load()
 		local mnum = tonumber(model)
 		if mnum then
 			if not isValidBlockID(mnum)then
-				player:setModel('humanoid')
+				player:setModel('humanoid', scale)
 				return false
 			end
 			model = tostring(mnum)
 		else
 			model = model:lower()
 			if not self.allowed_models[model]then
-				player:setModel('humanoid')
+				player:setModel('humanoid', scale)
 				return false
 			end
 		end
