@@ -362,11 +362,11 @@ function receiveMesg(fd, buffer, len, flags)
 	flags = flags or 0
 	local ret = sck.recv(fd, buffer, len, flags)
 	if ret < 0 then
-		return false, isClosed(currerr())
+		return 0, isClosed(currerr())
 	elseif ret > 0 then
 		return ret, false
 	else
-		return nil, true
+		return 0, true
 	end
 end
 

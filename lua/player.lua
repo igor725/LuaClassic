@@ -432,20 +432,27 @@ local player_mt = {
 	end,
 
 	readWsData = function(self)
-		local fd = self:getClient()
 		local sframe = self._sframe
+
 		if not self._sframe then
+			local fd = self:getClient()
 			sframe = ffi.new('struct ws_frame')
 			setupWFrameStruct(sframe, fd)
 			self._sframe = sframe
 		end
+
 		local st = receiveFrame(sframe)
+
 		if st == -1 then
 			self:destroy()
 		elseif st then
-			if sframe.opcode == 0x02 then
+			if sframe.opcode == 0x2 then
 				local id = sframe.payload[0]
 				self:handlePacket(id, sframe.payload + 1)
+			elseif sframe.opcode == 0x8 then
+				self:destroy()
+			else
+				log.warn('Unhandled frame', sframe.opcode, 'from', fd)
 			end
 		end
 	end,
@@ -456,13 +463,15 @@ local player_mt = {
 		end
 		local id, closed = self._waitPacket
 		if not id then
-			id, closed = receiveString(fd, 1)
+			len, closed = receiveMesg(fd, self._buf, 1)
+
 			if closed then
 				self:destroy()
 				return
 			end
-			if not id then return end
-			id = id:byte()
+			if len < 1 then return end
+
+			id = self._buf[0]
 			local psz = psizes[id]
 			local cpesz = cpe.psizes[id]
 			if cpesz then
@@ -478,18 +487,20 @@ local player_mt = {
 		end
 
 		if self._waitPacket then
-			local dlen, closed = receiveMesg(fd, self._buf + self._receivedData, self._remainingData)
+			local dlen, closed = receiveMesg(fd, self._buf + self._receivedData + 1, self._remainingData)
 			if closed then
 				self:destroy()
 				return
 			end
+			if not dlen then return end
+
 			self._remainingData = self._remainingData - dlen
 
 			if self._remainingData == 0 then
 				self._waitPacket = nil
 				self._remainingData = nil
 				self._receivedData = nil
-				self:handlePacket(id, self._buf)
+				self:handlePacket(id, self._buf + 1)
 			else
 				self._receivedData = self._receivedData + dlen
 			end

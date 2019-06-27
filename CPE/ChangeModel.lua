@@ -22,7 +22,7 @@ local cm = {
 function cm:load()
 	registerSvPacket(0x1d, 'bbc64')
 	getPlayerMT().setModel = function(player, model, scale)
-		if not model then return false end
+		model = model or'humanoid'
 		scale = tonumber(scale)or 1
 
 		local mnum = tonumber(model)
