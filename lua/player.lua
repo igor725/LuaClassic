@@ -461,9 +461,9 @@ local player_mt = {
 		if not self._buf then
 			self._buf = ffi.new('uint8_t[256]')
 		end
-		local id, closed = self._waitPacket
+		local id = self._waitPacket
 		if not id then
-			len, closed = receiveMesg(fd, self._buf, 1)
+			local len, closed = receiveMesg(fd, self._buf, 1)
 
 			if closed then
 				self:destroy()
