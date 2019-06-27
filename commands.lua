@@ -92,10 +92,7 @@ end)
 
 addCommand('uptime', function()
 	local tm = gettime() - START_TIME
-	local h = tm / 3600
-	local m = (tm/60) % 60
-	local s = tm % 60
-	return (CMD_UPTIME):format(h, m, s)
+	return (CMD_UPTIME):format(toDHMS(tm))
 end)
 
 addCommand('seed', function(isConsole, player, args)

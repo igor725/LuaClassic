@@ -193,6 +193,14 @@ function parseSizeStr(str)
 	return -1
 end
 
+function toDHMS(sec)
+	local d = sec / 86400
+	local h = (sec % 86400) / 3600
+	local m = (sec / 60) % 60
+	local s = sec % 60
+	return d, h, m, s
+end
+
 function getn(t)
 	local c = 0
 	for _ in pairs(t)do c = c + 1 end
