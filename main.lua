@@ -371,7 +371,7 @@ function serviceMessages()
 	end)
 	for i = #waitClose, 1, -1 do
 		local fd = waitClose[i]
-		while receiveMesg(fd, cwait, 256)do end
+		while receiveMesg(fd, cwait, 256) > 0 do end
 		table.remove(waitClose, i)
 		closeSock(fd)
 	end

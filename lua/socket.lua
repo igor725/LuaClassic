@@ -362,7 +362,7 @@ function receiveMesg(fd, buffer, len, flags)
 	flags = flags or 0
 	local ret = sck.recv(fd, buffer, len, flags)
 	if ret < 0 then
-		return 0, isClosed(currerr())
+		return -1, isClosed(currerr())
 	elseif ret > 0 then
 		return ret, false
 	else
@@ -375,7 +375,7 @@ function receiveString(fd, len, flags)
 
 	local buffer = ffi.new('char[?]', len)
 	local rlen, err = receiveMesg(fd, buffer, len, flags)
-	if rlen then
+	if rlen > 0 then
 		return ffi.string(buffer, rlen), err
 	else
 		return nil, err

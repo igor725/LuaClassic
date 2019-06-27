@@ -713,7 +713,6 @@ local player_mt = {
 			end
 		end
 
-		table.insert(waitClose, cl)
 		cpe:extCallHook('onPlayerDestroy', self)
 		hooks:call('onPlayerDestroy', self)
 		if onPlayerDestroy then
@@ -721,6 +720,7 @@ local player_mt = {
 		end
 
 		local cl = self:getClient()
+		table.insert(waitClose, cl)
 		shutdownSock(cl, SHUT_WR)
 		log.debug(DBG_DESTROYPLAYER, self)
 	end,
