@@ -9,7 +9,7 @@ local cm = {
 		['creeper'] = 2,
 		['zombie'] = 2,
 		['humanoid'] = 2,
-		['sitting'] = 1,
+		['sit'] = 1,
 		['chibi'] = 1,
 		['pig'] = 1,
 		['sheep'] = 1,
@@ -24,6 +24,10 @@ function cm:load()
 	getPlayerMT().setModel = function(player, model, scale)
 		model = model or'humanoid'
 		scale = tonumber(scale)or 1
+
+		if model == 'sitting'then
+			model = 'sit'
+		end
 
 		local mnum = tonumber(model)
 		if mnum then
