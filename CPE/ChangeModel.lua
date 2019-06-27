@@ -81,7 +81,7 @@ function cm:postPlayerSpawn(player)
 			if ply.model then
 				local mdstr
 				if player.modelscale ~= 1 then
-					mdstr = ('%s|%.2f'):format(ply.model, ply.modelscale)
+					mdstr = ('%s|%.2f'):format(ply.model, ply.modelscale or 0)
 				else
 					mdstr = ply.model
 				end

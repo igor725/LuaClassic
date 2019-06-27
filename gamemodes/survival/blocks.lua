@@ -145,6 +145,7 @@ end
 
 function survStopBreaking(player)
 	if player.action ~= SURV_ACT_BREAK then return end
+	
 	player.breakProgress = 0
 	player.action = SURV_ACT_NONE
 	survUpdateMiningProgress(player)

@@ -63,6 +63,6 @@ end)
 addCommand('ac', function(isConsole, player, args)
 	if args[1] == 'toggle'then
 		anticheatEnabled = not anticheatEnabled
-		return ('Anticheat %s'):format((anticheatEnabled and ST_ON)or ST_OFF)
 	end
+	return ('Anticheat %s'):format((anticheatEnabled and ST_ON)or ST_OFF)
 end)

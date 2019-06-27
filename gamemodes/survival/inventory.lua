@@ -39,7 +39,7 @@ end, function(inv, i)
 	end
 end, function(inv)
 	local cnt = 0
-	for i = 1, ffi.sizeof(inv) - 1 do
+	for i = 1, SURV_INV_SIZE do
 		if inv[i] > 0 then
 			cnt = cnt + 1
 		end
