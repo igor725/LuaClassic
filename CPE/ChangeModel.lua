@@ -56,9 +56,11 @@ function cm:load()
 		end
 
 		playersForEach(function(ply)
-			if ply:isSupported('ChangeModel')then
-				local id = (ply == player and -1)or player:getID()
-				ply:sendPacket(false, 0x1D, id, mdstr)
+			if ply:isInWorld(player)then
+				if ply:isSupported('ChangeModel')then
+					local id = (ply == player and -1)or player:getID()
+					ply:sendPacket(false, 0x1D, id, mdstr)
+				end
 			end
 		end)
 		return true
@@ -78,15 +80,17 @@ function cm:postPlayerSpawn(player)
 
 	if player:isSupported('ChangeModel')then
 		playersForEach(function(ply)
-			if ply.model then
-				local mdstr
-				if player.modelscale ~= 1 then
-					mdstr = ('%s|%.2f'):format(ply.model, ply.modelscale or 1)
-				else
-					mdstr = ply.model
+			if ply:isInWorld(player)then
+				if ply.model then
+					local mdstr
+					if player.modelscale ~= 1 then
+						mdstr = ('%s|%.2f'):format(ply.model, ply.modelscale or 1)
+					else
+						mdstr = ply.model
+					end
+					local id = (ply == player and -1)or ply:getID()
+					player:sendPacket(false, 0x1D, id, mdstr)
 				end
-				local id = (ply == player and -1)or ply:getID()
-				player:sendPacket(false, 0x1D, id, mdstr)
 			end
 		end)
 	end
