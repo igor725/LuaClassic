@@ -35,21 +35,28 @@ function wsLoad()
 		sframe.fd = fd
 	end
 
-	function encodeWsFrame(data, len, opcode)
-		local shortenc = false
-		if len > 125 then
-			shortenc = true
+	function encodeWsFrame(data, len, opcode, _buf)
+		local buf = _buf
+		data = ffi.cast('const char*', data)
+
+		if len < 126 then
+			buf = buf or ffi.new('char[?]', len + 2)
+			ffi.copy(buf + 2, data, len)
+			buf[1] = len
+			len = len + 2
+		elseif len < 65535 then
+			buf = buf or ffi.new('char[?]', len + 4)
+			ffi.cast('uint16_t*', buf)[1] = htons(len)
+			ffi.copy(buf + 4, data, len)
+			buf[1] = 126
+			len = len + 4
+		else
+			error('not implemented')
 		end
 
-		local b1 = bit.bor(0x80, bit.band(opcode, 0x0F))
-		if shortenc then
-			return struct.pack('>BBH', b1, 126, len) .. data
-		else
-			return string.char(
-				b1,
-				len
-			) .. data
-		end
+		buf[0] = bit.bor(0x80, bit.band(opcode, 0x0F))
+
+		return buf, len
 	end
 
 	function receiveFrame(sframe)

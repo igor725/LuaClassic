@@ -13,6 +13,7 @@ local cm = {
 		['chibi'] = 1,
 		['pig'] = 1,
 		['sheep'] = 1,
+		['sheep_nofur'] = 1,
 		['skeleton'] = 2,
 		['spider'] = 1,
 		['head'] = 1

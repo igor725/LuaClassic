@@ -24,9 +24,9 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 	local gErr = nil
 
 	if isWS then
-		mapStart = encodeWsFrame('\2', 1, 0x02)
+		sendMesg(fd, encodeWsFrame('\2', 1, 0x02))
 	else
-		mapStart = '\2'
+		sendMesg(fd, '\2', 1)
 	end
 
 	local smap = ffi.new[[struct {
@@ -35,27 +35,30 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 		uint8_t chunkdata[1024];
 		uint8_t complete;
 	}]]
+
+	local wbuf
 	local u16cl = ffi.cast('uint16_t*', smap.chunklen)
 	smap.complete = 100
 	smap.id = 0x03
 
-	sendMesg(fd, mapStart, #mapStart)
 	local succ, gErr = gz.compress(map, maplen, cmplvl, function(stream)
 		u16cl[0] = htons(1024 - stream.avail_out)
 
-		local err
+		local done
 
 		if isWS then
-			local wframe = encodeWsFrame(ffi.string(smap, 1028), 1028, 0x02)
-			err = select(2, sendMesg(fd, wframe, 1032))
+			wbuf = wbuf or ffi.new('char[1032]')
+			done = sendMesg(fd, encodeWsFrame(smap, 1028, 0x02, wbuf))
 		else
-			err = select(2, sendMesg(fd, smap, 1028))
+			done = sendMesg(fd, smap, 1028)
 		end
 
-		if err == 'closed'or err == 'nonsock'then
+		if not done then
 			gz.defEnd(stream)
 		end
 	end, smap.chunkdata)
+	wbuf, smap = nil
+	collectgarbage()
 
 	return gErr or 0
 end
@@ -514,9 +517,9 @@ local player_mt = {
 		if not self.canSend then return end
 
 		if self:isWebClient()then
-			msg = encodeWsFrame(msg, len, 0x02)
-			len = #msg
+			msg, len = encodeWsFrame(msg, len, 0x02)
 		end
+
 		msg = ffi.cast('char*', msg)
 		return sendMesg(self:getClient(), msg, len)
 	end,
