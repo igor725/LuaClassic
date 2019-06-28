@@ -43,6 +43,7 @@ local function wsaveThread(maddr, mlen, path)
 	end)
 	wh:close()
 	if not gStatus then error(gErr)end
+	collectgarbage()
 	return true
 end
 

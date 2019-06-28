@@ -492,6 +492,7 @@ function saveAll()
 	worldsForEach(function(world, wname)
 		log.eassert(world:save())
 	end)
+	collectgarbage()
 end
 
 succ, err = xpcall(function()

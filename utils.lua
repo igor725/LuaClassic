@@ -340,8 +340,8 @@ if jit.os == 'Windows'then
 
 	INVALID_HANDLE = ffi.cast('void*', -1)
 
+	local ft = ffi.new('filetime')
 	function gettime()
-		local ft = ffi.new('filetime')
 		C.GetSystemTimeAsFileTime(ft)
 		local wtime = ft.dwLowDateTime / 1.0e7 + ft.dwHighDateTime * 429.4967296
 		return wtime - 11644473600
@@ -431,8 +431,8 @@ else
 		C.usleep(ms * 1000)
 	end
 
+	local t = ffi.new('struct timeval')
 	function gettime()
-		local t = ffi.new('struct timeval')
 		C.gettimeofday(t, nil)
 		return tonumber(t.tv_sec) + 1e-6 * tonumber(t.tv_usec)
 	end

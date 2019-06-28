@@ -132,6 +132,7 @@ local function hThread(data)
 		end
 
 		closeSock(fd)
+		collectgarbage()
 		if not httpOK then
 			print(delim)
 		end
