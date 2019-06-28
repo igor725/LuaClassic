@@ -508,7 +508,6 @@ succ, err = xpcall(function()
 		end
 		if ETIME then
 			dt = CTIME - ETIME
-			dt = math.min(.1, dt)
 			hooks:call('onUpdate', dt)
 			timer.Update(dt)
 			worldsForEach(function(world)

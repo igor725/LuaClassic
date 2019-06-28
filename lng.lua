@@ -38,7 +38,6 @@ CU_WEATHER         = 'weather <world/weather type> [weather type] - Sets weather
 CU_TIME            = 'time <world/preset name> [preset name] - Sets time in specified world'
 
 IE_MSG             = 'Internal server error: %s'
-IE_GZ              = 'Map compression failed'
 IE_UE              = 'Unexpected error'
 IE_LE              = 'Lua error'
 
@@ -125,5 +124,4 @@ DBG_GMLOAD         = 'gmLoad:'
 WORLD_RO           = '&cThis world is in read-only mode'
 WORLD_NE           = 'This world does not exists'
 WORLD_TOOBIGDIM    = 'World dimensions are too big'
-WORLD_WRITEFAIL    = 'Level data write operation failed!'
 WORLD_LOCKED       = 'This world can\'t be regenerated now. Try again later.'

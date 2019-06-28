@@ -3,10 +3,6 @@
 	released under The MIT license http://opensource.org/licenses/MIT
 ]]
 
-local function getKickTimeout()
-	return config:get('playerTimeout')
-end
-
 local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 	set_debug_threadname('MapSender')
 
@@ -37,6 +33,7 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 	}]]
 
 	local wbuf
+	local connClosed = false
 	local u16cl = ffi.cast('uint16_t*', smap.chunklen)
 	smap.complete = 100
 	smap.id = 0x03
@@ -55,12 +52,13 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 
 		if not done then
 			gz.defEnd(stream)
+			connClosed = true
 		end
 	end, smap.chunkdata)
 	wbuf, smap = nil
 	collectgarbage()
 
-	return gErr or 0
+	return not connClosed and gErr or true
 end
 
 local function checkForPortal(player, x, y, z)
@@ -431,7 +429,7 @@ local player_mt = {
 			self:kick(KICK_INVALIDPACKET)
 			return
 		end
-		self.kickTimeout = CTIME + getKickTimeout()
+		self.kickTimeout = CTIME + config:get('playerTimeout')
 		pHandlers[id](self, struct.unpack(fmt, ffi.string(data, psz)))
 	end,
 
@@ -456,7 +454,7 @@ local player_mt = {
 			elseif sframe.opcode == 0x8 then
 				self:destroy()
 			else
-				log.warn('Unhandled frame', sframe.opcode, 'from', fd)
+				log.debug('Unhandled frame', sframe.opcode)
 			end
 		end
 	end,
@@ -738,34 +736,34 @@ local player_mt = {
 		if self.thread then
 			local pworld = getWorld(self)
 			if self.thread.status == 'error'then
+				self:kick(KICK_MAPTHREADERR, true)
 				log.error(self.thread[-1])
 				self.thread = nil
-				self:kick(KICK_MAPTHREADERR, true)
-				return
 			elseif self.thread.status == 'done'then
 				local mesg = self.thread[1]
+				self.canSend = true
 				self.thread = nil
 
-				if mesg then
-					if mesg == 0 then
-						self.canSend = true
-						local dim = pworld:getData('dimensions')
-						self:sendPacket(false, 0x04, dim.x, dim.y, dim.z)
-						self:spawn()
-					else
-						log.error('MAPSEND ERROR', mesg)
-						self:kick((IE_MSG):format(IE_GZ), true)
-					end
-					self.kickTimeout = CTIME + 60
-					pworld.unloadLocked = false
+				if mesg == true then
+					local dim = pworld:getData('dimensions')
+					self:sendPacket(false, 0x04, dim.x, dim.y, dim.z)
+					self.kickTimeout = CTIME + config:get('playerTimeout')
+					self:spawn()
+				elseif mesg == false then
+					self:destroy()
+				else
+					local err = gz.getErrStr(mesg)
+					log.error('MAPSEND ERROR', err)
+					self:kick((IE_MSG):format(err), true)
 				end
+				pworld.unloadLocked = false
 			elseif self.thread.status == 'running' then --TODO: Improve this
 				pworld.unloadLocked = true
+				return
 			end
-			return
 		end
 
-		if CTIME > self.kickTimeout then
+		if CTIME - dt > self.kickTimeout then
 			if self.isSpawned then
 				self:kick(KICK_TIMEOUT)
 				return
@@ -836,7 +834,7 @@ local player_mt = {
 		os.rename(pt_tmp, pt)
 		return true
 	end,
-	
+
 	isPlayer = true
 }
 player_mt.__index = player_mt
@@ -940,12 +938,12 @@ function newPlayer(fd)
 	local eye = newAngle(syaw, spitch)
 
 	return setmetatable({
-		kickTimeout = CTIME + getKickTimeout(),
 		connectTime = CTIME,
 		worldName = 'default',
 		messageBuffer = '',
 		prefix = '',
 		pos = pos,
+		kickTimeout = 0,
 		lastOnlineTime = 0,
 		isSpawned = false,
 		oldDY = 0,

@@ -72,7 +72,7 @@ config = {
 		[gthc] = 2,
 
 		[gzcmplvl] = 5,
-		[plytimeout] = 10,
+		[plytimeout] = 120,
 	},
 	types = {
 		[smotd] = 'string',

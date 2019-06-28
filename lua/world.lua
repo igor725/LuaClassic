@@ -22,6 +22,8 @@ local function logWorldError(world, str)
 end
 
 local function wsaveThread(maddr, mlen, path)
+	set_debug_threadname('WorldSave')
+
 	ffi = require('ffi')
 	ffi.cdef[[
 		size_t fwrite(const void* ptr, size_t size, size_t count, void* stream);
@@ -708,7 +710,7 @@ local world_mt = {
 	end,
 
 	save = function(self)
-		if self.gzipThread then return false end
+		if self.gzipThread then return true end
 		if not self.ldata then return true end
 		local pt = self:getPath()
 		local pt_tmp = pt .. '.tmp'
