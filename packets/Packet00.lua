@@ -4,6 +4,10 @@
 ]]
 
 return function(player, pver, name, vkey, magic)
+	if player.handshaked then
+		return
+	end
+	
 	if pver == 0x07 then
 		name = trimStr(name)
 		vkey = trimStr(vkey)

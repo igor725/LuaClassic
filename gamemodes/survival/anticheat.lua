@@ -43,7 +43,11 @@ hooks:add('onPlayerMove', 'anticheat', function(player, dx, dy, dz)
 		player.cheatScore = player.cheatScore + 25
 	else
 		if (y - player.landY) > 5 then
-			player.cheatScore = player.cheatScore + 20
+			if not haveGround(player)then
+				player.cheatScore = player.cheatScore + 20
+			else
+				player.landY = select(2, player:getPos())
+			end
 		end
 	end
 	if player.cheatScore > 60 then

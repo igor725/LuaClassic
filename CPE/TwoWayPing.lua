@@ -6,8 +6,8 @@
 local twp = {}
 
 function twp:load()
-	registerSvPacket(0x2B, '>bbh')
-	registerClPacket(0x2B, '>bh', function(player, dir, data)
+	registerSvPacket(0x2B, '>bbH')
+	registerClPacket(0x2B, '>bH', function(player, dir, data)
 		if dir == 0 then
 			player:sendPacket(false, 0x2B, 0, data)
 		elseif dir == 1 then

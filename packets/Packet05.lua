@@ -10,21 +10,26 @@ return function(player, x, y, z, mode, id)
 	if mode == 0x00 then
 		id = 0
 	end
+
 	if cblock ~= id and isValidBlockID(id)then
 		local cantPlace
 		if world:isReadOnly()then
 			player:sendMessage(WORLD_RO, MT_ANNOUNCE)
 			cantPlace = true
 		end
+		
 		if not cantPlace then
 			cantPlace = hooks:call('onPlayerPlaceBlock', player, x, y, z, id)
 		end
+
 		if not cantPlace and player.onPlaceBlock then
 			cantPlace = player.onPlaceBlock(x, y, z, id)
 		end
+
 		if not cantPlace and onPlayerPlaceBlock then
 			cantPlace = onPlayerPlaceBlock(player, x, y, z, id)
 		end
+
 		if not cantPlace then
 			world:setBlock(x, y, z, id)
 			broadcast(generatePacket(0x06, x, y, z, id))

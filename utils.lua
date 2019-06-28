@@ -208,7 +208,13 @@ function getn(t)
 end
 
 function getCurrentOnline()
-	return SERVER_ONLINE or 0
+	local count = 0
+	for i = 127, 0, -1 do
+		if isPlayer(entities[i])then
+			count = count + 1
+		end
+	end
+	return count
 end
 
 local function woSpaces(...) -- It works faster than string.match

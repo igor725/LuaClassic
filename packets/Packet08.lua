@@ -11,6 +11,7 @@ return function(player, id, x, y, z, yaw, pitch)
 		if not isValidBlockID(id)then
 			id = 0
 		end
+		
 		if player.heldBlock ~= id then
 			player.heldBlock = id
 			hooks:call('onHeldBlockChange', player, id)

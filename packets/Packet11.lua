@@ -8,10 +8,12 @@ return function(player, extName, extVer)
 		player:Kick(KICK_CPESEQERR)
 		return
 	end
+	
 	extName = trimStr(extName)
 	extName = extName:lower()
 	player.extensions[extName] = extVer
 	player.waitingExts = player.waitingExts - 1
+
 	if player.waitingExts == 0 then
 		player.handshakeStage2 = true
 		if onPlayerHandshakeDone then

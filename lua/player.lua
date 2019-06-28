@@ -151,7 +151,6 @@ local player_mt = {
 	init = function(self, id)
 		self.handshaked = false
 		self.handshakeStage2 = false
-		SERVER_ONLINE = (SERVER_ONLINE or 0) + 1
 		self:setID(id)
 	end,
 
@@ -559,7 +558,7 @@ local player_mt = {
 			0x07,
 			sname,
 			smotd,
-			(self.isOP and 0x64)or 0x00
+			0x00
 		)
 	end,
 	sendMessage = function(self, mesg, id)
@@ -707,7 +706,6 @@ local player_mt = {
 			end
 		end
 		entities[self:getID()] = nil
-		SERVER_ONLINE = math.max((SERVER_ONLINE or 1) - 1, 0)
 
 		if self.handshaked then
 			self.lastOnlineTime = self:getOnlineTime()
@@ -838,6 +836,7 @@ local player_mt = {
 		os.rename(pt_tmp, pt)
 		return true
 	end,
+	
 	isPlayer = true
 }
 player_mt.__index = player_mt
