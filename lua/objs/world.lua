@@ -43,7 +43,6 @@ local function wsaveThread(maddr, mlen, path)
 			error('file writing error')
 		end
 	end)
-	print('writing done')
 	wh:close()
 	if not gStatus then error(gErr)end
 	collectgarbage()
@@ -724,7 +723,6 @@ local world_mt = {
 		end
 
 		wh:close()
-		print('staring thread')
 		local ptr = getAddr(self.ldata)
 		self.gzipThread = lanes.gen('*', wsaveThread)(ptr, self:getData('size'), pt_tmp)
 		return true
@@ -927,7 +925,7 @@ function worldsForEach(func)
 end
 
 function newWorld(wh, wn)
-	local world = setmetatable({data = {}}, world_mt)
+	local world = setmetatable({}, world_mt)
 
 	if wh and wn then
 		world:setName(wn)

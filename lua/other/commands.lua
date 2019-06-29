@@ -154,8 +154,17 @@ end)
 addCommand('expand', function(isConsole, player, args)
 	if isConsole then return CON_INGAMECMD end
 	if #args < 1 then return false end
-	local dir = args[1]
-	local cnt = tonumber(args[2])or 1
+	local dir, cnt
+	local a1n = tonumber(args[1])
+	if a1n then
+		cnt = a1n
+		dir = args[2]
+	else
+		cnt = tonumber(args[2])
+		dir = args[1]
+	end
+
+	cnt = cnt or 1
 	local p1 = player.cuboidP1
 	local p2 = player.cuboidP2
 	if not p1 or not p2 then
