@@ -18,7 +18,7 @@ end
 
 local function hThread(data)
 	ffi = require('ffi')
-	require('socket')
+	require('network.socket')
 
 	local currServerURL
 
