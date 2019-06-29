@@ -43,6 +43,7 @@ local function wsaveThread(maddr, mlen, path)
 			error('file writing error')
 		end
 	end)
+	print('writing done')
 	wh:close()
 	if not gStatus then error(gErr)end
 	collectgarbage()
@@ -207,8 +208,7 @@ local world_mt = {
 	unload = function(self)
 		if self.players > 0 or self.unloadLocked then return false end
 		self:save()
-		self.ldata = nil
-		collectgarbage()
+		self.unloadScheduled = true
 		return true
 	end,
 	triggerLoad = function(self)
@@ -724,7 +724,9 @@ local world_mt = {
 		end
 
 		wh:close()
-		self.gzipThread = lanes.gen('*', wsaveThread)(getAddr(self.ldata), self:getData('size'), pt_tmp)
+		print('staring thread')
+		local ptr = getAddr(self.ldata)
+		self.gzipThread = lanes.gen('*', wsaveThread)(ptr, self:getData('size'), pt_tmp)
 		return true
 	end,
 	update = function(self)
@@ -733,10 +735,18 @@ local world_mt = {
 			if th.status == 'error'then
 				logWorldError(self, th[-1])
 				self.gzipThread = nil
+				if self.unloadScheduled then
+					self.ldata = nil
+					collectgarbage()
+				end
 			elseif th.status == 'done'then
 				self.gzipThread = nil
 				local pt = self:getPath()
 				os.rename(pt .. '.tmp', pt)
+				if self.unloadScheduled then
+					self.ldata = nil
+					collectgarbage()
+				end
 			end
 		else
 			if uwa > 0 then
