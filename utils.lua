@@ -24,6 +24,7 @@ ffi.cdef[[
 	size_t fread(void* ptr, size_t size, size_t count, void* stream);
 	size_t fwrite(const void* ptr, size_t size, size_t count, void* stream);
 	int    ferror(void* stream);
+	void   free(void* ptr);
 ]]
 
 local ext = (jit.os == 'Windows'and'dll')or'so'
@@ -42,7 +43,7 @@ end
 ENABLE_ANSI = checkEnv('ConEmuANSI', 'on')or checkEnv('TERM', 'xterm')or
 checkEnv('TERM', 'screen')or checkEnv('TERM', 'linux')
 
-lanes = require('lanes').configure{
+lanes = require('other.lanes').configure{
 	with_timers = false
 }
 struct = require('struct')
@@ -413,6 +414,7 @@ else
 		void  gettimeofday(struct timeval*, void*);
 		void  usleep(unsigned int);
 		void* opendir(const char*);
+		void  closedir(void*);
 		struct dirent* readdir(void*);
 	]]
 
@@ -425,6 +427,7 @@ else
 				return name, _ent.d_type == 8
 			end
 		end
+		C.closedir(dir)
 	end
 
 	function sleep(ms)
@@ -434,7 +437,8 @@ else
 	local t = ffi.new('struct timeval')
 	function gettime()
 		C.gettimeofday(t, nil)
-		return tonumber(t.tv_sec) + 1e-6 * tonumber(t.tv_usec)
+		local tm = tonumber(t.tv_sec) + 1e-6 * tonumber(t.tv_usec)
+		return tm
 	end
 
 	function scanDir(dir, ext)
@@ -497,8 +501,11 @@ function watchThreads(threads)
 	end
 end
 
-require('hooks')
-require('log')
-dirForEach('lua', 'lua', function(file)
-	require(file:sub(1, -5))
-end)
+require('evs.hooks')
+require('other.log')
+local cats = {'data', 'evs', 'hash', 'network', 'objs', 'other'}
+for i = 1, #cats do
+	dirForEach('lua/' .. cats[i], 'lua', function(_, path)
+		assert(loadfile(path))()
+	end)
+end

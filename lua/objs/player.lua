@@ -7,12 +7,12 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 	set_debug_threadname('MapSender')
 
 	ffi = require('ffi')
-	require('socket')
-	require('gzip')
+	require('data.gzip')
+	require('network.socket')
 
 	if isWS then
+		require('network.websocket')
 		struct = require('struct')
-		require('websocket')
 		wsLoad()
 	end
 

@@ -33,7 +33,6 @@ if os.getenv('DEBUG')then
 end
 
 require('utils')
-require('commands')
 START_TIME = gettime()
 
 function onPlayerAuth(player, name, key)
@@ -495,7 +494,7 @@ function saveAll()
 	collectgarbage()
 end
 
-succ, err = xpcall(function()
+function mainLoop()
 	while not _STOP do
 		ETIME = CTIME
 		CTIME = gettime()
@@ -533,12 +532,25 @@ succ, err = xpcall(function()
 		if NextUpdate > gettime() then
 			sleep((NextUpdate - gettime())*1000)
 		end
+
+		hasError = false
 	end
-end, debug.traceback)
+end
+
+while true do
+	succ, err = xpcall(mainLoop, debug.traceback)
+	if succ or hasError then
+		break
+	else
+		log.error(err)
+		hasError = true
+	end
+end
 
 ecode = 0
 
 if INITED then
+	log.info(CON_SVDAT)
 	playersForEach(function(ply)
 		if _STOP == 'restart'then
 			ply:kick(KICK_SVRST)

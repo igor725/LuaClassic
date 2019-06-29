@@ -29,7 +29,7 @@ local function wsaveThread(maddr, mlen, path)
 		size_t fwrite(const void* ptr, size_t size, size_t count, void* stream);
 		int    ferror(void* stream);
 	]]
-	require('gzip')
+	require('data.gzip')
 	C = ffi.C
 
 	local wh = io.open(path, 'ab') -- Oh...
