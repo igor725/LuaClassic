@@ -197,7 +197,7 @@ local player_mt = {
 	getFluidLevel = function(self)
 		local world = getWorld(self)
 		local x, y, z = self:getPos()
-		x, y, z = floor(x), floor(y), floor(z)
+		x, y, z = floor(x), floor(y - .5), floor(z)
 		if self:getModelHeight() > 1 then
 			local upblock = world:getBlock(x, y, z)
 			if upblock and upblock >= 8 and upblock <= 11 then
