@@ -501,7 +501,7 @@ function watchThreads(threads)
 	end
 end
 
-require('evs.hooks')
+require('evt.hooks')
 require('other.log')
 local cats = {'data', 'evt', 'hash', 'network', 'objs', 'other'}
 for i = 1, #cats do
