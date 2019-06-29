@@ -503,7 +503,7 @@ end
 
 require('evs.hooks')
 require('other.log')
-local cats = {'data', 'evs', 'hash', 'network', 'objs', 'other'}
+local cats = {'data', 'evt', 'hash', 'network', 'objs', 'other'}
 for i = 1, #cats do
 	dirForEach('lua/' .. cats[i], 'lua', function(_, path)
 		assert(loadfile(path))()
