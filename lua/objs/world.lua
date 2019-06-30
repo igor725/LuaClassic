@@ -689,6 +689,15 @@ local world_mt = {
 					end
 				end
 			end
+		elseif id == 12 then
+			if self:getBlock(x, y - 1, z) == 0 then
+				self:setBlock(x, y - 1, z, 12)
+				self:setBlock(x, y, z, 0)
+				
+				timer.Simple(.3, function()
+					self:updateWaterBlock(sx, sy, sz, x, y - 1, z)
+				end)
+			end
 		end
 	end,
 
