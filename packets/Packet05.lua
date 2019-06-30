@@ -17,7 +17,7 @@ return function(player, x, y, z, mode, id)
 			player:sendMessage(WORLD_RO, MT_ANNOUNCE)
 			cantPlace = true
 		end
-		
+
 		if not cantPlace then
 			cantPlace = hooks:call('onPlayerPlaceBlock', player, x, y, z, id)
 		end
@@ -31,8 +31,7 @@ return function(player, x, y, z, mode, id)
 		end
 
 		if not cantPlace then
-			world:setBlock(x, y, z, id)
-			broadcast(generatePacket(0x06, x, y, z, id))
+			world:setBlock(x, y, z, id, player)
 			if postPlayerPlaceBlock then
 				postPlayerPlaceBlock(player, x, y, z, id, cblock)
 			end

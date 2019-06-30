@@ -919,14 +919,6 @@ function newLocalChatMessage(world, msg, id)
 	end)
 end
 
-function broadcast(str, exid)
-	playersForEach(function(player, id)
-		if id ~= exid then
-			player:sendNetMesg(str, #str)
-		end
-	end)
-end
-
 function isPlayer(val)
 	return type(val) == 'table'and val.isPlayer == true
 end

@@ -275,7 +275,7 @@ local world_mt = {
 		return sp.x, sp.y, sp.z, spe.yaw, spe.pitch
 	end,
 
-	setBlock = function(self, x, y, z, id)
+	setBlock = function(self, x, y, z, id, exclude)
 		if not self.ldata then return false end
 		if self:isReadOnly()then return false end
 		local offset = self:getOffset(x, y, z)
@@ -283,7 +283,9 @@ local world_mt = {
 			self.ldata[offset] = id
 			if self.players > 0 then
 				playersForEach(function(player)
-					player:sendPacket(false, 0x06, x, y, z, id)
+					if player ~= exclude then
+						player:sendPacket(false, 0x06, x, y, z, id)
+					end
 				end)
 			end
 		end
