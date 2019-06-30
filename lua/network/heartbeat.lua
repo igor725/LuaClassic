@@ -203,7 +203,6 @@ hooks:add('onInitDone', 'heartbeat', function()
 			delay = 25000
 		}
 		heartbeatThread = lanes.gen('*', hThread)(heartbeatData)
-		heartbeatSalt = sSalt
 
 		function onPlayerAuth(player, name, key)
 			if key ~= md5.sumhexa(heartbeatData.salt .. name)then
@@ -228,7 +227,7 @@ hooks:add('onUpdate', 'heartbeat', function()
 		end
 		local _, v = linda:receive(0, 'salt')
 		if v then
-			heartbeatSalt = v
+			heartbeatData.salt = v
 		end
 		local _, url = linda:receive(0, 'url')
 		if url then

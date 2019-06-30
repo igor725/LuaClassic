@@ -5,7 +5,6 @@
 
 cpe = {
 	softwareName = 'LuaClassic',
-	inited = false,
 	extCount = 2,
 	packets = {
 		sv = {},
@@ -24,8 +23,6 @@ local ext_mt = {
 ext_mt.__index = ext_mt
 
 function cpe:init()
-	if self.inited then return end
-	self.inited = true
 	registerSvPacket(0x10, '>Bc64h')
 	registerSvPacket(0x11, '>Bc64i')
 	registerClPacket(0x10, '>c64h')
@@ -82,20 +79,16 @@ function cpe:generatePacket(id, ...)
 end
 
 function cpe:extCallHook(hookName, ...)
-	if cpe.inited then
-		for ename, ext in pairs(cpe.exts)do
-			if ext[hookName] then
-				ext[hookName](ext, ...)
-			end
+	for ename, ext in pairs(cpe.exts)do
+		if ext[hookName] then
+			ext[hookName](ext, ...)
 		end
 	end
 end
 
 function cpe:startFor(player)
-	if cpe.inited then
-		player:sendPacket(false, 0x10, self.softwareName, self.extCount)
-		for name, ext in pairs(self.exts)do
-			player:sendPacket(false, 0x11, name, ext:getVersion())
-		end
+	player:sendPacket(false, 0x10, self.softwareName, self.extCount)
+	for name, ext in pairs(self.exts)do
+		player:sendPacket(false, 0x11, name, ext:getVersion())
 	end
 end
