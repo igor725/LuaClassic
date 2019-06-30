@@ -21,8 +21,10 @@ end
 function hooks:add(hookname, bname, func, priority)
 	priority = priority or 100
 	local hks = self.list[hookname]
+	if not table.hasValue(hks.priority, bname)then
+		table.insert(hks.priority, bname)
+	end
 	hks.priority[bname] = priority
-	table.insert(hks.priority, bname)
 	hks[bname] = func
 
 	self:recalculatePriority(hookname)
