@@ -32,9 +32,6 @@ return function(player, x, y, z, mode, id)
 
 		if not cantPlace then
 			world:setBlock(x, y, z, id, player)
-			if postPlayerPlaceBlock then
-				postPlayerPlaceBlock(player, x, y, z, id, cblock)
-			end
 			hooks:call('postPlayerPlaceBlock', player, x, y, z, id, cblock)
 		else
 			player:sendPacket(false, 0x06, x, y, z, cblock)

@@ -16,7 +16,7 @@ local wmsg = 'welcomeMessage'
 local dperms = 'defaultPerms'
 local spl = 'storePlayersIn_G'
 local texpack = 'texPack'
-local wphys = 'waterPhysics'
+local wphys = 'physicsEnabled'
 local smsz = 'maxSaveSize'
 local asave = 'auosaveDelay'
 

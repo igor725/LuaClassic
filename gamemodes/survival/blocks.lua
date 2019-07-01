@@ -168,9 +168,6 @@ function survBreakBlock(player, x, y, z)
 		end
 		world:setBlock(x, y, z, 0)
 		hooks:call('postPlayerPlaceBlock', player, x, y, z, 0, cbid)
-		if postPlayerPlaceBlock then
-			postPlayerPlaceBlock(player, x, y, z, 0)
-		end
 	end
 	survStopBreaking(player)
 end
