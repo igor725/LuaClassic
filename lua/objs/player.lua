@@ -183,7 +183,7 @@ local player_mt = {
 		return self.worldName
 	end,
 	getLeaveReason = function(self)
-		return self.leavereason
+		return self.leaveReason
 	end,
 	getForward = function(self)
 		local eye = self.eye
@@ -435,14 +435,6 @@ local player_mt = {
 
 	readWsData = function(self)
 		local sframe = self._sframe
-
-		if not self._sframe then
-			local fd = self:getClient()
-			sframe = ffi.new('struct ws_frame')
-			setupWFrameStruct(sframe, fd)
-			self._sframe = sframe
-		end
-
 		local st = receiveFrame(sframe)
 
 		if st == -1 then
@@ -726,7 +718,7 @@ local player_mt = {
 	kick = function(self, reason, silent)
 		reason = reason or KICK_NOREASON
 		self:sendPacket(false, 0x0e, reason)
-		self.leavereason = reason
+		self.leaveReason = reason
 		self.silentKick = silent
 		self.kicked = true
 		self:destroy()

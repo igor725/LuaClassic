@@ -186,6 +186,7 @@ function wsDoHandshake()
 				wsHandshake[fd] = nil
 				return
 			end
+
 			if hdr then
 				if hdr:lower() == 'get'then
 					data.state = 'initial'
@@ -203,12 +204,14 @@ function wsDoHandshake()
 				wsHandshake[fd] = nil
 				return
 			end
+
 			if req then
 				req = req:lower()
 				if req:find(httpPattern)then
 					data.state = 'headers'
 				end
 			end
+
 			if data.state ~= 'headers'then
 				data.state = 'badrequest'
 				data.emsg = 'Not a GET request'
@@ -222,6 +225,7 @@ function wsDoHandshake()
 				wsHandshake[fd] = nil
 				return
 			end
+
 			if ln == ''then
 				data.state = 'genresp'
 			elseif ln then
@@ -240,6 +244,7 @@ function wsDoHandshake()
 			local hdr = data.headers
 			local wskey = hdr['sec-websocket-key']
 			local wsver = hdr['sec-websocket-version']
+			local wsproto = hdr['sec-websocket-protocol']
 			local conn = hdr['connection']
 			local upgrd = hdr['upgrade']
 
@@ -247,16 +252,47 @@ function wsDoHandshake()
 			upgrd:lower() == 'websocket'and
 			conn:lower():find('upgrade')and
 			tonumber(wsver) == 13 then
+				wsproto = wsproto or'noproto'
 				wskey = wskey .. WSGUID
 				wskey = b64enc(sha1(wskey))
+				wsHandshake[fd] = nil
+
+				if wsproto == 'ClassiCube'then
+					local player = createPlayer(fd, data.ip, true)
+					player._sframe = ffi.new('struct ws_frame')
+					setupWFrameStruct(player._sframe, fd)
+				else
+					if wsHandlers[wsproto]then
+						local frame = ffi.new('struct ws_frame')
+						setupWFrameStruct(frame, fd)
+
+						for i = 0, 127 do
+							if not wsConnections[i]then
+								wsConnections[i] = {
+									sframe = frame,
+									proto = wsproto,
+									fd = fd
+								}
+								break
+							elseif i == 127 then
+								data.state = 'badrequest'
+								data.emsg = 'Server cannot accept connection'
+								return
+							end
+						end
+					else
+						data.state = 'badrequest'
+						data.emsg = 'Invalid protocol'
+						return
+					end
+				end
+
 				local response =
 				('HTTP/1.1 101 Switching Protocols\r\n' ..
 				'Upgrade: websocket\r\nConnection: Upgrade\r\n' ..
-				'Sec-WebSocket-Protocol: ClassiCube\r\n' ..
-				'Sec-WebSocket-Accept: %s\r\n\r\n'):format(wskey)
+				'Sec-WebSocket-Protocol: %s\r\n' ..
+				'Sec-WebSocket-Accept: %s\r\n\r\n'):format(wsproto, wskey)
 				sendMesg(fd, response)
-				wsHandshake[fd] = nil
-				createPlayer(fd, data.ip, true)
 			else
 				data.state = 'badrequest'
 			end
@@ -289,6 +325,7 @@ function createPlayer(fd, ip, isWS)
 			player:kick(KICK_SFULL)
 		end
 		hooks:call('onPlayerCreate', player)
+		return player
 	else
 		local rawPacket = generatePacket(0x0e, KICK_CONNREJ)
 		if isWS then
@@ -368,6 +405,28 @@ function serviceMessages()
 	playersForEach(function(player)
 		player:serviceMessages()
 	end)
+
+	if wsConnections then
+		for i = 0, 127 do
+			local conn = wsConnections[i]
+			if conn then
+				local frame = conn.sframe
+				local st = receiveFrame(frame)
+				if st == -1 then
+					wsConnections[i] = nil
+					table.insert(waitClose, conn.fd)
+				elseif st then
+					if frame.opcode == 0x8 then
+						wsConnections[i] = nil
+						table.insert(waitClose, conn.fd)
+					else
+						wsHandlers[conn.proto](conn)
+					end
+				end
+			end
+		end
+	end
+
 	for i = #waitClose, 1, -1 do
 		local fd = waitClose[i]
 		while receiveMesg(fd, cwait, 256) > 0 do end
@@ -382,9 +441,10 @@ function init()
 		log.setLevel(loglvl)
 	end
 	log.info(CON_START)
-	entities, worlds = {}, {}
 	waitClose = {}
+	entities = {}
 	nworlds = {}
+	worlds = {}
 
 	config:parse()
 	permissions:parse()
@@ -396,15 +456,17 @@ function init()
 	server = log.assert(bindSock(ip, port))
 
 	if config:get('acceptWebsocket')then
+		wsConnections = {}
 		wsHandshake = {}
+		wsHandlers = {}
 		wsLoad()
 	else
 		wsLoad = nil
 	end
 
-	_GAMEMODE = config:get('serverGamemode')
-	if _GAMEMODE and #_GAMEMODE > 0 and _GAMEMODE ~= 'none'then
-		local path = 'gamemodes/' .. _GAMEMODE .. '/%s.lua'
+	local gm = config:get('serverGamemode')
+	if gm and #gm > 0 and gm ~= 'none'then
+		local path = 'gamemodes/' .. gm .. '/%s.lua'
 		function gmLoad(fn)
 			log.debug(DBG_GMLOAD, fn)
 			return assert(loadfile((path):format(fn)))()
@@ -416,16 +478,16 @@ function init()
 		else
 			log.fatal('Gamemode loading error:', err)
 		end
+
+		if initGamemode then
+			initGamemode()
+			log.info('Gamemode:', gm)
+			initGamemode = nil
+		end
 	end
 
 	log.info('Loading banlist')
 	loadBanList()
-
-	if initGamemode then
-		initGamemode()
-		log.info('Gamemode:', _GAMEMODE)
-		initGamemode = nil
-	end
 
 	log.info(CON_WLOAD)
 	local sdlist = config:get('levelSeeds')
