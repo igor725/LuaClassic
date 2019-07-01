@@ -8,6 +8,11 @@ return function(player, x, y, z, mode, id)
 	local cblock = world:getBlock(x, y, z)
 
 	if mode == 0x00 then
+		if not cblock then
+			cblock = id
+		elseif cblock ~= id then
+			return
+		end
 		id = 0
 	end
 
@@ -26,14 +31,15 @@ return function(player, x, y, z, mode, id)
 			cantPlace = player.onPlaceBlock(x, y, z, id)
 		end
 
-		if not cantPlace and onPlayerPlaceBlock then
-			cantPlace = onPlayerPlaceBlock(player, x, y, z, id)
+		if not cantPlace then
+			if world:setBlock(x, y, z, id, player)then
+				hooks:call('postPlayerPlaceBlock', player, x, y, z, id, cblock)
+			else
+				cantPlace = true
+			end
 		end
 
-		if not cantPlace then
-			world:setBlock(x, y, z, id, player)
-			hooks:call('postPlayerPlaceBlock', player, x, y, z, id, cblock)
-		else
+		if cantPlace then
 			player:sendPacket(false, 0x06, x, y, z, cblock)
 		end
 	end

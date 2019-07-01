@@ -209,15 +209,13 @@ local world_mt = {
 		return true
 	end,
 	triggerLoad = function(self)
-		if not self.ldata then
-			local wh = assert(io.open(self:getPath(), 'rb'))
-			if self:readLevelInfo(wh)then
-				self:readGZIPData(wh)
-				wh:close()
-				return true
-			end
+		if self.ldata then return false end
+		local wh = assert(io.open(self:getPath(), 'rb'))
+		if self:readLevelInfo(wh)then
+			self:readGZIPData(wh)
+			wh:close()
+			return true
 		end
-		return false
 	end,
 
 	getDimensions = function(self)
@@ -286,6 +284,7 @@ local world_mt = {
 					end
 				end)
 			end
+			return true
 		end
 	end,
 	setSpawn = function(self, x, y, z, ay, ap)

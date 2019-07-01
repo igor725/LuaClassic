@@ -528,9 +528,8 @@ local player_mt = {
 		if not world then return end
 		self.canSend = false
 		if not world.ldata then
-			self:sendMessage(MESG_LEVELLOAD, MT_STATUS1)
+			self:sendMessage(MESG_LEVELLOAD)
 			world:triggerLoad()
-			self:sendMessage('', MT_STATUS1)
 		end
 		local addr = world:getAddr()
 		local size = world:getSize()
@@ -672,6 +671,7 @@ local player_mt = {
 		local world = getWorld(self)
 		world.players = world.players + 1
 		world.emptyfrom = nil
+		world:triggerLoad()
 		self.isSpawned = true
 		cpe:extCallHook('postPlayerSpawn', self)
 		hooks:call('postPlayerSpawn', self)
