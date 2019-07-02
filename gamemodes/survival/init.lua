@@ -69,6 +69,7 @@ hooks:add('onPlayerCreate', 'surv_init', function(player)
 	player.oxygen = SURV_MAX_OXYGEN
 	player.action = SURV_ACT_NONE
 	player.breakProgress = 0
+	player.pvpmode = false
 	player.oxyshow = false
 	player.heldTool = 0
 	player.deaths = 0
@@ -167,11 +168,8 @@ end)
 saveAdd('deaths', '>I')
 saveAdd('health', '>f')
 saveAdd('oxygen', '>f')
-saveAdd('isInGodmode', 'b', function(player, val)
-	return val == 1
-end, function(val)
-	return val and 1 or 0
-end)
+saveAdd('isInGodmode', 'bool')
+saveAdd('pvpmode', 'bool')
 saveAdd('homepos', '>fff', function(player, x, y, z)
 	return newVector(x, y, z)
 end, function(val)

@@ -30,6 +30,8 @@ function parseData(file, readers, hdr, dTable, dSkipped)
 				else
 					dTable[key] = file:read(dataSize)
 				end
+			elseif reader.format == 'bool'then
+				dTable[key] = file:read(dataSize) == '\1'
 			elseif reader.format:find('^tbl:')then
 				local tfmt = reader.format:match('^tbl:(.+)')
 				local tfmtsz = struct.size(tfmt)
@@ -67,6 +69,9 @@ function writeData(file, writers, hdr, dTable, dSkipped)
 			if writer.format == 'string'then
 				packTo(file, '>H', #value)
 				file:write(value)
+			elseif writer.format == 'bool'then
+				packTo(file, '>H', 1)
+				file:write((value and '\1')or'\0')
 			elseif writer.format:find('^tbl:')then
 				local tfmt = writer.format:match('^tbl:(.+)')
 				local tfmtsz = struct.size(tfmt)

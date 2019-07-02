@@ -47,6 +47,16 @@ function survDamage(attacker, victim, damage, dmgtype)
 	local world = getWorld(victim)
 
 	if dmgtype == SURV_DMG_PLAYER then
+		if not attacker.pvpmode then
+			attacker:sendMessage(MESG_PVP)
+			return
+		end
+
+		if not victim.pvpmode then
+			attacker:sendMessage(MESG_PPVP)
+			return
+		end
+
 		if attacker.isInGodmode and not attacker:checkPermission('god.hurt')then
 			return
 		end

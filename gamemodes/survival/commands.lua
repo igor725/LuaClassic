@@ -70,6 +70,10 @@ addCommand('drop', function(isConsole, player, args)
 			return MESG_PLAYERNF
 		end
 
+		if target == player then
+			return false
+		end
+
 		if distance(x, y, z, target:getPos()) > 6 then
 			return CMD_DROPTOOFAR
 		end
@@ -81,6 +85,7 @@ addCommand('drop', function(isConsole, player, args)
 			return false
 		end
 
+		local name = survGetBlockName(bId)
 		if inv1[bId] >= quantity then
 			inv1[bId] = inv1[bId] - quantity
 			inv2[bId] = inv2[bId] + quantity
@@ -88,7 +93,10 @@ addCommand('drop', function(isConsole, player, args)
 			survUpdateBlockInfo(target)
 			survUpdateInventory(player, bId)
 			survUpdateInventory(target, bId)
-			return (CMD_DROPSUCCP):format(quantity, survGetBlockName(bId), target)
+			target:sendMessage((MESG_DROP):format(quantity, name, player))
+			return (CMD_DROPSUCCP):format(quantity, name, target)
+		else
+			return (CMD_DROPNE):format(quantity, name)
 		end
 	end
 	return false
@@ -177,8 +185,14 @@ addCommand('sethome', function(isConsole, player, args)
 		hp = newVector(player:getPos())
 		ha = newAngle(player:getEyePos())
 	end
+	
 	player.homepos = hp
 	player.homeang = ha
 	player.homeworld = player.worldName
 	return CMD_HOMESET
+end)
+
+addCommand('pvp', function(isConsole, player, args)
+	player.pvpmode = not player.pvpmode
+	return (CMD_PVP):format((player.pvpmode and ST_ON)or ST_OFF)
 end)

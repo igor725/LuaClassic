@@ -75,16 +75,10 @@ local wReaders = {
 		end
 	},
 	['isNether'] = {
-		format = 'b',
-		func = function(wdata, val)
-			return val == 1
-		end
+		format = 'bool'
 	},
 	['readonly'] = {
-		format = 'b',
-		func = function(wdata, val)
-			return val == 1
-		end
+		format = 'bool'
 	},
 	['portals'] = {
 		format = 'tbl:>HHHHHHc16c16',
@@ -142,16 +136,10 @@ local wWriters = {
 		end
 	},
 	['isNether'] = {
-		format = 'b',
-		func = function(v)
-			return v and 1 or 0
-		end
+		format = 'bool'
 	},
 	['readonly'] = {
-		format = 'b',
-		func = function(v)
-			return v and 1 or 0
-		end
+		format = 'bool'
 	},
 	['portals'] = {
 		format = 'tbl:>HHHHHHc16c16',
