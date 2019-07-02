@@ -11,33 +11,40 @@ return function(player, x, y, z, mode, id)
 		id = 0
 	end
 
-	if cblock ~= id and isValidBlockID(id)then
-		local cantPlace = not player.isSpawned
-		
-		if world:isReadOnly()then
-			player:sendMessage(WORLD_RO, MT_ANNOUNCE)
+	local cantPlace = not player.isSpawned
+
+	if world:isReadOnly()then
+		player:sendMessage(WORLD_RO, MT_ANNOUNCE)
+		cantPlace = true
+	end
+
+	if not cantPlace and cblock == -1 then
+		cblock = 1
+		cantPlace = true
+	end
+
+	if not cantPlace then
+		cantPlace = not isValidBlockID(id)
+	end
+
+	if not cantPlace then
+		cantPlace = hooks:call('onPlayerPlaceBlock', player, x, y, z, id)
+	end
+
+	if not cantPlace and player.onPlaceBlock then
+		cantPlace = player.onPlaceBlock(x, y, z, id)
+	end
+
+	if not cantPlace then
+		if world:setBlock(x, y, z, id, player)then
+			hooks:call('postPlayerPlaceBlock', player, x, y, z, id, cblock)
+		else
 			cantPlace = true
 		end
+	end
 
-		if not cantPlace then
-			cantPlace = hooks:call('onPlayerPlaceBlock', player, x, y, z, id)
-		end
-
-		if not cantPlace and player.onPlaceBlock then
-			cantPlace = player.onPlaceBlock(x, y, z, id)
-		end
-
-		if not cantPlace then
-			if world:setBlock(x, y, z, id, player)then
-				hooks:call('postPlayerPlaceBlock', player, x, y, z, id, cblock)
-			else
-				cantPlace = true
-			end
-		end
-
-		if cantPlace then
-			cblock = cblock or 1
-			player:sendPacket(false, 0x06, x, y, z, cblock)
-		end
+	if cantPlace then
+		cblock = cblock or 1
+		player:sendPacket(false, 0x06, x, y, z, cblock)
 	end
 end

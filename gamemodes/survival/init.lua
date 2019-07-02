@@ -68,9 +68,10 @@ hooks:add('onPlayerCreate', 'surv_init', function(player)
 	player.health = SURV_MAX_HEALTH
 	player.oxygen = SURV_MAX_OXYGEN
 	player.action = SURV_ACT_NONE
+	player.breakProgress = 0
 	player.oxyshow = false
-	player.deaths = 0
 	player.heldTool = 0
+	player.deaths = 0
 end)
 
 hooks:add('postPlayerSpawn', 'surv_init', function(player)

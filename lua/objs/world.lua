@@ -233,21 +233,12 @@ local world_mt = {
 		return false
 	end,
 	getBlock = function(self, x, y, z)
-		if not self.ldata then return false end
+		if not self.ldata then return -1 end
 		local offset = self:getOffset(x, y, z)
 		if offset then
 			return self.ldata[offset]
 		else
-			return 0
-		end
-	end,
-	getBlockUnsafe = function(self, x, y, z)
-		if not self.ldata then return false end
-		local offset = self:getOffset(x, y, z)
-		if offset then
-			return self.ldata[offset]
-		else
-			return nil
+			return -1
 		end
 	end,
 	getAddr = function(self)
