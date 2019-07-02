@@ -61,6 +61,8 @@ addCommand('restart', function(isConsole, player, args)
 				_STOP = 'restart'
 			elseif repLeft <= 10 then
 				newChatMessage((CMD_RSTTMR):format(repLeft))
+			elseif repLeft % 30 == 0 then
+				newChatMessage((CMD_RSTTMR):format(repLeft))
 			end
 		end)
 	else
