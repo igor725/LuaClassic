@@ -8,11 +8,6 @@ return function(player, x, y, z, mode, id)
 	local cblock = world:getBlock(x, y, z)
 
 	if mode == 0x00 then
-		if not cblock then
-			cblock = id
-		elseif cblock ~= id then
-			return
-		end
 		id = 0
 	end
 
@@ -40,6 +35,7 @@ return function(player, x, y, z, mode, id)
 		end
 
 		if cantPlace then
+			cblock = cblock or 1
 			player:sendPacket(false, 0x06, x, y, z, cblock)
 		end
 	end
