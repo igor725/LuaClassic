@@ -45,12 +45,15 @@ function onPlayerAuth(player, name, key)
 end
 
 function prePlayerFirstSpawn(player)
-	local wMsg = config:get('welcomeMessage')
-	if wMsg and #wMsg > 0 then
-		player:sendMessage(wMsg)
+	if not player.notified then
+		local wMsg = config:get('welcomeMessage')
+		if wMsg and #wMsg > 0 then
+			player:sendMessage(wMsg)
+		end
+		local msg = printf(MESG_CONN, player)
+		newChatMessage('&e' .. msg)
+		player.notified = true
 	end
-	local msg = printf(MESG_CONN, player)
-	newChatMessage('&e' .. msg)
 end
 
 function onPlayerDisconnect(player)
