@@ -12,7 +12,8 @@ return function(player, x, y, z, mode, id)
 	end
 
 	if cblock ~= id and isValidBlockID(id)then
-		local cantPlace
+		local cantPlace = not player.isSpawned
+		
 		if world:isReadOnly()then
 			player:sendMessage(WORLD_RO, MT_ANNOUNCE)
 			cantPlace = true

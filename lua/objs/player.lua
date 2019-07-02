@@ -397,6 +397,7 @@ local player_mt = {
 			self:despawn()
 			self.oldDY = 0
 			self.oldDY2 = 0
+			self.firstSpawn = true
 			self.fallingStartY = nil
 			self.handshakeStage2 = true
 			self.worldName = world:getName()

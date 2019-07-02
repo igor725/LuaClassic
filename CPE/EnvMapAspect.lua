@@ -72,10 +72,11 @@ function ema:load()
 end
 
 function ema:prePlayerSpawn(player)
-	local wn = player.worldName
-	local world = getWorld(wn)
+	if not player.firstSpawn then return end
+	
+	local world = getWorld(player)
 
-	for typ, val in pairs(getMa(wn))do
+	for typ, val in pairs(getMa(player.worldName))do
 		updateMapPropertyFor(player, typ, val)
 	end
 
