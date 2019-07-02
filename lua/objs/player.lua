@@ -776,15 +776,18 @@ local player_mt = {
 	end,
 
 	savePath = function(self)
+		if not self.uidhex then return false end
 		return 'playerdata/' .. self.uidhex .. '.dat'
 	end,
 	saveRead = function(self)
 		if self.isSpawned then return true end
-		local path = self:savePath()
-		local file, err, ec = io.open(path, 'rb')
+		local pt = self:savePath()
+		if not pt then return false end
+
+		local file, err, ec = io.open(pt, 'rb')
 		if not file then
 			if ec ~= 2 then
-				log.warn((SD_IOERR):format(path, 'reading', err))
+				log.warn((SD_IOERR):format(pt, 'reading', err))
 			end
 			return false
 		end
@@ -799,7 +802,7 @@ local player_mt = {
 			end
 			file:close()
 			log.error(etext)
-			os.rename(path, path .. '-corrupted')
+			os.rename(pt, pt .. '-corrupted')
 			self._dontsave = true
 			self:kick(KICK_PDATAERR, true)
 			return false
@@ -810,6 +813,8 @@ local player_mt = {
 	end,
 	saveWrite = function(self)
 		local pt = self:savePath()
+		if not pt then return true end
+
 		local pt_tmp = pt .. '.tmp'
 		local file, err = io.open(pt_tmp, 'wb')
 		if not file then
