@@ -9,11 +9,6 @@ local geterror, currerr
 local sck = ffi.C
 local error_cache = {}
 
-local function isClosed(err)
-	return err == 10053 or err == 10054 or
-	err == 32 or err == 104 or err == 3425
-end
-
 ffi.cdef[[
 	struct in_addr {
 		uint32_t s_addr;
@@ -356,13 +351,18 @@ function sendMesg(fd, msg, len, flags)
 	return true
 end
 
+local function isClosed(err)
+	return err ~= 10035 and err ~= 11
+end
+
 function receiveMesg(fd, buffer, len, flags)
 	if not buffer then return end
 
 	flags = flags or 0
 	local ret = sck.recv(fd, buffer, len, flags)
 	if ret < 0 then
-		return 0, isClosed(currerr())
+		local err = currerr()
+		return 0, isClosed(err), err
 	elseif ret > 0 then
 		return ret, false
 	else
@@ -374,11 +374,11 @@ function receiveString(fd, len, flags)
 	if len < 1 then return end
 
 	local buffer = ffi.new('char[?]', len)
-	local rlen, err = receiveMesg(fd, buffer, len, flags)
+	local rlen, closed, err = receiveMesg(fd, buffer, len, flags)
 	if rlen > 0 then
-		return ffi.string(buffer, rlen), err
+		return ffi.string(buffer, rlen), false
 	else
-		return nil, err
+		return nil, closed, err
 	end
 end
 
@@ -396,7 +396,7 @@ function receiveLine(fd)
 
 	while true do
 		local len, closed = receiveMesg(fd, ln.rcv, 1)
-		
+
 		if closed then
 			local str = ffi.string(ln.line, ln.linecur)
 			ln.linecur = 0

@@ -436,9 +436,10 @@ local player_mt = {
 
 	readWsData = function(self)
 		local sframe = self._sframe
-		local st = receiveFrame(sframe)
+		local st, err = receiveFrame(sframe)
 
 		if st == -1 then
+			self._sockerr = err
 			self:destroy()
 		elseif st then
 			if sframe.opcode == 0x2 then
@@ -458,46 +459,52 @@ local player_mt = {
 		end
 		local id = self._waitPacket
 		if not id then
-			local len, closed = receiveMesg(fd, self._buf, 1)
+			local len, closed, err = receiveMesg(fd, self._buf, 1)
 
 			if closed then
+				self._sockerr = err
 				self:destroy()
 				return
 			end
+
 			if len < 1 then return end
 
 			id = self._buf[0]
 			local psz = psizes[id]
 			local cpesz = cpe.psizes[id]
+
 			if cpesz then
 				if self:isSupported(cpe.pexts[id])then
 					psz = cpesz
 				end
 			end
+
 			if psz then
 				self._receivedData = 0
 				self._remainingData = psz
 				self._waitPacket = id
+			else
+				self:kick(KICK_INVALIDPACKET)
 			end
 		end
 
 		if self._waitPacket then
-			local dlen, closed = receiveMesg(fd, self._buf + self._receivedData + 1, self._remainingData)
+			local dlen, closed, err = receiveMesg(fd, self._buf + self._receivedData + 1, self._remainingData)
+
 			if closed then
+				self._sockerr = err
 				self:destroy()
 				return
 			end
-			if not dlen then return end
 
 			self._remainingData = self._remainingData - dlen
+			self._receivedData = self._receivedData + dlen
 
 			if self._remainingData == 0 then
 				self._waitPacket = nil
 				self._remainingData = nil
 				self._receivedData = nil
 				self:handlePacket(id, self._buf + 1)
-			else
-				self._receivedData = self._receivedData + dlen
 			end
 		end
 	end,
@@ -690,13 +697,17 @@ local player_mt = {
 		if self.isSpawned then
 			self:despawn()
 		end
+
 		if config:get('storePlayersIn_G')then
 			local name = self:getName()
 			if _G[name] == self then
 				_G[name] = nil
 			end
 		end
-		entities[self:getID()] = nil
+
+		if self._sockerr then
+			log.debug('Socket error:', self._sockerr)
+		end
 
 		if self.handshaked then
 			self.lastOnlineTime = self:getOnlineTime()
@@ -711,6 +722,7 @@ local player_mt = {
 			onPlayerDestroy(self)
 		end
 
+		entities[self:getID()] = nil
 		local cl = self:getClient()
 		table.insert(waitClose, cl)
 		shutdownSock(cl, SHUT_WR)
