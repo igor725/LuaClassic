@@ -388,17 +388,21 @@ function receiveLine(fd)
 	if not lines[fd]then
 		lines[fd] = ffi.new('struct line')
 	end
+
 	local ln = lines[fd]
 	if ln.linecur == 0 then
 		ffi.fill(ln.line, 8192)
 	end
+
 	while true do
 		local len, closed = receiveMesg(fd, ln.rcv, 1)
+		
 		if closed then
 			local str = ffi.string(ln.line, ln.linecur)
 			ln.linecur = 0
 			return str, 2
 		end
+
 		if len and len > 0 then
 			local sym = ln.rcv[0]
 			if sym == 10 then

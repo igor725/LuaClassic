@@ -165,39 +165,47 @@ end
 
 local httpPattern = '^get%s+(.+)%s+http/%d%.%d$'
 
-function wsDoHandshake()
-	for fd, data in pairs(wsHandshake)do
-		if data.state == 'testws'then
-			local hdr, closed = receiveString(fd, 3, MSG_PEEK)
-			if closed then
-				closeSock(fd)
-				wsHandshake[fd] = nil
-				return
-			end
+function wsUpdateHandshake(i)
+	local data = wsHandshake[i]
+	local fd = data.fd
 
-			if hdr then
-				if hdr:lower() == 'get'then
-					data.state = 'initial'
-				else
-					wsHandshake[fd] = nil
-					createPlayer(fd, data.ip, false)
-				end
-			end
+	if CTIME > data.timeout then
+		data.state = 'badrequest'
+		data.emsg = 'Timed out'
+	end
+
+	if data.state == 'testws'then
+		local hdr, closed = receiveString(fd, 3, MSG_PEEK)
+		if closed then
+			closeSock(fd)
+			wsHandshake[i] = nil
+			return
 		end
 
-		if data.state == 'initial'then
-			local req, closed = receiveLine(fd)
-			if closed then
-				closeSock(fd)
-				wsHandshake[fd] = nil
-				return
+		if hdr and #hdr == 3 then
+			if hdr:lower() == 'get'then
+				data.state = 'initial'
+				data.timeout = CTIME + 1
+			else
+				wsHandshake[i] = nil
+				createPlayer(fd, data.ip, false)
 			end
+		end
+	end
 
-			if req then
-				req = req:lower()
-				if req:find(httpPattern)then
-					data.state = 'headers'
-				end
+	if data.state == 'initial'then
+		local req, closed = receiveLine(fd)
+		if closed then
+			closeSock(fd)
+			wsHandshake[i] = nil
+			return
+		end
+
+		if req then
+			req = req:lower()
+			if req:find(httpPattern)then
+				data.state = 'headers'
+				data.timeout = CTIME + 1
 			end
 
 			if data.state ~= 'headers'then
@@ -205,98 +213,99 @@ function wsDoHandshake()
 				data.emsg = 'Not a GET request'
 			end
 		end
+	end
 
-		if data.state == 'headers'then
-			local ln, err = receiveLine(fd)
-			if err == 2 then
-				closeSock(fd)
-				wsHandshake[fd] = nil
-				return
-			end
-
-			if ln == ''then
-				data.state = 'genresp'
-			elseif ln then
-				local k, v = ln:match('(.+)%s*:%s*(.+)')
-				if k then
-					k = k:lower()
-					data.headers[k] = v
-				else
-					data.state = 'badrequest'
-					data.emsg = 'Invalid header'
-				end
-			end
+	if data.state == 'headers'then
+		local ln, err = receiveLine(fd)
+		if err == 2 then
+			closeSock(fd)
+			wsHandshake[i] = nil
+			return
 		end
 
-		if data.state == 'genresp'then
-			local hdr = data.headers
-			local wskey = hdr['sec-websocket-key']
-			local wsver = hdr['sec-websocket-version']
-			local wsproto = hdr['sec-websocket-protocol']
-			local conn = hdr['connection']
-			local upgrd = hdr['upgrade']
-
-			if upgrd and wskey and conn and
-			upgrd:lower() == 'websocket'and
-			conn:lower():find('upgrade')and
-			tonumber(wsver) == 13 then
-				wsproto = wsproto or'noproto'
-				wskey = wskey .. WSGUID
-				wskey = b64enc(sha1(wskey))
-				wsHandshake[fd] = nil
-
-				if wsproto == 'ClassiCube'then
-					local player = createPlayer(fd, data.ip, true)
-					player._sframe = ffi.new('struct ws_frame')
-					setupWFrameStruct(player._sframe, fd)
-				else
-					if wsHandlers[wsproto]then
-						local frame = ffi.new('struct ws_frame')
-						setupWFrameStruct(frame, fd)
-
-						for i = 0, 127 do
-							if not wsConnections[i]then
-								wsConnections[i] = {
-									sframe = frame,
-									proto = wsproto,
-									fd = fd
-								}
-								break
-							elseif i == 127 then
-								data.state = 'badrequest'
-								data.emsg = 'Server cannot accept connection'
-								return
-							end
-						end
-					else
-						data.state = 'badrequest'
-						data.emsg = 'Invalid protocol'
-						return
-					end
-				end
-
-				local response =
-				('HTTP/1.1 101 Switching Protocols\r\n' ..
-				'Upgrade: websocket\r\nConnection: Upgrade\r\n' ..
-				'Sec-WebSocket-Protocol: %s\r\n' ..
-				'Sec-WebSocket-Accept: %s\r\n\r\n'):format(wsproto, wskey)
-				sendMesg(fd, response)
+		if ln == ''then
+			data.state = 'genresp'
+			data.timeout = CTIME + 1
+		elseif ln then
+			local k, v = ln:match('(.+)%s*:%s*(.+)')
+			if k then
+				k = k:lower()
+				data.headers[k] = v
 			else
 				data.state = 'badrequest'
+				data.emsg = 'Invalid header'
 			end
 		end
+	end
 
-		if data.state == 'badrequest'then
-			local msg = data.emsg or MESG_NOTWSCONN
+	if data.state == 'genresp'then
+		local hdr = data.headers
+		local wskey = hdr['sec-websocket-key']
+		local wsver = hdr['sec-websocket-version']
+		local wsproto = hdr['sec-websocket-protocol']
+		local conn = hdr['connection']
+		local upgrd = hdr['upgrade']
+
+		if upgrd and wskey and conn and
+		upgrd:lower() == 'websocket'and
+		conn:lower():find('upgrade')and
+		tonumber(wsver) == 13 then
+			wsproto = wsproto or'noproto'
+			wskey = wskey .. WSGUID
+			wskey = b64enc(sha1(wskey))
+			wsHandshake[i] = nil
+
+			if wsproto == 'ClassiCube'then
+				local player = createPlayer(fd, data.ip, true)
+				player._sframe = ffi.new('struct ws_frame')
+				setupWFrameStruct(player._sframe, fd)
+			else
+				if wsHandlers[wsproto]then
+					local frame = ffi.new('struct ws_frame')
+					setupWFrameStruct(frame, fd)
+
+					for i = 0, 127 do
+						if not wsConnections[i]then
+							wsConnections[i] = {
+								sframe = frame,
+								proto = wsproto,
+								fd = fd
+							}
+							break
+						elseif i == 127 then
+							data.state = 'badrequest'
+							data.emsg = 'Server cannot accept connection'
+							return
+						end
+					end
+				else
+					data.state = 'badrequest'
+					data.emsg = 'Invalid protocol'
+					return
+				end
+			end
+
 			local response =
-			('HTTP/1.1 400 Bad request\r\n' ..
-			'Content-Type: text/plain; charset=utf-8\r\n' ..
-			'Content-Length: %d\r\n\r\nBad request: %s')
-			:format(#msg + 13, msg)
-			table.insert(waitClose, fd)
+			('HTTP/1.1 101 Switching Protocols\r\n' ..
+			'Upgrade: websocket\r\nConnection: Upgrade\r\n' ..
+			'Sec-WebSocket-Protocol: %s\r\n' ..
+			'Sec-WebSocket-Accept: %s\r\n\r\n'):format(wsproto, wskey)
 			sendMesg(fd, response)
-			wsHandshake[fd] = nil
+		else
+			data.state = 'badrequest'
 		end
+	end
+
+	if data.state == 'badrequest'then
+		local msg = data.emsg or MESG_NOTWSCONN
+		local response =
+		('HTTP/1.1 400 Bad request\r\n' ..
+		'Content-Type: text/plain; charset=utf-8\r\n' ..
+		'Content-Length: %d\r\n\r\n%s')
+		:format(#msg, msg)
+		table.insert(waitClose, fd)
+		sendMesg(fd, response)
+		wsHandshake[i] = nil
 	end
 end
 
@@ -378,11 +387,18 @@ function acceptClients()
 	if not fd then return end
 	log.debug(DBG_INCOMINGCONN, ip)
 	if wsHandshake then
-		wsHandshake[fd] = {
-			state = 'testws',
-			headers = {},
-			ip = ip
-		}
+		for i = 0, 127 do
+			if not wsHandshake[i]then
+				wsHandshake[i] = {
+					timeout = CTIME + 1,
+					state = 'testws',
+					headers = {},
+					fd = fd,
+					ip = ip
+				}
+				break
+			end
+		end
 		return
 	end
 	createPlayer(fd, ip, false)
@@ -396,6 +412,10 @@ function serviceMessages()
 
 	if wsConnections then
 		for i = 0, 127 do
+			if wsHandshake[i]then
+				wsUpdateHandshake(i)
+			end
+
 			local conn = wsConnections[i]
 			if conn then
 				local frame = conn.sframe
@@ -415,10 +435,9 @@ function serviceMessages()
 		end
 	end
 
-	for i = #waitClose, 1, -1 do
-		local fd = waitClose[i]
+	while #waitClose > 0 do
+		local fd = table.remove(waitClose)
 		while receiveMesg(fd, cwait, 256) > 0 do end
-		table.remove(waitClose, i)
 		closeSock(fd)
 	end
 end
@@ -569,10 +588,6 @@ function mainLoop()
 
 		acceptClients()
 		serviceMessages()
-
-		if wsHandshake then
-			wsDoHandshake()
-		end
 
 		if cmdh then
 			cmdh()

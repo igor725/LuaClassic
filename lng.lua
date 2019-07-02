@@ -80,7 +80,7 @@ MESG_CONN          = 'Player %s connected to server'
 MESG_DISCONN       = 'Player %s disconnected from server (%s)'
 MESG_WORDISCONN    = 'Player %s disconnected from server'
 MESG_UNKNOWNCMD    = 'Unknown command'
-MESG_NOTWSCONN     = 'This port accepts only websocket connections'
+MESG_NOTWSCONN     = 'Not a WebSocket request'
 
 CMD_WMODE          = 'Readonly mode %s for &a%s'
 CMD_SVINFO         = 'Server runned on %s %s with %s\nRam used: %.3fMB'
