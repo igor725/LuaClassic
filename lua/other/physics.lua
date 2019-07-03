@@ -324,11 +324,14 @@ hooks:add('onInitDone', 'load_physics', function()
 			end
 		elseif id == 12 then
 			if world:getBlock(x, y - 1, z) == 0 then
-				world:setBlock(x, y - 1, z, 12)
-				world:setBlock(x, y, z, 0)
-
 				timer.Simple(.3, function()
-					doPhysicsFor(world, sx, sy, sz, x, y - 1, z)
+					if world:getBlock(x, y, z) == 12 and world:getBlock(x, y - 1, z) == 0 then
+						world:setBlock(x, y - 1, z, 12)
+						world:setBlock(x, y, z, 0)
+					
+						doPhysicsFor(world, sx, sy, sz, x, y - 1, z)
+						doPhysicsFor(world, sx, sy, sz, x, y + 1, z)
+					end
 				end)
 			end
 		end
