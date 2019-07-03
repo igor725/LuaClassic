@@ -68,17 +68,20 @@ local function infstreamend(stream)
 	return _zlib.inflateEnd(stream)
 end
 
-local function deflate(_in, len, level, callback, out)
-	out = out or outbuff
-	level = level or 4
+local function initDeflate(level, bits)
 	local stream = ffi.new('z_stream')
 	local streamsz = ffi.sizeof(stream)
-	local ret = _zlib.deflateInit2_(stream, level, Z_DEFLATED, GZ_WINDOWBITS, Z_MEMLEVEL, Z_DEFAULT_STRATEGY, Z_VER, streamsz)
+	local ret = _zlib.deflateInit2_(stream, level, Z_DEFLATED, bits, Z_MEMLEVEL, Z_DEFAULT_STRATEGY, Z_VER, streamsz)
 
 	if ret ~= Z_OK then
 		defstreamend(stream)
-		return false, ret
+		return nil, ret
 	end
+
+	return stream
+end
+
+local function processDeflate(stream, _in, len, out, callback)
 	stream.avail_in = len
 	stream.next_in = _in
 
@@ -96,10 +99,26 @@ local function deflate(_in, len, level, callback, out)
 	until stream.avail_out ~= 0
 
 	defstreamend(stream)
+
 	return true
 end
 
-local function inflate(file, callback)
+local function deflate(_in, len, bits, level, callback, out)
+	out = out or outbuff
+	level = level or 4
+	local stream, err = initDeflate(level, bits)
+	if stream == nil then
+		return false, err
+	end
+
+	return processDeflate(stream, _in, len, out, callback)
+end
+
+local function gzip(_in, len, level, callback, out)
+	return deflate(_in, len, GZ_WINDOWBITS, level, callback, out)
+end
+
+local function ungzip(file, callback)
 	local stream = ffi.new('z_stream')
 	local ret = _zlib.inflateInit2_(stream, GZ_WINDOWBITS, Z_VER, ffi.sizeof('z_stream'))
 
@@ -141,9 +160,10 @@ local function inflate(file, callback)
 	return true
 end
 
-gz = {
-	compress = deflate,
-	decompress = inflate,
+zlib = {
+	deflate = deflate,
+	compress = gzip,
+	decompress = ungzip,
 	defEnd = defstreamend,
 	infEnd = infstreamend,
 	getErrStr = gzerrstr

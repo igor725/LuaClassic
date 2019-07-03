@@ -27,17 +27,17 @@ local function wsaveThread(maddr, mlen, path)
 		size_t fwrite(const void* ptr, size_t size, size_t count, void* stream);
 		int    ferror(void* stream);
 	]]
-	require('data.gzip')
+	require('data.zlib')
 	C = ffi.C
 
 	local wh = io.open(path, 'ab') -- Oh...
 	local mapdata = ffi.cast('uint8_t*', maddr)
 
-	local gStatus, gErr = gz.compress(mapdata, mlen, 4, function(stream)
+	local gStatus, gErr = zlib.compress(mapdata, mlen, 4, function(stream)
 		local chunksz = 1024 - stream.avail_out
 		C.fwrite(stream.next_out - chunksz, 1, chunksz, wh)
 		if C.ferror(wh) ~= 0 then
-			gz.defEnd(stream)
+			zlib.defEnd(stream)
 			error('file writing error')
 		end
 	end)
@@ -347,7 +347,7 @@ local world_mt = {
 
 	readGZIPData = function(self, wh)
 		local ptr = self.ldata
-		return gz.decompress(wh, function(out,stream)
+		return zlib.decompress(wh, function(out,stream)
 			local chunksz = 1024 - stream.avail_out
 			ffi.copy(ptr, out, chunksz)
 			ptr = ptr + chunksz

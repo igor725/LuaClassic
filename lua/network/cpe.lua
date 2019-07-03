@@ -5,7 +5,7 @@
 
 cpe = {
 	softwareName = 'LuaClassic',
-	extCount = 2,
+	extCount = 3,
 	packets = {
 		sv = {},
 		cl = {}
@@ -42,6 +42,7 @@ function cpe:init()
 	local emptyExt = setmetatable({}, ext_mt)
 	cpe.exts.LongerMessages = emptyExt
 	cpe.exts.FullCP437 = emptyExt
+	cpe.exts.FastMap = emptyExt
 	log.info('Successfully loaded', self.extCount, 'extensions.')
 end
 

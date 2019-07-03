@@ -3,26 +3,38 @@
 	released under The MIT license http://opensource.org/licenses/MIT
 ]]
 
-local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
+local function sendMap(cfd, cmplvl, mapaddr, maplen, isWeb, fmSupport)
 	set_debug_threadname('MapSender')
 
 	ffi = require('ffi')
-	require('data.gzip')
+	require('data.zlib')
 	require('network.socket')
 
-	if isWS then
+	if isWeb then
 		require('network.websocket')
 		struct = require('struct')
 		wsLoad()
 	end
 
-	local map = ffi.cast('char*', mapaddr)
+	local map
 	local gErr = nil
 
-	if isWS then
-		sendMesg(fd, encodeWsFrame('\2', 1, 0x02))
+	local levelInit
+
+	if fmSupport then
+		maplen = maplen - 4
+		map = ffi.cast('char*', mapaddr + 4)
+		local len = ffi.string(ffi.new('int[1]', bit.bswap(maplen)), 4)
+		levelInit = '\2' .. len
 	else
-		sendMesg(fd, '\2', 1)
+		levelInit = '\2'
+		map = ffi.cast('char*', mapaddr)
+	end
+
+	if isWeb then
+		sendMesg(cfd, encodeWsFrame(levelInit, #levelInit, 0x02))
+	else
+		sendMesg(cfd, levelInit, #levelInit)
 	end
 
 	local smap = ffi.new[[struct {
@@ -38,27 +50,35 @@ local function sendMap(fd, mapaddr, maplen, cmplvl, isWS)
 	smap.complete = 100
 	smap.id = 0x03
 
-	local succ, gErr = gz.compress(map, maplen, cmplvl, function(stream)
+	local callback = function(stream)
 		u16cl[0] = htons(1024 - stream.avail_out)
 
 		local done
 
-		if isWS then
+		if isWeb then
 			wbuf = wbuf or ffi.new('char[1032]')
-			done = sendMesg(fd, encodeWsFrame(smap, 1028, 0x02, wbuf))
+			done = sendMesg(cfd, encodeWsFrame(smap, 1028, 0x02, wbuf))
 		else
-			done = sendMesg(fd, smap, 1028)
+			done = sendMesg(cfd, smap, 1028)
 		end
 
 		if not done then
-			gz.defEnd(stream)
+			zlib.defEnd(stream)
 			connClosed = true
 		end
-	end, smap.chunkdata)
+	end
+
+	local succ, zErr
+	if fmSupport then
+		succ, zErr = zlib.deflate(map, maplen, -15, cmplvl, callback, smap.chunkdata)
+	else
+		succ, zErr = zlib.compress(map, maplen, cmplvl, callback, smap.chunkdata)
+	end
+
 	wbuf, smap = nil
 	collectgarbage()
 
-	return not connClosed and gErr or true
+	return not connClosed and zErr or true
 end
 
 local function checkForPortal(player, x, y, z)
@@ -532,6 +552,7 @@ local player_mt = {
 	sendMap = function(self)
 		if self.thread then return end
 		if not self.handshaked then return end
+
 		local world = getWorld(self)
 		if not world then return end
 		self.canSend = false
@@ -539,11 +560,16 @@ local player_mt = {
 			self:sendMessage(MESG_LEVELLOAD)
 			world:triggerLoad()
 		end
-		local addr = world:getAddr()
-		local size = world:getSize()
-		local sendMap_gen = lanes.gen('*', sendMap)
+
+		local cfd = self:getClient()
+		local mapaddr = world:getAddr()
+		local maplen = world:getSize()
+		local isWeb = self:isWebClient()
+		local fmSupport = self:isSupported('FastMap')
 		local cmplvl = config:get('gzipCompressionLevel')
-		self.thread = sendMap_gen(self:getClient(), addr, size, cmplvl, self:isWebClient())
+		local sendMap_gen = lanes.gen('*', sendMap)
+
+		self.thread = sendMap_gen(cfd, cmplvl, mapaddr, maplen, isWeb, fmSupport)
 		log.debug(DBG_NEWTHREAD, self.thread)
 	end,
 	sendMOTD = function(self, sname, smotd)
@@ -757,7 +783,7 @@ local player_mt = {
 				elseif mesg == false then
 					self:destroy()
 				else
-					local err = gz.getErrStr(mesg)
+					local err = zlib.getErrStr(mesg)
 					log.error('MAPSEND ERROR', err)
 					self:kick((IE_MSG):format(err), true)
 				end
