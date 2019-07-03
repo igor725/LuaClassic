@@ -158,7 +158,7 @@ function survBreakBlock(player, x, y, z)
 	local heldBlock = player:getHeldBlock()
 	local bid, count = survGetDropBlock(player, cbid)
 
-	if not hooks:call('onPlayerPlaceBlock', player, x, y, z, 0)then
+	if not hooks:call('prePlayerPlaceBlock', player, x, y, z, 0)then
 		if bid > 0 then
 			if survInvAddBlock(player, bid, dcount or 1) > 0 then
 				if heldBlock ~= bid and player.heldTool == 0 then
@@ -301,7 +301,7 @@ hooks:add('postPlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id, p
 	end
 end)
 
-hooks:add('onPlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id)
+hooks:add('prePlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id)
 	if player.isInGodmode then
 		return false
 	end

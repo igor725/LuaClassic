@@ -76,7 +76,7 @@ function survUpdateFireBlock(world, x, y, z)
 	end
 end
 
-hooks:add('onPlayerPlaceBlock', 'surv_fire', function(player, x, y, z, id)
+hooks:add('prePlayerPlaceBlock', 'surv_fire', function(player, x, y, z, id)
 	if id == 54 then
 		local down = getWorld(player):getBlock(x, y - 1, z)
 		if blocked[down]then
