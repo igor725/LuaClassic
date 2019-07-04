@@ -18,6 +18,7 @@ local function haveGround(player)
 			end
 		end
 	end
+
 	return haveGround
 end
 
@@ -39,6 +40,7 @@ hooks:add('onPlayerMove', 'anticheat', function(player, dx, dy, dz)
 			player.cheatScore = player.cheatScore + 5
 		end
 	end
+
 	if dy > 1 then
 		player.cheatScore = player.cheatScore + 25
 	else
@@ -50,6 +52,7 @@ hooks:add('onPlayerMove', 'anticheat', function(player, dx, dy, dz)
 			end
 		end
 	end
+	
 	if player.cheatScore > 60 then
 		player:kick('Kicked 4 cheats')
 	end

@@ -12,14 +12,10 @@ local function sendMap(cfd, cmplvl, mapaddr, maplen, isWeb, fmSupport)
 
 	if isWeb then
 		require('network.websocket')
-		struct = require('struct')
 		wsLoad()
 	end
 
-	local map
-	local gErr = nil
-
-	local levelInit
+	local map, levelInit, wbuf
 
 	if fmSupport then
 		maplen = maplen - 4
@@ -44,7 +40,6 @@ local function sendMap(cfd, cmplvl, mapaddr, maplen, isWeb, fmSupport)
 		uint8_t complete;
 	}]]
 
-	local wbuf
 	local connClosed = false
 	local u16cl = ffi.cast('uint16_t*', smap.chunklen)
 	smap.complete = 100
@@ -180,7 +175,7 @@ local player_mt = {
 	end,
 	getPos = function(self, forNet)
 		if forNet then
-			return self.pos.x * 32, self.pos.y* 32 - 22, self.pos.z * 32
+			return self.pos.x * 32, self.pos.y * 32 - 22, self.pos.z * 32
 		else
 			return self.pos.x, self.pos.y, self.pos.z
 		end
@@ -275,13 +270,11 @@ local player_mt = {
 		elseif pos.x ~= x or pos.y ~= y or pos.z ~= z then
 			local dx, dy, dz = x - pos.x, y - pos.y, z - pos.z
 			pos.x, pos.y, pos.z = x, y, z
-
 			hooks:call('onPlayerMove', self, dx, dy, dz)
 			if onPlayerMove then
 				onPlayerMove(self, dx, dy, dz)
 			end
 			checkForPortal(self, x, y, z)
-
 			if self.oldDY < 0 then
 				if dy >= 0 then
 					hooks:call('onPlayerLanded', self, self.fallingStartY and math.max(0, self.fallingStartY - pos.y) or 0)
@@ -292,13 +285,11 @@ local player_mt = {
 					end
 				end
 			end
-
 			self.oldDY2 = self.oldDY
 			self.oldDY = dy
 			return true
 		elseif self.oldDY < 0 then
 			self.oldDY = 0
-
 			hooks:call('onPlayerLanded', self, self.fallingStartY and math.max(0, self.fallingStartY - pos.y) or 0)
 			self.fallingStartY = nil
 			return
@@ -348,14 +339,12 @@ local player_mt = {
 	checkPermission = function(self, nm, silent)
 		local sect = nm:match('(.*)%.')
 		local perms = permissions:getFor(self:getUID())
-
 		if (perms and table.hasValue(perms, '-*.*', '-' .. sect .. '.*', '-' .. nm))then
 			if not silent then
 				self:sendMessage((MESG_PERMERROR):format(nm))
 			end
 			return false
 		end
-
 		local a, b, c = '*.*', sect .. '.*', nm
 		if (perms and table.hasValue(perms, a, b, c))or
 		table.hasValue(permissions.list.default, a, b, c)then
@@ -434,7 +423,8 @@ local player_mt = {
 		return false, 0
 	end,
 
-	handlePacket = function(self, id, data)
+	handlePacket = function(self, data)
+		local id = data[0]
 		local psz = psizes[id]
 		local fmt = packets[id]
 
@@ -450,8 +440,9 @@ local player_mt = {
 			self:kick(KICK_INVALIDPACKET)
 			return
 		end
+		
 		self.kickTimeout = CTIME + config:get('playerTimeout')
-		pHandlers[id](self, struct.unpack(fmt, ffi.string(data, psz)))
+		pHandlers[id](self, struct.unpack(fmt, ffi.string(data + 1, psz)))
 	end,
 
 	readWsData = function(self)
@@ -463,8 +454,7 @@ local player_mt = {
 			self:destroy()
 		elseif st then
 			if sframe.opcode == 0x2 then
-				local id = sframe.payload[0]
-				self:handlePacket(id, sframe.payload + 1)
+				self:handlePacket(sframe.payload)
 			elseif sframe.opcode == 0x8 then
 				self:destroy()
 			else
@@ -500,9 +490,9 @@ local player_mt = {
 			end
 
 			if psz then
+				self._waitPacket = id
 				self._receivedData = 0
 				self._remainingData = psz
-				self._waitPacket = id
 			else
 				self:kick(KICK_INVALIDPACKET)
 			end
@@ -522,9 +512,9 @@ local player_mt = {
 
 			if self._remainingData == 0 then
 				self._waitPacket = nil
-				self._remainingData = nil
 				self._receivedData = nil
-				self:handlePacket(id, self._buf + 1)
+				self._remainingData = nil
+				self:handlePacket(self._buf)
 			end
 		end
 	end,
@@ -542,11 +532,13 @@ local player_mt = {
 	end,
 	sendPacket = function(self, isCPE, ...)
 		local rawPacket
+
 		if isCPE then
 			rawPacket = cpe:generatePacket(...)
 		else
 			rawPacket = generatePacket(...)
 		end
+
 		return self:sendNetMesg(rawPacket, #rawPacket)
 	end,
 	sendMap = function(self)
@@ -556,6 +548,7 @@ local player_mt = {
 		local world = getWorld(self)
 		if not world then return end
 		self.canSend = false
+
 		if not world.ldata then
 			self:sendMessage(MESG_LEVELLOAD)
 			world:triggerLoad()
@@ -567,14 +560,15 @@ local player_mt = {
 		local isWeb = self:isWebClient()
 		local fmSupport = self:isSupported('FastMap')
 		local cmplvl = config:get('gzipCompressionLevel')
-		local sendMap_gen = lanes.gen('*', sendMap)
 
+		local sendMap_gen = lanes.gen('*', sendMap)
 		self.thread = sendMap_gen(cfd, cmplvl, mapaddr, maplen, isWeb, fmSupport)
 		log.debug(DBG_NEWTHREAD, self.thread)
 	end,
 	sendMOTD = function(self, sname, smotd)
 		sname = sname or config:get('serverName')
 		smotd = smotd or config:get('serverMotd')
+
 		self:sendPacket(
 			false,
 			0x00,
@@ -640,12 +634,14 @@ local player_mt = {
 		hooks:call('onPlayerDespawn', self)
 		local world = getWorld(self)
 		world.players = world.players - 1
+
 		if world.players == 0 then
 			world.emptyfrom = CTIME
 		end
 		if onPlayerDespawn then
 			onPlayerDespawn(self)
 		end
+
 		log.debug(DBG_DESPAWNPLAYER, self)
 		return true
 	end,
@@ -664,6 +660,7 @@ local player_mt = {
 			if hooks:call('prePlayerFirstSpawn', self)then
 				return
 			end
+
 			if prePlayerFirstSpawn and prePlayerFirstSpawn(self)then
 				return
 			end
@@ -674,6 +671,7 @@ local player_mt = {
 		local x, y, z = self:getPos(true)
 		local ay, ap = self:getEyePos(true)
 		local dat2, dat2cpe
+
 		playersForEach(function(ply, id)
 			local sId = (pId == id and -1)or id
 			local cx, cy, cz = ply:getPos(true)
@@ -830,8 +828,10 @@ local player_mt = {
 			end
 			return false
 		end
+
 		local sd = {}
 		local lsucc, succ, err = pcall(parseData, file, pReaders, 'pdata\2', self, sd)
+
 		if not lsucc or not succ then
 			local etext
 			if err == PCK_INVALID_HEADER then
@@ -846,6 +846,7 @@ local player_mt = {
 			self:kick(KICK_PDATAERR, true)
 			return false
 		end
+
 		self.skippedData = sd
 		file:close()
 		return true

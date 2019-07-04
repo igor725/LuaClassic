@@ -89,6 +89,7 @@ for i = 21, 36 do
 	survMiningSpeed[i] = 1.15
 	survMiningSpeedWithTool[4][i] = 1.15 / 2
 end
+
 for i = 55, 60 do
 	survMiningSpeed[i] = 1.15
 	survMiningSpeedWithTool[4][i] = 1.15 / 2
@@ -169,6 +170,7 @@ function survBreakBlock(player, x, y, z)
 		world:setBlock(x, y, z, 0)
 		hooks:call('postPlayerPlaceBlock', player, x, y, z, 0, cbid)
 	end
+
 	survStopBreaking(player)
 end
 
@@ -305,6 +307,7 @@ hooks:add('prePlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id)
 	if player.isInGodmode then
 		return false
 	end
+	
 	if player.inCraftMenu then
 		return true
 	end

@@ -63,6 +63,7 @@ function wsLoad()
 		if not sframe.ready then
 			return false
 		end
+
 		if sframe.state == WS_ST_DONE then
 			sframe.state = WS_ST_HDR
 			sframe.payload_len[0] = 0
@@ -83,12 +84,8 @@ function wsLoad()
 
 			if sframe._dneed == 0 then
 				local hdr = sframe.hdr
-				sframe.fin = bit.band(bit.rshift(hdr[0], 0x07)) == 1
-				sframe.masked = bit.rshift(hdr[1], 0x07) == 1
-				sframe.opcode = bit.band(hdr[0], 0x0F)
 				local len = bit.band(hdr[1], 0x7F)
-				sframe.payload_len[0] = len
-				sframe._drcvd = 0
+
 				if len == 126 then
 					sframe.state = WS_ST_PLEN
 					sframe._dneed = 2
@@ -98,6 +95,12 @@ function wsLoad()
 				else
 					return -1
 				end
+
+				sframe.fin = bit.band(bit.rshift(hdr[0], 0x07)) == 1
+				sframe.masked = bit.rshift(hdr[1], 0x07) == 1
+				sframe.opcode = bit.band(hdr[0], 0x0F)
+				sframe.payload_len[0] = len
+				sframe._drcvd = 0
 			end
 		end
 
@@ -157,6 +160,8 @@ function wsLoad()
 					for i = 0, sz - 1 do
 						sframe.payload[i] = bit.bxor(sframe.payload[i], sframe.mask[i % 4])
 					end
+				else
+					return -1
 				end
 				sframe.state = WS_ST_DONE
 			end
