@@ -440,7 +440,7 @@ local player_mt = {
 			self:kick(KICK_INVALIDPACKET)
 			return
 		end
-		
+
 		self.kickTimeout = CTIME + config:get('playerTimeout')
 		pHandlers[id](self, struct.unpack(fmt, ffi.string(data + 1, psz)))
 	end,
@@ -740,13 +740,13 @@ local player_mt = {
 			end
 		end
 
+		entities[self:getID()] = nil
 		cpe:extCallHook('onPlayerDestroy', self)
 		hooks:call('onPlayerDestroy', self)
 		if onPlayerDestroy then
 			onPlayerDestroy(self)
 		end
 
-		entities[self:getID()] = nil
 		local cl = self:getClient()
 		table.insert(waitClose, cl)
 		shutdownSock(cl, SHUT_WR)

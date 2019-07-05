@@ -59,15 +59,13 @@ end
 function onPlayerDisconnect(player)
 	local reason = player:getLeaveReason()
 	local msg
-	if not reason then
+	if not reason or player.silentKick then
 		msg = printf(MESG_WORDISCONN, player)
 	else
 		msg = printf(MESG_DISCONN, player, reason)
 	end
-	if not player.silentKick then
-		newChatMessage('&e' .. msg)
-	end
 
+	newChatMessage('&e' .. msg)
 	if player:isHandshaked()and not player._dontsave then
 		log.assert(player:saveWrite())
 	end

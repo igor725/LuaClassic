@@ -199,6 +199,7 @@ hooks:add('onInitDone', 'heartbeat', function()
 			online = getCurrentOnline(),
 			host = 'classicube.net',
 			request = ccreq,
+			debug = false,
 			salt = sSalt,
 			delay = 25000
 		}
