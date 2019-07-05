@@ -264,7 +264,7 @@ hooks:add('postPlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id, p
 		if math.random(0, 1) == 1 then
 			local world = getWorld(player)
 			world:setBlock(x, y, z, 8)
-			world:updateWaterBlock(x, y, z)
+			doPhysicsFor(world, x, y, z)
 		end
 	elseif id == 6 then
 		local world = getWorld(player)
@@ -307,7 +307,7 @@ hooks:add('prePlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id)
 	if player.isInGodmode then
 		return false
 	end
-	
+
 	if player.inCraftMenu then
 		return true
 	end

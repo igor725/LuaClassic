@@ -229,7 +229,7 @@ hooks:add('onInitDone', 'load_physics', function()
 		return nil
 	end
 
-	local function doPhysicsFor(world, sx, sy, sz, x, y, z, baseY)
+	function doPhysicsFor(world, sx, sy, sz, x, y, z, baseY)
 		if not x then
 			x, y, z = sx, sy, sz
 		end
@@ -328,7 +328,7 @@ hooks:add('onInitDone', 'load_physics', function()
 					if world:getBlock(x, y, z) == 12 and world:getBlock(x, y - 1, z) == 0 then
 						world:setBlock(x, y - 1, z, 12)
 						world:setBlock(x, y, z, 0)
-					
+
 						doPhysicsFor(world, sx, sy, sz, x, y - 1, z)
 						doPhysicsFor(world, sx, sy, sz, x, y + 1, z)
 					end
