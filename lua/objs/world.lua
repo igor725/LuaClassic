@@ -241,9 +241,14 @@ local world_mt = {
 
 		if biomes then
 			local cshort = ffi.cast('uint16_t*', biomes)
-			x = math.floor(x / cshort[1] + 0.5)
-			z = math.floor(z / cshort[1] + 0.5)
-			return biomes[(x + z * cshort[0]) + 4]
+			local sz = cshort[0]
+			local step = cshort[2]
+			x = math.floor(x / step + 0.5)
+			z = math.floor(z / step + 0.5)
+			local offset = x + z * cshort[1]
+			if offset >= 0 and offset <= sz then
+				return biomes[offset + 6]
+			end
 		end
 		return 0
 	end,
@@ -434,14 +439,15 @@ local world_mt = {
 		local dx, _, dz = self:getDimensions()
 		local bsx = math.floor(dx / step) + 1
 		local bsz = math.floor(dz / step) + 2
-		local sz = bsx * bsz + 4
+		local sz = bsx * bsz + 6
 		local biomes = ffi.new('uint8_t[?]', sz)
 		local cshort = ffi.cast('uint16_t*', biomes)
-		cshort[0] = bsx
-		cshort[1] = step
+		cshort[0] = bsx * bsz
+		cshort[1] = bsx
+		cshort[2] = step
 		self.data.biomes = biomes
-		for i = 0, sz - 4 do
-			biomes[i + 4] = t[i]
+		for i = 0, sz - 6 do
+			biomes[i + 6] = t[i]
 		end
 	end,
 

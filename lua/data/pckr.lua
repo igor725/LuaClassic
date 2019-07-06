@@ -39,8 +39,9 @@ function parseData(file, readers, hdr, dTable, dSkipped)
 					reader.func(dTable, unpackFrom(file, tfmt))
 				end
 			elseif reader.format == 'cdata'then
-				local data = file:read(dataSize)
-				dTable[key] = ffi.new(reader.type, dataSize, data)
+				local cdata = ffi.new(reader.type, dataSize)
+				C.fread(cdata, dataSize, 1, file)
+				dTable[key] = cdata
 			else
 				if reader.func then
 					local out = reader.func(dTable, unpackFrom(file, reader.format))
