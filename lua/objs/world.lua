@@ -113,6 +113,10 @@ local wReaders = {
 	},
 	['texPack'] = {
 		format = 'string'
+	},
+	['biomes'] = {
+		format = 'cdata',
+		type = 'uint8_t[?]'
 	}
 }
 
@@ -167,6 +171,9 @@ local wWriters = {
 	},
 	['texPack'] = {
 		format = 'string'
+	},
+	['biomes'] = {
+		format = 'cdata'
 	}
 }
 
@@ -228,6 +235,17 @@ local world_mt = {
 		else
 			return -1
 		end
+	end,
+	getBiome = function(self, x, z)
+		local biomes = self.data.biomes
+
+		if biomes then
+			local cshort = ffi.cast('uint16_t*', biomes)
+			x = math.floor(x / cshort[1] + 0.5)
+			z = math.floor(z / cshort[1] + 0.5)
+			return biomes[(x + z * cshort[0]) + 4]
+		end
+		return 0
 	end,
 	getAddr = function(self)
 		return getAddr(self.ldata)
@@ -410,6 +428,20 @@ local world_mt = {
 					end
 				end
 			end
+		end
+	end,
+	updateBiomesData = function(self, t, step)
+		local dx, _, dz = self:getDimensions()
+		local bsx = math.floor(dx / step) + 1
+		local bsz = math.floor(dz / step) + 2
+		local sz = bsx * bsz + 4
+		local biomes = ffi.new('uint8_t[?]', sz)
+		local cshort = ffi.cast('uint16_t*', biomes)
+		cshort[0] = bsx
+		cshort[1] = step
+		self.data.biomes = biomes
+		for i = 0, sz - 4 do
+			biomes[i + 4] = t[i]
 		end
 	end,
 

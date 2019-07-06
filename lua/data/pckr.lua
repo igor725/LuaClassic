@@ -38,6 +38,9 @@ function parseData(file, readers, hdr, dTable, dSkipped)
 				for i = 1, dataSize / tfmtsz do
 					reader.func(dTable, unpackFrom(file, tfmt))
 				end
+			elseif reader.format == 'cdata'then
+				local data = file:read(dataSize)
+				dTable[key] = ffi.new(reader.type, dataSize, data)
 			else
 				if reader.func then
 					local out = reader.func(dTable, unpackFrom(file, reader.format))
@@ -103,6 +106,10 @@ function writeData(file, writers, hdr, dTable, dSkipped)
 						file:write(ffi.string(value, sz))
 					end
 				end
+			elseif writer.format == 'cdata'then
+				local sz = (writer.getsz and writer.getsz(value))or ffi.sizeof(value)
+				packTo(file, '>H', sz)
+				ffi.C.fwrite(value, sz, 1, file)
 			else
 				packTo(file, '>H', struct.size(writer.format))
 				if writer.func then

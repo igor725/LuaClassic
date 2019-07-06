@@ -180,6 +180,15 @@ local player_mt = {
 			return self.pos.x, self.pos.y, self.pos.z
 		end
 	end,
+	getX = function(self)
+		return self.pos.x
+	end,
+	getY = function(self)
+		return self.pos.y
+	end,
+	getZ = function(self)
+		return self.pos.z
+	end,
 	getEyePos = function(self, forNet)
 		local eye = self.eye
 		if forNet then

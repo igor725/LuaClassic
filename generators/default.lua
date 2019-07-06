@@ -843,7 +843,6 @@ return function(world, seed)
 
 	-- lavalavalava(world, dimx, dimy, dimz)
 
-	world.biomes = setmetatable(biomes, biomes_mt)
 	world:setSpawn(x + 0.5, y + 2.5, z + 0.5)
 	world:setEnvProp(MEP_SIDESBLOCK, 0)
 	world:setEnvProp(MEP_EDGEBLOCK, 8)
@@ -851,6 +850,7 @@ return function(world, seed)
 	world:setEnvProp(MEP_MAPSIDESOFFSET, 0)
 	world:setData('isNether', false)
 	world:setData('seed', seed)
+	world:updateBiomesData(biomes, GEN_BIOME_STEP)
 	collectgarbage()
 	log.debug('DefaultGenerator: DONE')
 

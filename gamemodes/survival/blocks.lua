@@ -264,7 +264,9 @@ hooks:add('postPlayerPlaceBlock', 'surv_blocks', function(player, x, y, z, id, p
 		if math.random(0, 1) == 1 then
 			local world = getWorld(player)
 			world:setBlock(x, y, z, 8)
-			doPhysicsFor(world, x, y, z)
+			if doPhysicsFor then
+				doPhysicsFor(world, x, y, z)
+			end
 		end
 	elseif id == 6 then
 		local world = getWorld(player)
