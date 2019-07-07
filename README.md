@@ -1,11 +1,7 @@
 # LuaClassic
-A small Minecraft Classic server written in Lua.
+Small Minecraft Classic server written in Lua.
 
-Server supports web clients over websockets and some CPE extensions.
-
-All of necessary libraries already compiled for Linux (arm, x86_64) and Windows mingw-w64 (x86, x86_64).
-
-Server tested on Debian Stretch/Buster, Arch Linux, Raspbian and Windows 10. On other systems stable work is not guaranteed.
+Server tested on Debian Stretch/Buster, Arch Linux, Raspbian and Windows 7/8/10. On other systems stable work is not guaranteed.
 
 Demo server runned [here](http://www.classicube.net/server/play/9ae57bbe1ab6ac3bfaa8b9d2143c80b6/)
 
