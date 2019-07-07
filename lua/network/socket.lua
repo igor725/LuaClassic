@@ -209,10 +209,11 @@ function parseIPv4(sin_addr)
 	return ffi.string(ptr)
 end
 
+local addr = ffi.new('struct sockaddr_in')
+local addrp = ffi.cast('struct sockaddr*', addr)
+local addrsz = ffi.new('unsigned int[1]', ffi.sizeof(addr))
+
 function acceptClient(sfd)
-	local addr = ffi.new('struct sockaddr_in[1]')
-	local addrp = ffi.cast('struct sockaddr*', addr)
-	local addrsz = ffi.new('unsigned int[1]', ffi.sizeof(addr))
 	local cfd, err = sck.accept(sfd, addrp, addrsz)
 
 	if cfd ~= INVALID_SOCKET then
@@ -226,8 +227,9 @@ function acceptClient(sfd)
 				return false, geterror()
 			end
 		end
+		
 		assert(setSockOpt(cfd, SOL_TCP, TCP_NODELAY, 1))
-		return cfd, parseIPv4(addr[0].sin_addr)
+		return cfd, parseIPv4(addr.sin_addr)
 	end
 	return nil
 end

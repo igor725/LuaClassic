@@ -67,7 +67,7 @@ function onPlayerDisconnect(player)
 
 	newChatMessage('&e' .. msg)
 	if player:isHandshaked()and not player._dontsave then
-		log.assert(player:saveWrite())
+		log.eassert(player:saveWrite())
 	end
 end
 
@@ -494,7 +494,7 @@ function init()
 		end
 	end
 
-	log.info('Loading banlist')
+	log.info(CON_BANLIST)
 	loadBanList()
 
 	log.info(CON_WLOAD)
@@ -595,8 +595,8 @@ function mainLoop()
 		end
 
 		NextUpdate = CTIME + 0.02
-		if NextUpdate > gettime() then
-			sleep((NextUpdate - gettime())*1000)
+		if NextUpdate > gettime()then
+			sleep((NextUpdate - gettime()) * 1000)
 		end
 
 		hasError = false
