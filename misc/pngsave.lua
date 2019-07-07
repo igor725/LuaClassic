@@ -2,7 +2,6 @@
 	Copyright (c) 2019 igor725, scaledteam
 	released under The MIT license http://opensource.org/licenses/MIT
 
-
 	This script needs a libPNG binary. It does not load automatically
 	because it is not an integral part of the server.
 
@@ -49,6 +48,7 @@ ffi.cdef[[
 	void  png_write_row(void*,const char*);
 	void  png_write_end(void*,void*);
 ]]
+
 local PNG_VER = '1.5.0'
 local PNG_ERR
 
