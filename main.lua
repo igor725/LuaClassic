@@ -59,14 +59,14 @@ end
 function onPlayerDisconnect(player)
 	local reason = player:getLeaveReason()
 	local msg
-	if not reason or player.silentKick then
+	if not reason then
 		msg = printf(MESG_WORDISCONN, player)
 	else
 		msg = printf(MESG_DISCONN, player, reason)
 	end
 
 	newChatMessage('&e' .. msg)
-	if player:isHandshaked()and not player._dontsave then
+	if player:isHandshaked()then
 		log.eassert(player:saveWrite())
 	end
 end
@@ -110,8 +110,6 @@ function onPlayerChatMessage(player, message)
 			else
 				return (MESG_ERROR):format(err)
 			end
-		else
-			return err
 		end
 	elseif starts == '/'then
 		local args = message:split(' ')
@@ -335,7 +333,7 @@ function createPlayer(fd, ip, isWS)
 end
 
 function handleConsoleCommand(cmd)
-	if cmd:sub(1,1) == '#'then
+	if cmd:sub(1, 1) == '#'then
 		local code = cmd:sub(2)
 		code = code:gsub('^=', 'return ')
 

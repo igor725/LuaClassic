@@ -207,6 +207,7 @@ local player_mt = {
 		return self.worldName
 	end,
 	getLeaveReason = function(self)
+		if player.silentKick then return end
 		return self.leaveReason
 	end,
 	getForward = function(self)
@@ -861,6 +862,7 @@ local player_mt = {
 		return true
 	end,
 	saveWrite = function(self)
+		if player._dontsave then return end
 		local pt = self:savePath()
 		if not pt then return true end
 
