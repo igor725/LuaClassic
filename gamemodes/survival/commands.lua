@@ -6,10 +6,10 @@
 addCommand('give', function(isConsole, player, args)
 	if #args < 1 then return false end
 
-	local id, count
+	local id, count, target
 	if isConsole then
 		if #args < 2 then return false end
-		player = getPlayerByName(args[1])
+		target = getPlayerByName(args[1])
 		id = args[2]
 		count = args[3]
 	else
@@ -17,40 +17,49 @@ addCommand('give', function(isConsole, player, args)
 			id = args[1]
 			count = args[2]
 		elseif #args > 2 then
-			player = getPlayerByName(args[1])
+			target = getPlayerByName(args[1])
 			id = args[2]
 			count = args[3]
 		elseif #args == 1 then
 			id = args[1]
 			count = SURV_STACK_SIZE
 		end
+		target = target or player
 	end
-	if not player then return MESG_PLAYERNF end
+
+	if not target then return MESG_PLAYERNF end
+	if player and target ~= player and not player:checkPermission('commands.give-others')then
+		return
+	end
 
 	id = tonumber(id)or 0
 	count = tonumber(count)or SURV_STACK_SIZE
 	count = math.min(math.max(count, 1), SURV_STACK_SIZE)
 
-	local given = survInvAddBlock(player, id, count)
+	local given = survInvAddBlock(target, id, count)
 	if given > 0 then
-		player:holdThis(id)
-		return (CMD_GIVE):format(given, survGetBlockName(id), player)
+		target:holdThis(id)
+		return (CMD_GIVE):format(given, survGetBlockName(id), target)
 	end
 end)
 
 addCommand('heal', function(isConsole, player, args)
 	if isConsole and #args < 1 then return false end
-	player = getPlayerByName(args[1])or player
-	if not player then return MESG_PLAYERNF end
-	if player.health ~= SURV_MAX_HEALTH then
-		player.health = SURV_MAX_HEALTH
-		survUpdateHealth(player)
+	local target = (#args > 0 and getPlayerByName(args[1]))or player
+	if not target then return MESG_PLAYERNF end
+	if player and target ~= player and not player:checkPermission('commands.heal-others')then
+		return
 	end
-	if player.oxygen ~= SURV_MAX_OXYGEN then
-		player.oxygen = SURV_MAX_OXYGEN
-		survUpdateOxygen(player)
+
+	if target.health ~= SURV_MAX_HEALTH then
+		target.health = SURV_MAX_HEALTH
+		survUpdateHealth(target)
 	end
-	return (CMD_HEAL):format(player)
+	if target.oxygen ~= SURV_MAX_OXYGEN then
+		target.oxygen = SURV_MAX_OXYGEN
+		survUpdateOxygen(target)
+	end
+	return (CMD_HEAL):format(target)
 end)
 
 addCommand('drop', function(isConsole, player, args)
@@ -104,14 +113,14 @@ end)
 
 addCommand('kill', function(isConsole, player, args)
 	if isConsole and #args < 1 then return false end
-	player = getPlayerByName(args[1])or player
+	local target = (#args > 0 and getPlayerByName(args[1]))or player
+	if not target then return MESG_PLAYERNF end
+	if player and target ~= player and not player:checkPermission('commands.kill-others')then
+		return
+	end
 
-	if player then
-		if not survDamage(nil, player, SURV_MAX_HEALTH, 0)then
-			return MESG_NODMG
-		end
-	else
-		return MESG_PLAYERNF
+	if not survDamage(nil, target, SURV_MAX_HEALTH, 0)then
+		return MESG_NODMG
 	end
 end)
 
@@ -138,12 +147,14 @@ addCommand('god', function(isConsole, player, args)
 	if target.isInGodmode then
 		survPauseTimers(target)
 		target.inCraftMenu = false
-	else
 		target.health = SURV_MAX_HEALTH
+		target.oxygen = SURV_MAX_OXYGEN
+	else
 		survResumeTimers(target)
 	end
 
 	survUpdateHealth(target)
+	survUpdateOxygen(target)
 	survUpdateInventory(target)
 	survUpdateBlockInfo(target)
 
@@ -185,7 +196,7 @@ addCommand('sethome', function(isConsole, player, args)
 		hp = newVector(player:getPos())
 		ha = newAngle(player:getEyePos())
 	end
-	
+
 	player.homepos = hp
 	player.homeang = ha
 	player.homeworld = player.worldName
