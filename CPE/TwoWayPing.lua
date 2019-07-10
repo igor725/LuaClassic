@@ -12,7 +12,7 @@ function twp:load()
 			player:sendPacket(false, 0x2B, 0, data)
 		elseif dir == 1 then
 			if data == player.pData then
-				player.ping = (CTIME - player.pTime) / .002
+				player.ping = (ctime - player.pTime) / .002
 			end
 		end
 	end)
@@ -23,7 +23,7 @@ function twp:load()
 		local rand = math.random(0, 32767)
 		player:sendPacket(false, 0x2B, 1, rand)
 		player.pData = rand
-		player.pTime = CTIME
+		player.pTime = ctime
 		return true
 	end
 end

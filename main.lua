@@ -168,7 +168,7 @@ function wsUpdateHandshake(i)
 	local data = wsHandshake[i]
 	local fd = data.fd
 
-	if CTIME > data.timeout then
+	if ctime > data.timeout then
 		data.state = 'badrequest'
 		data.emsg = 'Timed out'
 	end
@@ -184,7 +184,7 @@ function wsUpdateHandshake(i)
 		if hdr and #hdr == 3 then
 			if hdr:lower() == 'get'then
 				data.state = 'initial'
-				data.timeout = CTIME + 1
+				data.timeout = ctime + 1
 			else
 				wsHandshake[i] = nil
 				createPlayer(fd, data.ip, false)
@@ -204,7 +204,7 @@ function wsUpdateHandshake(i)
 			req = req:lower()
 			if req:find(httpPattern)then
 				data.state = 'headers'
-				data.timeout = CTIME + 1
+				data.timeout = ctime + 1
 			end
 
 			if data.state ~= 'headers'then
@@ -224,7 +224,7 @@ function wsUpdateHandshake(i)
 
 		if ln == ''then
 			data.state = 'genresp'
-			data.timeout = CTIME + 1
+			data.timeout = ctime + 1
 		elseif ln then
 			local k, v = ln:match('(.+)%s*:%s*(.+)')
 			if k then
@@ -389,7 +389,7 @@ function acceptClients()
 		for i = 0, 127 do
 			if not wsHandshake[i]then
 				wsHandshake[i] = {
-					timeout = CTIME + 1,
+					timeout = ctime + 1,
 					state = 'testws',
 					headers = {},
 					fd = fd,
@@ -442,10 +442,6 @@ function serviceMessages()
 end
 
 function init()
-	local loglvl = tonumber(os.getenv('LOGLEVEL'))
-	if loglvl then
-		log.setLevel(loglvl)
-	end
 	log.info(CON_START)
 	waitClose = {}
 	entities = {}
@@ -520,7 +516,7 @@ function init()
 		if world and world.isWorld then
 			worlds[wn] = world
 			nworlds[num] = world
-			world.emptyfrom = CTIME
+			world.emptyfrom = ctime
 			if num == 1 then
 				worlds['default'] = world
 			end
@@ -542,7 +538,7 @@ function init()
 	log.info((CON_BINDSUCC):format(ip, port))
 	cmdh = initCmdHandler(handleConsoleCommand)
 	log.info(CON_HELP)
-	CTIME = gettime()
+	ctime = gettime()
 	return true
 end
 
@@ -564,17 +560,18 @@ end
 
 function mainLoop()
 	while not _STOP do
-		ETIME = CTIME
-		CTIME = gettime()
+		etime = ctime
+		ctime = gettime()
 
-		if not INITED then
+		if not inited then
 			if init()then
 				hooks:call('onInitDone')
-				INITED = true
+				inited = true
 			end
 		end
-		if ETIME then
-			dt = CTIME - ETIME
+
+		if etime then
+			dt = ctime - etime
 			hooks:call('onUpdate', dt)
 			timer.Update(dt)
 			worldsForEach(function(world)
@@ -592,7 +589,7 @@ function mainLoop()
 			cmdh()
 		end
 
-		NextUpdate = CTIME + 0.02
+		NextUpdate = ctime + 0.02
 		if NextUpdate > gettime()then
 			sleep((NextUpdate - gettime()) * 1000)
 		end
@@ -603,7 +600,7 @@ end
 
 while true do
 	succ, err = xpcall(mainLoop, debug.traceback)
-	if succ or hasError then
+	if succ or hasError or not inited then
 		break
 	else
 		log.error(err)
@@ -613,7 +610,7 @@ end
 
 ecode = 0
 
-if INITED then
+if inited then
 	log.info(CON_SVDAT)
 	playersForEach(function(ply)
 		if _STOP == 'restart'then
@@ -622,7 +619,6 @@ if INITED then
 			ply:kick((not succ and KICK_SVERR)or KICK_SVSTOP)
 		end
 	end)
-
 	saveAll()
 	local saveDone = false
 	while not saveDone do

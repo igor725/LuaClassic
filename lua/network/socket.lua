@@ -34,9 +34,11 @@ ffi.cdef[[
 
 	uint16_t htons(uint16_t hostshort);
 	uint16_t ntohs(uint16_t netshort);
-	uint32_t inet_addr(const char* cp);
+	uint32_t htonl(uint32_t hostlong);
+	uint32_t ntohl(uint32_t netlong);
 
 	const char* inet_ntop(int af, const void* src, char* dst, size_t cnt);
+	uint32_t inet_addr(const char* cp);
 
 	struct hostent* gethostbyname(const char* hostname);
 
@@ -113,6 +115,7 @@ if jit.os == 'Windows'then
 		int WSAStartup(uint16_t version, void *wsa_data);
 		int WSACleanup();
 	]]
+
 	sck = ffi.load('ws2_32')
 
 	FIONBIO = -2147195266
@@ -154,7 +157,7 @@ if jit.os == 'Windows'then
 	end
 
 	-- Flags: FORMAT_MESSAGE_FROM_SYSTEM, FORMAT_MESSAGE_IGNORE_INSERTS
-	local flags = bit.bor(0x00000200, 0x00001000)
+	local flags = bit.bor(0x200, 0x1000)
 
 	function currerr()
 		return ffi.C.GetLastError()
@@ -163,8 +166,8 @@ if jit.os == 'Windows'then
 	function geterror(errno)
 		errno = errno or currerr()
 		if not error_cache[errno]then
-			local buff = ffi.new('char[512]')
-			local buffsz = ffi.sizeof(buff)
+			local buffsz = 512
+			local buff = ffi.new('char[?]', buffsz)
 			local len = ffi.C.FormatMessageA(flags, nil, errno, 0, buff, buffsz, nil)
 			error_cache[errno] = ffi.string(buff, len - 2) .. ' (' .. errno .. ')'
 		end
@@ -227,7 +230,7 @@ function acceptClient(sfd)
 				return false, geterror()
 			end
 		end
-		
+
 		assert(setSockOpt(cfd, SOL_TCP, TCP_NODELAY, 1))
 		return cfd, parseIPv4(addr.sin_addr)
 	end
@@ -247,21 +250,22 @@ function setSockOpt(fd, level, opt, val)
 
 	local valsz = ffi.sizeof(val)
 	val = ffi.cast('void*', val)
+
 	return sck.setsockopt(fd, level, opt, val, valsz) == 0
 end
 
 function connectSock(ip, port)
 	local fd = sck.socket(AF_INET, SOCK_STREAM, 0)
-	local ssa = ffi.new('struct sockaddr_in[1]', {{
+	local ssa = ffi.new('struct sockaddr_in', {
 		sin_family = AF_INET,
 		sin_addr = {
 			s_addr = sck.inet_addr(ip)
 		},
 		sin_port = sck.htons(port)
-	}})
+	})
 
 	local cssa = ffi.cast('const struct sockaddr*', ssa)
-	local ssasz = ffi.sizeof(ssa[0])
+	local ssasz = ffi.sizeof(ssa)
 
 	assert(setSockOpt(fd, SOL_TCP, TCP_NODELAY, 1))
 
@@ -281,16 +285,16 @@ end
 
 function bindSock(ip, port, backlog)
 	local fd = sck.socket(AF_INET, SOCK_STREAM, 0)
-	local ssa = ffi.new('struct sockaddr_in[1]', {{
+	local ssa = ffi.new('struct sockaddr_in', {
 		sin_family = AF_INET,
 		sin_addr = {
 			s_addr = sck.inet_addr(ip)
 		},
 		sin_port = sck.htons(port)
-	}})
+	})
 
 	local cssa = ffi.cast('const struct sockaddr*', ssa)
-	local ssasz = ffi.sizeof(ssa[0])
+	local ssasz = ffi.sizeof(ssa)
 
 	assert(setSockOpt(fd, SOL_TCP, TCP_NODELAY, 1))
 	if jit.os == 'Linux'then
@@ -456,4 +460,12 @@ end
 
 function ntohs(short)
 	return sck.ntohs(short)
+end
+
+function ntohl(long)
+	return sck.ntohl(long)
+end
+
+function htonl(long)
+	return sck.htonl(long)
 end

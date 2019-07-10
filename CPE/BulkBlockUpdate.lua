@@ -55,7 +55,7 @@ function bbu:write(x, y, z, id)
 	end
 
 	if offset and id then
-		iptr[sbbu.count] = bswap(offset - 4)
+		iptr[sbbu.count] = htonl(offset - 4)
 		sbbu.blocks[sbbu.count] = id
 		sbbu.count = sbbu.count + 1
 		if sbbu.count == 255 then

@@ -113,7 +113,6 @@ end
 
 floor = math.floor
 ceil = math.ceil
-bswap = bit.bswap
 
 local colorReplace
 

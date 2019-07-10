@@ -21,7 +21,6 @@ function timer.Create(id, reps, delay, func)
     curr = delay,
 		func = func
   }
-
 	timer.active[id] = t
   return t
 end
@@ -73,7 +72,7 @@ function timer.Resume(id)
 end
 
 function timer.Update(dt)
-  for id,data in pairs(timer.active)do
+  for id, data in pairs(timer.active)do
     if data.repeats ~= 0 then
 			if not data.paused then
 	      if data.curr > 0 then
@@ -81,6 +80,7 @@ function timer.Update(dt)
 	      else
 	        data.curr = data.delay
 	        data.repeats = data.repeats - 1
+					log.debug(('Timer %q tick'):format(id))
 					local status, ret = pcall(data.func, data.repeats)
 					if not status then
 						ret = tostring(ret)

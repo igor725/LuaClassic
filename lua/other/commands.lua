@@ -328,7 +328,7 @@ addCommand('copy', function(isConsole, player, args)
 	local bsz = 6 + cdx * cdy * cdz
 	local msz = parseSizeStr(config:get('maxSaveSize'))
 	if bsz > msz then
-		return 'Selected cuboid is too big'
+		return CMD_COPYMEMLIM
 	end
 	local cbuf = ffi.new('uint8_t[?]', bsz)
 	local sptr = ffi.cast('uint16_t*', cbuf)

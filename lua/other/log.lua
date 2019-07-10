@@ -25,7 +25,7 @@ log = {
 		[LOG_INFO]  = '1;32',
 		[LOG_ERROR] = '1;31'
 	},
-	level = LOG_WARN
+	level = tonumber(os.getenv('LOGLEVEL'))or LOG_WARN
 }
 
 if not ENABLE_ANSI then

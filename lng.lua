@@ -111,6 +111,7 @@ CMD_CANCELRST      = '&a***&f Restart cancelled'
 CMD_RSTTMR         = '&c***&f Server will restart in %d seconds!'
 CMD_PLISTHDR       = 'Players online %d:'
 CMD_PLISTROW       = '\n%s (Is web client: %s)'
+CMD_COPYMEMLIM     = 'Cuboid size limit exceeded'
 
 DBG_INCOMINGCONN   = 'Incoming connection from'
 DBG_NEWTHREAD      = 'New SendMap thread:'

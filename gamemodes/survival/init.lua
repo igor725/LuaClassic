@@ -143,7 +143,7 @@ hooks:add('onPlayerClick', 'surv_init', function(player, ...)
 			if not player.nextHit then
 				player.nextHit = 0
 			end
-			if tgentity and CTIME > player.nextHit then
+			if tgentity and ctime > player.nextHit then
 				-- get damage from sword
 				local power, toolType = survPlayerGetTool(player)
 
@@ -159,7 +159,7 @@ hooks:add('onPlayerClick', 'surv_init', function(player, ...)
 				survStopBreaking(player)
 
 				-- timeout
-				player.nextHit = CTIME + 0.5
+				player.nextHit = ctime + 0.5
 			end
 		end
 	end

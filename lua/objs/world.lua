@@ -193,7 +193,7 @@ local world_mt = {
 		data.spawnpointeye = data.spawnpointeye or newAngle(0, 0)
 		data.size = sz
 		self.ldata = ffi.new('uint8_t[?]', sz)
-		ffi.cast('int*', self.ldata)[0] = bswap(sz - 4)
+		ffi.cast('int*', self.ldata)[0] = htonl(sz - 4)
 		self.data = data
 		return true
 	end,
@@ -427,7 +427,7 @@ local world_mt = {
 		else
 			if uwa > 0 then
 				if self.emptyfrom then
-					if CTIME - self.emptyfrom > uwa then
+					if ctime - self.emptyfrom > uwa then
 						self:unload()
 						self.emptyfrom = nil
 					end

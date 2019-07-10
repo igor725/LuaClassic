@@ -20,7 +20,7 @@ local function sendMap(cfd, cmplvl, mapaddr, maplen, isWeb, fmSupport)
 	if fmSupport then
 		maplen = maplen - 4
 		map = ffi.cast('char*', mapaddr + 4)
-		local len = ffi.string(ffi.new('int[1]', bit.bswap(maplen)), 4)
+		local len = ffi.string(ffi.new('int[1]', htonl(maplen)), 4)
 		levelInit = '\2' .. len
 	else
 		levelInit = '\2'
@@ -198,7 +198,7 @@ local player_mt = {
 		end
 	end,
 	getOnlineTime = function(self)
-		return floor(self.lastOnlineTime + (CTIME - self.connectTime))
+		return floor(self.lastOnlineTime + (ctime - self.connectTime))
 	end,
 	getWorld = function(self)
 		return getWorld(self.worldName)
@@ -451,7 +451,7 @@ local player_mt = {
 			return
 		end
 
-		self.kickTimeout = CTIME + config:get('playerTimeout')
+		self.kickTimeout = ctime + config:get('playerTimeout')
 		pHandlers[id](self, struct.unpack(fmt, ffi.string(data + 1, psz)))
 	end,
 
@@ -646,7 +646,7 @@ local player_mt = {
 		world.players = world.players - 1
 
 		if world.players == 0 then
-			world.emptyfrom = CTIME
+			world.emptyfrom = ctime
 		end
 		if onPlayerDespawn then
 			onPlayerDespawn(self)
@@ -786,7 +786,7 @@ local player_mt = {
 				if mesg == true then
 					local dim = pworld:getData('dimensions')
 					self:sendPacket(false, 0x04, dim.x, dim.y, dim.z)
-					self.kickTimeout = CTIME + config:get('playerTimeout')
+					self.kickTimeout = ctime + config:get('playerTimeout')
 					self:spawn()
 				elseif mesg == false then
 					self:destroy()
@@ -802,7 +802,7 @@ local player_mt = {
 			end
 		end
 
-		if CTIME - dt > self.kickTimeout then
+		if ctime - dt > self.kickTimeout then
 			if self.isSpawned then
 				self:kick(KICK_TIMEOUT)
 				return
@@ -978,7 +978,7 @@ function newPlayer(fd)
 	local eye = newAngle(syaw, spitch)
 
 	return setmetatable({
-		connectTime = CTIME,
+		connectTime = ctime,
 		worldName = 'default',
 		messageBuffer = '',
 		prefix = '',

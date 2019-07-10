@@ -37,24 +37,27 @@ function wsLoad()
 
 	function encodeWsFrame(data, len, opcode, _buf)
 		local buf = _buf
+		local offset = 2
 		data = ffi.cast('const char*', data)
 
 		if len < 126 then
 			buf = buf or ffi.new('char[?]', len + 2)
-			ffi.copy(buf + 2, data, len)
 			buf[1] = len
-			len = len + 2
 		elseif len < 65535 then
+			offset = 4
 			buf = buf or ffi.new('char[?]', len + 4)
 			ffi.cast('uint16_t*', buf)[1] = htons(len)
-			ffi.copy(buf + 4, data, len)
 			buf[1] = 126
-			len = len + 4
 		else
-			error('not implemented')
+			offset = 6
+			buf = buf or ffi.new('char[?]', len + 6)
+			ffi.cast('uint32_t*', buf + 2)[0] = htonl(len)
+			buf[1] = 127
 		end
 
+		ffi.copy(buf + offset, data, len)
 		buf[0] = bit.bor(0x80, bit.band(opcode, 0x0F))
+		len = len + offset
 
 		return buf, len
 	end
