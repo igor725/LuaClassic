@@ -37,7 +37,13 @@ time_presets = {
 
 local function updateEnvColorsFor(player, typ, r, g, b)
 	if player:isSupported('EnvColors')then
-		player:sendPacket(false, 0x19, typ, r or -1, g or -1, b or -1)
+		r, g, b = r or -1, g or -1, b or -1
+		local buf = player._buf
+		buf:reset()
+			buf:writeByte(0x19)
+			buf:writeByte(typ)
+			buf:writeVarShort(r, g, b)
+		buf:sendTo(player:getClient())
 	end
 end
 
@@ -52,7 +58,6 @@ local function getClrs(world)
 end
 
 function ec:load()
-	registerSvPacket(0x19,'>bbhhh')
 	getPlayerMT().setEnvColor = function(player, typ, r, g, b)
 		updateEnvColorsFor(player, typ, r, g, b)
 	end

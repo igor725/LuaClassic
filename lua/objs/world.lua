@@ -282,7 +282,12 @@ local world_mt = {
 			if self.players > 0 then
 				playersForEach(function(player)
 					if player ~= exclude then
-						player:sendPacket(false, 0x06, x, y, z, id)
+						local buf = player._buf
+						buf:reset()
+							buf:writeByte(0x06)
+							buf:writeVarShort(x, y, z)
+							buf:writeByte(id)
+						buf:sendTo(player:getClient())
 					end
 				end)
 			end

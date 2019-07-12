@@ -6,7 +6,6 @@
 local hb = {}
 
 function hb:load()
-	registerSvPacket(0x14, 'bbb')
 	hooks:create('onHeldBlockChange')
 	getPlayerMT().getHeldBlock = function(player)
 		return player.heldBlock or -1
@@ -15,7 +14,12 @@ function hb:load()
 		if not player:isSupported('HeldBlock')then
 			return false
 		end
-		player:sendPacket(false, 0x14, block, (preventChange and 1)or 0)
+		local buf = player._buf
+		buf:reset()
+			buf:writeByte(0x14)
+			buf:writeByte(block)
+			buf:writeByte(preventChange and 1 or 0)
+		buf:sendTo(player:getClient())
 		return true
 	end
 end

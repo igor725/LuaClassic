@@ -7,11 +7,6 @@ local sc = {
 	global = true
 }
 
-function sc:load()
-	registerSvPacket(0x1A, '>bbc64hhhhhhhhhh')
-	registerSvPacket(0x1B, 'bb')
-end
-
 function sc:create(player, id, label, p1, p2, r, g, b, a)
 	if not player:isSupported('SelectionCuboid')then
 		return false
@@ -23,22 +18,26 @@ function sc:create(player, id, label, p1, p2, r, g, b, a)
 	a = a or 100
 	x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p2)
 
-	player:sendPacket(
-		false,
-		0x1A,
-		id,
-		label,
-		x1, y1, z1,
-		x2, y2, z2,
-		r, g, b, a
-	)
+	local buf = player._buf
+	buf:reset()
+		buf:writeByte(0x1A)
+		buf:writeByte(id)
+		buf:writeString(label)
+		buf:writeVarShort(x1, y1, z1)
+		buf:writeVarShort(x2, y2, z2)
+		buf:writeVarShort(r, g, b, a)
+	buf:sendTo(player:getClient())
 end
 
 function sc:remove(player, id)
 	if not player:isSupported('SelectionCuboid')then
 		return false
 	end
-	player:sendPacket(false, 0x1B, id)
+	local buf = player._buf
+	buf:reset()
+		buf:writeByte(0x1B)
+		buf:writeByte(id)
+	buf:sendTo(player:getClient())
 	return true
 end
 

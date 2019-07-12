@@ -19,12 +19,18 @@ local function hackControlFor(player, ...)
 	if not player:isSupported('HackControl')then
 		return false
 	end
-	player:sendPacket(false, 0x20, ...)
+	local buf = player._buf
+	buf:reset()
+		buf:writeByte(0x20)
+	for i = 1, 5 do
+		buf:writeByte(select(i, ...))
+	end
+		buf:writeShort(select(6, ...))
+	buf:sendTo(player:getClient())
 	return true
 end
 
 function hc:load()
-	registerSvPacket(0x20, '>bbbbbbh')
 	getPlayerMT().hackControl = function(...)
 		return hackControlFor(...)
 	end

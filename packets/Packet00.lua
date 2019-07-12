@@ -3,11 +3,17 @@
 	released under The MIT license http://opensource.org/licenses/MIT
 ]]
 
-return function(player, pver, name, vkey, magic)
+-- return function(player, pver, name, vkey, magic)
+return function(player, buf)
+	local pver = buf:readByte()
+	local name = buf:readString()
+	local vkey = buf:readString()
+	local magic = buf:readByte()
+
 	if player.handshaked then
 		return
 	end
-	
+
 	if pver == 0x07 then
 		name = trimStr(name)
 		vkey = trimStr(vkey)

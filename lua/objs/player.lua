@@ -376,6 +376,7 @@ local player_mt = {
 	isSupported = function(self, extName, extVer)
 		extVer = extVer or 1
 		extName = extName:lower()
+		if not cpe.exts[extName]then return false end
 		local ext = self.extensions[extName]
 		return (ext and ext == extVer)or false
 	end,
@@ -401,7 +402,17 @@ local player_mt = {
 			ay = floor(ay / 360 * 255)
 			ap = floor(ap / 360 * 255)
 		end
-		self:sendPacket(self:isSupported('ExtEntityPositions'), 0x08, -1, x, y, z, ay, ap)
+		local buf = self._buf
+		buf:reset()
+			buf:writeByte(0x08)
+			buf:writeByte(255)
+		if self:isSupported('ExtEntityPositions')then
+			buf:writeVarInt(x, y, z)
+		else
+			buf:writeVarShort(x, y, z)
+		end
+			buf:writeVarByte(ay, ap)
+		buf:sendTo(self:getClient())
 	end,
 	moveToSpawn = function(self)
 		local world = getWorld(self)
@@ -433,16 +444,14 @@ local player_mt = {
 		return false, 0
 	end,
 
-	handlePacket = function(self, data)
-		local id = data[0]
+	handlePacket = function(self, buf)
+		local id = buf:readByte()
 		local psz = psizes[id]
-		local fmt = packets[id]
 
 		local cpesz = cpe.psizes[id]
 		if cpesz then
 			if self:isSupported(cpe.pexts[id])then
 				psz = cpesz
-				fmt = cpe.packets.cl[id]
 			end
 		end
 
@@ -452,7 +461,8 @@ local player_mt = {
 		end
 
 		self.kickTimeout = ctime + config:get('playerTimeout')
-		pHandlers[id](self, struct.unpack(fmt, ffi.string(data + 1, psz)))
+		pHandlers[id](self, buf)
+		buf:reset()
 	end,
 
 	readWsData = function(self)
@@ -475,11 +485,11 @@ local player_mt = {
 	readRawData = function(self)
 		local fd = self:getClient()
 		if not self._buf then
-			self._buf = ffi.new('uint8_t[256]')
+			self._buf = newBuffer(3096)
 		end
 		local id = self._waitPacket
 		if not id then
-			local len, closed, err = receiveMesg(fd, self._buf, 1)
+			local len, closed, err = receiveMesg(fd, self._buf.array, 1)
 
 			if closed then
 				self._sockerr = err
@@ -489,7 +499,7 @@ local player_mt = {
 
 			if len < 1 then return end
 
-			id = self._buf[0]
+			id = self._buf.array[0]
 			local psz = psizes[id]
 			local cpesz = cpe.psizes[id]
 
@@ -509,7 +519,7 @@ local player_mt = {
 		end
 
 		if self._waitPacket then
-			local dlen, closed, err = receiveMesg(fd, self._buf + self._receivedData + 1, self._remainingData)
+			local dlen, closed, err = receiveMesg(fd, self._buf.array + self._receivedData + 1, self._remainingData)
 
 			if closed then
 				self._sockerr = err
@@ -590,7 +600,7 @@ local player_mt = {
 	end,
 	sendMessage = function(self, mesg, id)
 		mesg = tostring(mesg)
-		id = id or MT_CHAT
+		id = id or MT_CHAT or 0
 
 		if mesg:find('[\r\n]')then
 			for line in mesg:gmatch("[^\r\n]+") do
@@ -617,18 +627,31 @@ local player_mt = {
 		else
 			parts = 1
 		end
+
+		local buf = self._buf
+
+		buf:reset()
 		if parts > 1 then
 			for i = 1, parts do
 				local mpart = mesg:sub(i * 60 - 59, i * 60)
 				if i == parts then
 					mpart = lastcolor .. mpart
 				end
-				self:sendPacket(false, 0x0D, id, ((i > 1 and '> ')or'') .. lastcolor .. mpart)
+				buf:writeByte(0x0D)
+				buf:writeByte(id)
+				buf:writeString(((i > 1 and '> ')or'') .. lastcolor .. mpart)
+				if buf.pos + 66 > buf.len then
+					buf:sendTo(self:getClient())
+					buf:reset()
+				end
 				lastcolor = mpart:match('.*(&%x)')or lastcolor or''
 			end
 		else
-			self:sendPacket(false, 0x0D, id, mesg)
+			buf:writeByte(0x0D)
+			buf:writeByte(id)
+			buf:writeString(mesg)
 		end
+		buf:sendTo(self:getClient())
 	end,
 
 	despawn = function(self)
@@ -764,7 +787,11 @@ local player_mt = {
 	end,
 	kick = function(self, reason, silent)
 		reason = reason or KICK_NOREASON
-		self:sendPacket(false, 0x0e, reason)
+		local buf = self._buf
+		buf:reset()
+			buf:writeByte(0x0E)
+			buf:writeString(reason)
+		buf:sendTo(self:getClient())
 		self.leaveReason = reason
 		self.silentKick = silent
 		self.kicked = true
@@ -785,7 +812,11 @@ local player_mt = {
 
 				if mesg == true then
 					local dim = pworld:getData('dimensions')
-					self:sendPacket(false, 0x04, dim.x, dim.y, dim.z)
+					local buf = self._buf
+					buf:reset()
+						buf:writeByte(0x04)
+						buf:writeVarShort(dim.x, dim.y, dim.z)
+					buf:sendTo(self:getClient())
 					self.kickTimeout = ctime + config:get('playerTimeout')
 					self:spawn()
 				elseif mesg == false then

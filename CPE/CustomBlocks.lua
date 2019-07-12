@@ -7,14 +7,16 @@
 local cb = {}
 
 function cb:load()
-	registerClPacket(0x13, 'b', function(player, b)
-	end)
-	registerSvPacket(0x13, 'bb')
+	registerClPacket(0x13, 1, function()end)
 end
 
 function cb:prePlayerSpawn(player)
 	if player:isSupported('CustomBlocks')then
-		player:sendPacket(false, 0x13, 1)
+		local buf = player._buf
+		buf:reset()
+			buf:writeByte(0x13)
+			buf:writeByte(0x01)
+		buf:sendTo(player:getClient())
 	end
 end
 

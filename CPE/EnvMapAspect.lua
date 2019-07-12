@@ -18,13 +18,22 @@ MEP_MAPSIDESOFFSET = 9
 
 local function updateMapPropertyFor(player, typ, val)
 	if player:isSupported('EnvMapAspect')then
-		player:sendPacket(false, 0x029, typ, val)
+		local buf = player._buf
+		buf:reset()
+			buf:writeByte(0x29)
+			buf:writeByte(typ)
+			buf:writeInt(val)
+		buf:sendTo(player:getClient())
 	end
 end
 
 local function setTexturePackFor(player, tpack)
 	if player:isSupported('EnvMapAspect')then
-		player:sendPacket(false, 0x28, tpack)
+		local buf = player._buf
+		buf:reset()
+			buf:writeByte(0x28)
+			buf:writeString(tpack)
+		buf:sendTo(player:getClient())
 	end
 end
 
@@ -39,8 +48,6 @@ local function getMa(world)
 end
 
 function ema:load()
-	registerSvPacket(0x28, 'bc64')
-	registerSvPacket(0x29, '>bbi')
 	getPlayerMT().setEnvProp = function(player, typ, val)
 		updateMapPropertyFor(player, typ, val)
 	end
@@ -73,7 +80,7 @@ end
 
 function ema:prePlayerSpawn(player)
 	if not player.firstSpawn then return end
-	
+
 	local world = getWorld(player)
 
 	for typ, val in pairs(getMa(player.worldName))do

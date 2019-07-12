@@ -9,10 +9,8 @@ local bbu = {
 }
 
 local sbbu = ffi.new([[struct {
-	uint8_t id;
-	uint8_t count;
-	uint8_t indices[1024];
-	uint8_t blocks[256];
+	uint8_t id, count,
+	indices[1024], blocks[256];
 }]])
 local iptr = ffi.cast('uint32_t*', sbbu.indices)
 

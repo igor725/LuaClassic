@@ -9,7 +9,7 @@ onPlayerClick = onPlayerClick or function(...)hooks:call('onPlayerClick', ...)en
 
 function pc:load()
 	hooks:create('onPlayerClick')
-	registerClPacket(0x22, '>bbhhbhhhb', onPlayerClick)
+	registerClPacket(0x22, 14, onPlayerClick)
 end
 
 return pc

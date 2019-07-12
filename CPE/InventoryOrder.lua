@@ -6,12 +6,16 @@
 local iord = {}
 
 function iord:load()
-	registerSvPacket(0x2C, 'bbb')
 	getPlayerMT().setInventoryOrder = function(player, order, id)
 		if not player:isSupported('InventoryOrder')then
 			return false
 		end
-		player:sendPacket(false, 0x2C, order, id)
+		local buf = player._buf
+		buf:reset()
+			buf:writeByte(0x2C)
+			buf:writeByte(order)
+			buf:writeByte(id)
+		buf:sendTo(player:getClient())
 		return true
 	end
 end

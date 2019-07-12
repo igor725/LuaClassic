@@ -20,8 +20,16 @@ local cm = {
 	}
 }
 
+local function updateModelFor(player, id, mdl)
+	local buf = player._buf
+	buf:reset()
+		buf:writeByte(0x1D)
+		buf:writeByte(id)
+		buf:writeString(mdl)
+	buf:sendTo(player:getClient())
+end
+
 function cm:load()
-	registerSvPacket(0x1d, 'bbc64')
 	getPlayerMT().setModel = function(player, model, scale)
 		model = model or'humanoid'
 		scale = tonumber(scale)or 1
@@ -60,7 +68,7 @@ function cm:load()
 			if ply:isInWorld(player)then
 				if ply:isSupported('ChangeModel')then
 					local id = (ply == player and -1)or player:getID()
-					ply:sendPacket(false, 0x1D, id, mdstr)
+					updateModelFor(ply, id, mdstr)
 				end
 			end
 		end)
@@ -90,7 +98,7 @@ function cm:postPlayerSpawn(player)
 						mdstr = ply.model
 					end
 					local id = (ply == player and -1)or ply:getID()
-					player:sendPacket(false, 0x1D, id, mdstr)
+					updateModelFor(player, id, mdstr)
 				end
 			end
 		end)

@@ -11,12 +11,17 @@ EP_ROTZ = 2
 
 local function entPropFor(player, id, ptype, val)
 	if player:isSupported('EntityProperty')then
-		player:sendPacket(false, 0x2A, id, ptype, val)
+		local buf = player._buf
+		buf:reset()
+			buf:writeByte(0x2A)
+			buf:writeByte(id)
+			buf:writeByte(ptype)
+			buf:writeInt(val)
+		buf:sendTo(player:getClient())
 	end
 end
 
 function ep:load()
-	registerSvPacket(0x2A, '>bbbi')
 	getPlayerMT().setProp = function(player, ptype, val)
 		player.entProps = player.entProps or{}
 		player.entProps[ptype] = val
@@ -26,8 +31,8 @@ function ep:load()
 		end)
 	end
 	getPlayerMT().getProp = function(player, ptype)
-		if not player.entProps then return end
-		return player.entProps[ptype]
+		if not player.entProps then return 0 end
+		return player.entProps[ptype]or 0
 	end
 end
 

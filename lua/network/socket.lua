@@ -32,10 +32,10 @@ ffi.cdef[[
 		uint16_t linecur;
 	};
 
-	uint16_t htons(uint16_t hostshort);
-	uint16_t ntohs(uint16_t netshort);
 	uint32_t htonl(uint32_t hostlong);
+	uint16_t htons(uint16_t hostshort);
 	uint32_t ntohl(uint32_t netlong);
+	uint16_t ntohs(uint16_t netshort);
 
 	const char* inet_ntop(int af, const void* src, char* dst, size_t cnt);
 	uint32_t inet_addr(const char* cp);

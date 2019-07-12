@@ -3,7 +3,16 @@
 	released under The MIT license http://opensource.org/licenses/MIT
 ]]
 
-return function(player, x, y, z, mode, id)
+return function(player, buf)
+	local x, y, z, mode, id
+	if player:isSupported('ExtEntityPositions')then
+		x, y, z = buf:readInt3()
+	else
+		x, y, z = buf:readShort3()
+	end
+	mode = buf:readByte()
+	id = buf:readByte()
+
 	local world = getWorld(player)
 	local cblock = world:getBlock(x, y, z)
 
@@ -45,6 +54,10 @@ return function(player, x, y, z, mode, id)
 
 	if cantPlace then
 		cblock = cblock or 1
-		player:sendPacket(false, 0x06, x, y, z, cblock)
+		buf:reset()
+			buf:writeByte(0x06)
+			buf:writeVarShort(x, y, z)
+			buf:writeByte(cblock)
+		buf:sendTo(player:getClient())
 	end
 end

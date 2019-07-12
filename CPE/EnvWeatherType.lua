@@ -16,12 +16,15 @@ end
 
 local function weatherFor(player, w)
 	if player:isSupported('EnvWeatherType')then
-		player:sendPacket(false, 0x1F, w)
+		local buf = player._buf
+		buf:reset()
+			buf:writeByte(0x1F)
+			buf:writeByte(w)
+		buf:sendTo(player:getClient())
 	end
 end
 
 function wt:load()
-	registerSvPacket(0x1F, 'bb')
 	getWorldMT().setWeather = function(world, w)
 		world = getWorld(world)
 		if not world then return false end

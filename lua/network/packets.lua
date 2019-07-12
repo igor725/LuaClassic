@@ -3,12 +3,8 @@
 	released under The MIT license http://opensource.org/licenses/MIT
 ]]
 
-packets = {
-	[0x00] = 'Bc64c64B',
-	[0x05] = '>hhhBB',
-	[0x08] = '>BhhhBB',
-	[0x0d] = 'Bc64'
-}
+pHandlers = {}
+psizes = {}
 
 svpackets = {
 	[0x00] = 'bbc64c64b',
@@ -26,14 +22,10 @@ svpackets = {
 	[0x0f] = 'bb'
 }
 
-psizes = {}
-pHandlers = {}
-
 local packetPathFormat = 'packets/Packet%02X.lua'
 
-function registerClPacket(id, fmt, handler)
-	packets[id] = fmt
-	psizes[id] = struct.size(fmt)
+function registerClPacket(id, size, handler)
+	psizes[id] = size
 	local path = (packetPathFormat):format(id)
 	pHandlers[id] = handler or log.assert(loadfile(path))()
 end
@@ -42,13 +34,14 @@ function registerSvPacket(id, fmt)
 	svpackets[id] = fmt
 end
 
-for id, fmt in pairs(packets)do
-	registerClPacket(id, fmt)
-end
-
 function generatePacket(id, ...)
 	local fmt = svpackets[id]
 	if fmt then
 		return struct.pack(fmt, id, ...)
 	end
 end
+
+registerClPacket(0x00, 130)
+registerClPacket(0x05, 008)
+registerClPacket(0x08, 009)
+registerClPacket(0x0D, 065)

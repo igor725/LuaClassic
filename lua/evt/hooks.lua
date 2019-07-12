@@ -21,6 +21,7 @@ end
 function hooks:add(hookname, bname, func, priority)
 	priority = priority or 100
 	local hks = self.list[hookname]
+	if not hks then return end
 	if not table.hasValue(hks.priority, bname)then
 		table.insert(hks.priority, bname)
 	end
