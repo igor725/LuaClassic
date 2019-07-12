@@ -37,6 +37,6 @@ function initCmdHandler(cbfunc)
 			end
 			return true
 		end
-		return false
+		return false, thread
 	end
 end

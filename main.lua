@@ -586,7 +586,11 @@ function mainLoop()
 		serviceMessages()
 
 		if cmdh then
-			cmdh()
+			local succ, th = cmdh()
+			if not succ then
+				log.warn('CommandsHandler thread', th.status, th[-1])
+				cmdh = nil
+			end
 		end
 
 		NextUpdate = ctime + 0.02
