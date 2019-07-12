@@ -802,11 +802,9 @@ local player_mt = {
 			end
 		end
 
-		if ctime - dt > self.kickTimeout then
-			if self.isSpawned then
-				self:kick(KICK_TIMEOUT)
-				return
-			end
+		if self.kickTimeout and ctime - dt > self.kickTimeout then
+			self:kick(KICK_TIMEOUT)
+			return
 		end
 
 		if self.handshakeStage2 then
@@ -983,7 +981,6 @@ function newPlayer(fd)
 		messageBuffer = '',
 		prefix = '',
 		pos = pos,
-		kickTimeout = 0,
 		lastOnlineTime = 0,
 		isSpawned = false,
 		oldDY = 0,
