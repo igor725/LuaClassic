@@ -550,17 +550,6 @@ local player_mt = {
 		msg = ffi.cast('char*', msg)
 		return sendMesg(self:getClient(), msg, len)
 	end,
-	sendPacket = function(self, isCPE, ...)
-		local rawPacket
-
-		if isCPE then
-			rawPacket = cpe:generatePacket(...)
-		else
-			rawPacket = generatePacket(...)
-		end
-
-		return self:sendNetMesg(rawPacket, #rawPacket)
-	end,
 	sendMap = function(self)
 		if self.thread then return end
 		if not self.handshaked then return end
@@ -589,14 +578,14 @@ local player_mt = {
 		sname = sname or config:get('serverName')
 		smotd = smotd or config:get('serverMotd')
 
-		self:sendPacket(
-			false,
-			0x00,
-			0x07,
-			sname,
-			smotd,
-			0x00
-		)
+		local buf = self._buf
+		buf:reset()
+			buf:writeByte(0x00)
+			buf:writeByte(0x07)
+			buf:writeString(sname)
+			buf:writeString(smotd)
+			buf:writeByte(0x00)
+		buf:sendTo(self:getClient())
 	end,
 	sendMessage = function(self, mesg, id)
 		mesg = tostring(mesg)
@@ -660,7 +649,11 @@ local player_mt = {
 		local sId = self:getID()
 		playersForEach(function(ply)
 			if ply:isInWorld(self)then
-				ply:sendPacket(false, 0x0c, sId)
+				local buf = ply._buf
+				buf:reset()
+					buf:writeByte(0x0C)
+					buf:writeByte(sId)
+				buf:sendTo(ply:getClient())
 			end
 		end)
 		cpe:extCallHook('postPlayerDespawn', self)
@@ -713,22 +706,32 @@ local player_mt = {
 
 			local dat, datcpe
 			if ply:isInWorld(self) and (ply.isSpawned or sId == -1)then
+				local buf = self._buf
+				buf:reset()
+					buf:writeByte(0x07)
+					buf:writeByte(sId)
+					buf:writeString(cname)
 				if self:isSupported('ExtEntityPositions')then
-					datcpe = datcpe or cpe:generatePacket(0x07, sId, cname, cx, cy, cz, cay, cap)
-					self:sendNetMesg(datcpe, #datcpe)
+					buf:writeVarInt(cx, cy, cz)
 				else
-					dat = dat or generatePacket(0x07, sId, cname, cx, cy, cz, cay, cap)
-					self:sendNetMesg(dat, #dat)
+					buf:writeVarShort(cx, cy, cz)
 				end
+					buf:writeVarByte(cay, cap)
+				buf:sendTo(self:getClient())
 
 				if sId ~= -1 then
+					local buf = self._buf
+					buf:reset()
+						buf:writeByte(0x07)
+						buf:writeByte(pId)
+						buf:writeString(name)
 					if ply:isSupported('ExtEntityPositions')then
-						dat2cpe = dat2cpe or cpe:generatePacket(0x07, pId, name, x, y, z, ay, ap)
-						ply:sendNetMesg(dat2cpe, #dat2cpe)
+						buf:writeVarInt(x, y, z)
 					else
-						dat2 = dat2 or generatePacket(0x07, pId, name, x, y, z, ay, ap)
-						ply:sendNetMesg(dat2, #dat2)
+						buf:writeVarShort(x, y, z)
 					end
+						buf:writeVarByte(ay, ap)
+					buf:sendTo(ply:getClient())
 				end
 			end
 		end)

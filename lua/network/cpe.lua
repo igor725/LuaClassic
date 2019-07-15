@@ -90,13 +90,6 @@ function cpe:loadExt(path)
 	end
 end
 
-function cpe:generatePacket(id, ...)
-	local fmt = self.packets.sv[id]
-	if fmt then
-		return struct.pack(fmt, id, ...)
-	end
-end
-
 function cpe:extCallHook(hookName, ...)
 	for ename, ext in pairs(cpe.exts)do
 		if ext[hookName] then

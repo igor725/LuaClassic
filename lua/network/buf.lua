@@ -3,7 +3,7 @@
 	released under The MIT license http://opensource.org/licenses/MIT
 ]]
 
-local buff_mt = {
+local buf_mt = {
 	writeByte = function(self, byte)
 		local arr, pos = self.array, self.pos
 		if pos + 1 > self.len then return false end
@@ -145,7 +145,7 @@ local buff_mt = {
 		return sendMesg(fd, self.array, len or self.pos)
 	end
 }
-buff_mt.__index = buff_mt
+buf_mt.__index = buf_mt
 
 function newBuffer(len)
 	len = len or 70
@@ -153,5 +153,5 @@ function newBuffer(len)
 		array = ffi.new('uint8_t[?]', len),
 		len = len,
 		pos = 0
-	}, buff_mt)
+	}, buf_mt)
 end

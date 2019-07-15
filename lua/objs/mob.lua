@@ -14,10 +14,25 @@ local function spawnMobFor(mob, player)
 			cname = mob.model
 		end
 
-		player:sendPacket(player:isSupported('ExtEntityPositions'), 0x07, id, cname, cx, cy, cz, cay, cap)
+		local buf = player._buf
+		buf:reset()
+			buf:writeByte(0x07)
+			buf:writeByte(id)
+			buf:writeString(cname)
+			if player:isSupported('ExtEntityPositions')then
+				buf:writeVarInt(cx, cy, cz)
+			else
+				buf:writeVarShort(cx, cy, cz)
+			end
+				buf:writeVarByte(cay, cap)
+
 		if #cname == 0 then
-			player:sendPacket(false, 0x1D, id, mob.model)
+			buf:writeByte(0x1D)
+			buf:writeByte(id)
+			buf:writeString(mob.model)
 		end
+
+		buf:sendTo(player:getClient())
 	end
 end
 
@@ -48,13 +63,17 @@ local mob_mt = {
 
 		playersForEach(function(player)
 			if player:isInWorld(self)and player.isSpawned then
+				local buf = player._buf
+				buf:reset()
+					buf:writeByte(0x08)
+					buf:writeByte(id)
 				if player:isSupported('ExtEntityPositions')then
-					datcpe = datcpe or cpe:generatePacket(0x08, id, cx, cy, cz, cay, cap)
-					player:sendNetMesg(datcpe, #datcpe)
+					buf:writeVarInt(cx, cy, cz)
 				else
-					dat = dat or generatePacket(0x08, id, cx, cy, cz, cay, cap)
-					player:sendNetMesg(dat, #dat)
+					buf:writeVarShort(cx, cy, cz)
 				end
+					buf:writeVarByte(cay, cap)
+				buf:sendTo(player:getClient())
 			end
 		end)
 	end,
@@ -71,7 +90,11 @@ local mob_mt = {
 	despawn = function(self)
 		if not self.isSpawned then return false end
 		playersForEach(function(player)
-			player:sendPacket(false, 0x0C, self.id)
+			local buf = player._buf
+			buf:reset()
+				buf:writeByte(0x0C)
+				buf:writeByte(self.id)
+			buf:sendTo(player:getClient())
 		end)
 		self.isSpawned = false
 		return true

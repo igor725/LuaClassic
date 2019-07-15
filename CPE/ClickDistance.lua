@@ -6,12 +6,15 @@
 local cd = {}
 
 function cd:load()
-	registerSvPacket(0x12, '>bH')
 	getPlayerMT().setClickDistance = function(player, cdist)
 		if not player:isSupported('ClickDistance')then
 			return false
 		end
-		player:sendPacket(false, 0x12, cdist)
+		local buf = player._buf
+		buf:reset()
+			buf:writeByte(0x12)
+			buf:writeShort(cdist)
+		buf:sendTo(player:getClient())
 		return true
 	end
 end
