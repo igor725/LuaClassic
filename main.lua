@@ -323,12 +323,7 @@ function createPlayer(fd, ip, isWS)
 		hooks:call('onPlayerCreate', player)
 		return player
 	else
-		local rawPacket = generatePacket(0x0e, KICK_CONNREJ)
-		if isWS then
-			sendMesg(fd, encodeWsFrame(rawPacket, #rawPacket, 0x02))
-		else
-			sendMesg(fd, rawPacket)
-		end
+		closeSock(fd)
 	end
 end
 

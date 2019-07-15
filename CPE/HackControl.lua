@@ -19,7 +19,7 @@ local function hackControlFor(player, ...)
 	if not player:isSupported('HackControl')then
 		return false
 	end
-	local buf = player._buf
+	local buf = player._bufwr
 	buf:reset()
 		buf:writeByte(0x20)
 	for i = 1, 5 do

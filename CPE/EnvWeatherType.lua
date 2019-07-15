@@ -16,7 +16,7 @@ end
 
 local function weatherFor(player, w)
 	if player:isSupported('EnvWeatherType')then
-		local buf = player._buf
+		local buf = player._bufwr
 		buf:reset()
 			buf:writeByte(0x1F)
 			buf:writeByte(w)

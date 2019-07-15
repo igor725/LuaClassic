@@ -12,7 +12,7 @@ end
 
 function cb:prePlayerSpawn(player)
 	if player:isSupported('CustomBlocks')then
-		local buf = player._buf
+		local buf = player._bufwr
 		buf:reset()
 			buf:writeByte(0x13)
 			buf:writeByte(0x01)

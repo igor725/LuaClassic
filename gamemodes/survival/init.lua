@@ -85,11 +85,12 @@ hooks:add('postPlayerSpawn', 'surv_init', function(player)
 	end
 end)
 
-hooks:add('onPlayerClick', 'surv_init', function(player, ...)
-	local button  = select(1, ...)
-	local action  = select(2, ...)
-	local tgid    = select(5, ...)
-	local x, y, z = select(6, ...)
+hooks:add('onPlayerClick', 'surv_init', function(player, buf)
+	local button  = buf:readByte()
+	local action  = buf:readByte()
+	buf:seek('cur', 4)
+	local tgid    = buf:readByte()
+	local x, y, z = buf:readShort3()
 
 	if button == 1 and action == 0 then
 		local held = player:getHeldBlock()

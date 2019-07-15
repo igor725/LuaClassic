@@ -16,14 +16,17 @@ local bp = {
 
 local function setBlockPermFor(player, id, allowPlace, allowDelete)
 	if player:isSupported('BlockPermissions')then
-		allowPlace = (allowPlace and 1)or 0
-		allowDelete = (allowDelete and 1)or 0
-		player:sendPacket(false, 0x1C, id, allowPlace, allowDelete)
+		local buf = player._buf
+		buf:reset()
+			buf:writeByte(0x1C)
+			buf:writeByte(id)
+			buf:writeByte((allowPlace and 1)or 0)
+			buf:writeByte((allowDelete and 1)or 0)
+		buf:sendTo(player:getClient())
 	end
 end
 
 function bp:load()
-	registerSvPacket(0x1C, 'bbbb')
 	getPlayerMT().setBlockPermissions = function(...)
 		setBlockPermFor(...)
 	end

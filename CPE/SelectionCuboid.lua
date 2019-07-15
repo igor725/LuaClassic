@@ -18,7 +18,7 @@ function sc:create(player, id, label, p1, p2, r, g, b, a)
 	a = a or 100
 	x1, y1, z1, x2, y2, z2 = makeNormalCube(p1, p2)
 
-	local buf = player._buf
+	local buf = player._bufwr
 	buf:reset()
 		buf:writeByte(0x1A)
 		buf:writeByte(id)
@@ -33,7 +33,7 @@ function sc:remove(player, id)
 	if not player:isSupported('SelectionCuboid')then
 		return false
 	end
-	local buf = player._buf
+	local buf = player._bufwr
 	buf:reset()
 		buf:writeByte(0x1B)
 		buf:writeByte(id)

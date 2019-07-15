@@ -234,7 +234,6 @@ function acceptClient(sfd)
 		assert(setSockOpt(cfd, SOL_TCP, TCP_NODELAY, 1))
 		return cfd, parseIPv4(addr.sin_addr)
 	end
-	return nil
 end
 
 function setSockOpt(fd, level, opt, val)

@@ -14,7 +14,7 @@ local function spawnMobFor(mob, player)
 			cname = mob.model
 		end
 
-		local buf = player._buf
+		local buf = player._bufwr
 		buf:reset()
 			buf:writeByte(0x07)
 			buf:writeByte(id)
@@ -63,7 +63,7 @@ local mob_mt = {
 
 		playersForEach(function(player)
 			if player:isInWorld(self)and player.isSpawned then
-				local buf = player._buf
+				local buf = player._bufwr
 				buf:reset()
 					buf:writeByte(0x08)
 					buf:writeByte(id)
@@ -90,7 +90,7 @@ local mob_mt = {
 	despawn = function(self)
 		if not self.isSpawned then return false end
 		playersForEach(function(player)
-			local buf = player._buf
+			local buf = player._bufwr
 			buf:reset()
 				buf:writeByte(0x0C)
 				buf:writeByte(self.id)

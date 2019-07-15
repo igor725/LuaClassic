@@ -123,18 +123,15 @@ local buf_mt = {
 		return ffi.string(arr + pos, strend - pos)
 	end,
 
-	setCursor = function(self, cpos)
-		if cpos >= 0 then
-			self.pos = cpos
-		else
-			self.pos = self.pos + cpos
+	seek = function(self, md, pos)
+		if md == 'set'then
+			self.pos = pos
+		elseif md == 'cur'then
+			self.pos = self.pos + pos
+		elseif md == 'end'then
+			self.pos = self.len
 		end
-		return self
-	end,
-	set = function(self, str)
-		self:reset()
-		ffi.copy(self.array, str)
-		return self
+		return self.pos
 	end,
 	reset = function(self)
 		ffi.fill(self.array, self.len)

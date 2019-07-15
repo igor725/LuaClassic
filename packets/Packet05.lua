@@ -5,11 +5,7 @@
 
 return function(player, buf)
 	local x, y, z, mode, id
-	if player:isSupported('ExtEntityPositions')then
-		x, y, z = buf:readInt3()
-	else
-		x, y, z = buf:readShort3()
-	end
+	x, y, z = buf:readShort3()
 	mode = buf:readByte()
 	id = buf:readByte()
 

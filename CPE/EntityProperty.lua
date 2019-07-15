@@ -11,7 +11,7 @@ EP_ROTZ = 2
 
 local function entPropFor(player, id, ptype, val)
 	if player:isSupported('EntityProperty')then
-		local buf = player._buf
+		local buf = player._bufwr
 		buf:reset()
 			buf:writeByte(0x2A)
 			buf:writeByte(id)

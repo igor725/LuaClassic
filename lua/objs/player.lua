@@ -402,7 +402,7 @@ local player_mt = {
 			ay = floor(ay / 360 * 255)
 			ap = floor(ap / 360 * 255)
 		end
-		local buf = self._buf
+		local buf = self._bufwr
 		buf:reset()
 			buf:writeByte(0x08)
 			buf:writeByte(255)
@@ -485,7 +485,8 @@ local player_mt = {
 	readRawData = function(self)
 		local fd = self:getClient()
 		if not self._buf then
-			self._buf = newBuffer(3096)
+			self._buf = newBuffer(1024)
+			self._bufwr = newBuffer(3096)
 		end
 		local id = self._waitPacket
 		if not id then
@@ -578,7 +579,7 @@ local player_mt = {
 		sname = sname or config:get('serverName')
 		smotd = smotd or config:get('serverMotd')
 
-		local buf = self._buf
+		local buf = self._bufwr
 		buf:reset()
 			buf:writeByte(0x00)
 			buf:writeByte(0x07)
@@ -617,8 +618,7 @@ local player_mt = {
 			parts = 1
 		end
 
-		local buf = self._buf
-
+		local buf = self._bufwr
 		buf:reset()
 		if parts > 1 then
 			for i = 1, parts do
@@ -649,7 +649,7 @@ local player_mt = {
 		local sId = self:getID()
 		playersForEach(function(ply)
 			if ply:isInWorld(self)then
-				local buf = ply._buf
+				local buf = ply._bufwr
 				buf:reset()
 					buf:writeByte(0x0C)
 					buf:writeByte(sId)
@@ -704,9 +704,8 @@ local player_mt = {
 			local cay, cap = ply:getEyePos(true)
 			local cname = ply:getName()
 
-			local dat, datcpe
 			if ply:isInWorld(self) and (ply.isSpawned or sId == -1)then
-				local buf = self._buf
+				local buf = self._bufwr
 				buf:reset()
 					buf:writeByte(0x07)
 					buf:writeByte(sId)
@@ -720,7 +719,7 @@ local player_mt = {
 				buf:sendTo(self:getClient())
 
 				if sId ~= -1 then
-					local buf = self._buf
+					local buf = self._bufwr
 					buf:reset()
 						buf:writeByte(0x07)
 						buf:writeByte(pId)
@@ -790,7 +789,7 @@ local player_mt = {
 	end,
 	kick = function(self, reason, silent)
 		reason = reason or KICK_NOREASON
-		local buf = self._buf
+		local buf = self._bufwr
 		buf:reset()
 			buf:writeByte(0x0E)
 			buf:writeString(reason)
@@ -815,7 +814,7 @@ local player_mt = {
 
 				if mesg == true then
 					local dim = pworld:getData('dimensions')
-					local buf = self._buf
+					local buf = self._bufwr
 					buf:reset()
 						buf:writeByte(0x04)
 						buf:writeVarShort(dim.x, dim.y, dim.z)

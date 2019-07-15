@@ -38,7 +38,7 @@ time_presets = {
 local function updateEnvColorsFor(player, typ, r, g, b)
 	if player:isSupported('EnvColors')then
 		r, g, b = r or -1, g or -1, b or -1
-		local buf = player._buf
+		local buf = player._bufwr
 		buf:reset()
 			buf:writeByte(0x19)
 			buf:writeByte(typ)

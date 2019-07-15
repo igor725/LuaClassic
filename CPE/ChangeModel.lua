@@ -21,7 +21,7 @@ local cm = {
 }
 
 local function updateModelFor(player, id, mdl)
-	local buf = player._buf
+	local buf = player._bufwr
 	buf:reset()
 		buf:writeByte(0x1D)
 		buf:writeByte(id)

@@ -26,12 +26,28 @@ local survBlocknames = {
 	'Crate', 'Stone brick'
 }
 
+local function getCustomBlockName(id)
+	local name = BlockDefinitions:getOpt(id, 'name')
+	if name then
+		local len = 63
+		for i = len, 0, -1 do
+			if name[i] ~= 32 then
+				len = i + 1
+				break
+			end
+		end
+		name = ffi.string(name, len)
+	end
+	survBlocknames[id] = name
+	return name
+end
+
 function survAddBlockName(id, name)
 	survBlocknames[id] = name
 end
 
 function survGetBlockName(id)
 	return survBlocknames[id]
-	or BlockDefinitions:getOpt(id, 'name')
+	or getCustomBlockName(id)
 	or'Unknown block'
 end

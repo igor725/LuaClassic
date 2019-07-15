@@ -19,8 +19,6 @@ local ext_mt = {
 ext_mt.__index = ext_mt
 
 function cpe:init()
-	registerSvPacket(0x10, '>Bc64h')
-	registerSvPacket(0x11, '>Bc64i')
 	registerClPacket(0x10, 66, function(player, buf)
 		local appName = buf:readString()
 		local extCount = buf:readShort()
@@ -74,6 +72,11 @@ function cpe:init()
 	log.info('Successfully loaded', self.extCount, 'extensions.')
 end
 
+function cpe:registerClPacket(id, size, ext)
+	self.psizes[id] = size
+	self.pexts[id] = ext
+end
+
 function cpe:loadExt(path)
 	local filename = path:match('^.+/(.+)$')
 	local chunk = log.eassert(loadfile(path))
@@ -99,7 +102,7 @@ function cpe:extCallHook(hookName, ...)
 end
 
 function cpe:startFor(player)
-	local buf = player._buf
+	local buf = player._bufwr
 	buf:reset()
 		buf:writeByte(0x10)
 		buf:writeString(self.softwareName)

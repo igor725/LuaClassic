@@ -282,7 +282,7 @@ local world_mt = {
 			if self.players > 0 then
 				playersForEach(function(player)
 					if player ~= exclude then
-						local buf = player._buf
+						local buf = player._bufwr
 						buf:reset()
 							buf:writeByte(0x06)
 							buf:writeVarShort(x, y, z)

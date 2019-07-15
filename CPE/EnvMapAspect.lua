@@ -18,7 +18,7 @@ MEP_MAPSIDESOFFSET = 9
 
 local function updateMapPropertyFor(player, typ, val)
 	if player:isSupported('EnvMapAspect')then
-		local buf = player._buf
+		local buf = player._bufwr
 		buf:reset()
 			buf:writeByte(0x29)
 			buf:writeByte(typ)
@@ -29,7 +29,7 @@ end
 
 local function setTexturePackFor(player, tpack)
 	if player:isSupported('EnvMapAspect')then
-		local buf = player._buf
+		local buf = player._bufwr
 		buf:reset()
 			buf:writeByte(0x28)
 			buf:writeString(tpack)

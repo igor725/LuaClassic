@@ -27,7 +27,7 @@ function twp:load()
 			return false
 		end
 		local rand = math.random(0, 32767)
-		local buf = player._buf
+		local buf = player._bufwr
 		buf:reset()
 			buf:writeByte(0x2B)
 			buf:writeByte(1)

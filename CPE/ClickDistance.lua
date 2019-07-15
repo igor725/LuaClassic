@@ -10,7 +10,7 @@ function cd:load()
 		if not player:isSupported('ClickDistance')then
 			return false
 		end
-		local buf = player._buf
+		local buf = player._bufwr
 		buf:reset()
 			buf:writeByte(0x12)
 			buf:writeShort(cdist)
