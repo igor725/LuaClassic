@@ -16,7 +16,7 @@ local bp = {
 
 local function setBlockPermFor(player, id, allowPlace, allowDelete)
 	if player:isSupported('BlockPermissions')then
-		local buf = player._buf
+		local buf = player._bufwr
 		buf:reset()
 			buf:writeByte(0x1C)
 			buf:writeByte(id)
