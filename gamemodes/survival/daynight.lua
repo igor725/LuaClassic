@@ -13,6 +13,8 @@ local ptime = {
 	['dawn']   = SURV_DNTIME * 2 + SURV_SDTIME
 }
 
+hooks:create('survOnDayNightChange')
+
 function survUpdateWorldTime(world)
 	if world:getData('isNether') then return end
 	local ds = SURV_DNTIME + SURV_SDTIME
@@ -24,21 +26,25 @@ function survUpdateWorldTime(world)
 		if world.ctpreset ~= 'day'then
 			world.ctpreset = 'day'
 			world:setTime('day')
+			hooks:call('survOnDayNightChange', world)
 		end
 	elseif time < ds then
 		if world.ctpreset ~= 'dawn'then
 			world.ctpreset = 'dawn'
 			world:setTime('dawn')
+			hooks:call('survOnDayNightChange', world)
 		end
 	elseif time < dsn then
 		if world.ctpreset ~= 'night'then
 			world.ctpreset = 'night'
 			world:setTime('night')
+			hooks:call('survOnDayNightChange', world)
 		end
 	elseif time < dsns then
 		if world.ctpreset ~= 'sunset'then
 			world.ctpreset = 'sunset'
 			world:setTime('dawn')
+			hooks:call('survOnDayNightChange', world)
 		end
 	else
 		world:setData('time', -1)
