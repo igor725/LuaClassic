@@ -28,6 +28,7 @@ function initCmdHandler(cbfunc)
 
 	return function()
 		if thread and
+		thread.status == 'pending'or
 		thread.status == 'running'or
 		thread.status == 'waiting'then
 			local cmd = select(2, cmdlinda:receive(0, 'cmd'))

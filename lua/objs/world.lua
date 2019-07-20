@@ -35,8 +35,7 @@ local function wsaveThread(maddr, mlen, path)
 
 	local gStatus, gErr = zlib.compress(mapdata, mlen, 4, function(stream)
 		local chunksz = 1024 - stream.avail_out
-		C.fwrite(stream.next_out - chunksz, 1, chunksz, wh)
-		if C.ferror(wh) ~= 0 then
+		if C.fwrite(stream.next_out - chunksz, chunksz, 1, wh) ~= 1 then
 			zlib.defEnd(stream)
 			error('file writing error')
 		end
@@ -222,7 +221,7 @@ local world_mt = {
 		if x < 0 or y < 0 or z < 0 then return false end
 		local dx, dy, dz = self:getDimensions()
 		local offset = math.floor(z * dx + y * (dx * dz) + x + 4)
-		if offset > 3 and offset < self:getData('size') then
+		if offset > 3 and offset < self:getData('size') - 3 then
 			return offset
 		end
 		return false

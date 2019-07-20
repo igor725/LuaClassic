@@ -29,7 +29,7 @@ ffi.cdef[[
 
 local ext = (jit.os == 'Windows'and'dll')or'so'
 package.cpath = ('./bin/%s/?.%s;'):format(jit.arch, ext)
-package.path = './lua/?.lua;./?.lua'
+package.path = './lua/?.lua;./?.lua;./misc/?.lua'
 
 function checkEnv(ev, val)
 	local evar = os.getenv(ev)
