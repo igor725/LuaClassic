@@ -29,7 +29,7 @@ svpackets = {
 psizes = {}
 pHandlers = {}
 
-local packetPathFormat = 'packets/Packet%02X.lua'
+local packetPathFormat = 'lua/network/packets/Packet%02X.lua'
 
 function registerClPacket(id, fmt, handler)
 	packets[id] = fmt

@@ -468,7 +468,7 @@ function init()
 
 	local gm = config:get('serverGamemode')
 	if gm and #gm > 0 and gm ~= 'none'then
-		local path = 'gamemodes/' .. gm .. '/%s.lua'
+		local path = 'lua/gamemodes/' .. gm .. '/%s.lua'
 		function gmLoad(fn)
 			log.debug(DBG_GMLOAD, fn)
 			return assert(loadfile((path):format(fn)))()
@@ -526,7 +526,7 @@ function init()
 		log.fatal(CON_WLOADERR)
 	end
 
-	dirForEach('autorun', 'lua', function(_, path)
+	dirForEach('lua/autorun', 'lua', function(_, path)
 		log.assert(loadfile(path))()
 	end)
 
