@@ -308,8 +308,8 @@ end
 if jit.os == 'Windows'then
 	ffi.cdef[[
 		typedef struct {
-		  unsigned int dwLowDateTime;
-		  unsigned int dwHighDateTime;
+		  uint32_t dwLowDateTime;
+		  uint32_t dwHighDateTime;
 		} filetime;
 
 		int MoveFileExA(
@@ -323,20 +323,20 @@ if jit.os == 'Windows'then
 			filetime  ftCreationTime;
 			filetime  ftLastAccessTime;
 			filetime  ftLastWriteTime;
-			unsigned int     nFileSizeHigh;
-			unsigned int     nFileSizeLow;
-			unsigned int     dwReserved0;
-			unsigned int     dwReserved1;
+			uint32_t  nFileSizeHigh;
+			uint32_t  nFileSizeLow;
+			uint32_t  dwReserved0;
+			uint32_t  dwReserved1;
 			char     cFileName[260];
 			char     cAlternateFileName[14];
 		} WIN32_FIND_DATA;
 
 		void  GetSystemTimeAsFileTime(filetime*);
 		void* FindFirstFileA(const char*, WIN32_FIND_DATA*);
+		bool  CreateDirectoryA(const char*, uint32_t);
 		bool  FindNextFileA(void*, WIN32_FIND_DATA*);
-		void  Sleep(unsigned int);
-		int   _mkdir(const char*);
 		bool  FindClose(void*);
+		void  Sleep(uint32_t);
 	]]
 
 	INVALID_HANDLE = ffi.cast('void*', -1)
@@ -389,7 +389,7 @@ if jit.os == 'Windows'then
 	end
 
 	function createDirectory(path)
-		return C._mkdir(path) == 0
+		return C.CreateDirectoryA(path, 0)
 	end
 
 	function os.rename(oldfile, newfile)
