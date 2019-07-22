@@ -37,7 +37,7 @@ local function printlogline(ltype, ...)
 	local color = (log.colors and log.colors[ltype])or nil
 	local fmt
 	local time, mtime = math.modf(gettime())
-	mtime = mtime * 1000
+	mtime = mtime * 999
 
 	if color then
 		fmt = os.date('%H:%M:%S.%%03d [\27[%%sm%%s\27[0m] ', time)
@@ -96,7 +96,7 @@ end
 
 function log.fatal(...)
 	log.error(...)
-	os.exit(1)
+	_STOP = true
 end
 
 function log.assert(val, ...)

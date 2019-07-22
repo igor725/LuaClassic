@@ -510,7 +510,7 @@ function init()
 			world = newWorld()
 			world:setName(wn)
 			if world:createWorld({dimensions = newVector(unpack(dims))})then
-				regenerateWorld(world, gtype, sdlist[num]or os.time())
+				log.eassert(regenerateWorld(world, gtype, sdlist[num]or os.time()))
 			end
 		end
 		if world and world.isWorld then
@@ -522,6 +522,7 @@ function init()
 			end
 		end
 	end
+
 	if not getWorld('default')then
 		log.fatal(CON_WLOADERR)
 	end
@@ -551,6 +552,7 @@ function saveAll()
 	else
 		log.error(CON_SAVEERR)
 	end
+	saveBanList()
 	log.debug(CON_WSAVE)
 	worldsForEach(function(world, wname)
 		log.eassert(world:save())
@@ -567,6 +569,7 @@ function mainLoop()
 			if init()then
 				hooks:call('onInitDone')
 				inited = true
+				if _STOP then break end
 			end
 		end
 
@@ -639,7 +642,6 @@ end
 
 if server then closeSock(server)end
 cleanupSock()
-saveBanList()
 
 if not succ then
 	err = tostring(err)
