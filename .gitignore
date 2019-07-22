@@ -1,14 +1,8 @@
 worlds/*
-!worlds/.keep
 playerdata/*
-!playerdata/.keep
 saves/*
-!saves/.keep
 /test*.lua
 cfg.lua
-*.properties
 *.log
 *.txt
-*.db
-*.old
 *.png

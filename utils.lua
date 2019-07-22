@@ -335,6 +335,7 @@ if jit.os == 'Windows'then
 		void* FindFirstFileA(const char*, WIN32_FIND_DATA*);
 		bool  FindNextFileA(void*, WIN32_FIND_DATA*);
 		void  Sleep(unsigned int);
+		int   _mkdir(const char*);
 		bool  FindClose(void*);
 	]]
 
@@ -387,6 +388,10 @@ if jit.os == 'Windows'then
 		end
 	end
 
+	function createDirectory(path)
+		return C._mkdir(path) == 0
+	end
+
 	function os.rename(oldfile, newfile)
 		local ret = ffi.C.MoveFileExA(oldfile, newfile, 1)
 		if ret == 0 then
@@ -411,6 +416,7 @@ else
 		};
 
 		void  gettimeofday(struct timeval*, void*);
+		int   mkdir(const char*, unsigned int);
 		void  usleep(unsigned int);
 		void* opendir(const char*);
 		void  closedir(void*);
@@ -438,6 +444,10 @@ else
 		C.gettimeofday(t, nil)
 		local tm = tonumber(t.tv_sec) + 1e-6 * tonumber(t.tv_usec)
 		return tm
+	end
+
+	function createDirectory(path, chmod)
+		return C.mkdir(path, chmod or 0755) == 0
 	end
 
 	function scanDir(dir, ext)
@@ -507,4 +517,9 @@ for i = 1, #cats do
 	dirForEach('lua/' .. cats[i], 'lua', function(_, path)
 		assert(loadfile(path))()
 	end)
+end
+
+local dirs = {'worlds', 'saves', 'playerdata'}
+for i = 1, #dirs do
+	createDirectory(dirs[i])
 end
