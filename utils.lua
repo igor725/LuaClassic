@@ -40,8 +40,17 @@ function checkEnv(ev, val)
 	end
 end
 
-ENABLE_ANSI = checkEnv('ConEmuANSI', 'on')or checkEnv('TERM', 'xterm')or
-checkEnv('TERM', 'screen')or checkEnv('TERM', 'linux')
+local terms = {'xterm', 'screen', 'linux', 'cygwin', 'vt100'}
+
+local function isColoredTerm()
+	for i = 1, #terms do
+		if checkEnv('term', terms[i])then
+			return true
+		end
+	end
+end
+
+enableConsoleColors = checkEnv('ConEmuANSI', 'on')or isColoredTerm()
 
 lanes = require('other.lanes').configure{
 	with_timers = false
@@ -116,7 +125,7 @@ ceil = math.ceil
 
 local colorReplace
 
-if ENABLE_ANSI then
+if enableConsoleColors then
 	local rt = {
 		['&0'] = '30',
 		['&1'] = '34',
@@ -393,9 +402,9 @@ if jit.os == 'Windows'then
 	end
 
 	function os.rename(oldfile, newfile)
-		local ret = ffi.C.MoveFileExA(oldfile, newfile, 1)
+		local ret = C.MoveFileExA(oldfile, newfile, 1)
 		if ret == 0 then
-			return nil, ffi.C.GetLastError()
+			return nil, C.GetLastError()
 		else
 			return true
 		end

@@ -28,7 +28,7 @@ log = {
 	level = tonumber(os.getenv('LOGLEVEL'))or LOG_WARN
 }
 
-if not ENABLE_ANSI then
+if not enableConsoleColors then
 	log.colors = nil
 end
 

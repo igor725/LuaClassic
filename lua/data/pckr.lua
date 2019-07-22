@@ -110,7 +110,7 @@ function writeData(file, writers, hdr, dTable, dSkipped)
 			elseif writer.format == 'cdata'then
 				local sz = (writer.getsz and writer.getsz(value))or ffi.sizeof(value)
 				packTo(file, '>H', sz)
-				ffi.C.fwrite(value, sz, 1, file)
+				C.fwrite(value, sz, 1, file)
 			else
 				packTo(file, '>H', struct.size(writer.format))
 				if writer.func then

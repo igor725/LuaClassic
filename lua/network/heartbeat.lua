@@ -18,6 +18,7 @@ end
 
 local function hThread(data)
 	ffi = require('ffi')
+	C = ffi.C
 	require('network.socket')
 
 	local currServerURL
@@ -32,7 +33,7 @@ local function hThread(data)
 	if jit.os == 'Windows'then
 		ffi.cdef'void Sleep(uint32_t);'
 		function sleep(ms)
-			ffi.C.Sleep(ms)
+			C.Sleep(ms)
 		end
 	else
 		ffi.cdef[[
@@ -43,7 +44,7 @@ local function hThread(data)
 			};
 		]]
 		function sleep(ms)
-			ffi.C.usleep(ms * 1000)
+			C.usleep(ms * 1000)
 		end
 	end
 
