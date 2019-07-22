@@ -550,7 +550,7 @@ function createWorld(wname, dims, gen, seed)
 end
 
 function openGenerator(name)
-	local chunk, err = loadfile('generators/' .. name .. '.lua')
+	local chunk, err = loadfile('lua/generators/' .. name .. '.lua')
 	if chunk then
 		local status, ret = pcall(chunk)
 		return status and ret, ret

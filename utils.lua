@@ -415,12 +415,15 @@ else
 			long tv_usec;
 		};
 
+		typedef unsigned short mode_t;
+
 		void  gettimeofday(struct timeval*, void*);
-		int   mkdir(const char*, unsigned int);
+		int   mkdir(const char*, mode_t);
 		void  usleep(unsigned int);
 		void* opendir(const char*);
 		void  closedir(void*);
 		struct dirent* readdir(void*);
+		mode_t umask(mode_t);
 	]]
 
 	local function scanNext(dir, ext)
@@ -447,7 +450,8 @@ else
 	end
 
 	function createDirectory(path, chmod)
-		return C.mkdir(path, chmod or 0755) == 0
+		chmod = tonumber(chmod or 755, 8)
+		return C.mkdir(path, chmod) == 0
 	end
 
 	function scanDir(dir, ext)
