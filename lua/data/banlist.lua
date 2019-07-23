@@ -39,7 +39,7 @@ end
 function banlist:add(name, ip, reason)
 	if not self:check(name, ip)then
 		self.modified = true
-		if reason == ''then reason = 'Banned'end
+		if reason == ''then reason = 'No reason'end
 		table.insert(self, {name, ip, reason})
 		return true
 	end
@@ -55,7 +55,7 @@ function banlist:remove(name, ip)
 			return true
 		end
 	end
-	return true
+	return false
 end
 
 function banlist:check(name, ip)

@@ -596,7 +596,7 @@ end)
 
 addCommand('unban', function(isConsole, player, args)
 	if #args < 1 then return false end
-	if banlist:remove(args[1], args[2])then
+	if banlist:remove(args[1], args[1])then
 		return 'Player unbanned'
 	end
 end)
@@ -605,7 +605,7 @@ addCommand('ban', function(isConsole, player, args)
 	if #args < 1 then return false end
 	local target = args[1]
 	local isIp = false
-	local reason = table.concat(args, ' ', 2)
+	local reason = (#args > 1 and table.concat(args, ' ', 2))or 'No reason'
 	if not target:match('(%d+%.%d+%.%d+%.%d+)')then
 		target = getPlayerByName(target)
 	else
