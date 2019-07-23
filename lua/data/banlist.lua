@@ -7,13 +7,13 @@ banlist = {
 	modified = false
 }
 
-function loadBanList()
+function banlist:parse()
 	local bfile = io.open('banlist.txt', 'r')
 	if bfile then
 		for line in bfile:lines()do
 			local name, ip, reason = line:match('(.+):(%d+%.%d+%.%d+%.%d+):(.+)')
 			if name then
-				table.insert(banlist, {name, ip, reason})
+				table.insert(self, {name, ip, reason})
 			end
 		end
 		bfile:close()
@@ -22,12 +22,12 @@ function loadBanList()
 	return false
 end
 
-function saveBanList()
-	if not banlist.modified then return true end
+function banlist:save()
+	if not self.modified then return true end
 	local bfile = io.open('banlist.txt', 'w')
 	if bfile then
-		for i = 1, #banlist do
-			local banRow = banlist[i]
+		for i = 1, #self do
+			local banRow = self[i]
 			bfile:write(('%s:%s:%s\n'):format(banRow[1], banRow[2], banRow[3]))
 		end
 		bfile:close()
@@ -36,17 +36,17 @@ function saveBanList()
 	return false
 end
 
-function addBan(name, ip, reason)
-	if not checkBan(name, ip)then
-		banlist.modified = true
+function banlist:add(name, ip, reason)
+	if not self:check(name, ip)then
+		self.modified = true
 		if reason == ''then reason = 'Banned'end
-		table.insert(banlist, {name, ip, reason})
+		table.insert(self, {name, ip, reason})
 		return true
 	end
 	return false
 end
 
-function removeBan(name, ip)
+function banlist:remove(name, ip)
 	for i = #banlist, 1, -1 do
 		local banRow = banlist[i]
 		if banRow[1] == name or banRow[2] == ip then
@@ -58,7 +58,7 @@ function removeBan(name, ip)
 	return true
 end
 
-function checkBan(name, ip)
+function banlist:check(name, ip)
 	for i = 1, #banlist do
 		local banRow = banlist[i]
 		if banRow[1] == name or banRow[2] == ip then

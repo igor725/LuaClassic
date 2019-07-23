@@ -26,12 +26,6 @@ do
 	end
 end
 
-if os.getenv('DEBUG')then
-	local path = os.getenv('DEBUG')
-	path = path or'../mobdebug.lua'
-	loadfile(path)().start()
-end
-
 require('utils')
 START_TIME = gettime()
 
@@ -449,6 +443,7 @@ function init()
 	worlds = {}
 
 	config:parse()
+	banlist:parse()
 	permissions:parse()
 	cpe:init()
 
@@ -487,9 +482,6 @@ function init()
 			initGamemode = nil
 		end
 	end
-
-	log.info(CON_BANLIST)
-	loadBanList()
 
 	log.info(CON_WLOAD)
 	local sdlist = config:get('levelSeeds')
@@ -552,7 +544,7 @@ function saveAll()
 	else
 		log.error(CON_SAVEERR)
 	end
-	saveBanList()
+	banlist:save()
 	log.debug(CON_WSAVE)
 	worldsForEach(function(world, wname)
 		log.eassert(world:save())

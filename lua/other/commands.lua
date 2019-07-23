@@ -596,7 +596,7 @@ end)
 
 addCommand('unban', function(isConsole, player, args)
 	if #args < 1 then return false end
-	if removeBan(args[1], args[2])then
+	if banlist:remove(args[1], args[2])then
 		return 'Player unbanned'
 	end
 end)
@@ -619,8 +619,8 @@ addCommand('ban', function(isConsole, player, args)
 		else
 			tgname, tgip = target:getName(), target:getIP()
 		end
-		if addBan(tgname, tgip, reason)and not isIp then
-			target:kick(reason)
+		if banlist:add(tgname, tgip, reason)and not isIp then
+			target:kick('Banned: ' .. reason)
 		end
 	end
 end)

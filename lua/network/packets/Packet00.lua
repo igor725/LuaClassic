@@ -7,14 +7,14 @@ return function(player, pver, name, vkey, magic)
 	if player.handshaked then
 		return
 	end
-	
+
 	if pver == 0x07 then
 		name = trimStr(name)
 		vkey = trimStr(vkey)
 
-		local isBanned, reason = checkBan(name, player:getIP())
+		local isBanned, reason = banlist:check(name, player:getIP())
 		if isBanned then
-			player:kick(reason, true)
+			player:kick('Banned: ' .. reason, true)
 			return
 		end
 
