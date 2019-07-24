@@ -1,8 +1,8 @@
 ffi.cdef[[
-	void*    fopen(const char* path, const char* mode);
-	long int ftell(void* stream);
-	int      fseek(void* stream, long offset, int origin);
-	int      fclose(void* stream);
+	void*    fopen(const char*, const char*);
+	long int ftell(void*);
+	int      fseek(void*, long, int);
+	int      fclose(void*);
 
 	struct bmp {
 		uint32_t width, height;

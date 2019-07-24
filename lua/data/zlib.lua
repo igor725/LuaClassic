@@ -4,33 +4,33 @@
 ]]
 
 ffi.cdef[[
-typedef void* (* z_alloc_func) (void*, unsigned, unsigned);
-typedef void  (* z_free_func)  (void*, void*);
-typedef struct z_stream_s {
-	char*         next_in;
-	unsigned      avail_in;
-	unsigned long total_in;
-	char*         next_out;
-	unsigned      avail_out;
-	unsigned long total_out;
-	char*         msg;
-	void*         state;
-	z_alloc_func  zalloc;
-	z_free_func   zfree;
-	void*         opaque;
-	int           data_type;
-	unsigned long adler;
-	unsigned long reserved;
-} z_stream;
+	typedef void* (* z_alloc_func) (void*, unsigned, unsigned);
+	typedef void  (* z_free_func)  (void*, void*);
+	typedef struct z_stream_s {
+		char*         next_in;
+		unsigned      avail_in;
+		unsigned long total_in;
+		char*         next_out;
+		unsigned      avail_out;
+		unsigned long total_out;
+		char*         msg;
+		void*         state;
+		z_alloc_func  zalloc;
+		z_free_func   zfree;
+		void*         opaque;
+		int           data_type;
+		unsigned long adler;
+		unsigned long reserved;
+	} z_stream;
 
-const char* zlibVersion();
-const char* zError(int);
-int         inflateEnd(z_stream*);
-int         deflateEnd(z_stream*);
-int         deflate(z_stream*, int);
-int         inflate(z_stream*, int);
-int         inflateInit2_(z_stream*, int, const char *, int);
-int         deflateInit2_(z_stream*, int, int, int, int, int, const char *, int);
+	const char* zlibVersion();
+	const char* zError(int);
+	int         inflateEnd(z_stream*);
+	int         deflateEnd(z_stream*);
+	int         deflate(z_stream*, int);
+	int         inflate(z_stream*, int);
+	int         inflateInit2_(z_stream*, int, const char *, int);
+	int         deflateInit2_(z_stream*, int, int, int, int, int, const char *, int);
 ]]
 
 local Z_NO_FLUSH         =  0

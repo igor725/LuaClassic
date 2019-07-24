@@ -24,8 +24,8 @@ local function wsaveThread(maddr, mlen, path)
 
 	ffi = require('ffi')
 	ffi.cdef[[
-		size_t fwrite(const void* ptr, size_t size, size_t count, void* stream);
-		int    ferror(void* stream);
+		size_t fwrite(const void*, size_t, size_t, void* stream);
+		int    ferror(void*);
 	]]
 	require('data.zlib')
 	C = ffi.C

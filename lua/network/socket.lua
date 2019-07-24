@@ -32,29 +32,29 @@ ffi.cdef[[
 		uint16_t linecur;
 	};
 
-	uint16_t htons(uint16_t hostshort);
-	uint16_t ntohs(uint16_t netshort);
-	uint32_t htonl(uint32_t hostlong);
-	uint32_t ntohl(uint32_t netlong);
+	uint16_t htons(uint16_t);
+	uint16_t ntohs(uint16_t);
+	uint32_t htonl(uint32_t);
+	uint32_t ntohl(uint32_t);
 
-	const char* inet_ntop(int af, const void* src, char* dst, size_t cnt);
-	uint32_t inet_addr(const char* cp);
+	const char* inet_ntop(int, const void*, char*, size_t);
+	uint32_t inet_addr(const char*);
 
-	struct hostent* gethostbyname(const char* hostname);
+	struct hostent* gethostbyname(const char*);
 
-	int bind(int sockfd, const struct sockaddr* addr, uint32_t addrlen);
-	int listen(int sockfd, int backlog);
-	int shutdown(int sockfd, int how);
-	int accept(int sockfd, struct sockaddr* addr, uint32_t* addrlen);
+	int bind(int, const struct sockaddr*, uint32_t);
+	int listen(int, int);
+	int shutdown(int, int);
+	int accept(int, struct sockaddr*, uint32_t*);
 
-	int socket(int domain, int type, int protocol);
-	int connect(int sockfd, const struct sockaddr* addr, int addrlen);
-	int setsockopt(int fd, int level, int optname, const void* optval, uint32_t optlen);
+	int socket(int, int, int);
+	int connect(int, const struct sockaddr*, int);
+	int setsockopt(int, int, int, const void*, uint32_t);
 
-	int recv(int fd, void* buf, size_t count, int flags);
-	int send(int fd, const void* buf, size_t count, int flags);
+	int recv(int, void*, size_t, int);
+	int send(int, const void*, size_t, int);
 
-	size_t strlen(const char* string);
+	size_t strlen(const char*);
 ]]
 
 INVALID_SOCKET = -1
@@ -107,12 +107,12 @@ if jit.os == 'Windows'then
 			va_list *Arguments
 		);
 
-		int ioctlsocket(int sockfd, long cmd, unsigned long* argp);
-		int closesocket(int sockfd);
+		int ioctlsocket(int, long, unsigned long*);
+		int closesocket(int);
 
 		int GetLastError();
 
-		int WSAStartup(uint16_t version, void *wsa_data);
+		int WSAStartup(uint16_t, void *);
 		int WSACleanup();
 	]]
 
@@ -182,9 +182,9 @@ else -- POSIX
 			int     h_length;
 			char    **h_addr_list;
 		};
-		char* strerror(int errnum);
+		char* strerror(int);
 		int fcntl(int, int, ...);
-		int close(int fd);
+		int close(int);
 	]]
 
 	function currerr()

@@ -21,10 +21,10 @@ ffi.cdef[[
 		float pitch;
 	} angle;
 
-	size_t fread(void* ptr, size_t size, size_t count, void* stream);
-	size_t fwrite(const void* ptr, size_t size, size_t count, void* stream);
-	int    ferror(void* stream);
-	void   free(void* ptr);
+	size_t fread(void*, size_t, size_t, void*);
+	size_t fwrite(const void*, size_t, size_t, void*);
+	int    ferror(void*);
+	void   free(void*);
 ]]
 
 local ext = (jit.os == 'Windows'and'dll')or'so'
