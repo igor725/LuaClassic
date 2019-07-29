@@ -4,11 +4,10 @@
 ]]
 
 io.stdout:setvbuf('no')
-require('lng')
 
 do
 	local function vermismatch()
-		print(CON_LJVER)
+		print('Server requires LuaJIT >= 2.0.0-beta11')
 		os.exit(1)
 	end
 

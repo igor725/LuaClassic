@@ -9,7 +9,6 @@ DEF_SERVERMOTD     = 'This server uses LuaClassic'
 TMR_ERR            = 'timer %q error: %s'
 
 CON_INGAMECMD      = 'This command can\'t be called from console'
-CON_LJVER          = 'Server requires LuaJIT >= 2.0.0-beta11'
 CON_SAVESUCC       = 'Configuration has been saved successfully'
 CON_HELP           = 'For help, type "help" or "?"'
 CON_START          = 'Starting LuaClassic server'

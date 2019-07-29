@@ -52,11 +52,6 @@ end
 
 enableConsoleColors = checkEnv('ConEmuANSI', 'on')or isColoredTerm()
 
-lanes = require('other.lanes').configure{
-	with_timers = false
-}
-struct = require('struct')
-
 function packTo(file, fmt, ...)
 	if select('#', ...) < 1 then return false end
 	local data = struct.pack(fmt, ...)
@@ -523,9 +518,13 @@ function watchThreads(threads)
 	end
 end
 
-require('evt.hooks')
-require('other.log')
-local cats = {'data', 'evt', 'hash', 'network', 'objs', 'other'}
+lanes = require('other.lanes').configure{
+	with_timers = false
+}
+struct = require('struct')
+require('hooks')
+require('log')
+local cats = {'data', 'hash', 'network', 'objs', 'other'}
 for i = 1, #cats do
 	dirForEach('lua/' .. cats[i], 'lua', function(_, path)
 		assert(loadfile(path))()
