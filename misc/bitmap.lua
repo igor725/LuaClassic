@@ -29,8 +29,6 @@ local bmp_mt = {
 			b = self.data[index + 0]
 			g = self.data[index + 1]
 			r = self.data[index + 2]
-		else
-			return nil, 'Unsupported bpp'
 		end
 
 		return r, g ,b
@@ -58,8 +56,6 @@ local bmp_mt = {
 			self.data[index + 0] = b
 			self.data[index + 1] = g
 			self.data[index + 2] = r
-		else
-			return nil, 'Unsupported bpp'
 		end
 
 		return true
@@ -83,12 +79,14 @@ local bmp_mt = {
 		return written == 1
 	end,
 	close = function(self)
-		self.data = nil
-		self.ok = false
+		local ok
 		if self.file ~= nil then
-			return C.fclose(self.file) == 0
+			ok = C.fclose(self.file) == 0
 		end
-		return true
+		self.ok = false
+		self.data = nil
+		ffi.fill(self, ffi.sizeof(self))
+		return ok
 	end,
 	_readData = function(self)
 		local data = self.data
@@ -102,6 +100,10 @@ local bmp_mt = {
 		self.pixel_offset = ffi.cast('uint16_t*', data + 10)[0]
 		self.bps = ffi.cast('uint16_t*', data + 28)[0]
 		ffi.copy(self, data + 18, 8)
+		if self.bps ~= 24 then
+			self:close()
+			return nil, 'Unsupported bpp'
+		end
 		return true
 	end
 }

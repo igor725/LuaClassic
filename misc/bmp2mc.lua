@@ -71,7 +71,7 @@ function createBmpPainting(world, x, y, z, direction, image)
 					nx = nx + bx
 					ny = ny + by
 				end
-				
+
 				local id = getNearbyWool(assert(bmp:getPixel(bx, by)))
 				local offset = world:getOffset(nx, ny, nz)
 				if offset and world.ldata[offset] ~= id then
@@ -82,6 +82,7 @@ function createBmpPainting(world, x, y, z, direction, image)
 		end
 		BulkBlockUpdate:done()
 		bmp:close()
+		print(bmp.ok)
 		return true
 	end
 	return false, 'Can\'t load bmp file'

@@ -336,10 +336,14 @@ function handleConsoleCommand(cmd)
 			for i=2, #ret do
 				ret[i] = tostring(ret[i])
 			end
-			if ret[1]then
-				log.info(table.concat(ret, ', ', 2))
+			if #ret > 1 then
+				if ret[1]then
+					log.info(table.concat(ret, ', ', 2))
+				else
+					log.error((MESG_ERROR):format(ret[2]))
+				end
 			else
-				log.error((MESG_ERROR):format(ret[2]))
+				log.info(MESG_EXEC)
 			end
 		else
 			log.error((MESG_ERROR):format(err))

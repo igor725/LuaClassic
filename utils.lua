@@ -524,6 +524,7 @@ lanes = require('other.lanes').configure{
 struct = require('struct')
 require('hooks')
 require('log')
+require('lng')
 local cats = {'data', 'hash', 'network', 'objs', 'other'}
 for i = 1, #cats do
 	dirForEach('lua/' .. cats[i], 'lua', function(_, path)
