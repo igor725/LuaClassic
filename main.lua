@@ -641,15 +641,15 @@ cleanupSock()
 if not succ then
 	err = tostring(err)
 	if not err:find('interrupted')then
-		print(err)
+		if not hooks:call('onMainLoopError', err)then
+			print(err)
+		end
 		ecode = 1
 	end
 end
 
 if _STOP == 'restart'then
 	ecode = 2
-else
-	log.info(CON_SVSTOP)
 end
 
 os.exit(ecode)

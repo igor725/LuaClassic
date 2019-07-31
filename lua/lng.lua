@@ -18,7 +18,6 @@ CON_WLOADERR       = 'No worlds loaded'
 CON_SVDAT          = 'Saving data'
 CON_BANLIST        = 'Loading banlist'
 CON_WSAVE          = 'Saving worlds'
-CON_SVSTOP         = 'Server stopped'
 CON_WLOAD          = 'Loading worlds'
 CON_USE            = 'Usage: %s'
 

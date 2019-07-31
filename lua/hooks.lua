@@ -58,6 +58,7 @@ end
 
 hooks:create('preInit')
 hooks:create('onUpdate')
+hooks:create('onMainLoopError')
 hooks:create('onInitDone')
 hooks:create('onPlayerMove')
 hooks:create('onPlayerChat')
