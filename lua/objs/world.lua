@@ -220,11 +220,8 @@ local world_mt = {
 		if not self.ldata then return false end
 		if x < 0 or y < 0 or z < 0 then return false end
 		local dx, dy, dz = self:getDimensions()
-		local offset = math.floor(z * dx + y * (dx * dz) + x + 4)
-		if offset > 3 and offset < self:getData('size') - 3 then
-			return offset
-		end
-		return false
+		if x > dx - 1 or y > dy - 1 or z > dz - 1 then return false end
+		return math.floor(z * dx + y * (dx * dz) + x + 4)
 	end,
 	getBlock = function(self, x, y, z)
 		if not self.ldata then return -1 end
