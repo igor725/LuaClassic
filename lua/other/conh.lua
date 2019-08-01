@@ -1,43 +1,67 @@
 --[[
 	Copyright (c) 2019 igor725, scaledteam
 	released under The MIT license http://opensource.org/licenses/MIT
+
+	TODO: Improve this code
 ]]
 
---[[
-TODO: Rewrite it sometime.
-Threads isn't good idea in
-this place.
-]]
+local cbfunc, cbuf, cbufpos
 
-function initCmdHandler(cbfunc)
-	if type(cbfunc) ~= 'function'then return false end
-	local cmdlinda = lanes.linda()
-	local thread = lanes.gen('io', function()
-		set_debug_threadname('CommandsHandler')
+if jit.os == 'Windows'then
+	ffi.cdef[[
+		bool _kbhit(void);
+		char _getch(void);
+	]]
 
-		while true do
-			local stp = select(2, cmdlinda:receive(.1, 'stp'))
-			if stp ~= nil then break end
-			local line = io.read('*l')
-			if not line then break end
-			if #line > 0 then
-				cmdlinda:send('cmd', line)
+	function initCmdHandler(func)
+		if type(func) ~= 'function'then return false end
+
+		cbufpos = 0
+		cbfunc = func
+		cbuf = ffi.new('char[256]')
+	end
+
+	function updateCmdHandler()
+		if C._kbhit()then
+			local b = C._getch()
+			if b >= 32 and b <= 126 then
+				if cbufpos < 255 then
+					cbuf[cbufpos] = b
+					cbufpos = cbufpos + 1
+					io.write(string.char(b))
+				end
+			elseif b == 13 then
+				io.write('\13\10')
+				cbfunc(ffi.string(cbuf, cbufpos))
+				cbufpos = 0
+			elseif b == 8 then
+				if cbufpos > 0 then
+					cbuf[cbufpos] = 0
+					cbufpos = cbufpos - 1
+					-- Oh...
+					io.write('\8\0\8')
+				end
 			end
 		end
-	end)()
+	end
+else
+	ffi.cdef[[
+		int read(int, char*, size_t);
+	]]
 
-	return function()
-		if thread and
-		thread.status == 'pending'or
-		thread.status == 'running'or
-		thread.status == 'waiting'then
-			local cmd = select(2, cmdlinda:receive(0, 'cmd'))
-			if cmd then
-				cbfunc(cmd)
-				cmdlinda:send('stp', _STOP)
-			end
-			return true
+	function initCmdHandler(func)
+		if type(func) ~= 'function'then return false end
+
+		cbfunc = func
+		cbuf = ffi.new('char[256]')
+		C.fcntl(0, 4, bit.bor(C.fcntl(0, 3), 4000))
+	end
+
+	function updateCmdHandler()
+		local numRead = C.read(0, cbuf, 255)
+
+		if numRead > 1 then
+			cbfunc(ffi.string(cbuf, numRead - 1))
 		end
-		return false, thread
 	end
 end

@@ -44,7 +44,7 @@ local terms = {'xterm', 'screen', 'linux', 'cygwin', 'vt100'}
 
 local function isColoredTerm()
 	for i = 1, #terms do
-		if checkEnv('term', terms[i])then
+		if checkEnv('TERM', terms[i])then
 			return true
 		end
 	end

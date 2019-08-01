@@ -575,9 +575,7 @@ function mainLoop()
 			worldsForEach(function(world)
 				world:update()
 			end)
-			if onUpdate then
-				onUpdate(dt)
-			end
+			updateCmdHandler()
 		end
 
 		acceptClients()

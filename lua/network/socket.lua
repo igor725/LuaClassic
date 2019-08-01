@@ -221,12 +221,7 @@ function acceptClient(sfd)
 
 	if cfd ~= INVALID_SOCKET then
 		if jit.os == 'Linux'then
-			local flags = ffi.C.fcntl(cfd, 3, 0)
-			if flags < 0 then
-				return false, geterror()
-			end
-			flags = bit.bor(flags, 4000)
-			if ffi.C.fcntl(cfd, 4, ffi.new('int', flags)) < 0 then
+			if C.fcntl(cfd, 4, bit.bor(C.fcntl(cfd, 3, 0), 4000)) < 0 then
 				return false, geterror()
 			end
 		end
@@ -319,7 +314,7 @@ function bindSock(ip, port, backlog)
 			return false, geterror()
 		end
 		flags = bit.bor(flags, 4000) -- NON BLOCKING FLAG
-		if ffi.C.fcntl(fd, 4, ffi.new('int', flags)) < 0 then
+		if C.fcntl(fd, 4, ffi.new('int', flags)) < 0 then
 			return false, geterror()
 		end
 	end
