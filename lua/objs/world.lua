@@ -272,6 +272,7 @@ local world_mt = {
 	setBlock = function(self, x, y, z, id, exclude)
 		if not self.ldata then return false end
 		if self:isReadOnly()then return false end
+
 		local offset = self:getOffset(x, y, z)
 		if offset then
 			self.ldata[offset] = id
@@ -284,6 +285,8 @@ local world_mt = {
 			end
 			return true
 		end
+
+		return false
 	end,
 	setSpawn = function(self, x, y, z, ay, ap)
 		if not x or not y or not z then return false end
@@ -375,16 +378,19 @@ local world_mt = {
 	readLevelInfo = function(self, wh)
 		self.data = {}
 		self.skipped = {}
+
 		if parseData(wh, wReaders, 'wdata\0', self.data, self.skipped)then
 			self.ldata = ffi.new('uint8_t[?]', self:getData('size'))
 			return true
 		end
+
 		return false
 	end,
 
 	save = function(self)
 		if self.gzipThread then return true end
 		if not self.ldata then return true end
+
 		local pt = self:getPath()
 		local pt_tmp = pt .. '.tmp'
 		local wh = assert(io.open(pt_tmp, 'wb'))
@@ -397,8 +403,7 @@ local world_mt = {
 		end
 
 		wh:close()
-		local ptr = getAddr(self.ldata)
-		self.gzipThread = lanes.gen('*', wsaveThread)(ptr, self:getData('size'), pt_tmp)
+		self.gzipThread = lanes.gen('*', wsaveThread)(getAddr(self.ldata), self:getData('size'), pt_tmp)
 		return true
 	end,
 	update = function(self)
@@ -447,8 +452,7 @@ local world_mt = {
 		end
 	end,
 
-	isWorld = true,
-	players = 0
+	isWorld = true
 }
 world_mt.__index = world_mt
 
@@ -514,7 +518,7 @@ function unloadWorld(wname)
 			end
 		end)
 		world:save()
-		world.ldata = nil
+		world.unloadScheduled = true
 		worlds[wname] = nil
 		for i = #nworlds, 1, -1 do
 			if nworlds[i] == world then
@@ -614,7 +618,9 @@ function worldsForEach(func)
 end
 
 function newWorld(wh, wn)
-	local world = setmetatable({}, world_mt)
+	local world = setmetatable({
+		players = 0
+	}, world_mt)
 
 	if wh and wn then
 		world:setName(wn)

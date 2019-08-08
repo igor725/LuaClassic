@@ -82,7 +82,6 @@ function createBmpPainting(world, x, y, z, direction, image)
 		end
 		BulkBlockUpdate:done()
 		bmp:close()
-		print(bmp.ok)
 		return true
 	end
 	return false, 'Can\'t load bmp file'

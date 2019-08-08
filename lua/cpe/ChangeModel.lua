@@ -21,7 +21,7 @@ local cm = {
 }
 
 function cm:load()
-	registerSvPacket(0x1d, 'bbc64')
+	registerSvPacket(0x1D, 'bbc64')
 	getPlayerMT().setModel = function(player, model, scale)
 		model = model or'humanoid'
 		scale = tonumber(scale)or 1

@@ -673,17 +673,20 @@ addCommand('tp', function(isConsole, player, args)
 	return CMD_TPDONE
 end)
 
-addCommand('help', function(isConsole)
-	if isConsole then
-		local str = 'List of server commands:'
-		for k, v in pairs(_G)do
-			if k:startsWith('CU_')then
-				str = str .. '\n' .. v
-			end
+addCommand('help', function(isConsole, player)
+	local str = 'List of server commands:'
+	for k, v in pairs(_G)do
+		if k:startsWith('CU_')then
+			str = str .. '\n' .. v
 		end
-		print(str)
 	end
-	return 'Online help page: &ahttps://github.com/igor725/LuaClassic/wiki'
+	str = str .. '\nOnline help page: &ahttps://github.com/igor725/LuaClassic/wiki'
+
+	if isConsole then
+		print(str)
+	else
+		player:sendMessage(str)
+	end
 end)
 
 addAlias('help', '?')
