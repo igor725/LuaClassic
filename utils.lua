@@ -211,10 +211,11 @@ function getn(t)
 	return c
 end
 
-function getCurrentOnline()
+function getCurrentOnline(world)
 	local count = 0
-	for i = 127, 0, -1 do
-		if isPlayer(entities[i])then
+	for i = 0, 127 do
+		local ent = entities[i]
+		if isPlayer(ent) and (not world or getWorld(world) == getWorld(ent))then
 			count = count + 1
 		end
 	end

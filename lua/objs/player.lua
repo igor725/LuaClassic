@@ -643,9 +643,8 @@ local player_mt = {
 		cpe:extCallHook('postPlayerDespawn', self)
 		hooks:call('onPlayerDespawn', self)
 		local world = getWorld(self)
-		world.players = world.players - 1
 
-		if world.players == 0 then
+		if getCurrentOnline(world) == 0 then
 			world.emptyfrom = ctime
 		end
 		if onPlayerDespawn then
@@ -711,8 +710,6 @@ local player_mt = {
 		end)
 
 		local world = getWorld(self)
-		world.players = world.players + 1
-		world.emptyfrom = nil
 		world:triggerLoad()
 		self.isSpawned = true
 		cpe:extCallHook('postPlayerSpawn', self)

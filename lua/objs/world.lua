@@ -197,7 +197,7 @@ local world_mt = {
 		return true
 	end,
 	unload = function(self)
-		if self.players > 0 or self.unloadLocked then return false end
+		if getCurrentOnline(self) > 0 or self.unloadLocked then return false end
 		self:save()
 		self.unloadScheduled = true
 		return true
@@ -276,13 +276,11 @@ local world_mt = {
 		local offset = self:getOffset(x, y, z)
 		if offset then
 			self.ldata[offset] = id
-			if self.players > 0 then
-				playersForEach(function(player)
-					if player ~= exclude then
-						player:sendPacket(false, 0x06, x, y, z, id)
-					end
-				end)
-			end
+			playersForEach(function(player)
+				if player ~= exclude then
+					player:sendPacket(false, 0x06, x, y, z, id)
+				end
+			end)
 			return true
 		end
 
@@ -562,6 +560,7 @@ end
 function regenerateWorld(world, gentype, seed)
 	world = getWorld(world)
 	if not world then return false, WORLD_NE end
+	if not world.ldata then return false end
 	if world.gzipThread then return false end
 	if world:isReadOnly()then return false, WORLD_RO end
 	local locked = false
@@ -618,9 +617,7 @@ function worldsForEach(func)
 end
 
 function newWorld(wh, wn)
-	local world = setmetatable({
-		players = 0
-	}, world_mt)
+	local world = setmetatable({}, world_mt)
 
 	if wh and wn then
 		world:setName(wn)
