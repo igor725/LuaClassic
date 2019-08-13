@@ -398,8 +398,8 @@ local player_mt = {
 			ay, ap = self:getEyePos(true)
 		else
 			ay, ap = ay % 360, ap % 360
-			ay = floor(ay / 360 * 255)
-			ap = floor(ap / 360 * 255)
+			ay = floor(ay / 360 * 256)
+			ap = floor(ap / 360 * 256)
 		end
 		self:sendPacket(self:isSupported('ExtEntityPositions'), 0x08, -1, x, y, z, ay, ap)
 	end,
