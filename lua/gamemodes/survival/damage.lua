@@ -13,7 +13,10 @@ function survRespawn(player)
 	player.health = SURV_MAX_HEALTH
 	player.oxygen = SURV_MAX_OXYGEN
 	ffi.fill(player.inventory, SURV_INV_SIZE)
-
+	for i = 0, 8 do
+		player:setHotBar(i, 0)
+	end
+	
 	survUpdateInventory(player)
 	survUpdateBlockInfo(player)
 	survUpdateHealth(player)

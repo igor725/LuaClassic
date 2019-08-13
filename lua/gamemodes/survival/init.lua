@@ -78,9 +78,6 @@ end)
 hooks:add('postPlayerSpawn', 'surv_init', function(player)
 	local h = player.isInGodmode and 1 or 0
 	player:hackControl(h, h, h, 0, 1, -1)
-	for i = 0, 8 do
-		player:setHotBar(i, 0)
-	end
 	for i = 1, SURV_INV_SIZE do
 		if isValidBlockID(i)then
 			survUpdatePermission(player, i)
@@ -117,7 +114,7 @@ hooks:add('onPlayerClick', 'surv_init', function(player, ...)
 		else
 			player:sendMessage(SURV_NOT_HUNGRY)
 		end
-		
+
 		return
 	end
 
