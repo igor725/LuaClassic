@@ -580,14 +580,6 @@ function mainLoop()
 		acceptClients()
 		serviceMessages()
 
-		if cmdh then
-			local succ, th = cmdh()
-			if not succ then
-				log.warn('CommandsHandler thread', th.status, th[-1])
-				cmdh = nil
-			end
-		end
-
 		NextUpdate = ctime + 0.02
 		if NextUpdate > gettime()then
 			sleep((NextUpdate - gettime()) * 1000)
