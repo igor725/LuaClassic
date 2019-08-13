@@ -411,6 +411,7 @@ local world_mt = {
 				logWorldError(self, th[-1])
 				self.gzipThread = nil
 				if self.unloadScheduled then
+					self.unloadScheduled = false
 					self.ldata = nil
 					collectgarbage()
 				end
@@ -419,6 +420,7 @@ local world_mt = {
 				local pt = self:getPath()
 				os.rename(pt .. '.tmp', pt)
 				if self.unloadScheduled then
+					self.unloadScheduled = false
 					self.ldata = nil
 					collectgarbage()
 				end
