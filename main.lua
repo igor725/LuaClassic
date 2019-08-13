@@ -575,7 +575,6 @@ function mainLoop()
 			worldsForEach(function(world)
 				world:update()
 			end)
-			updateCmdHandler()
 		end
 
 		acceptClients()
@@ -607,6 +606,8 @@ while true do
 		hasError = true
 	end
 end
+
+hooks:call('onMainLoopStop')
 
 ecode = 0
 

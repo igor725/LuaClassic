@@ -21,7 +21,7 @@ if jit.os == 'Windows'then
 		cbuf = ffi.new('char[256]')
 	end
 
-	function updateCmdHandler()
+	hooks:add('onUpdate', 'cmdhandler', function()
 		if C._kbhit()then
 			local b = C._getch()
 			if b >= 32 and b <= 126 then
@@ -43,25 +43,9 @@ if jit.os == 'Windows'then
 				end
 			end
 		end
-	end
+	end)
 else
-	ffi.cdef[[
-		int read(int, char*, size_t);
-	]]
+	function initCmdHandler()
 
-	function initCmdHandler(func)
-		if type(func) ~= 'function'then return false end
-
-		cbfunc = func
-		cbuf = ffi.new('char[256]')
-		C.fcntl(0, 4, bit.bor(C.fcntl(0, 3), 4000))
-	end
-
-	function updateCmdHandler()
-		local numRead = C.read(0, cbuf, 255)
-
-		if numRead > 1 then
-			cbfunc(ffi.string(cbuf, numRead - 1))
-		end
 	end
 end
