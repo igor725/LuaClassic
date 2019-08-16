@@ -30,7 +30,7 @@ function cpe:init()
 
 	local f = true
 	log.info('Loading Classic Protocol Extensions')
-	dirForEach('lua/cpe', 'lua', function(_, fullpath)
+	dirForEach('lua/network/cpe', 'lua', function(_, fullpath)
 		self:loadExt(fullpath)
 	end)
 	for extn, ext in pairs(self.exts)do
