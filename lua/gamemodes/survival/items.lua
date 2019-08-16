@@ -1,17 +1,16 @@
 function survAddItem(texY, texX, name)
 	local id = 128 + texX + 16 * texY
-	
-	local opts = {
+
+	BlockDefinitions:create({
 		id = id,
 		name = name,
 		shape = 0,
 		sideTex = id,
 		transLight = 1
-	}
-	BlockDefinitions:create(opts)
-	
+	})
+
 	survSetMiningSpeed(id, 0)
-	
+
 	return id
 end
 
@@ -66,7 +65,7 @@ local ITEMS_CRAFT_MATERIALS = {5, 4, IRON_ID, GOLD_ID}
 for tool = 0, 3 do
 	for material = 0, 3 do
 		local id = survAddItem(0, material + 4 * tool, ITEMS_MATERIAL_NAMES[material+1] .. ITEMS_TOOLS_NAMES[tool+1])
-		
+
 		--sword
 		if tool == 0 then
 			survAddTool(id, 4, 2 + material / 2)
@@ -74,7 +73,7 @@ for tool = 0, 3 do
 		else
 			survAddTool(id, tool, 2 ^ (material + 1))
 		end
-		
+
 		survAddCraft(id, {
 			needs = {
 				[ ITEMS_CRAFT_MATERIALS[material+1] ] = ITEMS_TOOLS_NEEDS[tool * 2 + 1],
@@ -122,7 +121,7 @@ local DYE_NAMES = {
 
 for i = 1, 15 do
 	local id = survAddItem(2, i-1, DYE_NAMES[i] .. ' Dye')
-	
+
 	survAddCraft(20 + i, {
 		needs = {
 			[36] = 4,
@@ -143,7 +142,7 @@ survAddCraft(36, {
 
 for i = 1, 5 do
 	local id = survAddItem(3, i-1, DYE_NAMES[i+16] .. ' Dye')
-	
+
 	survAddCraft(54 + i, {
 		needs = {
 			[36] = 4,

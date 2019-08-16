@@ -28,7 +28,7 @@ function survMobsSpawnPeaceful(world)
 				if not mob then
 					return 'Not enough id\'s for mobs. Spawned ' .. (i - 1) .. ' mobs.'
 				end
-				
+
 				mob:spawn()
 				table.insert(mobs, mob)
 
@@ -52,11 +52,11 @@ addCommand('mobs', function(isConsole, player, args)
 	end
 
 	survMobsSpawnPeaceful(world)
-	
+
 	if world.ctpreset == 'night' then
 		survMobsSpawnAngry(world)
 	end
-	
+
 	timer.Resume('Mobs_AI')
 	timer.Resume('Mobs_smooth_moving')
 end)
@@ -66,7 +66,7 @@ addCommand('mobs-delete', function(isConsole, player, args)
 		local Mob = mobs[i]
 		Mob:destroy()
 	end
-	
+
 	timer.Pause('Mobs_AI')
 	timer.Pause('Mobs_smooth_moving')
 end)
@@ -77,13 +77,13 @@ timer.Create('Mobs_AI', -1, MOB_STEP_INVERVAL, function()
 	for i = 1, #mobs do
 		local Mob = mobs[i]
 		local world = getWorld(Mob.worldName)
-		
+
 		-- angry mobs
 		if Mob.isAngry then
 			local distanceTemp
 			local distanceMin = MOB_ANGRY_ATTACK_DISTANCE
 			local playerMin
-			
+
 			playersForEach(function(player)
 				if getWorld(player) == world then
 					--distanceTemp = distance(Mob:getPos(), player:getPos())
@@ -94,19 +94,19 @@ timer.Create('Mobs_AI', -1, MOB_STEP_INVERVAL, function()
 					end
 				end
 			end)
-			
+
 			if playerMin then
 				Mob.startX, Mob.startZ = Mob.pos.x, Mob.pos.z
-				
+
 				Mob.dirX = playerMin.pos.x - Mob.pos.x
 				Mob.dirZ = playerMin.pos.z - Mob.pos.z
-				
+
 				Mob.target = true
 			else
 				Mob.target = false
 			end
 		end
-		
+
 		-- peaceful mobs
 		if not Mob.target then
 			if Mob.dirX then
@@ -114,12 +114,12 @@ timer.Create('Mobs_AI', -1, MOB_STEP_INVERVAL, function()
 			else
 				Mob.dirX, Mob.dirZ = math.random() - .5, math.random() - .5
 			end
-			
+
 			local length = math.sqrt(Mob.dirX^2 + Mob.dirZ^2)
 			Mob.dirX, Mob.dirZ = Mob.dirX / length * MOB_STEP, Mob.dirZ / length * MOB_STEP
-			
+
 			Mob.startX, Mob.startZ = Mob.pos.x, Mob.pos.z
-			
+
 			local dimx, dimy, dimz = world:getDimensions()
 			if Mob.startX + Mob.dirX > dimx or Mob.startX + Mob.dirX < 0 then
 				Mob.dirX = -Mob.dirX
@@ -128,7 +128,7 @@ timer.Create('Mobs_AI', -1, MOB_STEP_INVERVAL, function()
 				Mob.dirZ = -Mob.dirZ
 			end
 		end
-		
+
 		Mob.eye.yaw = (toAngle(Mob.dirX, Mob.dirZ) + 90) % 360
 	end
 end)
@@ -139,7 +139,7 @@ timer.Create('Mobs_smooth_moving', -1, 0.1, function()
 	for i = 1, #mobs do
 		local Mob = mobs[i]
 		if not Mob.dirX then break end
-		
+
 		local world = getWorld(Mob.worldName)
 
 		Mob.pos.x = Mob.startX + Mob.dirX * (thisTime - mobsLastUpdate) / MOB_STEP_INVERVAL
@@ -172,7 +172,7 @@ function survMobsSpawnAngry(world)
 				if not mob then
 					return
 				end
-				
+
 				mob:spawn()
 				mob.isAngry = true
 				table.insert(mobs, mob)
@@ -190,7 +190,7 @@ hooks:add('survOnDayNightChange', 'surv_craft', function(world)
 	elseif world.ctpreset == 'day' then
 		for i = #mobs, 1, -1 do
 			local Mob = mobs[i]
-			
+
 			if Mob.isAngry then
 				table.remove(mobs, i)
 				Mob:destroy()

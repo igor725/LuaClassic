@@ -19,7 +19,7 @@ gmLoad('damage')
 gmLoad('inventory')
 gmLoad('commands')
 gmLoad('daynight')
-gmLoad('mobs')
+-- gmLoad('mobs')
 gmLoad('firespread')
 gmLoad('anticheat')
 
@@ -46,6 +46,9 @@ end)
 
 hooks:add('postPlayerFirstSpawn', 'surv_init', function(player)
 	player:sendMessage('LuaClassic Survival Dev', MT_STATUS1)
+	for i = 0, 8 do
+		player:setHotBar(i, 0)
+	end
 end)
 
 hooks:add('onPlayerHandshakeDone', 'surv_init', function(player)
