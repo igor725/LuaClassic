@@ -532,7 +532,7 @@ function init()
 	end
 
 	log.info((CON_BINDSUCC):format(ip, port))
-	cmdh = initCmdHandler(handleConsoleCommand)
+	initCmdHandler(handleConsoleCommand)
 	log.info(CON_HELP)
 	ctime = gettime()
 	return true
