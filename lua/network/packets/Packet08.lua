@@ -4,14 +4,14 @@
 ]]
 
 return function(player, id, x, y, z, yaw, pitch)
-	player:setPos(x / 32, y / 32, z / 32)
+	player:setPos(x / 32, y / 32 - 0.6875, z / 32)
 	player:setEyePos((yaw / 255) * 360, (pitch / 255) * 360)
 
 	if player:isSupported('HeldBlock')then
 		if not isValidBlockID(id)then
 			id = 0
 		end
-		
+
 		if player.heldBlock ~= id then
 			player.heldBlock = id
 			hooks:call('onHeldBlockChange', player, id)

@@ -175,7 +175,7 @@ local player_mt = {
 	end,
 	getPos = function(self, forNet)
 		if forNet then
-			return self.pos.x * 32, self.pos.y * 32 - 22, self.pos.z * 32
+			return self.pos.x * 32, self.pos.y * 32, self.pos.z * 32
 		else
 			return self.pos.x, self.pos.y, self.pos.z
 		end
@@ -398,8 +398,8 @@ local player_mt = {
 			ay, ap = self:getEyePos(true)
 		else
 			ay, ap = ay % 360, ap % 360
-			ay = floor(ay / 360 * 256)
-			ap = floor(ap / 360 * 256)
+			ay = ceil(ay / 360 * 256)
+			ap = ceil(ap / 360 * 256)
 		end
 		self:sendPacket(self:isSupported('ExtEntityPositions'), 0x08, -1, x, y, z, ay, ap)
 	end,
@@ -675,6 +675,7 @@ local player_mt = {
 		local pId = self:getID()
 		local name = self:getName()
 		local x, y, z = self:getPos(true)
+		y = y + 22 -- wtf?
 		local ay, ap = self:getEyePos(true)
 		local dat2, dat2cpe
 
