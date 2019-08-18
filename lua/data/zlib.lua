@@ -52,7 +52,7 @@ if not zLoaded then
 	_zlib = ffi.load(path)
 end
 
-local Z_VER = _zlib.zlibVersion()
+local zlibVersion = ffi.string(_zlib.zlibVersion())
 local outbuff = ffi.new('char[?]', CHUNK_SIZE)
 local inbuff = ffi.new('char[?]', CHUNK_SIZE)
 
@@ -71,7 +71,7 @@ end
 local function initDeflate(level, bits)
 	local stream = ffi.new('z_stream')
 	local streamsz = ffi.sizeof(stream)
-	local ret = _zlib.deflateInit2_(stream, level, Z_DEFLATED, bits, Z_MEMLEVEL, Z_DEFAULT_STRATEGY, Z_VER, streamsz)
+	local ret = _zlib.deflateInit2_(stream, level, Z_DEFLATED, bits, Z_MEMLEVEL, Z_DEFAULT_STRATEGY, zlibVersion, streamsz)
 
 	if ret ~= Z_OK then
 		defstreamend(stream)
@@ -120,7 +120,7 @@ end
 
 local function ungzip(file, callback)
 	local stream = ffi.new('z_stream')
-	local ret = _zlib.inflateInit2_(stream, GZ_WINDOWBITS, Z_VER, ffi.sizeof('z_stream'))
+	local ret = _zlib.inflateInit2_(stream, GZ_WINDOWBITS, zlibVersion, ffi.sizeof('z_stream'))
 
 	if ret ~= Z_OK then
 		infstreamend(stream)
@@ -166,5 +166,6 @@ zlib = {
 	decompress = ungzip,
 	defEnd = defstreamend,
 	infEnd = infstreamend,
-	getErrStr = gzerrstr
+	getErrStr = gzerrstr,
+	version = zlibVersion
 }
