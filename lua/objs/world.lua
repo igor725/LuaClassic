@@ -599,6 +599,7 @@ function regenerateWorld(world, gentype, seed)
 			playersForEach(function(player)
 				if player:isInWorld(world)then
 					player.handshakeStage2 = true
+					player.firstSpawn = true
 				end
 			end)
 			return true, e - t
