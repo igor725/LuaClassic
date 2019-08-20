@@ -433,7 +433,7 @@ function serviceMessages()
 
 	while #waitClose > 0 do
 		local fd = table.remove(waitClose)
-		while receiveMesg(fd, cwait, 256) > 0 do end
+		while recvSock(fd, cwait, 256) > 0 do end
 		closeSock(fd)
 	end
 end

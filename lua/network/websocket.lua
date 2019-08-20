@@ -76,7 +76,7 @@ function wsLoad()
 		end
 
 		if sframe.state == WS_ST_HDR then
-			local sz, closed, err = receiveMesg(sframe.fd, sframe.hdr + sframe._drcvd, sframe._dneed)
+			local sz, closed, err = recvSock(sframe.fd, sframe.hdr + sframe._drcvd, sframe._dneed)
 
 			if closed then
 				return -1, err
@@ -108,7 +108,7 @@ function wsLoad()
 		end
 
 		if sframe.state == WS_ST_PLEN then
-			local sz, closed, err = receiveMesg(sframe.fd, sframe.payload_len + sframe._drcvd, sframe._dneed)
+			local sz, closed, err = recvSock(sframe.fd, sframe.payload_len + sframe._drcvd, sframe._dneed)
 
 			if closed then
 				return -1, err
@@ -126,7 +126,7 @@ function wsLoad()
 		end
 
 		if sframe.state == WS_ST_MASK then
-			local sz, closed, err = receiveMesg(sframe.fd, sframe.mask + sframe._drcvd, sframe._dneed)
+			local sz, closed, err = recvSock(sframe.fd, sframe.mask + sframe._drcvd, sframe._dneed)
 
 			if closed then
 				return -1, err
@@ -149,7 +149,7 @@ function wsLoad()
 				sframe.payload = ffi.new('uint8_t[?]', plen + 1)
 			end
 
-			local sz, closed, err = receiveMesg(sframe.fd, sframe.payload + sframe._drcvd, sframe._dneed)
+			local sz, closed, err = recvSock(sframe.fd, sframe.payload + sframe._drcvd, sframe._dneed)
 
 			if closed then
 				return -1, err

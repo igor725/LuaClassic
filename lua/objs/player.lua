@@ -479,7 +479,7 @@ local player_mt = {
 		end
 		local id = self._waitPacket
 		if not id then
-			local len, closed, err = receiveMesg(fd, self._buf, 1)
+			local len, closed, err = recvSock(fd, self._buf, 1)
 
 			if closed then
 				self._sockerr = err
@@ -509,7 +509,7 @@ local player_mt = {
 		end
 
 		if self._waitPacket then
-			local dlen, closed, err = receiveMesg(fd, self._buf + self._receivedData + 1, self._remainingData)
+			local dlen, closed, err = recvSock(fd, self._buf + self._receivedData + 1, self._remainingData)
 
 			if closed then
 				self._sockerr = err

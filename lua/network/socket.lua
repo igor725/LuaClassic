@@ -5,9 +5,10 @@
 
 --TODO: Refactor dis shiet
 
+local C = ffi.C
 local geterror, currerr
-local sck = ffi.C
 local error_cache = {}
+local sck = C
 
 ffi.cdef[[
 	struct in_addr {
@@ -51,8 +52,9 @@ ffi.cdef[[
 	int connect(int, const struct sockaddr*, int);
 	int setsockopt(int, int, int, const void*, uint32_t);
 
-	int recv(int, void*, size_t, int);
-	int send(int, const void*, size_t, int);
+	int recvfrom(int, const char*, size_t, int, struct sockaddr*, size_t*);
+	int recv(int, const char*, size_t, int);
+	int send(int, const char*, size_t, int);
 
 	size_t strlen(const char*);
 ]]
@@ -60,9 +62,11 @@ ffi.cdef[[
 INVALID_SOCKET = -1
 
 SOMAXCONN = 128
+AF_UNIX = 1
 AF_INET = 2
 
 SOCK_STREAM = 1
+SOCK_DGRAM = 2
 
 SOL_SOCKET = 1
 SOL_TCP = 6
@@ -160,7 +164,7 @@ if jit.os == 'Windows'then
 	local flags = bit.bor(0x200, 0x1000)
 
 	function currerr()
-		return ffi.C.GetLastError()
+		return C.GetLastError()
 	end
 
 	function geterror(errno)
@@ -168,7 +172,7 @@ if jit.os == 'Windows'then
 		if not error_cache[errno]then
 			local buffsz = 512
 			local buff = ffi.new('char[?]', buffsz)
-			local len = ffi.C.FormatMessageA(flags, nil, errno, 0, buff, buffsz, nil)
+			local len = C.FormatMessageA(flags, nil, errno, 0, buff, buffsz, nil)
 			error_cache[errno] = ffi.string(buff, len - 2) .. ' (' .. errno .. ')'
 		end
 		return error_cache[errno]
@@ -182,8 +186,15 @@ else -- POSIX
 			int     h_length;
 			char    **h_addr_list;
 		};
+
+		struct sockaddr_un {
+			uint16_t     sun_family;
+			char         sun_path[108];
+		};
+
 		char* strerror(int);
 		int fcntl(int, int, ...);
+		int unlink(const char*);
 		int close(int);
 	]]
 
@@ -194,7 +205,7 @@ else -- POSIX
 	function geterror(errno)
 		errno = errno or currerr()
 		if not error_cache[errno]then
-			error_cache[errno] = ffi.string(ffi.C.strerror(errno)) .. ' (' .. errno .. ')'
+			error_cache[errno] = ffi.string(C.strerror(errno)) .. ' (' .. errno .. ')'
 		end
 		return error_cache[errno]
 	end
@@ -278,8 +289,45 @@ function connectSock(ip, port)
 	return fd
 end
 
+if jit.os ~= 'Windows'then
+	function bindUSock(file)
+		if #file > 107 then return false end
+
+		local fd = sck.socket(AF_UNIX, SOCK_DGRAM, 0)
+		if fd < 0 then
+			return false, geterror(), 'socket'
+		end
+
+		if C.unlink(file) < 0 then
+			local err = currerr()
+			if err ~= 2 then
+				return false, geterror(err), 'unlink'
+			end
+		end
+
+		local ssa = ffi.new('struct sockaddr_un', {
+			sun_family = AF_UNIX,
+			sun_path = file
+		})
+		local cssa = ffi.cast('const struct sockaddr*', ssa)
+		local ssasz = ffi.sizeof(ssa)
+
+		if sck.bind(fd, cssa, ssasz) < 0 then
+			return false, geterror(), 'bind'
+		end
+
+		return fd
+	end
+else
+	bindUSock = function()return false end
+end
+
 function bindSock(ip, port, backlog)
 	local fd = sck.socket(AF_INET, SOCK_STREAM, 0)
+	if fd < 0 then
+		return false, geterror()
+	end
+
 	local ssa = ffi.new('struct sockaddr_in', {
 		sin_family = AF_INET,
 		sin_addr = {
@@ -287,11 +335,9 @@ function bindSock(ip, port, backlog)
 		},
 		sin_port = sck.htons(port)
 	})
-
 	local cssa = ffi.cast('const struct sockaddr*', ssa)
 	local ssasz = ffi.sizeof(ssa)
 
-	assert(setSockOpt(fd, SOL_TCP, TCP_NODELAY, 1))
 	if jit.os == 'Linux'then
 		assert(setSockOpt(fd, SOL_SOCKET, SO_REUSEADDR, 1))
 	end
@@ -309,7 +355,7 @@ function bindSock(ip, port, backlog)
 			return false, geterror()
 		end
 	else
-		local flags = ffi.C.fcntl(fd, 3, 0)
+		local flags = C.fcntl(fd, 3, 0)
 		if flags < 0 then
 			return false, geterror()
 		end
@@ -333,7 +379,7 @@ function sendMesg(fd, msg, len, flags)
 	flags = flags or 0
 	flags = bit.bor(dflags, flags)
 	msg = ffi.cast('const char*', msg)
-	len = len or ffi.C.strlen(msg)
+	len = len or C.strlen(msg)
 
 	local snlen = sck.send(fd, msg, len, flags)
 	if snlen < 0 then
@@ -356,8 +402,8 @@ local function isClosed(err)
 	return err ~= 10035 and err ~= 11
 end
 
-function receiveMesg(fd, buffer, len, flags)
-	if not buffer then return end
+function recvSock(fd, buffer, len, flags)
+	if not buffer or buffer == nil then return 0, false end
 
 	flags = flags or 0
 	local ret = sck.recv(fd, buffer, len, flags)
@@ -366,16 +412,29 @@ function receiveMesg(fd, buffer, len, flags)
 		return 0, isClosed(err), err
 	elseif ret > 0 then
 		return ret, false
-	else
-		return 0, true
 	end
+
+	return 0, true
+end
+
+function recvfromSock(fd, buffer, len, flags, addr, addrlen)
+	if not buffer or buffer == nil then return 0, false end
+
+	flags = flags or 0
+	local ret = sck.recvfrom(fd, buffer, len, flags, addr, addrlen)
+	if ret < 0 then
+		local err = currerr()
+		return 0, isClosed(err), err
+	end
+	
+	return ret
 end
 
 function receiveString(fd, len, flags)
 	if len < 1 then return end
 
 	local buffer = ffi.new('char[?]', len)
-	local rlen, closed, err = receiveMesg(fd, buffer, len, flags)
+	local rlen, closed, err = recvSock(fd, buffer, len, flags)
 	if rlen > 0 then
 		return ffi.string(buffer, rlen), false
 	else
@@ -396,7 +455,7 @@ function receiveLine(fd)
 	end
 
 	while true do
-		local len, closed = receiveMesg(fd, ln.rcv, 1)
+		local len, closed = recvSock(fd, ln.rcv, 1)
 
 		if closed then
 			local str = ffi.string(ln.line, ln.linecur)
@@ -430,7 +489,7 @@ function closeSock(fd)
 	if jit.os == 'Windows'then
 		return sck.closesocket(fd) == 0
 	else
-		return ffi.C.close(fd) == 0
+		return C.close(fd) == 0
 	end
 end
 
