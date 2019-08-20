@@ -453,6 +453,7 @@ local player_mt = {
 
 		self.kickTimeout = ctime + config:get('playerTimeout')
 		pHandlers[id](self, struct.unpack(fmt, ffi.string(data + 1, psz)))
+		return true
 	end,
 
 	readWsData = function(self)
@@ -464,7 +465,7 @@ local player_mt = {
 			self:destroy()
 		elseif st then
 			if sframe.opcode == 0x2 then
-				self:handlePacket(sframe.payload)
+				return self:handlePacket(sframe.payload)
 			elseif sframe.opcode == 0x8 then
 				self:destroy()
 			else
@@ -524,7 +525,7 @@ local player_mt = {
 				self._waitPacket = nil
 				self._receivedData = nil
 				self._remainingData = nil
-				self:handlePacket(self._buf)
+				return self:handlePacket(self._buf)
 			end
 		end
 	end,
@@ -813,9 +814,9 @@ local player_mt = {
 		end
 
 		if self:isWebClient()then
-			self:readWsData()
+			while self:readWsData()do end
 		else
-			self:readRawData()
+			while self:readRawData()do end
 		end
 	end,
 
