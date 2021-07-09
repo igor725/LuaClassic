@@ -1,6 +1,8 @@
 # LuaClassic
 Small Minecraft Classic server written in Lua.
 
+**Warning: Network code of this server is a bullshit. Two years later, I tried to rewrite it. But considering the fundamentally bad architecture, the amount of work is very large. DO NOT USE this server as "main" software , it will NEVER work the way it should.**
+
 Server tested on Debian Stretch/Buster, Arch Linux, Raspbian and Windows 7/8/10. On other systems stable work is not guaranteed.
 
 ~~Demo server runned [here](http://www.classicube.net/server/play/e434e83ee753a5979b364a03407ae58e/)~~
